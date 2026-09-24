@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import {
   Calendar,
@@ -16,11 +16,26 @@ import {
   Loader2,
   AlertCircle,
   LogIn,
+  Check,
+  UserCheck,
 } from 'lucide-react';
 import { BIRO_LIST } from '@/lib/mock-data';
 import { BiroCode } from '@/lib/types';
 import Link from 'next/link';
 import { useSession } from 'next-auth/react';
+import { getActiveUsersAction, createMeetingAction } from '@/app/actions/meeting-actions';
+
+interface AvailableUser {
+  id: string;
+  name: string;
+  email: string;
+  role: string;
+  biro?: {
+    id: string;
+    code: string;
+    shortName: string;
+  } | null;
+}
 
 export default function BuatRapatPage() {
   const router = useRouter();
@@ -38,10 +53,29 @@ export default function BuatRapatPage() {
   );
   const [classification, setClassification] = useState('STRATEGIS');
   const [attendees, setAttendees] = useState(
-    'Biro Terkait, Tim Sekretariat Jenderal, Perwakilan Kawasan'
+    'Dr. Hendra Suprayitno, Maya Puspita, S.Sos, Tim Sekretariat Jenderal'
   );
+  const [availableUsers, setAvailableUsers] = useState<AvailableUser[]>([]);
+  const [selectedUserIds, setSelectedUserIds] = useState<string[]>([]);
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+
+  // Fetch available users on mount
+  useEffect(() => {
+    getActiveUsersAction()
+      .then((res) => {
+        if (res.success && res.data) {
+          setAvailableUsers(res.data);
+          // Automatically select matching users based on initial attendees text
+          const initialLower = 'dr. hendra suprayitno, maya puspita, s.sos'.toLowerCase();
+          const matchedIds = res.data
+            .filter((u) => initialLower.includes(u.name.toLowerCase()))
+            .map((u) => u.id);
+          setSelectedUserIds(matchedIds);
+        }
+      })
+      .catch((err) => console.warn('Could not load users for meeting:', err));
+  }, []);
 
   // Loading session state
   if (status === 'loading') {
@@ -102,13 +136,37 @@ export default function BuatRapatPage() {
     );
   }
 
+  // Toggle user participant
+  const handleToggleUser = (user: AvailableUser) => {
+    const isSelected = selectedUserIds.includes(user.id);
+    let nextIds: string[];
+    let currentNames = attendees
+      .split(/[,;\n]/)
+      .map((s) => s.trim())
+      .filter((s) => s.length > 0);
+
+    if (isSelected) {
+      nextIds = selectedUserIds.filter((id) => id !== user.id);
+      currentNames = currentNames.filter(
+        (n) => n.toLowerCase() !== user.name.toLowerCase()
+      );
+    } else {
+      nextIds = [...selectedUserIds, user.id];
+      if (!currentNames.some((n) => n.toLowerCase() === user.name.toLowerCase())) {
+        currentNames.push(user.name);
+      }
+    }
+
+    setSelectedUserIds(nextIds);
+    setAttendees(currentNames.join(', '));
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitted(true);
     setErrorMessage(null);
 
     try {
-      const { createMeetingAction } = await import('@/app/actions/meeting-actions');
       const parts = time.split('-').map((s) => s.trim().replace('WIB', '').trim());
       const startTime = parts[0] || '09:00';
       const endTime = parts[1] || '12:00';
@@ -120,14 +178,16 @@ export default function BuatRapatPage() {
         startTime,
         endTime,
         location,
+        attendees,
+        participantUserIds: selectedUserIds,
       });
 
       if (res.success && res.data) {
         alert(
-          `Rapat "${title}" berhasil dijadwalkan dengan nomor resmi: ${res.data.meetingNumber}`
+          `Rapat "${title}" berhasil dijadwalkan dengan nomor resmi: ${res.data.meetingNumber} dan ${res.data.participantCount || 0} peserta terdaftar!`
         );
         router.refresh();
-        window.location.href = '/semua-rapat';
+        window.location.href = `/semua-rapat/${res.data.id}`;
       } else {
         setErrorMessage(res.error || 'Gagal membuat rapat');
         setIsSubmitted(false);
@@ -161,7 +221,7 @@ export default function BuatRapatPage() {
           </span>
           <h1 className="text-xl font-bold">Jadwalkan Rapat Baru KEK RI</h1>
           <p className="text-amber-100 text-xs mt-1">
-            Inputkan rincian agenda, biro pelaksana, dan jadwal rapat koordinasi resmi.
+            Inputkan rincian agenda, biro pelaksana, dan daftar pejabat peserta rapat koordinasi resmi.
           </p>
         </div>
 
@@ -277,19 +337,79 @@ export default function BuatRapatPage() {
             />
           </div>
 
-          {/* Peserta */}
-          <div>
-            <label className="block font-semibold text-slate-700 mb-1 flex items-center gap-1.5">
-              <Users className="w-4 h-4 text-amber-600" />
-              Peserta &amp; Pemangku Kepentingan
-            </label>
-            <input
-              type="text"
-              value={attendees}
-              onChange={(e) => setAttendees(e.target.value)}
-              placeholder="Pisahkan dengan tanda koma..."
-              className="w-full px-3 py-2 rounded-lg border border-amber-200 bg-white text-slate-800 focus:outline-none focus:ring-2 focus:ring-amber-500"
-            />
+          {/* Peserta & Pemangku Kepentingan */}
+          <div className="space-y-2">
+            <div className="flex items-center justify-between">
+              <label className="block font-semibold text-slate-700 flex items-center gap-1.5">
+                <Users className="w-4 h-4 text-amber-600" />
+                Daftar Peserta &amp; Pemangku Kepentingan <span className="text-red-500">*</span>
+              </label>
+              <span className="text-[11px] text-slate-400">
+                {selectedUserIds.length} pejabat dipilih
+              </span>
+            </div>
+
+            {/* Quick Picker from Registered Users */}
+            {availableUsers.length > 0 && (
+              <div className="p-3 bg-amber-50/60 rounded-xl border border-amber-200/60 space-y-2">
+                <div className="flex items-center justify-between">
+                  <span className="text-[11px] font-bold text-amber-900 flex items-center gap-1">
+                    <UserCheck className="w-3.5 h-3.5 text-amber-700" />
+                    Pilih Cepat Pejabat / Staf Terdaftar:
+                  </span>
+                  <span className="text-[10px] text-amber-700">
+                    Klik nama untuk menambahkan atau menghapus
+                  </span>
+                </div>
+
+                <div className="flex flex-wrap gap-1.5 max-h-36 overflow-y-auto pr-1">
+                  {availableUsers.map((u) => {
+                    const isSelected = selectedUserIds.includes(u.id);
+                    return (
+                      <button
+                        type="button"
+                        key={u.id}
+                        onClick={() => handleToggleUser(u)}
+                        className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-medium transition-all ${
+                          isSelected
+                            ? 'bg-amber-600 text-white shadow-xs'
+                            : 'bg-white text-slate-700 border border-slate-200 hover:border-amber-400 hover:text-amber-800'
+                        }`}
+                      >
+                        {isSelected && <Check className="w-3 h-3 stroke-[2.5]" />}
+                        <span>{u.name}</span>
+                        {u.biro?.code && (
+                          <span
+                            className={`text-[9px] px-1 py-0.2 rounded font-bold ${
+                              isSelected
+                                ? 'bg-amber-700 text-amber-100'
+                                : 'bg-slate-100 text-slate-500'
+                            }`}
+                          >
+                            {u.biro.code}
+                          </span>
+                        )}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
+            {/* Manual text input for additional guests / attendees */}
+            <div>
+              <textarea
+                rows={2}
+                required
+                value={attendees}
+                onChange={(e) => setAttendees(e.target.value)}
+                placeholder="Pisahkan nama peserta dengan tanda koma..."
+                className="w-full px-3 py-2 rounded-lg border border-amber-200 bg-white text-slate-800 focus:outline-none focus:ring-2 focus:ring-amber-500 text-xs"
+              />
+              <p className="text-[11px] text-slate-400 mt-0.5">
+                Anda juga dapat mengetikkan nama pemangku kepentingan atau instansi luar lainnya secara manual dipisahkan dengan tanda koma.
+              </p>
+            </div>
           </div>
 
           {/* Submit Actions */}
@@ -309,7 +429,7 @@ export default function BuatRapatPage() {
               {isSubmitted ? (
                 <>
                   <Loader2 className="w-4 h-4 animate-spin" />
-                  <span>Menyimpan Rapat...</span>
+                  <span>Menyimpan Rapat &amp; Peserta...</span>
                 </>
               ) : (
                 <>
