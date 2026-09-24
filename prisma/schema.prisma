@@ -1,0 +1,134 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+enum UserRole {
+  SUPER_ADMIN
+  ADMIN
+  NOTULIS
+  STAFF
+  VIEWER
+}
+
+enum MeetingStatus {
+  DRAFT
+  REVIEW
+  APPROVED
+  FINAL
+}
+
+enum AttendanceStatus {
+  INVITED
+  PRESENT
+  ABSENT
+  EXCUSED
+}
+
+model Biro {
+  id          String   @id @default(uuid())
+  code        String   @unique
+  name        String
+  shortName   String
+  description String?
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  users           User[]
+  primaryMeetings Meeting[]            @relation("PrimaryBiroMeetings")
+  meetingBiros    MeetingBiro[]
+  sequence        BiroMeetingSequence?
+
+  @@index([code])
+}
+
+model User {
+  id        String   @id @default(uuid())
+  name      String
+  email     String   @unique
+  role      UserRole @default(STAFF)
+  biroId    String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  biro                Biro                 @relation(fields: [biroId], references: [id], onDelete: Restrict)
+  chairedMeetings     Meeting[]            @relation("ChairpersonMeetings")
+  secretaryMeetings   Meeting[]            @relation("SecretaryMeetings")
+  meetingParticipants MeetingParticipant[]
+
+  @@index([email])
+  @@index([biroId])
+}
+
+model Meeting {
+  id            String        @id @default(uuid())
+  meetingNumber String        @unique
+  title         String
+  primaryBiroId String
+  date          DateTime
+  startTime     String
+  endTime       String
+  location      String
+  chairpersonId String?
+  secretaryId   String?
+  status        MeetingStatus @default(DRAFT)
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+
+  primaryBiro  Biro                 @relation("PrimaryBiroMeetings", fields: [primaryBiroId], references: [id], onDelete: Restrict)
+  chairperson  User?                @relation("ChairpersonMeetings", fields: [chairpersonId], references: [id], onDelete: SetNull)
+  secretary    User?                @relation("SecretaryMeetings", fields: [secretaryId], references: [id], onDelete: SetNull)
+  meetingBiros MeetingBiro[]
+  participants MeetingParticipant[]
+
+  @@index([meetingNumber])
+  @@index([primaryBiroId])
+  @@index([date])
+  @@index([status])
+  @@index([createdAt])
+}
+
+model MeetingBiro {
+  meetingId String
+  biroId    String
+
+  meeting Meeting @relation(fields: [meetingId], references: [id], onDelete: Cascade)
+  biro    Biro    @relation(fields: [biroId], references: [id], onDelete: Restrict)
+
+  @@id([meetingId, biroId])
+  @@index([meetingId])
+  @@index([biroId])
+}
+
+model MeetingParticipant {
+  id               String           @id @default(uuid())
+  meetingId        String
+  userId           String
+  attendanceStatus AttendanceStatus @default(INVITED)
+  createdAt        DateTime         @default(now())
+
+  meeting Meeting @relation(fields: [meetingId], references: [id], onDelete: Cascade)
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([meetingId, userId])
+  @@index([meetingId])
+  @@index([userId])
+}
+
+model BiroMeetingSequence {
+  id            String   @id @default(uuid())
+  biroId        String   @unique
+  currentNumber Int      @default(0)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  biro Biro @relation(fields: [biroId], references: [id], onDelete: Cascade)
+
+  @@index([biroId])
+}

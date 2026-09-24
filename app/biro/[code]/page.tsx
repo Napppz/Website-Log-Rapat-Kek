@@ -1,9 +1,9 @@
 import React from 'react';
 import { notFound } from 'next/navigation';
-import { BIRO_LIST, MOCK_BUREAU_WORKLOAD } from '@/lib/mock-data';
+import { getBiroDetail, getMeetingsFromDb } from '@/lib/db-service';
 import { BiroCode } from '@/lib/types';
 import { MeetingTable } from '@/components/meeting/meeting-table';
-import { Building2, Calendar, ArrowLeft } from 'lucide-react';
+import { Building2, Calendar, ArrowLeft, Users } from 'lucide-react';
 import Link from 'next/link';
 
 interface BiroPageProps {
@@ -12,21 +12,13 @@ interface BiroPageProps {
 
 export default async function BiroDetailPage({ params }: BiroPageProps) {
   const { code } = await params;
-  let upperCode = code.toUpperCase() as BiroCode;
+  const biro = await getBiroDetail(code);
 
-  // Aliases mapping for seamless compatibility
-  if (upperCode === 'PPK' || upperCode === 'REN' || upperCode === 'IT') upperCode = 'BPPK';
-  if (upperCode === 'DAL' || upperCode === 'OPS') upperCode = 'PKKEK';
-  if (upperCode === 'INV') upperCode = 'IKK';
-  if (upperCode === 'HUK' || upperCode === 'LEG') upperCode = 'HSDMO';
-  if (upperCode === 'BUK' || upperCode === 'ADM') upperCode = 'UK';
-
-  const biro = BIRO_LIST.find((b) => b.code === upperCode);
   if (!biro) {
     notFound();
   }
 
-  const workload = MOCK_BUREAU_WORKLOAD.find((w) => w.code === upperCode);
+  const meetings = await getMeetingsFromDb({ biroCode: biro.code });
 
   return (
     <div className="flex flex-col gap-6">
@@ -48,13 +40,24 @@ export default async function BiroDetailPage({ params }: BiroPageProps) {
             <span className="px-2.5 py-1 rounded-md bg-amber-600 text-white font-bold text-[12px] uppercase">
               {biro.code}
             </span>
-            <span className="font-semibold text-amber-700 text-[13px]">• Unit Kerja Resmi</span>
+            <span className="font-semibold text-amber-700 text-[13px]">• Unit Kerja Resmi Dewan Nasional KEK</span>
           </div>
 
           <h1 className="text-[26px] font-bold text-slate-900">{biro.name}</h1>
           <p className="text-[14px] text-slate-600 max-w-2xl leading-relaxed">
             {biro.description}
           </p>
+
+          <div className="pt-2 flex flex-wrap items-center gap-4 text-[12px] text-slate-500">
+            <span className="flex items-center gap-1 font-medium">
+              <Users className="w-3.5 h-3.5 text-amber-600" />
+              {biro.users.length} Personel Terdaftar
+            </span>
+            <span>•</span>
+            <span className="font-medium">
+              Nomor Rapat Terakhir: <strong className="text-amber-800">{biro.sequence ? `${biro.code}-${String(biro.sequence.currentNumber).padStart(3, '0')}` : `${biro.code}-000`}</strong>
+            </span>
+          </div>
         </div>
 
         {/* Workload metric */}
@@ -65,7 +68,7 @@ export default async function BiroDetailPage({ params }: BiroPageProps) {
           <div>
             <div className="text-[12px] font-semibold text-slate-500 uppercase">Total Sesi Rapat</div>
             <div className="text-[24px] font-bold text-amber-900 leading-tight">
-              {workload?.count || 0} <span className="text-[13px] text-slate-500 font-medium">Rapat</span>
+              {biro.primaryMeetings.length} <span className="text-[13px] text-slate-500 font-medium">Rapat</span>
             </div>
           </div>
         </div>
@@ -77,7 +80,7 @@ export default async function BiroDetailPage({ params }: BiroPageProps) {
           <Calendar className="w-5 h-5 text-amber-600" />
           Daftar Rapat {biro.name}
         </h2>
-        <MeetingTable filterBiro={upperCode} />
+        <MeetingTable filterBiro={biro.code as BiroCode} initialMeetings={meetings} />
       </div>
     </div>
   );
