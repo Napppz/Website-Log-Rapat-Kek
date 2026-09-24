@@ -2,7 +2,7 @@
 
 import { prisma } from '@/lib/prisma';
 import { getNextMeetingNumber } from '@/lib/sequence';
-import { MeetingStatus } from '@prisma/client';
+import { MeetingStatus, AttendanceStatus } from '@prisma/client';
 import { revalidatePath } from 'next/cache';
 import { requirePermission, requireAuth } from '@/lib/auth/authorization';
 
@@ -135,19 +135,18 @@ export async function createMeetingAction(input: CreateMeetingInput) {
           });
 
           for (const name of rawNames) {
-            const lower = name.toLowerCase();
-            const matched = allUsers.find(
+            const lowerName = name.toLowerCase();
+            const matchedUser = allUsers.find(
               (u) =>
-                u.name.toLowerCase() === lower ||
-                u.email.toLowerCase() === lower ||
-                u.name.toLowerCase().includes(lower) ||
-                lower.includes(u.name.toLowerCase())
+                u.name.toLowerCase() === lowerName ||
+                u.email.toLowerCase() === lowerName ||
+                u.name.toLowerCase().includes(lowerName) ||
+                lowerName.includes(u.name.toLowerCase())
             );
 
-            if (matched) {
-              targetUserIds.add(matched.id);
+            if (matchedUser) {
+              targetUserIds.add(matchedUser.id);
             } else {
-              // Create guest participant user record so they exist in User table
               const slug = name
                 .toLowerCase()
                 .replace(/[^a-z0-9]/g, '.')
@@ -240,6 +239,110 @@ export async function updateMeetingStatusAction(meetingId: string, status: Meeti
   } catch (error: any) {
     console.error('Error updating meeting status:', error);
     return { success: false, error: error?.message || 'Gagal memperbarui status rapat' };
+  }
+}
+
+/**
+ * Server action to update a participant's attendance status (INVITED, PRESENT, ABSENT, EXCUSED)
+ */
+export async function updateParticipantAttendanceAction(
+  participantId: string,
+  attendanceStatus: AttendanceStatus
+) {
+  try {
+    // Authorization Check: Must have 'manage:participants' permission (SUPER_ADMIN, ADMIN, NOTULIS)
+    await requirePermission('manage:participants');
+
+    const updated = await prisma.meetingParticipant.update({
+      where: { id: participantId },
+      data: { attendanceStatus },
+      include: {
+        meeting: true,
+        user: { include: { biro: true } },
+      },
+    });
+
+    safeRevalidate([
+      `/semua-rapat/${updated.meetingId}`,
+      `/rapat/${updated.meetingId}`,
+      '/semua-rapat',
+      '/',
+    ]);
+
+    return { success: true, data: updated };
+  } catch (error: any) {
+    console.error('Error updating participant attendance:', error);
+    return { success: false, error: error?.message || 'Gagal memperbarui status kehadiran' };
+  }
+}
+
+/**
+ * Server action to add a new participant to an existing meeting
+ */
+export async function addParticipantToMeetingAction(
+  meetingId: string,
+  userId: string,
+  attendanceStatus: AttendanceStatus = 'INVITED'
+) {
+  try {
+    await requirePermission('manage:participants');
+
+    const participant = await prisma.meetingParticipant.upsert({
+      where: {
+        meetingId_userId: {
+          meetingId,
+          userId,
+        },
+      },
+      create: {
+        meetingId,
+        userId,
+        attendanceStatus,
+      },
+      update: {
+        attendanceStatus,
+      },
+      include: {
+        user: { include: { biro: true } },
+      },
+    });
+
+    safeRevalidate([
+      `/semua-rapat/${meetingId}`,
+      `/rapat/${meetingId}`,
+      '/semua-rapat',
+      '/',
+    ]);
+
+    return { success: true, data: participant };
+  } catch (error: any) {
+    console.error('Error adding participant to meeting:', error);
+    return { success: false, error: error?.message || 'Gagal menambahkan peserta' };
+  }
+}
+
+/**
+ * Server action to remove a participant from a meeting
+ */
+export async function removeParticipantFromMeetingAction(participantId: string) {
+  try {
+    await requirePermission('manage:participants');
+
+    const deleted = await prisma.meetingParticipant.delete({
+      where: { id: participantId },
+    });
+
+    safeRevalidate([
+      `/semua-rapat/${deleted.meetingId}`,
+      `/rapat/${deleted.meetingId}`,
+      '/semua-rapat',
+      '/',
+    ]);
+
+    return { success: true };
+  } catch (error: any) {
+    console.error('Error removing participant from meeting:', error);
+    return { success: false, error: error?.message || 'Gagal menghapus peserta' };
   }
 }
 
