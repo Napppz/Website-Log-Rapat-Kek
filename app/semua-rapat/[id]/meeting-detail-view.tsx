@@ -18,6 +18,7 @@ import {
   Shield,
   Layers,
   CheckSquare,
+  FileDown,
 } from 'lucide-react';
 import { MeetingStatusBadge } from '@/components/meeting/meeting-status-badge';
 import { MeetingMinutesSection } from '@/components/meeting/meeting-minutes/meeting-minutes-section';
@@ -46,7 +47,32 @@ export function MeetingDetailView({
   const [activeTab, setActiveTab] = useState<'overview' | 'participants' | 'minutes' | 'actionItems'>('overview');
   const [isDeleting, setIsDeleting] = useState(false);
   const [isUpdatingStatus, setIsUpdatingStatus] = useState(false);
+  const [isExporting, setIsExporting] = useState(false);
   const [status, setStatus] = useState<MeetingStatus>(meeting.status);
+
+  const handleExportPdf = async () => {
+    try {
+      setIsExporting(true);
+      const res = await fetch(`/api/meetings/${meeting.id}/pdf`);
+      if (!res.ok) {
+        const errJson = await res.json().catch(() => null);
+        throw new Error(errJson?.error || 'Gagal mengunduh dokumen PDF.');
+      }
+      const blob = await res.blob();
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `Risalah-Rapat-${meeting.meetingNumber || 'KEK'}.pdf`;
+      document.body.appendChild(link);
+      link.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(link);
+    } catch (err: any) {
+      alert(err?.message || 'Terjadi kesalahan saat mengekspor PDF.');
+    } finally {
+      setIsExporting(false);
+    }
+  };
 
   const formattedDate = new Date(meeting.date).toLocaleDateString('id-ID', {
     weekday: 'long',
@@ -110,19 +136,33 @@ export function MeetingDetailView({
           <span>Kembali ke Semua Rapat</span>
         </Link>
 
-        {/* Delete button (SUPER_ADMIN, ADMIN) */}
-        {canDeleteMeeting && (
+        <div className="flex items-center gap-2">
+          {/* Export PDF Button (All roles) */}
           <button
             type="button"
-            disabled={isDeleting}
-            onClick={handleDelete}
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-red-200 text-red-600 hover:bg-red-50 text-[12px] font-semibold transition-colors cursor-pointer disabled:opacity-50"
-            title="Hapus Rapat dari Database"
+            disabled={isExporting}
+            onClick={handleExportPdf}
+            className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg bg-amber-600 hover:bg-amber-700 text-white text-[12px] font-semibold transition-all shadow-xs cursor-pointer disabled:opacity-50"
+            title="Unduh Risalah Rapat Resmi Format PDF"
           >
-            <Trash2 className="w-3.5 h-3.5" />
-            <span>{isDeleting ? 'Menghapus...' : 'Hapus Rapat'}</span>
+            <FileDown className="w-3.5 h-3.5" />
+            <span>{isExporting ? 'Membuat PDF...' : 'Export PDF'}</span>
           </button>
-        )}
+
+          {/* Delete button (SUPER_ADMIN, ADMIN) */}
+          {canDeleteMeeting && (
+            <button
+              type="button"
+              disabled={isDeleting}
+              onClick={handleDelete}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-red-200 text-red-600 hover:bg-red-50 text-[12px] font-semibold transition-colors cursor-pointer disabled:opacity-50"
+              title="Hapus Rapat dari Database"
+            >
+              <Trash2 className="w-3.5 h-3.5" />
+              <span>{isDeleting ? 'Menghapus...' : 'Hapus Rapat'}</span>
+            </button>
+          )}
+        </div>
       </div>
 
       {/* Main Header Card */}

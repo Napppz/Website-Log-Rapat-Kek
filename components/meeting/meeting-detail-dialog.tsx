@@ -15,6 +15,7 @@ import {
   ExternalLink,
   Layers,
   CheckSquare,
+  FileDown,
 } from 'lucide-react';
 import { Meeting, MeetingStatus } from '@/lib/types';
 import { MeetingStatusBadge } from './meeting-status-badge';
@@ -44,8 +45,34 @@ export function MeetingDetailDialog({
   const [activeTab, setActiveTab] = useState<'info' | 'participants' | 'minutes' | 'actionItems'>('info');
   const [isDeleting, setIsDeleting] = useState(false);
   const [isUpdatingStatus, setIsUpdatingStatus] = useState(false);
+  const [isExporting, setIsExporting] = useState(false);
   const [actionItems, setActionItems] = useState<any[]>([]);
   const [isLoadingItems, setIsLoadingItems] = useState(false);
+
+  const handleExportPdf = async () => {
+    if (!meeting?.id) return;
+    try {
+      setIsExporting(true);
+      const res = await fetch(`/api/meetings/${meeting.id}/pdf`);
+      if (!res.ok) {
+        const errJson = await res.json().catch(() => null);
+        throw new Error(errJson?.error || 'Gagal mengunduh dokumen PDF.');
+      }
+      const blob = await res.blob();
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `Risalah-Rapat-${meeting.code || 'KEK'}.pdf`;
+      document.body.appendChild(link);
+      link.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(link);
+    } catch (err: any) {
+      alert(err?.message || 'Terjadi kesalahan saat mengunduh PDF.');
+    } finally {
+      setIsExporting(false);
+    }
+  };
 
   useEffect(() => {
     if (activeTab === 'actionItems' && meeting?.id) {
@@ -388,11 +415,13 @@ export function MeetingDetailDialog({
 
             <button
               type="button"
-              onClick={() => onDownloadPdf ? onDownloadPdf(meeting) : alert(`Mengunduh risalah resmi format PDF: ${meeting.code}`)}
-              className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-amber-600 text-white font-semibold text-[13px] hover:bg-amber-700 shadow-sm transition-all cursor-pointer"
+              disabled={isExporting}
+              onClick={() => onDownloadPdf ? onDownloadPdf(meeting) : handleExportPdf()}
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-amber-600 text-white font-semibold text-[13px] hover:bg-amber-700 shadow-sm transition-all cursor-pointer disabled:opacity-50"
+              title="Unduh Risalah Rapat Resmi Format PDF"
             >
-              <FileText className="w-4 h-4" />
-              <span>Unduh Notulen PDF</span>
+              <FileDown className="w-4 h-4" />
+              <span>{isExporting ? 'Membuat PDF...' : 'Unduh Notulen PDF'}</span>
             </button>
           </div>
         </div>
