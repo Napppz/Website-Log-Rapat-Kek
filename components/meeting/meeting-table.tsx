@@ -38,7 +38,7 @@ export function MeetingTable({
   initialMeetings,
   pageSize = 8,
 }: MeetingTableProps) {
-  const [meetings, setMeetings] = useState<Meeting[]>(initialMeetings || MOCK_MEETINGS);
+  const [meetings, setMeetings] = useState<Meeting[]>(initialMeetings !== undefined ? initialMeetings : MOCK_MEETINGS);
   const [fetching, setFetching] = useState(false);
   const [searchFilter, setSearchFilter] = useState('');
   const [selectedMeeting, setSelectedMeeting] = useState<Meeting | null>(null);
@@ -71,8 +71,9 @@ export function MeetingTable({
 
   // Sync with initialMeetings or fetch from Neon API
   React.useEffect(() => {
-    if (initialMeetings) {
+    if (initialMeetings !== undefined) {
       setMeetings(initialMeetings);
+      return;
     }
 
     let isMounted = true;
@@ -82,7 +83,7 @@ export function MeetingTable({
         const res = await fetch('/api/meetings', { cache: 'no-store' });
         if (res.ok) {
           const data = await res.json();
-          if (isMounted && Array.isArray(data) && data.length > 0) {
+          if (isMounted && Array.isArray(data)) {
             setMeetings(data);
           }
         }

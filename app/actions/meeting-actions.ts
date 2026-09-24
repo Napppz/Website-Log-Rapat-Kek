@@ -451,3 +451,49 @@ export async function deleteMeetingAction(meetingId: string) {
     return { success: false, error: error?.message || 'Gagal menghapus rapat' };
   }
 }
+
+/**
+ * Server action to delete ALL meetings (SUPER_ADMIN or ADMIN only)
+ * Completely clears all meetings, minutes, action items, attendee records, and resets biro sequence counters.
+ */
+export async function deleteAllMeetingsAction() {
+  try {
+    await requirePermission('delete:meeting');
+
+    const totalCount = await prisma.meeting.count();
+
+    // 1. Explicitly delete child relations for maximum reliability across database drivers
+    await prisma.actionItem.deleteMany({});
+    await prisma.meetingMinutes.deleteMany({});
+    await prisma.meetingParticipant.deleteMany({});
+    await prisma.meetingBiro.deleteMany({});
+
+    // 2. Delete all meetings
+    await prisma.meeting.deleteMany({});
+
+    // 3. Reset sequence counters for all biros back to 0
+    await prisma.biroMeetingSequence.updateMany({
+      data: { currentNumber: 0 },
+    });
+
+    safeRevalidate([
+      '/',
+      '/semua-rapat',
+      '/tindak-lanjut',
+      '/kalender',
+      '/dokumen',
+      '/laporan',
+      '/biro/bppk',
+      '/biro/pkkek',
+      '/biro/ikk',
+      '/biro/hsdmo',
+      '/biro/uk',
+    ]);
+
+    return { success: true, count: totalCount };
+  } catch (error: any) {
+    console.error('Error deleting all meetings:', error);
+    return { success: false, error: error?.message || 'Gagal menghapus seluruh data rapat' };
+  }
+}
+
