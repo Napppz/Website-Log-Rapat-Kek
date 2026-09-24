@@ -32,9 +32,6 @@ export function DashboardClient({
       {/* 1. Executive Welcome Banner */}
       <WelcomeBanner
         onScheduleMeeting={() => router.push('/buat-rapat')}
-        onDownloadExecutiveSummary={() =>
-          alert('Menghasilkan Ringkasan Eksekutif Dewan Nasional KEK RI (Format PDF Resmi)...')
-        }
       />
 
       {/* 2. Top Metric Cards - Live dari Neon DB */}
