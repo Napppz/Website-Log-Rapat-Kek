@@ -181,6 +181,70 @@ export async function getDashboardStats() {
       };
     });
 
+    const finalMeetings = await prisma.meeting.count({ where: { status: 'FINAL' } });
+    const now = new Date();
+    const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+    const thisMonthMeetings = await prisma.meeting.count({
+      where: {
+        date: {
+          gte: startOfMonth,
+        },
+      },
+    });
+
+    const metrics: DashboardMetric[] = [
+      {
+        id: 'total-rapat',
+        label: 'Total Rapat (YTD)',
+        value: totalMeetings,
+        unit: 'Rapat',
+        changeValue: '+100%',
+        changeLabel: 'Tersinkronisasi Neon DB',
+        variant: 'default',
+        iconName: 'event_note',
+      },
+      {
+        id: 'rapat-bulan-ini',
+        label: 'Rapat Bulan Ini',
+        value: thisMonthMeetings,
+        unit: 'Agenda',
+        badgeText: `${approvedMeetings} Disetujui`,
+        badgeSubtext: 'Bulan Ini',
+        variant: 'default',
+        iconName: 'calendar_month',
+      },
+      {
+        id: 'tindak-lanjut-aktif',
+        label: 'Menunggu Review',
+        value: reviewMeetings,
+        unit: 'Review',
+        badgeText: 'Menunggu Persetujuan',
+        badgeSubtext: '(Review)',
+        variant: 'default',
+        iconName: 'pending_actions',
+      },
+      {
+        id: 'perlu-atensi',
+        label: 'Rapat Draft',
+        value: draftMeetings,
+        unit: 'Draft',
+        badgeText: 'Perlu Difinalisasi',
+        badgeSubtext: 'Biro Terkait',
+        variant: draftMeetings > 0 ? 'danger' : 'default',
+        iconName: 'warning',
+      },
+      {
+        id: 'tindak-lanjut-selesai',
+        label: 'Rapat Disetujui & Final',
+        value: approvedMeetings + finalMeetings,
+        unit: 'Selesai',
+        badgeText: `${totalMeetings > 0 ? Math.round(((approvedMeetings + finalMeetings) / totalMeetings) * 100) : 0}%`,
+        badgeSubtext: 'Tingkat Penyelesaian',
+        variant: 'success',
+        iconName: 'task_alt',
+      },
+    ];
+
     return {
       totalMeetings,
       totalUsers,
@@ -188,7 +252,9 @@ export async function getDashboardStats() {
       approvedMeetings,
       reviewMeetings,
       draftMeetings,
+      finalMeetings,
       bureauWorkload,
+      metrics,
     };
   } catch (error) {
     console.error('Error calculating dashboard stats from Neon DB:', error);

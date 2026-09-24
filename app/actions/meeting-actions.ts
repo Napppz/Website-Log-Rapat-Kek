@@ -82,3 +82,51 @@ export async function createMeetingAction(input: CreateMeetingInput) {
     return { success: false, error: error?.message || 'Gagal membuat rapat' };
   }
 }
+
+/**
+ * Server action to update meeting status (DRAFT, REVIEW, APPROVED, FINAL)
+ */
+export async function updateMeetingStatusAction(meetingId: string, status: MeetingStatus) {
+  try {
+    const updated = await prisma.meeting.update({
+      where: { id: meetingId },
+      data: { status },
+      include: { primaryBiro: true },
+    });
+
+    revalidatePath('/');
+    revalidatePath('/semua-rapat');
+    if (updated.primaryBiro?.code) {
+      revalidatePath(`/biro/${updated.primaryBiro.code.toLowerCase()}`);
+    }
+
+    return { success: true, data: updated };
+  } catch (error: any) {
+    console.error('Error updating meeting status:', error);
+    return { success: false, error: error?.message || 'Gagal memperbarui status rapat' };
+  }
+}
+
+/**
+ * Server action to delete meeting from Neon database
+ */
+export async function deleteMeetingAction(meetingId: string) {
+  try {
+    const deleted = await prisma.meeting.delete({
+      where: { id: meetingId },
+      include: { primaryBiro: true },
+    });
+
+    revalidatePath('/');
+    revalidatePath('/semua-rapat');
+    if (deleted.primaryBiro?.code) {
+      revalidatePath(`/biro/${deleted.primaryBiro.code.toLowerCase()}`);
+    }
+
+    return { success: true, data: deleted };
+  } catch (error: any) {
+    console.error('Error deleting meeting:', error);
+    return { success: false, error: error?.message || 'Gagal menghapus rapat' };
+  }
+}
+
