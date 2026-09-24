@@ -21,7 +21,13 @@ export default async function MeetingDetailPage({ params }: MeetingDetailPagePro
       orderBy: { code: 'asc' },
     }),
     prisma.user.findMany({
-      select: { id: true, name: true, email: true, biroId: true },
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        biroId: true,
+        biro: { select: { id: true, code: true, name: true, shortName: true } },
+      },
       orderBy: { name: 'asc' },
     }),
   ]);
