@@ -38,7 +38,8 @@ export default function BuatRapatPage() {
 
       if (res.success && res.data) {
         alert(`Rapat "${title}" berhasil dijadwalkan dengan nomor resmi: ${res.data.meetingNumber}`);
-        router.push('/semua-rapat');
+        router.refresh();
+        window.location.href = '/semua-rapat';
       } else {
         alert(res.error || 'Gagal membuat rapat');
         setIsSubmitted(false);

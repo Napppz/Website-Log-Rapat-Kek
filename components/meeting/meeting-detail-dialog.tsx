@@ -1,8 +1,8 @@
 'use client';
 
-import React, { useEffect } from 'react';
-import { X, Calendar, Clock, MapPin, Building2, Users, FileText, CheckCircle2 } from 'lucide-react';
-import { Meeting } from '@/lib/types';
+import React, { useEffect, useState } from 'react';
+import { X, Calendar, Clock, MapPin, Building2, Users, FileText, CheckCircle2, Trash2, Check, AlertCircle } from 'lucide-react';
+import { Meeting, MeetingStatus } from '@/lib/types';
 import { MeetingStatusBadge } from './meeting-status-badge';
 import { ActionItemProgress } from '../action-items/action-item-progress';
 
@@ -10,13 +10,18 @@ interface MeetingDetailDialogProps {
   meeting: Meeting | null;
   onClose: () => void;
   onDownloadPdf?: (meeting: Meeting) => void;
+  onMeetingUpdated?: () => void;
 }
 
 export function MeetingDetailDialog({
   meeting,
   onClose,
   onDownloadPdf,
+  onMeetingUpdated,
 }: MeetingDetailDialogProps) {
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [isUpdatingStatus, setIsUpdatingStatus] = useState(false);
+
   // Close on Escape key
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -31,6 +36,50 @@ export function MeetingDetailDialog({
   }, [meeting, onClose]);
 
   if (!meeting) return null;
+
+  const handleDelete = async () => {
+    if (!confirm(`Apakah Anda yakin ingin menghapus rapat "${meeting.code} - ${meeting.title}" dari database?`)) {
+      return;
+    }
+
+    try {
+      setIsDeleting(true);
+      const { deleteMeetingAction } = await import('@/app/actions/meeting-actions');
+      const res = await deleteMeetingAction(meeting.id);
+      if (res.success) {
+        alert(`Rapat ${meeting.code} berhasil dihapus dari Neon DB.`);
+        onClose();
+        if (onMeetingUpdated) onMeetingUpdated();
+        window.location.reload();
+      } else {
+        alert(res.error || 'Gagal menghapus rapat');
+      }
+    } catch (err: any) {
+      alert(`Terjadi kesalahan: ${err?.message || 'Gagal menghapus'}`);
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
+  const handleStatusChange = async (newStatus: MeetingStatus) => {
+    try {
+      setIsUpdatingStatus(true);
+      const { updateMeetingStatusAction } = await import('@/app/actions/meeting-actions');
+      const res = await updateMeetingStatusAction(meeting.id, newStatus);
+      if (res.success) {
+        alert(`Status rapat ${meeting.code} berhasil diubah ke ${newStatus}.`);
+        onClose();
+        if (onMeetingUpdated) onMeetingUpdated();
+        window.location.reload();
+      } else {
+        alert(res.error || 'Gagal memperbarui status');
+      }
+    } catch (err: any) {
+      alert(`Terjadi kesalahan: ${err?.message || 'Gagal memperbarui status'}`);
+    } finally {
+      setIsUpdatingStatus(false);
+    }
+  };
 
   return (
     <div
@@ -60,62 +109,96 @@ export function MeetingDetailDialog({
         </div>
 
         {/* Modal Body */}
-        <div className="p-6 overflow-y-auto space-y-5">
+        <div className="p-6 overflow-y-auto space-y-6 text-[13px]">
           {/* Title */}
           <div>
-            <h3 className="font-bold text-[18px] text-slate-900 leading-snug">
+            <span className="text-[11px] font-bold text-amber-700 uppercase tracking-wider">
+              Agenda Pembahasan
+            </span>
+            <h3 className="text-[20px] font-bold text-slate-900 mt-1 leading-snug">
               {meeting.title}
             </h3>
           </div>
 
           {/* Quick Info Grid */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 p-4 bg-amber-50/50 rounded-xl border border-amber-100 text-[13px]">
-            <div className="flex items-center gap-2.5 text-slate-700">
-              <Calendar className="w-4 h-4 text-amber-600 shrink-0" />
-              <span>{meeting.date}</span>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-4 bg-slate-50/80 rounded-xl border border-amber-100">
+            <div className="flex items-center gap-3">
+              <Calendar className="w-5 h-5 text-amber-600 shrink-0" />
+              <div>
+                <p className="text-[11px] text-slate-400 font-semibold uppercase">Tanggal Pelaksanaan</p>
+                <p className="font-bold text-slate-800">{meeting.date}</p>
+              </div>
             </div>
-            <div className="flex items-center gap-2.5 text-slate-700">
-              <Clock className="w-4 h-4 text-amber-600 shrink-0" />
-              <span>{meeting.time}</span>
+
+            <div className="flex items-center gap-3">
+              <Clock className="w-5 h-5 text-amber-600 shrink-0" />
+              <div>
+                <p className="text-[11px] text-slate-400 font-semibold uppercase">Waktu Sesi</p>
+                <p className="font-bold text-slate-800">{meeting.time}</p>
+              </div>
             </div>
-            <div className="flex items-center gap-2.5 text-slate-700 sm:col-span-2">
-              <MapPin className="w-4 h-4 text-amber-600 shrink-0" />
-              <span>{meeting.location}</span>
+
+            <div className="flex items-center gap-3">
+              <Building2 className="w-5 h-5 text-amber-600 shrink-0" />
+              <div>
+                <p className="text-[11px] text-slate-400 font-semibold uppercase">Biro Utama Penyelenggara</p>
+                <p className="font-bold text-slate-800">
+                  {meeting.biroCode} — {meeting.biroName}
+                </p>
+              </div>
             </div>
-            <div className="flex items-center gap-2.5 text-slate-700 sm:col-span-2">
-              <Building2 className="w-4 h-4 text-amber-600 shrink-0" />
-              <span className="font-semibold text-amber-800">{meeting.biroName}</span>
+
+            <div className="flex items-center gap-3">
+              <MapPin className="w-5 h-5 text-amber-600 shrink-0" />
+              <div>
+                <p className="text-[11px] text-slate-400 font-semibold uppercase">Lokasi / Media</p>
+                <p className="font-bold text-slate-800 line-clamp-1">{meeting.location}</p>
+              </div>
             </div>
           </div>
 
-          {/* Agenda Summary */}
-          {meeting.agendaSummary && (
+          {/* Status Change (CRUD Update) */}
+          <div className="p-3.5 bg-amber-50/50 rounded-xl border border-amber-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
             <div>
-              <h4 className="text-[13px] font-bold text-slate-900 uppercase tracking-wider mb-2 flex items-center gap-2">
-                <FileText className="w-4 h-4 text-amber-600" />
-                Pokok Pembahasan &amp; Keputusan
-              </h4>
-              <p className="text-[14px] text-slate-600 leading-relaxed bg-slate-50 p-3.5 rounded-lg border border-slate-200">
-                {meeting.agendaSummary}
-              </p>
+              <span className="text-[12px] font-bold text-slate-900 block">Ubah Status Risalah (Update CRUD)</span>
+              <span className="text-[11px] text-slate-500">Status saat ini: <strong>{meeting.status}</strong></span>
             </div>
-          )}
+            <div className="flex flex-wrap items-center gap-1.5">
+              {(['DRAFT', 'REVIEW', 'APPROVED', 'FINAL'] as MeetingStatus[]).map((st) => (
+                <button
+                  key={st}
+                  type="button"
+                  disabled={meeting.status === st || isUpdatingStatus}
+                  onClick={() => handleStatusChange(st)}
+                  className={`px-2.5 py-1 rounded text-[11px] font-bold transition-all cursor-pointer ${
+                    meeting.status === st
+                      ? 'bg-amber-700 text-white shadow-xs opacity-90 cursor-default'
+                      : 'bg-white border border-amber-300 text-slate-700 hover:bg-amber-100 hover:text-amber-900'
+                  }`}
+                >
+                  {st}
+                </button>
+              ))}
+            </div>
+          </div>
 
-          {/* Attendees */}
+          {/* Attendees / Peserta */}
           {meeting.attendees && meeting.attendees.length > 0 && (
             <div>
               <h4 className="text-[13px] font-bold text-slate-900 uppercase tracking-wider mb-2 flex items-center gap-2">
                 <Users className="w-4 h-4 text-amber-600" />
-                Peserta &amp; Pemangku Kepentingan
+                Daftar Peserta Rapat
               </h4>
-              <ul className="space-y-1.5 text-[13px] text-slate-600 bg-slate-50 p-3.5 rounded-lg border border-slate-200">
-                {meeting.attendees.map((person, idx) => (
-                  <li key={idx} className="flex items-center gap-2">
-                    <span className="w-1.5 h-1.5 rounded-full bg-amber-500"></span>
-                    <span>{person}</span>
-                  </li>
+              <div className="flex flex-wrap gap-2">
+                {meeting.attendees.map((attendee, idx) => (
+                  <span
+                    key={idx}
+                    className="px-3 py-1 rounded-full bg-slate-100 border border-slate-200 text-slate-700 text-[12px] font-medium"
+                  >
+                    {attendee}
+                  </span>
                 ))}
-              </ul>
+              </div>
             </div>
           )}
 
@@ -132,23 +215,36 @@ export function MeetingDetailDialog({
         </div>
 
         {/* Modal Footer */}
-        <div className="px-6 py-3.5 bg-slate-50 border-t border-slate-200 flex items-center justify-between">
+        <div className="px-6 py-3.5 bg-slate-50 border-t border-slate-200 flex items-center justify-between gap-3">
           <button
             type="button"
-            onClick={onClose}
-            className="px-4 py-2 text-[13px] font-semibold text-slate-600 hover:text-slate-900 transition-colors cursor-pointer"
+            disabled={isDeleting}
+            onClick={handleDelete}
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-red-200 text-red-600 hover:bg-red-50 hover:border-red-300 text-[12px] font-semibold transition-colors cursor-pointer"
+            title="Hapus rapat dari database"
           >
-            Tutup
+            <Trash2 className="w-4 h-4" />
+            <span>{isDeleting ? 'Menghapus...' : 'Hapus Rapat'}</span>
           </button>
 
-          <button
-            type="button"
-            onClick={() => onDownloadPdf ? onDownloadPdf(meeting) : alert(`Mengunduh risalah resmi format PDF: ${meeting.code}`)}
-            className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-amber-600 text-white font-semibold text-[13px] hover:bg-amber-700 shadow-sm transition-all cursor-pointer"
-          >
-            <FileText className="w-4 h-4" />
-            <span>Unduh Notulen PDF</span>
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={onClose}
+              className="px-4 py-2 text-[13px] font-semibold text-slate-600 hover:text-slate-900 transition-colors cursor-pointer"
+            >
+              Tutup
+            </button>
+
+            <button
+              type="button"
+              onClick={() => onDownloadPdf ? onDownloadPdf(meeting) : alert(`Mengunduh risalah resmi format PDF: ${meeting.code}`)}
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-amber-600 text-white font-semibold text-[13px] hover:bg-amber-700 shadow-sm transition-all cursor-pointer"
+            >
+              <FileText className="w-4 h-4" />
+              <span>Unduh Notulen PDF</span>
+            </button>
+          </div>
         </div>
       </div>
     </div>

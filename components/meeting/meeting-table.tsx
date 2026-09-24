@@ -46,14 +46,13 @@ export function MeetingTable({
   React.useEffect(() => {
     if (initialMeetings) {
       setMeetings(initialMeetings);
-      return;
     }
 
     let isMounted = true;
     const loadFromDb = async () => {
       try {
         setFetching(true);
-        const res = await fetch('/api/meetings');
+        const res = await fetch('/api/meetings', { cache: 'no-store' });
         if (res.ok) {
           const data = await res.json();
           if (isMounted && Array.isArray(data) && data.length > 0) {
@@ -400,6 +399,14 @@ export function MeetingTable({
       <MeetingDetailDialog
         meeting={selectedMeeting}
         onClose={() => setSelectedMeeting(null)}
+        onMeetingUpdated={() => {
+          fetch('/api/meetings', { cache: 'no-store' })
+            .then((r) => r.json())
+            .then((data) => {
+              if (Array.isArray(data)) setMeetings(data);
+            })
+            .catch((e) => console.error(e));
+        }}
       />
     </div>
   );
