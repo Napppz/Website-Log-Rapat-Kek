@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import { User, Bell, Save } from 'lucide-react';
 import { BIRO_LIST } from '@/lib/mock-data';
+import { toast } from '@/components/providers/toast-provider';
 
 export default function PengaturanPage() {
   const [userName, setUserName] = useState('Dr. Hendra Suprayitno, M.Si');
@@ -16,9 +17,9 @@ export default function PengaturanPage() {
     e.preventDefault();
     setSaved(true);
     setTimeout(() => {
-      alert('Pengaturan profil dan sistem berhasil disimpan (Simulasi Mock).');
+      toast.success('Pengaturan profil dan preferensi sistem berhasil disimpan.');
       setSaved(false);
-    }, 500);
+    }, 400);
   };
 
   return (

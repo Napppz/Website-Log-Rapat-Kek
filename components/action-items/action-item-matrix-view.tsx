@@ -26,6 +26,7 @@ import { ActionItemStatusBadge, ActionItemPriorityBadge } from './action-item-st
 import { ActionItemFormDialog } from './action-item-form-dialog';
 import { ActionItemDeleteDialog } from './action-item-delete-dialog';
 import { updateActionItemStatusAction } from '@/app/actions/action-item-actions';
+import { toast } from '@/components/providers/toast-provider';
 
 interface ActionItemMatrixViewProps {
   initialItems: any[];
@@ -73,12 +74,12 @@ export function ActionItemMatrixView({
       const res = await fetch(url);
 
       if (res.status === 401) {
-        alert('Sesi Anda telah berakhir. Silakan masuk kembali ke sistem.');
+        toast.warning('Sesi Anda telah berakhir. Silakan masuk kembali ke sistem.');
         return;
       }
       if (!res.ok) {
         const body = await res.json().catch(() => ({}));
-        alert(`Gagal mengekspor: ${body?.error ?? 'Terjadi kesalahan server.'}`);
+        toast.error(`Gagal mengekspor: ${body?.error ?? 'Terjadi kesalahan server.'}`);
         return;
       }
 
@@ -92,8 +93,9 @@ export function ActionItemMatrixView({
       anchor.download = filename;
       anchor.click();
       URL.revokeObjectURL(anchor.href);
+      toast.success(`Matriks Tindak Lanjut "${filename}" berhasil diekspor.`);
     } catch (err: any) {
-      alert(`Terjadi kesalahan saat mengekspor: ${err?.message ?? 'Error tidak diketahui'}`);
+      toast.error(`Terjadi kesalahan saat mengekspor: ${err?.message ?? 'Error tidak diketahui'}`);
     } finally {
       setIsExporting(false);
     }
@@ -147,12 +149,19 @@ export function ActionItemMatrixView({
         setItems((prev) =>
           prev.map((it) => (it.id === itemId ? { ...it, ...res.data } : it))
         );
+        toast.success(
+          newStatus === 'COMPLETED'
+            ? 'Status tindak lanjut diperbarui: Selesai.'
+            : newStatus === 'IN_PROGRESS'
+            ? 'Status tindak lanjut diperbarui: Sedang Berjalan.'
+            : 'Status tindak lanjut diperbarui: Belum Dimulai.'
+        );
         router.refresh();
       } else {
-        alert(res.error || 'Gagal mengubah status tindak lanjut.');
+        toast.error(res.error || 'Gagal mengubah status tindak lanjut.');
       }
     } catch (err: any) {
-      alert(`Terjadi kesalahan: ${err?.message || 'Gagal'}`);
+      toast.error(`Terjadi kesalahan: ${err?.message || 'Gagal'}`);
     } finally {
       setUpdatingStatusId(null);
     }

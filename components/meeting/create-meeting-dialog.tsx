@@ -5,6 +5,8 @@ import { X, Calendar, Clock, MapPin, Building2, Plus } from 'lucide-react';
 import { BIRO_LIST } from '@/lib/mock-data';
 import { BiroCode } from '@/lib/types';
 import { useSession } from 'next-auth/react';
+import { useRouter } from 'next/navigation';
+import { toast } from '@/components/providers/toast-provider';
 
 interface CreateMeetingDialogProps {
   isOpen: boolean;
@@ -13,6 +15,7 @@ interface CreateMeetingDialogProps {
 }
 
 export function CreateMeetingDialog({ isOpen, onClose, onSuccess }: CreateMeetingDialogProps) {
+  const router = useRouter();
   const { data: session } = useSession();
   const userRole = session?.user?.role || 'VIEWER';
   const canCreate = userRole === 'SUPER_ADMIN' || userRole === 'ADMIN' || userRole === 'NOTULIS';
@@ -36,9 +39,9 @@ export function CreateMeetingDialog({ isOpen, onClose, onSuccess }: CreateMeetin
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [isOpen, onClose]);
 
-  if (!isOpen || !canCreate) return null;
-
   const [submitting, setSubmitting] = useState(false);
+
+  if (!isOpen || !canCreate) return null;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -59,16 +62,16 @@ export function CreateMeetingDialog({ isOpen, onClose, onSuccess }: CreateMeetin
       });
 
       if (res.success && res.data) {
-        alert(`Rapat "${title}" berhasil disimpan di Neon DB dengan nomor otomatis: ${res.data.meetingNumber}`);
+        toast.success(`Rapat "${title}" (${res.data.meetingNumber}) berhasil disimpan ke database.`);
         setTitle('');
         if (onSuccess) onSuccess();
         onClose();
-        window.location.reload();
+        router.refresh();
       } else {
-        alert(res.error || 'Gagal membuat rapat');
+        toast.error(res.error || 'Gagal membuat rapat');
       }
     } catch (err: any) {
-      alert(`Terjadi kesalahan: ${err?.message || 'Gagal menyimpan rapat'}`);
+      toast.error(err?.message || 'Gagal menyimpan rapat');
     } finally {
       setSubmitting(false);
     }

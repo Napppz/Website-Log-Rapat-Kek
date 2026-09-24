@@ -2,6 +2,7 @@
 
 import React from 'react';
 import { CheckCircle, AlertTriangle, Clock, Info } from 'lucide-react';
+import { toast } from '@/components/providers/toast-provider';
 
 export default function NotifikasiPage() {
   const notifs = [
@@ -50,8 +51,8 @@ export default function NotifikasiPage() {
 
         <button
           type="button"
-          onClick={() => alert('Semua notifikasi telah ditandai dibaca.')}
-          className="px-3.5 py-1.5 rounded-lg border border-amber-200 bg-white hover:bg-amber-50 text-slate-700 text-[12px] font-semibold transition-colors"
+          onClick={() => toast.success('Semua notifikasi telah ditandai dibaca.')}
+          className="px-3.5 py-1.5 rounded-lg border border-amber-200 bg-white hover:bg-amber-50 text-slate-700 text-[12px] font-semibold transition-colors cursor-pointer"
         >
           Tandai Semua Dibaca
         </button>

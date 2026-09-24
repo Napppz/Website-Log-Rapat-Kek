@@ -42,6 +42,7 @@ import {
   removeParticipantFromMeetingAction,
 } from '@/app/actions/meeting-actions';
 import { useSession } from 'next-auth/react';
+import { toast, confirmModal } from '@/components/providers/toast-provider';
 
 interface MeetingDetailViewProps {
   meeting: any;
@@ -122,13 +123,9 @@ export function MeetingDetailView({
   const [customBiroId, setCustomBiroId] = useState<string>(meeting.primaryBiroId || '');
   const [newParticipantStatus, setNewParticipantStatus] = useState<AttendanceStatus>('PRESENT');
   const [isAddingParticipant, setIsAddingParticipant] = useState<boolean>(false);
-  const [toastMessage, setToastMessage] = useState<string | null>(null);
 
   const showToast = (message: string) => {
-    setToastMessage(message);
-    setTimeout(() => {
-      setToastMessage(null);
-    }, 3500);
+    toast.success(message);
   };
 
   const handleExportPdf = async () => {
@@ -148,8 +145,9 @@ export function MeetingDetailView({
       link.click();
       window.URL.revokeObjectURL(url);
       document.body.removeChild(link);
+      toast.success(`Risalah rapat ${meeting.meetingNumber} berhasil diunduh (PDF).`);
     } catch (err: any) {
-      alert(err?.message || 'Terjadi kesalahan saat mengekspor PDF.');
+      toast.error(err?.message || 'Terjadi kesalahan saat mengekspor PDF.');
     } finally {
       setIsExporting(false);
     }
@@ -168,24 +166,27 @@ export function MeetingDetailView({
       const res = await updateMeetingStatusAction(meeting.id, newStatus);
       if (res.success) {
         setStatus(newStatus);
-        showToast(`Status rapat ${meeting.meetingNumber} berhasil diperbarui ke ${newStatus}.`);
+        toast.success(`Status rapat ${meeting.meetingNumber} berhasil diperbarui ke ${newStatus}.`);
         router.refresh();
       } else {
-        alert(res.error || 'Gagal mengubah status');
+        toast.error(res.error || 'Gagal mengubah status');
       }
     } catch (err: any) {
-      alert(`Terjadi kesalahan: ${err?.message || 'Gagal'}`);
+      toast.error(`Terjadi kesalahan: ${err?.message || 'Gagal'}`);
     } finally {
       setIsUpdatingStatus(false);
     }
   };
 
   const handleDelete = async () => {
-    if (
-      !confirm(
-        `Apakah Anda yakin ingin menghapus permanen rapat "${meeting.meetingNumber} - ${meeting.title}" beserta seluruh notulennya?`
-      )
-    ) {
+    const confirmed = await confirmModal({
+      title: `Hapus Rapat ${meeting.meetingNumber}?`,
+      message: `Apakah Anda yakin ingin menghapus permanen rapat "${meeting.title}" beserta seluruh notulen dan butir tindak lanjutnya dari database?`,
+      confirmText: 'Ya, Hapus Rapat',
+      variant: 'danger',
+    });
+
+    if (!confirmed) {
       return;
     }
 
@@ -193,13 +194,13 @@ export function MeetingDetailView({
       setIsDeleting(true);
       const res = await deleteMeetingAction(meeting.id);
       if (res.success) {
-        alert(`Rapat ${meeting.meetingNumber} berhasil dihapus dari Neon DB.`);
+        toast.success(`Rapat ${meeting.meetingNumber} berhasil dihapus dari database.`);
         router.push('/semua-rapat');
       } else {
-        alert(res.error || 'Gagal menghapus rapat');
+        toast.error(res.error || 'Gagal menghapus rapat');
       }
     } catch (err: any) {
-      alert(`Terjadi kesalahan: ${err?.message || 'Gagal'}`);
+      toast.error(`Terjadi kesalahan: ${err?.message || 'Gagal menghapus rapat'}`);
     } finally {
       setIsDeleting(false);
     }
@@ -221,15 +222,15 @@ export function MeetingDetailView({
       const res = await updateParticipantAttendanceAction(participantId, newStatus);
       if (res.success) {
         const label = ATTENDANCE_OPTIONS.find((o) => o.value === newStatus)?.label || newStatus;
-        showToast(`Presensi "${userName}" diubah menjadi "${label}".`);
+        toast.success(`Presensi "${userName}" diubah menjadi "${label}".`);
         router.refresh();
       } else {
         setParticipants(prevParticipants);
-        alert(res.error || 'Gagal mengubah status kehadiran.');
+        toast.error(res.error || 'Gagal mengubah status kehadiran.');
       }
     } catch (err: any) {
       setParticipants(prevParticipants);
-      alert(err?.message || 'Terjadi kesalahan sistem saat memperbarui presensi.');
+      toast.error(err?.message || 'Terjadi kesalahan sistem saat memperbarui presensi.');
     } finally {
       setUpdatingParticipantId(null);
     }
@@ -238,15 +239,18 @@ export function MeetingDetailView({
   const handleMarkAllPresent = async () => {
     const notPresent = participants.filter((p) => p.attendanceStatus !== 'PRESENT');
     if (notPresent.length === 0) {
-      alert('Semua peserta sidang sudah berstatus "Hadir".');
+      toast.info('Semua peserta sidang sudah berstatus "Hadir".');
       return;
     }
 
-    if (
-      !confirm(
-        `Tandai ${notPresent.length} peserta yang belum hadir sebagai "Hadir"?`
-      )
-    ) {
+    const confirmed = await confirmModal({
+      title: 'Tandai Semua Hadir?',
+      message: `Tandai ${notPresent.length} peserta yang belum hadir sebagai "Hadir"?`,
+      confirmText: 'Ya, Tandai Hadir',
+      variant: 'primary',
+    });
+
+    if (!confirmed) {
       return;
     }
 
@@ -258,17 +262,24 @@ export function MeetingDetailView({
       setParticipants((prev) =>
         prev.map((p) => ({ ...p, attendanceStatus: 'PRESENT' as AttendanceStatus }))
       );
-      showToast(`Berhasil menandai ${notPresent.length} peserta sebagai "Hadir".`);
+      toast.success(`Berhasil menandai ${notPresent.length} peserta sebagai "Hadir".`);
       router.refresh();
     } catch (err: any) {
-      alert(err?.message || 'Terjadi kesalahan saat memperbarui presensi massal.');
+      toast.error(err?.message || 'Terjadi kesalahan saat memperbarui presensi massal.');
     } finally {
       setIsBulkUpdating(false);
     }
   };
 
   const handleRemoveParticipant = async (participantId: string, userName: string) => {
-    if (!confirm(`Hapus "${userName}" dari daftar peserta sidang ini?`)) {
+    const confirmed = await confirmModal({
+      title: 'Hapus Peserta Sidang?',
+      message: `Hapus "${userName}" dari daftar peserta sidang ini?`,
+      confirmText: 'Hapus Peserta',
+      variant: 'danger',
+    });
+
+    if (!confirmed) {
       return;
     }
 
@@ -279,15 +290,15 @@ export function MeetingDetailView({
     try {
       const res = await removeParticipantFromMeetingAction(participantId);
       if (res.success) {
-        showToast(`Peserta "${userName}" berhasil dihapus dari daftar sidang.`);
+        toast.success(`Peserta "${userName}" berhasil dihapus dari daftar sidang.`);
         router.refresh();
       } else {
         setParticipants(prev);
-        alert(res.error || 'Gagal menghapus peserta.');
+        toast.error(res.error || 'Gagal menghapus peserta.');
       }
     } catch (err: any) {
       setParticipants(prev);
-      alert(err?.message || 'Terjadi kesalahan saat menghapus peserta.');
+      toast.error(err?.message || 'Terjadi kesalahan saat menghapus peserta.');
     } finally {
       setUpdatingParticipantId(null);
     }
@@ -296,11 +307,11 @@ export function MeetingDetailView({
   const handleAddParticipant = async (e: React.FormEvent) => {
     e.preventDefault();
     if (participantMode === 'registered' && !selectedAddUserId) {
-      alert('Silakan pilih peserta yang ingin ditambahkan.');
+      toast.warning('Silakan pilih peserta yang ingin ditambahkan.');
       return;
     }
     if (participantMode === 'unregistered' && !customName.trim()) {
-      alert('Silakan masukkan nama lengkap pejabat / peserta.');
+      toast.warning('Silakan masukkan nama lengkap pejabat / peserta.');
       return;
     }
 
@@ -328,17 +339,17 @@ export function MeetingDetailView({
           }
           return [...prev, res.data];
         });
-        showToast(`Peserta "${res.data.user?.name}" berhasil ditambahkan ke rapat.`);
+        toast.success(`Peserta "${res.data.user?.name}" berhasil ditambahkan ke rapat.`);
         setShowAddModal(false);
         setSelectedAddUserId('');
         setCustomName('');
         setCustomEmail('');
         router.refresh();
       } else {
-        alert(res.error || 'Gagal menambahkan peserta.');
+        toast.error(res.error || 'Gagal menambahkan peserta.');
       }
     } catch (err: any) {
-      alert(err?.message || 'Terjadi kesalahan saat menambahkan peserta.');
+      toast.error(err?.message || 'Terjadi kesalahan saat menambahkan peserta.');
     } finally {
       setIsAddingParticipant(false);
     }
@@ -358,14 +369,6 @@ export function MeetingDetailView({
 
   return (
     <div className="flex flex-col gap-6 max-w-5xl mx-auto">
-      {/* Toast Notification */}
-      {toastMessage && (
-        <div className="fixed bottom-6 right-6 z-50 bg-slate-900 text-white text-[13px] px-4 py-2.5 rounded-xl shadow-xl flex items-center gap-2.5 border border-slate-700 animate-in fade-in slide-in-from-bottom-3">
-          <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
-          <span>{toastMessage}</span>
-        </div>
-      )}
-
       {/* Breadcrumb & Navigation */}
       <div className="flex items-center justify-between">
         <Link

@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import { CalendarDays, Download, PlusCircle, Loader2, Sparkles, Building2 } from 'lucide-react';
 import { useSession } from 'next-auth/react';
+import { toast } from '@/components/providers/toast-provider';
 
 interface WelcomeBannerProps {
   onDownloadExecutiveSummary?: () => void;
@@ -76,8 +77,9 @@ export function WelcomeBanner({
       link.click();
       window.URL.revokeObjectURL(url);
       document.body.removeChild(link);
+      toast.success('Laporan Ringkasan Eksekutif PDF berhasil diunduh.');
     } catch (e: any) {
-      alert(e?.message || 'Terjadi kesalahan saat mengunduh dokumen.');
+      toast.error(e?.message || 'Terjadi kesalahan saat mengunduh dokumen.');
     } finally {
       setIsDownloading(false);
     }

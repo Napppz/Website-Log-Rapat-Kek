@@ -24,6 +24,7 @@ import { BiroCode } from '@/lib/types';
 import Link from 'next/link';
 import { useSession } from 'next-auth/react';
 import { getActiveUsersAction, createMeetingAction } from '@/app/actions/meeting-actions';
+import { toast } from '@/components/providers/toast-provider';
 
 interface AvailableUser {
   id: string;
@@ -183,13 +184,14 @@ export default function BuatRapatPage() {
       });
 
       if (res.success && res.data) {
-        alert(
-          `Rapat "${title}" berhasil dijadwalkan dengan nomor resmi: ${res.data.meetingNumber} dan ${res.data.participantCount || 0} peserta terdaftar!`
+        toast.success(
+          `Rapat "${title}" (${res.data.meetingNumber}) berhasil dijadwalkan dengan ${res.data.participantCount || 0} peserta terdaftar!`
         );
         router.refresh();
-        window.location.href = `/semua-rapat/${res.data.id}`;
+        router.push(`/semua-rapat/${res.data.id}`);
       } else {
         setErrorMessage(res.error || 'Gagal membuat rapat');
+        toast.error(res.error || 'Gagal membuat rapat');
         setIsSubmitted(false);
       }
     } catch (err: any) {
