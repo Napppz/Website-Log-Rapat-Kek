@@ -1,4 +1,4 @@
-import { Prisma, PrismaClient } from '@prisma/client';
+import { Prisma } from '@prisma/client';
 import { prisma } from './prisma';
 
 export interface NextMeetingNumberResult {
@@ -12,8 +12,11 @@ export interface NextMeetingNumberResult {
  * Safely generates the next sequential meeting number for a given Biro using an atomic Prisma transaction.
  * Format: {BIRO_CODE}-{001} (e.g. BPPK-001, PKKEK-002, IKK-013)
  * 
- * Never uses COUNT(meeting) + 1.
- * Uses atomic upsert / increment on BiroMeetingSequence to guarantee concurrency safety and zero duplicate numbers.
+ * Never produces duplicate numbers:
+ * 1. Checks max existing number in Meeting table.
+ * 2. Uses atomic upsert / increment on BiroMeetingSequence.
+ * 3. Bumps past any existing numbers if sequence was desynchronized.
+ * 4. Verifies uniqueness against Meeting table before returning.
  */
 export async function getNextMeetingNumber(
   biroCode: string,
@@ -29,12 +32,34 @@ export async function getNextMeetingNumber(
       throw new Error(`Biro resmi dengan kode "${biroCode}" tidak ditemukan.`);
     }
 
-    // 2. Safely increment sequence or initialize if first meeting
-    const sequence = await tx.biroMeetingSequence.upsert({
+    // 2. Find max existing meeting number for this biro in the Meeting table
+    const existingMeetings = await tx.meeting.findMany({
+      where: {
+        OR: [
+          { primaryBiroId: biro.id },
+          { meetingNumber: { startsWith: `${biro.code}-` } },
+        ],
+      },
+      select: { meetingNumber: true },
+    });
+
+    let maxExistingNum = 0;
+    for (const m of existingMeetings) {
+      const match = m.meetingNumber.match(new RegExp(`^${biro.code}-(\\d+)$`, 'i'));
+      if (match) {
+        const num = parseInt(match[1], 10);
+        if (!isNaN(num) && num > maxExistingNum) {
+          maxExistingNum = num;
+        }
+      }
+    }
+
+    // 3. Atomically increment sequence or initialize if first meeting
+    let sequence = await tx.biroMeetingSequence.upsert({
       where: { biroId: biro.id },
       create: {
         biroId: biro.id,
-        currentNumber: 1,
+        currentNumber: maxExistingNum + 1,
       },
       update: {
         currentNumber: {
@@ -42,6 +67,26 @@ export async function getNextMeetingNumber(
         },
       },
     });
+
+    // If the sequence was behind maxExistingNum, bump it past maxExistingNum
+    if (sequence.currentNumber <= maxExistingNum) {
+      sequence = await tx.biroMeetingSequence.update({
+        where: { biroId: biro.id },
+        data: { currentNumber: maxExistingNum + 1 },
+      });
+    }
+
+    // Safety loop to ensure uniqueness even if there were gaps or existing records
+    while (
+      await tx.meeting.findUnique({
+        where: { meetingNumber: `${biro.code}-${String(sequence.currentNumber).padStart(3, '0')}` },
+      })
+    ) {
+      sequence = await tx.biroMeetingSequence.update({
+        where: { biroId: biro.id },
+        data: { currentNumber: { increment: 1 } },
+      });
+    }
 
     const paddedNumber = String(sequence.currentNumber).padStart(3, '0');
     const meetingNumber = `${biro.code}-${paddedNumber}`;
