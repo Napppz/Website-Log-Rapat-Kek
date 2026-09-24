@@ -115,7 +115,11 @@ export function MeetingDetailView({
   const [updatingParticipantId, setUpdatingParticipantId] = useState<string | null>(null);
   const [isBulkUpdating, setIsBulkUpdating] = useState<boolean>(false);
   const [showAddModal, setShowAddModal] = useState<boolean>(false);
+  const [participantMode, setParticipantMode] = useState<'registered' | 'unregistered'>('registered');
   const [selectedAddUserId, setSelectedAddUserId] = useState<string>('');
+  const [customName, setCustomName] = useState<string>('');
+  const [customEmail, setCustomEmail] = useState<string>('');
+  const [customBiroId, setCustomBiroId] = useState<string>(meeting.primaryBiroId || '');
   const [newParticipantStatus, setNewParticipantStatus] = useState<AttendanceStatus>('PRESENT');
   const [isAddingParticipant, setIsAddingParticipant] = useState<boolean>(false);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
@@ -291,29 +295,44 @@ export function MeetingDetailView({
 
   const handleAddParticipant = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!selectedAddUserId) {
+    if (participantMode === 'registered' && !selectedAddUserId) {
       alert('Silakan pilih peserta yang ingin ditambahkan.');
+      return;
+    }
+    if (participantMode === 'unregistered' && !customName.trim()) {
+      alert('Silakan masukkan nama lengkap pejabat / peserta.');
       return;
     }
 
     setIsAddingParticipant(true);
     try {
-      const res = await addParticipantToMeetingAction(
-        meeting.id,
-        selectedAddUserId,
-        newParticipantStatus
-      );
+      const payload =
+        participantMode === 'registered'
+          ? {
+              userId: selectedAddUserId,
+              attendanceStatus: newParticipantStatus,
+            }
+          : {
+              customName: customName.trim(),
+              customEmail: customEmail.trim() || undefined,
+              biroId: customBiroId || meeting.primaryBiroId,
+              attendanceStatus: newParticipantStatus,
+            };
+
+      const res = await addParticipantToMeetingAction(meeting.id, payload);
       if (res.success && res.data) {
         setParticipants((prev) => {
-          const exists = prev.some((p) => p.userId === selectedAddUserId);
+          const exists = prev.some((p) => p.userId === res.data.userId);
           if (exists) {
-            return prev.map((p) => (p.userId === selectedAddUserId ? res.data : p));
+            return prev.map((p) => (p.userId === res.data.userId ? res.data : p));
           }
           return [...prev, res.data];
         });
-        showToast('Peserta berhasil ditambahkan ke daftar sidang.');
+        showToast(`Peserta "${res.data.user?.name}" berhasil ditambahkan ke rapat.`);
         setShowAddModal(false);
         setSelectedAddUserId('');
+        setCustomName('');
+        setCustomEmail('');
         router.refresh();
       } else {
         alert(res.error || 'Gagal menambahkan peserta.');
@@ -886,34 +905,121 @@ export function MeetingDetailView({
               </button>
             </div>
 
+            {/* Mode Switcher Tabs */}
+            <div className="grid grid-cols-2 p-1.5 bg-slate-100 border-b border-slate-200 text-[12px] font-bold">
+              <button
+                type="button"
+                onClick={() => setParticipantMode('registered')}
+                className={`py-2 px-3 rounded-lg transition-all cursor-pointer ${
+                  participantMode === 'registered'
+                    ? 'bg-white text-amber-900 shadow-xs border border-slate-200/80'
+                    : 'text-slate-600 hover:text-slate-900'
+                }`}
+              >
+                Pegawai Terdaftar
+              </button>
+              <button
+                type="button"
+                onClick={() => setParticipantMode('unregistered')}
+                className={`py-2 px-3 rounded-lg transition-all cursor-pointer ${
+                  participantMode === 'unregistered'
+                    ? 'bg-white text-amber-900 shadow-xs border border-slate-200/80'
+                    : 'text-slate-600 hover:text-slate-900'
+                }`}
+              >
+                Pejabat Baru / Eksternal
+              </button>
+            </div>
+
             <form onSubmit={handleAddParticipant} className="p-6 space-y-4 text-[13px]">
-              {/* Select User */}
-              <div className="space-y-1.5">
-                <label className="font-bold text-slate-800 block text-[12px]">
-                  Pilih Pegawai / Pejabat Peserta <span className="text-red-500">*</span>
-                </label>
-                <select
-                  required
-                  value={selectedAddUserId}
-                  onChange={(e) => setSelectedAddUserId(e.target.value)}
-                  className="w-full px-3 py-2 rounded-xl border border-slate-300 focus:border-amber-600 focus:ring-1 focus:ring-amber-600 bg-white text-slate-800 text-[13px] outline-none"
-                >
-                  <option value="">-- Pilih Pegawai dari Daftar Database --</option>
-                  {unaddedUsers.map((u: any) => (
-                    <option key={u.id} value={u.id}>
-                      {u.name} ({u.biro?.code || 'KEK'}) — {u.email}
-                    </option>
-                  ))}
-                </select>
-                {unaddedUsers.length === 0 && (
-                  <p className="text-[11px] text-amber-700 italic">
-                    Semua pengguna terdaftar sudah masuk dalam daftar peserta.
+              {participantMode === 'registered' ? (
+                /* Mode 1: Select Registered User */
+                <div className="space-y-1.5">
+                  <label className="font-bold text-slate-800 block text-[12px]">
+                    Pilih Pegawai dari Database <span className="text-red-500">*</span>
+                  </label>
+                  <select
+                    required
+                    value={selectedAddUserId}
+                    onChange={(e) => setSelectedAddUserId(e.target.value)}
+                    className="w-full px-3 py-2 rounded-xl border border-slate-300 focus:border-amber-600 focus:ring-1 focus:ring-amber-600 bg-white text-slate-800 text-[13px] outline-none"
+                  >
+                    <option value="">-- Pilih Pegawai dari Daftar Database --</option>
+                    {unaddedUsers.map((u: any) => (
+                      <option key={u.id} value={u.id}>
+                        {u.name} ({u.biro?.code || 'KEK'}) — {u.email}
+                      </option>
+                    ))}
+                  </select>
+                  {unaddedUsers.length === 0 && (
+                    <p className="text-[11px] text-amber-700 italic">
+                      Semua pengguna terdaftar sudah masuk dalam daftar peserta.
+                    </p>
+                  )}
+                </div>
+              ) : (
+                /* Mode 2: Unregistered Official / External Guest */
+                <div className="space-y-3">
+                  <div className="p-2.5 bg-blue-50 border border-blue-200 rounded-xl text-[11.5px] text-blue-900 flex items-start gap-2">
+                    <Info className="w-4 h-4 text-blue-600 shrink-0 mt-0.5" />
+                    <span>
+                      Gunakan opsi ini untuk pejabat kementerian/lembaga lain, kepala daerah, narasumber, atau tamu eksternal yang belum memiliki akun login di SIM-RAPAT KEK.
+                    </span>
+                  </div>
+
+                  <div className="space-y-1">
+                    <label className="font-bold text-slate-800 block text-[12px]">
+                      Nama Lengkap, Gelar &amp; Jabatan <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="text"
+                      required
+                      placeholder="Contoh: Dr. Ir. Budi Santoso, M.Sc. (Deputi Kemenko)"
+                      value={customName}
+                      onChange={(e) => setCustomName(e.target.value)}
+                      className="w-full px-3 py-2 rounded-xl border border-slate-300 focus:border-amber-600 focus:ring-1 focus:ring-amber-600 bg-white text-slate-800 text-[13px] outline-none"
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div className="space-y-1">
+                      <label className="font-bold text-slate-800 block text-[12px]">
+                        Biro Pengampu / Afiliasi
+                      </label>
+                      <select
+                        value={customBiroId}
+                        onChange={(e) => setCustomBiroId(e.target.value)}
+                        className="w-full px-3 py-2 rounded-xl border border-slate-300 focus:border-amber-600 focus:ring-1 focus:ring-amber-600 bg-white text-slate-800 text-[12px] outline-none"
+                      >
+                        {availableBiros.map((b: any) => (
+                          <option key={b.id} value={b.id}>
+                            {b.code} — {b.shortName}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+
+                    <div className="space-y-1">
+                      <label className="font-bold text-slate-800 block text-[12px]">
+                        Email Resmi <span className="text-slate-400 font-normal">(Opsional)</span>
+                      </label>
+                      <input
+                        type="email"
+                        placeholder="pejabat@instansi.go.id"
+                        value={customEmail}
+                        onChange={(e) => setCustomEmail(e.target.value)}
+                        className="w-full px-3 py-2 rounded-xl border border-slate-300 focus:border-amber-600 focus:ring-1 focus:ring-amber-600 bg-white text-slate-800 text-[12px] outline-none"
+                      />
+                    </div>
+                  </div>
+                  <p className="text-[10.5px] text-slate-400">
+                    * Jika email dikosongkan, sistem otomatis membuatkan identitas peserta resmi untuk arsip risalah sidang.
                   </p>
-                )}
-              </div>
+                </div>
+              )}
 
               {/* Status Kehadiran Awal */}
-              <div className="space-y-1.5">
+              <div className="space-y-1.5 pt-1">
                 <label className="font-bold text-slate-800 block text-[12px]">
                   Status Presensi Awal
                 </label>
@@ -953,7 +1059,11 @@ export function MeetingDetailView({
                 </button>
                 <button
                   type="submit"
-                  disabled={isAddingParticipant || !selectedAddUserId}
+                  disabled={
+                    isAddingParticipant ||
+                    (participantMode === 'registered' && !selectedAddUserId) ||
+                    (participantMode === 'unregistered' && !customName.trim())
+                  }
                   className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-amber-600 hover:bg-amber-700 text-white font-semibold text-[12px] transition-all shadow-xs cursor-pointer disabled:opacity-50"
                 >
                   {isAddingParticipant ? (

@@ -276,31 +276,103 @@ export async function updateParticipantAttendanceAction(
   }
 }
 
+export interface AddParticipantInput {
+  userId?: string;
+  customName?: string;
+  customEmail?: string;
+  biroId?: string;
+  attendanceStatus?: AttendanceStatus;
+}
+
 /**
  * Server action to add a new participant to an existing meeting
+ * Supports both registered users and unregistered officials/guests
  */
 export async function addParticipantToMeetingAction(
   meetingId: string,
-  userId: string,
+  userIdOrInput: string | AddParticipantInput,
   attendanceStatus: AttendanceStatus = 'INVITED'
 ) {
   try {
     await requirePermission('manage:participants');
 
+    let targetUserId: string;
+    let finalStatus: AttendanceStatus = attendanceStatus;
+
+    if (typeof userIdOrInput === 'string') {
+      targetUserId = userIdOrInput;
+    } else {
+      finalStatus = userIdOrInput.attendanceStatus || attendanceStatus;
+
+      if (userIdOrInput.userId) {
+        targetUserId = userIdOrInput.userId;
+      } else if (userIdOrInput.customName && userIdOrInput.customName.trim()) {
+        const trimmedName = userIdOrInput.customName.trim();
+
+        // Find meeting to resolve default biro
+        const meeting = await prisma.meeting.findUnique({
+          where: { id: meetingId },
+          select: { primaryBiroId: true },
+        });
+
+        if (!meeting) {
+          throw new Error('Rapat tidak ditemukan');
+        }
+
+        // Check if user already exists by name or email
+        const existingUser = await prisma.user.findFirst({
+          where: {
+            OR: [
+              { name: { equals: trimmedName, mode: 'insensitive' as const } },
+              ...(userIdOrInput.customEmail
+                ? [{ email: { equals: userIdOrInput.customEmail.trim(), mode: 'insensitive' as const } }]
+                : []),
+            ],
+          },
+        });
+
+        if (existingUser) {
+          targetUserId = existingUser.id;
+        } else {
+          const slug = trimmedName
+            .toLowerCase()
+            .replace(/[^a-z0-9]/g, '.')
+            .replace(/\.+/g, '.')
+            .slice(0, 25);
+          const uniqueEmail =
+            userIdOrInput.customEmail?.trim() ||
+            `${slug || 'peserta'}.${Date.now().toString(36)}.${Math.random().toString(36).substring(2, 6)}@peserta.kek.go.id`;
+
+          const guestUser = await prisma.user.create({
+            data: {
+              name: trimmedName,
+              email: uniqueEmail,
+              role: 'VIEWER',
+              biroId: userIdOrInput.biroId || meeting.primaryBiroId,
+              isActive: true,
+            },
+          });
+          targetUserId = guestUser.id;
+        }
+      } else {
+        throw new Error('Nama peserta atau ID pengguna harus diisi');
+      }
+    }
+
     const participant = await prisma.meetingParticipant.upsert({
       where: {
         meetingId_userId: {
           meetingId,
-          userId,
+          userId: targetUserId,
         },
       },
       create: {
         meetingId,
-        userId,
-        attendanceStatus,
+        userId: targetUserId,
+        attendanceStatus: finalStatus,
       },
       update: {
-        attendanceStatus,
+        attendanceStatus: finalStatus,
       },
       include: {
         user: { include: { biro: true } },
