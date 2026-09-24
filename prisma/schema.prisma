@@ -86,6 +86,7 @@ model Meeting {
   secretary    User?                @relation("SecretaryMeetings", fields: [secretaryId], references: [id], onDelete: SetNull)
   meetingBiros MeetingBiro[]
   participants MeetingParticipant[]
+  minutes      MeetingMinutes?
 
   @@index([meetingNumber])
   @@index([primaryBiroId])
@@ -131,4 +132,19 @@ model BiroMeetingSequence {
   biro Biro @relation(fields: [biroId], references: [id], onDelete: Cascade)
 
   @@index([biroId])
+}
+
+model MeetingMinutes {
+  id         String   @id @default(uuid())
+  meetingId  String   @unique
+  agenda     Json?
+  discussion Json?
+  decisions  Json?
+  conclusion Json?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  meeting Meeting @relation(fields: [meetingId], references: [id], onDelete: Cascade)
+
+  @@index([meetingId])
 }

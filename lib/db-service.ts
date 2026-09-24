@@ -64,6 +64,37 @@ export async function getBiroDetail(code: string) {
   }
 }
 
+export async function getMeetingByIdFromDb(idOrNumber: string) {
+  try {
+    const meeting = await prisma.meeting.findFirst({
+      where: {
+        OR: [{ id: idOrNumber }, { meetingNumber: idOrNumber.toUpperCase() }],
+      },
+      include: {
+        primaryBiro: true,
+        meetingBiros: {
+          include: { biro: true },
+        },
+        participants: {
+          include: { user: { include: { biro: true } } },
+        },
+        chairperson: {
+          include: { biro: true },
+        },
+        secretary: {
+          include: { biro: true },
+        },
+        minutes: true,
+      },
+    });
+
+    return meeting;
+  } catch (error) {
+    console.error(`Error fetching meeting ${idOrNumber} from Neon DB:`, error);
+    return null;
+  }
+}
+
 export async function getMeetingsFromDb(filters?: {
   biroCode?: string | null;
   status?: MeetingStatus | null;

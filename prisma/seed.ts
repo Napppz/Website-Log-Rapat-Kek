@@ -442,7 +442,171 @@ async function main() {
     console.log(`   [SEQUENCE] ${code} -> currentNumber: ${count}`);
   }
 
-  console.log('--- SEEDING DATABASE FOUNDATION SELESAI DENGAN SUKSES ---');
+  // 5. Seed MeetingMinutes (Stage 4 Sample Data)
+  console.log('5. Menyemai Notulen Rapat Resmi (Stage 4)...');
+  const bppkMeeting = await prisma.meeting.findUnique({
+    where: { meetingNumber: 'BPPK-001' },
+  });
+
+  if (bppkMeeting) {
+    await prisma.meetingMinutes.upsert({
+      where: { meetingId: bppkMeeting.id },
+      update: {},
+      create: {
+        meetingId: bppkMeeting.id,
+        agenda: {
+          type: 'doc',
+          content: [
+            {
+              type: 'heading',
+              attrs: { level: 2 },
+              content: [{ type: 'text', text: 'Agenda Pembahasan Kelayakan Zonasi' }],
+            },
+            {
+              type: 'orderedList',
+              content: [
+                {
+                  type: 'listItem',
+                  content: [
+                    {
+                      type: 'paragraph',
+                      content: [
+                        {
+                          type: 'text',
+                          text: 'Pemaparan hasil uji kelayakan tata ruang kawasan maritim dan daya dukung lingkungan bahari.',
+                        },
+                      ],
+                    },
+                  ],
+                },
+                {
+                  type: 'listItem',
+                  content: [
+                    {
+                      type: 'paragraph',
+                      content: [
+                        {
+                          type: 'text',
+                          text: 'Evaluasi usulan insentif fiskal terintegrasi bagi investor sektor pariwisata bertaraf internasional.',
+                        },
+                      ],
+                    },
+                  ],
+                },
+                {
+                  type: 'listItem',
+                  content: [
+                    {
+                      type: 'paragraph',
+                      content: [
+                        {
+                          type: 'text',
+                          text: 'Penyusunan jadwal penyampaian draf Peraturan Pemerintah penetapan kawasan kepada Presiden.',
+                        },
+                      ],
+                    },
+                  ],
+                },
+              ],
+            },
+          ],
+        },
+        discussion: {
+          type: 'doc',
+          content: [
+            {
+              type: 'heading',
+              attrs: { level: 2 },
+              content: [{ type: 'text', text: 'Poin-Poin Diskusi & Tanggapan Biro' }],
+            },
+            {
+              type: 'paragraph',
+              content: [
+                {
+                  type: 'text',
+                  text: 'Biro Perencanaan (BPPK) menegaskan bahwa batas koordinat deliniasi telah diselaraskan dengan tata ruang zonasi pesisir provinsi. Biro Pengendalian (PKKEK) memberikan catatan penting terkait kesiapan aksesibilitas dermaga sandar kapal pesiar internasional.',
+                },
+              ],
+            },
+            {
+              type: 'blockquote',
+              content: [
+                {
+                  type: 'paragraph',
+                  content: [
+                    {
+                      type: 'text',
+                      text: '"Perlu dilakukan akselerasi perizinan AMDAL dan penyelesaian sertifikasi HPL clean and clear sebelum batas akhir triwulan IV." — Arahan Pimpinan Sidang',
+                    },
+                  ],
+                },
+              ],
+            },
+          ],
+        },
+        decisions: {
+          type: 'doc',
+          content: [
+            {
+              type: 'heading',
+              attrs: { level: 2 },
+              content: [{ type: 'text', text: 'Ketetapan Resmi Sidang Pleno' }],
+            },
+            {
+              type: 'bulletList',
+              content: [
+                {
+                  type: 'listItem',
+                  content: [
+                    {
+                      type: 'paragraph',
+                      content: [
+                        {
+                          type: 'text',
+                          text: 'Menyetujui dokumen studi kelayakan zonasi dengan revisi teknis luas deliniasi menjadi 1.250 hektar.',
+                        },
+                      ],
+                    },
+                  ],
+                },
+                {
+                  type: 'listItem',
+                  content: [
+                    {
+                      type: 'paragraph',
+                      content: [
+                        {
+                          type: 'text',
+                          text: 'Menugaskan Tim Asistensi Hukum (HSDMO) menyusun harmonisasi naskah akademik regulasi fasilitas fiskal.',
+                        },
+                      ],
+                    },
+                  ],
+                },
+              ],
+            },
+          ],
+        },
+        conclusion: {
+          type: 'doc',
+          content: [
+            {
+              type: 'paragraph',
+              content: [
+                {
+                  type: 'text',
+                  text: 'Sidang ditutup dengan kesepakatan bulat. Seluruh perbaikan dokumen ditargetkan selesai paling lambat tanggal 30 September 2026.',
+                },
+              ],
+            },
+          ],
+        },
+      },
+    });
+    console.log(`   [MINUTES] Notulen resmi untuk BPPK-001 berhasil disemai.`);
+  }
+
+  console.log('--- SEEDING DATABASE FOUNDATION & NOTULEN SELESAI DENGAN SUKSES ---');
 }
 
 main()
