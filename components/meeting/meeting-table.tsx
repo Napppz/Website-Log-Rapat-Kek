@@ -188,10 +188,14 @@ export function MeetingTable({
         <div>
           <div className="flex items-center gap-2">
             <span className="w-2.5 h-2.5 rounded-full bg-amber-500"></span>
-            <h2 className="font-bold text-[18px] text-slate-900">Rapat Terbaru KEK</h2>
+            <h2 className="font-bold text-[18px] text-slate-900">
+              {onViewAllMeetings ? 'Agenda & Risalah Rapat Terkini' : 'Semua Risalah Rapat KEK'}
+            </h2>
           </div>
-          <p className="text-[13px] text-slate-500 mt-0.5">
-            Daftar agenda dan risalah pertemuan terkini, diurutkan dari yang paling baru
+          <p className="text-[12.5px] text-slate-500 mt-0.5">
+            {onViewAllMeetings
+              ? 'Ringkasan rapat koordinasi terbaru. Untuk mencari data lama atau arsip penuh, klik Buka Semua Arsip.'
+              : 'Daftar lengkap agenda dan risalah pertemuan, diurutkan dari yang paling baru.'}
           </p>
         </div>
 
@@ -202,10 +206,10 @@ export function MeetingTable({
               type="text"
               value={searchFilter}
               onChange={(e) => setSearchFilter(e.target.value)}
-              placeholder="Saring rapat..."
-              className="pl-8 pr-3 py-1.5 rounded-lg bg-white border border-amber-200 text-slate-800 text-[13px] focus:outline-none focus:ring-2 focus:ring-amber-500 shadow-xs"
+              placeholder="Cari nomor/agenda..."
+              className="pl-8 pr-3 py-1.5 rounded-xl bg-white border border-amber-200 text-slate-800 text-[12.5px] focus:outline-none focus:ring-2 focus:ring-amber-500 shadow-2xs"
             />
-            <Filter className="w-4 h-4 absolute left-2.5 top-2.5 text-amber-600 pointer-events-none" />
+            <Filter className="w-3.5 h-3.5 absolute left-2.5 top-2.5 text-amber-600 pointer-events-none" />
           </div>
 
           {/* View All Meetings Link */}
@@ -213,9 +217,9 @@ export function MeetingTable({
             <button
               type="button"
               onClick={onViewAllMeetings}
-              className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg bg-amber-600 text-white hover:bg-amber-700 transition-colors text-[13px] font-semibold shadow-sm shadow-amber-600/20 cursor-pointer"
+              className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-amber-600 text-white hover:bg-amber-700 transition-all text-[12.5px] font-semibold shadow-xs cursor-pointer shrink-0"
             >
-              <span>Lihat Semua Rapat</span>
+              <span>Buka Semua Arsip Rapat</span>
               <ArrowRight className="w-4 h-4" />
             </button>
           )}
