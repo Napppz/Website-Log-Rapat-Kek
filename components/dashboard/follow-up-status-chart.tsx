@@ -3,12 +3,22 @@
 import React from 'react';
 import { Info, ArrowRight } from 'lucide-react';
 import { MOCK_FOLLOW_UP_STATUS } from '@/lib/mock-data';
+import { FollowUpStatusMetric } from '@/lib/types';
 
 interface FollowUpStatusChartProps {
   onManageMatrixClick?: () => void;
+  followUpData?: FollowUpStatusMetric[];
+  totalResolutions?: number;
 }
 
-export function FollowUpStatusChart({ onManageMatrixClick }: FollowUpStatusChartProps) {
+export function FollowUpStatusChart({
+  onManageMatrixClick,
+  followUpData = MOCK_FOLLOW_UP_STATUS,
+  totalResolutions,
+}: FollowUpStatusChartProps) {
+  const data = followUpData && followUpData.length > 0 ? followUpData : MOCK_FOLLOW_UP_STATUS;
+  const total = totalResolutions !== undefined ? totalResolutions : data.reduce((acc, curr) => acc + curr.count, 0);
+
   return (
     <div className="lg:col-span-4 rounded-xl bg-white p-6 shadow-sm border border-amber-200/60 flex flex-col justify-between">
       <div>
@@ -22,7 +32,7 @@ export function FollowUpStatusChart({ onManageMatrixClick }: FollowUpStatusChart
               Status Tindak Lanjut
             </h2>
             <p className="text-[13px] text-slate-500 mt-1">
-              Total 142 butir kesepakatan dewan
+              Total {total} butir kesepakatan dewan
             </p>
           </div>
           <button
@@ -50,63 +60,27 @@ export function FollowUpStatusChart({ onManageMatrixClick }: FollowUpStatusChart
                 strokeWidth="12"
               />
 
-              {/* Selesai (45%) */}
-              <circle
-                cx="50"
-                cy="50"
-                r="38"
-                fill="transparent"
-                stroke="#D97706"
-                strokeWidth="12"
-                strokeDasharray="107.4 238.7"
-                strokeDashoffset="0"
-                className="transition-all duration-500"
-              />
-
-              {/* Sedang Berjalan (35%) */}
-              <circle
-                cx="50"
-                cy="50"
-                r="38"
-                fill="transparent"
-                stroke="#F59E0B"
-                strokeWidth="12"
-                strokeDasharray="83.5 238.7"
-                strokeDashoffset="-107.4"
-                className="transition-all duration-500"
-              />
-
-              {/* Belum Dimulai (15%) */}
-              <circle
-                cx="50"
-                cy="50"
-                r="38"
-                fill="transparent"
-                stroke="#FDE68A"
-                strokeWidth="12"
-                strokeDasharray="35.8 238.7"
-                strokeDashoffset="-190.9"
-                className="transition-all duration-500"
-              />
-
-              {/* Terlambat (5%) */}
-              <circle
-                cx="50"
-                cy="50"
-                r="38"
-                fill="transparent"
-                stroke="#DC2626"
-                strokeWidth="12"
-                strokeDasharray="12 238.7"
-                strokeDashoffset="-226.7"
-                className="transition-all duration-500"
-              />
+              {/* Dynamic Segments */}
+              {data.map((item, idx) => (
+                <circle
+                  key={item.label || idx}
+                  cx="50"
+                  cy="50"
+                  r="38"
+                  fill="transparent"
+                  stroke={item.color}
+                  strokeWidth="12"
+                  strokeDasharray={item.dasharray}
+                  strokeDashoffset={item.dashoffset}
+                  className="transition-all duration-500"
+                />
+              ))}
             </svg>
 
             {/* Center Label */}
             <div className="absolute flex flex-col items-center justify-center text-center">
               <span className="font-bold text-[20px] text-slate-900 leading-none">
-                142
+                {total}
               </span>
               <span className="text-[10px] text-slate-500 font-semibold uppercase mt-0.5">
                 Resolusi
@@ -116,7 +90,7 @@ export function FollowUpStatusChart({ onManageMatrixClick }: FollowUpStatusChart
 
           {/* Legend */}
           <div className="space-y-2 w-full sm:w-auto">
-            {MOCK_FOLLOW_UP_STATUS.map((item) => (
+            {data.map((item) => (
               <div
                 key={item.label}
                 className="flex items-center justify-between gap-3 text-slate-800 text-[12px]"

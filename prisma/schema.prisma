@@ -30,6 +30,20 @@ enum AttendanceStatus {
   EXCUSED
 }
 
+enum ActionItemStatus {
+  PENDING
+  IN_PROGRESS
+  COMPLETED
+  OVERDUE
+}
+
+enum ActionItemPriority {
+  LOW
+  MEDIUM
+  HIGH
+  URGENT
+}
+
 model Biro {
   id          String   @id @default(uuid())
   code        String   @unique
@@ -44,6 +58,7 @@ model Biro {
   primaryMeetings Meeting[]            @relation("PrimaryBiroMeetings")
   meetingBiros    MeetingBiro[]
   sequence        BiroMeetingSequence?
+  actionItems     ActionItem[]         @relation("BiroActionItems")
 
   @@index([code])
 }
@@ -61,6 +76,7 @@ model User {
   chairedMeetings     Meeting[]            @relation("ChairpersonMeetings")
   secretaryMeetings   Meeting[]            @relation("SecretaryMeetings")
   meetingParticipants MeetingParticipant[]
+  actionItems         ActionItem[]         @relation("UserActionItems")
 
   @@index([email])
   @@index([biroId])
@@ -87,6 +103,7 @@ model Meeting {
   meetingBiros MeetingBiro[]
   participants MeetingParticipant[]
   minutes      MeetingMinutes?
+  actionItems  ActionItem[]
 
   @@index([meetingNumber])
   @@index([primaryBiroId])
@@ -147,4 +164,29 @@ model MeetingMinutes {
   meeting Meeting @relation(fields: [meetingId], references: [id], onDelete: Cascade)
 
   @@index([meetingId])
+}
+
+model ActionItem {
+  id          String             @id @default(uuid())
+  meetingId   String
+  title       String
+  description String?
+  picBiroId   String
+  picUserId   String?
+  dueDate     DateTime
+  status      ActionItemStatus   @default(PENDING)
+  priority    ActionItemPriority @default(MEDIUM)
+  completedAt DateTime?
+  createdAt   DateTime           @default(now())
+  updatedAt   DateTime           @updatedAt
+
+  meeting Meeting @relation(fields: [meetingId], references: [id], onDelete: Cascade)
+  picBiro Biro    @relation("BiroActionItems", fields: [picBiroId], references: [id], onDelete: Restrict)
+  picUser User?   @relation("UserActionItems", fields: [picUserId], references: [id], onDelete: SetNull)
+
+  @@index([meetingId])
+  @@index([picBiroId])
+  @@index([picUserId])
+  @@index([status])
+  @@index([dueDate])
 }

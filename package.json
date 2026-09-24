@@ -9,6 +9,7 @@
     "lint": "eslint"
   },
   "dependencies": {
+    "@hookform/resolvers": "^5.9.1",
     "@prisma/client": "^6.19.3",
     "@tiptap/extension-link": "^3.31.3",
     "@tiptap/extension-underline": "^3.31.3",
@@ -20,6 +21,7 @@
     "next": "16.3.6",
     "react": "19.2.8",
     "react-dom": "19.2.8",
+    "react-hook-form": "^7.88.0",
     "tailwind-merge": "^3.7.0",
     "zod": "^4.6.5"
   },

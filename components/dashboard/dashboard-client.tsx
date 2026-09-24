@@ -8,18 +8,22 @@ import { FollowUpStatusChart } from '@/components/dashboard/follow-up-status-cha
 import { BureauDistribution } from '@/components/dashboard/bureau-distribution';
 import { MeetingTable } from '@/components/meeting/meeting-table';
 import { useRouter } from 'next/navigation';
-import { Meeting, DashboardMetric, BureauWorkload } from '@/lib/types';
+import { Meeting, DashboardMetric, BureauWorkload, FollowUpStatusMetric } from '@/lib/types';
 
 interface DashboardClientProps {
   initialMeetings: Meeting[];
   metrics?: DashboardMetric[];
   workload?: BureauWorkload[];
+  followUpMetrics?: FollowUpStatusMetric[];
+  totalResolutions?: number;
 }
 
 export function DashboardClient({
   initialMeetings,
   metrics,
   workload,
+  followUpMetrics,
+  totalResolutions,
 }: DashboardClientProps) {
   const router = useRouter();
 
@@ -40,6 +44,8 @@ export function DashboardClient({
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
         <ActivityTrendChart />
         <FollowUpStatusChart
+          followUpData={followUpMetrics}
+          totalResolutions={totalResolutions}
           onManageMatrixClick={() => router.push('/tindak-lanjut')}
         />
         <BureauDistribution

@@ -9,6 +9,44 @@ export interface Biro {
 
 export type MeetingStatus = 'APPROVED' | 'FINAL' | 'REVIEW' | 'DRAFT';
 
+export type ActionItemStatus = 'PENDING' | 'IN_PROGRESS' | 'COMPLETED' | 'OVERDUE';
+export type ActionItemPriority = 'LOW' | 'MEDIUM' | 'HIGH' | 'URGENT';
+
+export interface ActionItem {
+  id: string;
+  meetingId: string;
+  title: string;
+  description?: string | null;
+  picBiroId: string;
+  picUserId?: string | null;
+  dueDate: Date | string;
+  status: ActionItemStatus;
+  priority: ActionItemPriority;
+  completedAt?: Date | string | null;
+  createdAt: Date | string;
+  updatedAt: Date | string;
+  picBiro?: {
+    id: string;
+    code: string;
+    name: string;
+    shortName: string;
+  };
+  picUser?: {
+    id: string;
+    name: string;
+    email: string;
+    role?: string;
+  } | null;
+  meeting?: {
+    id: string;
+    meetingNumber: string;
+    title: string;
+    date?: Date | string;
+  };
+  computedStatus?: ActionItemStatus;
+  isOverdue?: boolean;
+}
+
 export interface ActionItemProgressData {
   total: number;
   completed: number;

@@ -15,6 +15,8 @@ export default async function DashboardPage() {
       initialMeetings={meetings}
       metrics={stats?.metrics}
       workload={stats?.bureauWorkload}
+      followUpMetrics={stats?.followUpMetrics}
+      totalResolutions={stats?.actionItemStats?.total}
     />
   );
 }
