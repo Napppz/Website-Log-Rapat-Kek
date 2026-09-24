@@ -24,6 +24,7 @@ import {
   updateUserAction,
   toggleUserStatusAction,
 } from '@/app/actions/user-actions';
+import { toast } from '@/components/providers/toast-provider';
 
 interface UserItem {
   id: string;
@@ -121,6 +122,7 @@ export function UserManagementView({
             prev.map((u) => (u.id === editingUser.id ? (res.data as unknown as UserItem) : u))
           );
           setIsDialogOpen(false);
+          toast.success(`Data pengguna "${formName}" berhasil diperbarui.`);
           router.refresh();
         } else {
           setFormError(res.error || 'Gagal memperbarui pengguna.');
@@ -138,6 +140,7 @@ export function UserManagementView({
         if (res.success && res.data) {
           setUsers((prev) => [res.data as unknown as UserItem, ...prev]);
           setIsDialogOpen(false);
+          toast.success(`Pengguna baru "${formName}" berhasil ditambahkan.`);
           router.refresh();
         } else {
           setFormError(res.error || 'Gagal menambahkan pengguna.');
@@ -153,7 +156,7 @@ export function UserManagementView({
   // Toggle user status
   const handleToggleStatus = async (userId: string) => {
     if (userId === currentUserId) {
-      alert('Anda tidak dapat menonaktifkan akun yang sedang aktif digunakan.');
+      toast.warning('Anda tidak dapat menonaktifkan akun yang sedang aktif digunakan.');
       return;
     }
 
@@ -163,12 +166,17 @@ export function UserManagementView({
         setUsers((prev) =>
           prev.map((u) => (u.id === userId ? { ...u, isActive: res.data!.isActive } : u))
         );
+        toast.success(
+          res.data.isActive
+            ? 'Akun pengguna berhasil diaktifkan kembali.'
+            : 'Akun pengguna berhasil dinonaktifkan.'
+        );
         router.refresh();
       } else {
-        alert(res.error || 'Gagal mengubah status aktif pengguna.');
+        toast.error(res.error || 'Gagal mengubah status aktif pengguna.');
       }
     } catch (err: any) {
-      alert(`Terjadi kesalahan: ${err?.message || 'Gagal'}`);
+      toast.error(err?.message || 'Terjadi kesalahan sistem.');
     }
   };
 

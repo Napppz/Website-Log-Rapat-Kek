@@ -23,6 +23,7 @@ import { TrendChart } from '@/components/report/trend-chart';
 import { StatusDonutChart } from '@/components/report/status-donut-chart';
 import { ReportSummaryResult } from '@/lib/report/report-service';
 import { ReportPeriod, ReportBiro } from '@/lib/validations/report';
+import { toast } from '@/components/providers/toast-provider';
 
 export function LaporanClient() {
   const [period, setPeriod] = useState<ReportPeriod>('MONTH');
@@ -116,8 +117,9 @@ export function LaporanClient() {
       a.click();
       a.remove();
       window.URL.revokeObjectURL(downloadUrl);
+      toast.success(`Laporan PDF "${filename}" berhasil diunduh.`);
     } catch (err: any) {
-      alert(`Gagal export PDF: ${err?.message || 'Terjadi kesalahan'}`);
+      toast.error(err?.message || 'Gagal export PDF');
     } finally {
       setPdfLoading(false);
     }
@@ -155,8 +157,9 @@ export function LaporanClient() {
       a.click();
       a.remove();
       window.URL.revokeObjectURL(downloadUrl);
+      toast.success(`Laporan Excel "${filename}" berhasil diunduh.`);
     } catch (err: any) {
-      alert(`Gagal export Excel: ${err?.message || 'Terjadi kesalahan'}`);
+      toast.error(err?.message || 'Gagal export Excel');
     } finally {
       setExcelLoading(false);
     }

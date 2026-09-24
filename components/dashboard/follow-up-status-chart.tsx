@@ -5,6 +5,7 @@ import { Info, ArrowRight, RotateCcw, CheckCircle2 } from 'lucide-react';
 import { MOCK_FOLLOW_UP_STATUS } from '@/lib/mock-data';
 import { FollowUpStatusMetric } from '@/lib/types';
 import { cn } from '@/lib/utils';
+import { toast } from '@/components/providers/toast-provider';
 
 interface FollowUpStatusChartProps {
   onManageMatrixClick?: () => void;
@@ -102,7 +103,7 @@ export function FollowUpStatusChart({
               type="button"
               className="text-slate-400 hover:text-amber-700 p-1.5 rounded-lg hover:bg-amber-50 cursor-pointer transition-colors"
               title="Metrik dihitung otomatis berdasarkan laporan pemantauan PIC biro pelaksana."
-              onClick={() => alert('Metrik dihitung otomatis berdasarkan laporan pemantauan PIC biro pelaksana.')}
+              onClick={() => toast.info('Metrik dihitung otomatis berdasarkan laporan pemantauan PIC biro pelaksana.', 'Info Metrik')}
             >
               <Info className="w-4 h-4" />
             </button>

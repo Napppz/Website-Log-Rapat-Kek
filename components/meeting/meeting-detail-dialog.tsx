@@ -24,6 +24,7 @@ import { MeetingMinutesSection } from './meeting-minutes/meeting-minutes-section
 import { ActionItemList } from '../action-items/action-item-list';
 import { getActionItemsAction } from '@/app/actions/action-item-actions';
 import { useSession } from 'next-auth/react';
+import { toast, confirmModal } from '@/components/providers/toast-provider';
 
 interface MeetingDetailDialogProps {
   meeting: Meeting | null;
@@ -66,9 +67,9 @@ export function MeetingDetailDialog({
       document.body.appendChild(link);
       link.click();
       window.URL.revokeObjectURL(url);
-      document.body.removeChild(link);
+      toast.success(`Risalah rapat ${meeting.code || 'KEK'} berhasil diunduh (PDF).`);
     } catch (err: any) {
-      alert(err?.message || 'Terjadi kesalahan saat mengunduh PDF.');
+      toast.error(err?.message || 'Terjadi kesalahan saat mengunduh PDF.');
     } finally {
       setIsExporting(false);
     }
@@ -109,7 +110,14 @@ export function MeetingDetailDialog({
   if (!meeting) return null;
 
   const handleDelete = async () => {
-    if (!confirm(`Apakah Anda yakin ingin menghapus rapat "${meeting.code} - ${meeting.title}" dari database?`)) {
+    const confirmed = await confirmModal({
+      title: `Hapus Rapat ${meeting.code}?`,
+      message: `Apakah Anda yakin ingin menghapus rapat "${meeting.title}" dari database?`,
+      confirmText: 'Ya, Hapus Rapat',
+      variant: 'danger',
+    });
+
+    if (!confirmed) {
       return;
     }
 
@@ -118,15 +126,15 @@ export function MeetingDetailDialog({
       const { deleteMeetingAction } = await import('@/app/actions/meeting-actions');
       const res = await deleteMeetingAction(meeting.id);
       if (res.success) {
-        alert(`Rapat ${meeting.code} berhasil dihapus dari Neon DB.`);
+        toast.success(`Rapat ${meeting.code} berhasil dihapus dari database.`);
         onClose();
         if (onMeetingUpdated) onMeetingUpdated();
         window.location.reload();
       } else {
-        alert(res.error || 'Gagal menghapus rapat');
+        toast.error(res.error || 'Gagal menghapus rapat');
       }
     } catch (err: any) {
-      alert(`Terjadi kesalahan: ${err?.message || 'Gagal menghapus'}`);
+      toast.error(err?.message || 'Gagal menghapus rapat');
     } finally {
       setIsDeleting(false);
     }
@@ -138,15 +146,15 @@ export function MeetingDetailDialog({
       const { updateMeetingStatusAction } = await import('@/app/actions/meeting-actions');
       const res = await updateMeetingStatusAction(meeting.id, newStatus);
       if (res.success) {
-        alert(`Status rapat ${meeting.code} berhasil diubah ke ${newStatus}.`);
+        toast.success(`Status rapat ${meeting.code} berhasil diubah ke ${newStatus}.`);
         onClose();
         if (onMeetingUpdated) onMeetingUpdated();
         window.location.reload();
       } else {
-        alert(res.error || 'Gagal memperbarui status');
+        toast.error(res.error || 'Gagal memperbarui status');
       }
     } catch (err: any) {
-      alert(`Terjadi kesalahan: ${err?.message || 'Gagal memperbarui status'}`);
+      toast.error(err?.message || 'Gagal memperbarui status');
     } finally {
       setIsUpdatingStatus(false);
     }

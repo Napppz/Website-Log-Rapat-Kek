@@ -22,6 +22,7 @@ import { ActionItemFormDialog } from './action-item-form-dialog';
 import { ActionItemDeleteDialog } from './action-item-delete-dialog';
 import { updateActionItemStatusAction } from '@/app/actions/action-item-actions';
 import { useSession } from 'next-auth/react';
+import { toast } from '@/components/providers/toast-provider';
 
 interface ActionItemListProps {
   meetingId: string;
@@ -81,12 +82,19 @@ export function ActionItemList({
         setItems((prev) =>
           prev.map((it) => (it.id === itemId ? (res.data as unknown as ActionItem) : it))
         );
+        toast.success(
+          newStatus === 'COMPLETED'
+            ? 'Status tindak lanjut diperbarui: Selesai.'
+            : newStatus === 'IN_PROGRESS'
+            ? 'Status tindak lanjut diperbarui: Sedang Berjalan.'
+            : 'Status tindak lanjut diperbarui: Belum Dimulai.'
+        );
         router.refresh();
       } else {
-        alert(res.error || 'Gagal mengubah status tindak lanjut.');
+        toast.error(res.error || 'Gagal mengubah status tindak lanjut.');
       }
     } catch (err: any) {
-      alert(`Terjadi kesalahan: ${err?.message || 'Gagal mengubah status'}`);
+      toast.error(`Terjadi kesalahan: ${err?.message || 'Gagal mengubah status'}`);
     } finally {
       setUpdatingStatusId(null);
     }

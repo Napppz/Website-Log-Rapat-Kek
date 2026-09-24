@@ -8,6 +8,7 @@ import { PlusCircle, Filter, Trash2, AlertTriangle, Loader2, CheckCircle2, X } f
 import Link from 'next/link';
 import { useSession } from 'next-auth/react';
 import { deleteAllMeetingsAction } from '@/app/actions/meeting-actions';
+import { toast } from '@/components/providers/toast-provider';
 
 interface SemuaRapatClientProps {
   initialMeetings: Meeting[];
@@ -24,7 +25,6 @@ export function SemuaRapatClient({ initialMeetings }: SemuaRapatClientProps) {
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [confirmInput, setConfirmInput] = useState('');
   const [isDeletingAll, setIsDeletingAll] = useState(false);
-  const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
 
   const statusParam = searchParams.get('status') as MeetingStatus | null;
   const biroParam = searchParams.get('biro') as BiroCode | null;
@@ -56,19 +56,15 @@ export function SemuaRapatClient({ initialMeetings }: SemuaRapatClientProps) {
       if (res.success) {
         setIsDeleteModalOpen(false);
         setConfirmInput('');
-        setToast({
-          message: `Berhasil menghapus seluruh data rapat (${res.count ?? initialMeetings.length} rapat dibersihkan dari database).`,
-          type: 'success',
-        });
-        setTimeout(() => {
-          setToast(null);
-        }, 5000);
+        toast.success(
+          `Berhasil menghapus seluruh data rapat (${res.count ?? initialMeetings.length} rapat telah dibersihkan).`
+        );
         router.refresh();
       } else {
-        alert(res.error || 'Gagal menghapus seluruh data rapat');
+        toast.error(res.error || 'Gagal menghapus seluruh data rapat');
       }
     } catch (err: any) {
-      alert(`Terjadi kesalahan: ${err?.message || 'Gagal menghapus rapat'}`);
+      toast.error(`Terjadi kesalahan: ${err?.message || 'Gagal menghapus rapat'}`);
     } finally {
       setIsDeletingAll(false);
     }
@@ -76,19 +72,6 @@ export function SemuaRapatClient({ initialMeetings }: SemuaRapatClientProps) {
 
   return (
     <div className="flex flex-col gap-6">
-      {/* Toast Notification */}
-      {toast && (
-        <div className="fixed top-20 right-6 z-50 flex items-center gap-3 bg-emerald-900 text-white px-4 py-3 rounded-xl shadow-xl border border-emerald-700 animate-in fade-in slide-in-from-top-4 duration-300">
-          <CheckCircle2 className="w-5 h-5 text-emerald-400 shrink-0" />
-          <span className="text-[13px] font-medium">{toast.message}</span>
-          <button
-            onClick={() => setToast(null)}
-            className="text-emerald-300 hover:text-white ml-2 p-1"
-          >
-            <X className="w-4 h-4" />
-          </button>
-        </div>
-      )}
 
       {/* Header section */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 p-6 bg-white rounded-xl border border-amber-200/70 shadow-sm">

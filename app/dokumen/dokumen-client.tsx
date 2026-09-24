@@ -18,6 +18,7 @@ import {
 } from 'lucide-react';
 import { Meeting, Biro } from '@/lib/types';
 import { cn } from '@/lib/utils';
+import { toast } from '@/components/providers/toast-provider';
 
 interface DokumenClientProps {
   initialMeetings: Meeting[];
@@ -99,8 +100,9 @@ export function DokumenClient({ initialMeetings, biros }: DokumenClientProps) {
       a.click();
       window.URL.revokeObjectURL(url);
       document.body.removeChild(a);
+      toast.success(`Risalah resmi ${meeting.code} berhasil diunduh.`);
     } catch (e: any) {
-      alert(e?.message || 'Terjadi kesalahan saat mengunduh berkas risalah.');
+      toast.error(e?.message || 'Terjadi kesalahan saat mengunduh berkas risalah.');
     } finally {
       setDownloadingId(null);
     }
@@ -123,8 +125,9 @@ export function DokumenClient({ initialMeetings, biros }: DokumenClientProps) {
       a.click();
       window.URL.revokeObjectURL(url);
       document.body.removeChild(a);
+      toast.success('Laporan Eksekutif berkala berhasil diunduh (PDF).');
     } catch (e: any) {
-      alert(e?.message || 'Terjadi kesalahan saat mengunduh laporan eksekutif.');
+      toast.error(e?.message || 'Terjadi kesalahan saat mengunduh laporan eksekutif.');
     } finally {
       setIsDownloadingSummary(false);
     }

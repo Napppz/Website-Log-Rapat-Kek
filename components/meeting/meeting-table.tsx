@@ -24,6 +24,7 @@ import { ActionItemProgress } from '../action-items/action-item-progress';
 import { MeetingDetailDialog } from './meeting-detail-dialog';
 import { useSession } from 'next-auth/react';
 import { deleteMeetingAction } from '@/app/actions/meeting-actions';
+import { toast, confirmModal } from '@/components/providers/toast-provider';
 
 interface MeetingTableProps {
   onViewAllMeetings?: () => void;
@@ -54,11 +55,14 @@ export function MeetingTable({
   const canDeleteMeeting = userRole === 'SUPER_ADMIN' || userRole === 'ADMIN';
 
   const handleDeleteSingleMeeting = async (m: Meeting) => {
-    if (
-      !confirm(
-        `Apakah Anda yakin ingin menghapus permanen rapat "${m.code} - ${m.title}" beserta seluruh notulen dan tindak lanjutnya?`
-      )
-    ) {
+    const confirmed = await confirmModal({
+      title: `Hapus Rapat ${m.code}?`,
+      message: `Apakah Anda yakin ingin menghapus permanen rapat "${m.title}" beserta seluruh notulen dan butir tindak lanjutnya dari database?`,
+      confirmText: 'Ya, Hapus Rapat',
+      variant: 'danger',
+    });
+
+    if (!confirmed) {
       return;
     }
 
@@ -67,12 +71,12 @@ export function MeetingTable({
       const res = await deleteMeetingAction(m.id);
       if (res.success) {
         setMeetings((prev) => prev.filter((item) => item.id !== m.id));
-        alert(`Rapat ${m.code} berhasil dihapus dari database.`);
+        toast.success(`Rapat ${m.code} berhasil dihapus dari database.`);
       } else {
-        alert(res.error || 'Gagal menghapus rapat.');
+        toast.error(res.error || 'Gagal menghapus rapat.');
       }
     } catch (err: any) {
-      alert(`Terjadi kesalahan: ${err?.message || 'Gagal menghapus rapat'}`);
+      toast.error(err?.message || 'Gagal menghapus rapat.');
     } finally {
       setDeletingRowId(null);
     }
@@ -95,8 +99,9 @@ export function MeetingTable({
       a.click();
       window.URL.revokeObjectURL(url);
       document.body.removeChild(a);
+      toast.success(`Risalah rapat ${mCode} berhasil diunduh (PDF).`);
     } catch (e: any) {
-      alert(e?.message || 'Gagal mengunduh dokumen PDF.');
+      toast.error(e?.message || 'Gagal mengunduh dokumen PDF.');
     } finally {
       setDownloadingId(null);
     }
