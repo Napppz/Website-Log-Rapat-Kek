@@ -86,8 +86,20 @@ export function WelcomeBanner({
   const canCreateMeeting =
     userRole === 'SUPER_ADMIN' || userRole === 'ADMIN' || userRole === 'NOTULIS';
 
+  const [isMounted, setIsMounted] = useState(false);
+  React.useEffect(() => {
+    setIsMounted(true);
+  }, []);
+
   return (
-    <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-amber-50 via-white to-amber-100/60 text-slate-800 shadow-sm border border-amber-200/80 p-6 md:p-8">
+    <div
+      style={{
+        transition: 'all 500ms cubic-bezier(0.16, 1, 0.3, 1)',
+        opacity: isMounted ? 1 : 0,
+        transform: isMounted ? 'translateY(0)' : 'translateY(-6px)',
+      }}
+      className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-amber-50 via-white to-amber-100/60 text-slate-800 shadow-sm border border-amber-200/80 p-6 md:p-8"
+    >
       {/* Decorative Blur Backgrounds */}
       <div className="absolute -right-16 -top-16 w-80 h-80 rounded-full bg-amber-400/10 blur-3xl pointer-events-none" />
       <div className="absolute right-48 -bottom-20 w-64 h-64 rounded-full bg-amber-200/20 blur-2xl pointer-events-none" />

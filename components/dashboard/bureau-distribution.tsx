@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { MOCK_BUREAU_WORKLOAD } from '@/lib/mock-data';
 import { BureauWorkload } from '@/lib/types';
 import { Building2, ChevronRight, RotateCcw } from 'lucide-react';
+import { AnimatedCounter } from '@/components/ui/animated-counter';
 
 interface BureauDistributionProps {
   onBiroClick?: (code: string) => void;
@@ -62,7 +63,7 @@ export function BureauDistribution({
   }, [initialWorkload]);
 
   return (
-    <div className="lg:col-span-3 rounded-2xl bg-white p-6 shadow-sm border border-amber-200/80 flex flex-col justify-between transition-all">
+    <div className="lg:col-span-3 rounded-2xl bg-white p-6 shadow-sm border border-amber-200/80 flex flex-col justify-between transition-all duration-300 hover:shadow-md">
       <div>
         {/* Card Header with Replay Action */}
         <div className="flex items-start justify-between">
@@ -82,7 +83,7 @@ export function BureauDistribution({
           <button
             type="button"
             onClick={handleReplay}
-            className="text-slate-400 hover:text-amber-800 p-1.5 rounded-lg hover:bg-amber-50 cursor-pointer transition-colors"
+            className="text-slate-400 hover:text-amber-800 p-1.5 rounded-lg hover:bg-amber-50 cursor-pointer transition-all duration-200 hover:rotate-180"
             title="Putar ulang animasi progres biro"
           >
             <RotateCcw className="w-4 h-4" />
@@ -116,17 +117,24 @@ export function BureauDistribution({
                 </span>
 
                 <div className="flex items-center gap-1.5 shrink-0 whitespace-nowrap">
-                  <span className="font-extrabold text-amber-800 text-[12px]">
-                    {biro.count} Rapat
+                  <span className="font-extrabold text-amber-800 text-[12px] tabular-nums">
+                    {isAnimated ? (
+                      <AnimatedCounter value={biro.count} duration={800 + idx * 80} />
+                    ) : (
+                      0
+                    )}{' '}
+                    Rapat
                   </span>
                   <ChevronRight className="w-3.5 h-3.5 text-slate-400 group-hover:text-amber-700 group-hover:translate-x-0.5 transition-all" />
                 </div>
               </div>
 
-              {/* Animated Progress Bar Track */}
+              {/* Animated Progress Bar Track with Shimmer Shine */}
               <div className="h-2.5 w-full bg-amber-100/70 rounded-full overflow-hidden relative">
                 <div
-                  className={`h-full ${biro.barColor} rounded-full transition-all duration-900 ease-out relative`}
+                  className={`h-full ${biro.barColor} rounded-full transition-all duration-900 ease-out relative ${
+                    isAnimated ? 'animate-shimmer' : ''
+                  }`}
                   style={{
                     width: isAnimated ? `${Math.max(biro.percentage, 8)}%` : '0%',
                     transitionDelay: isAnimated ? `${120 + idx * 100}ms` : '0ms',

@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import {
   CalendarCheck,
@@ -16,6 +16,7 @@ import {
 import { DashboardMetric } from '@/lib/types';
 import { MOCK_METRICS } from '@/lib/mock-data';
 import { cn } from '@/lib/utils';
+import { AnimatedCounter } from '@/components/ui/animated-counter';
 
 interface StatsOverviewProps {
   metrics?: DashboardMetric[];
@@ -30,22 +31,41 @@ const METRIC_LINKS: Record<string, { href: string; actionLabel: string }> = {
 };
 
 export function StatsOverview({ metrics = MOCK_METRICS }: StatsOverviewProps) {
+  const [isAnimated, setIsAnimated] = useState(false);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setIsAnimated(true);
+    }, 60);
+    return () => clearTimeout(timer);
+  }, []);
+
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
-      {metrics.map((metric) => {
+      {metrics.map((metric, idx) => {
         const isDanger = metric.variant === 'danger';
         const isSuccess = metric.variant === 'success';
         const linkInfo = METRIC_LINKS[metric.id] || { href: '/semua-rapat', actionLabel: 'Buka' };
+        const numValue =
+          typeof metric.value === 'number'
+            ? metric.value
+            : parseInt(String(metric.value).replace(/[^0-9]/g, ''), 10) || 0;
 
         return (
           <Link
             key={metric.id}
             href={linkInfo.href}
+            style={{
+              transition: 'all 500ms cubic-bezier(0.16, 1, 0.3, 1)',
+              transitionDelay: isAnimated ? `${idx * 60}ms` : '0ms',
+              transform: isAnimated ? 'translateY(0)' : 'translateY(10px)',
+              opacity: isAnimated ? 1 : 0,
+            }}
             className={cn(
-              'group relative rounded-2xl bg-white p-4 shadow-xs transition-all duration-200 cursor-pointer block',
+              'group relative rounded-2xl bg-white p-4 shadow-xs hover:-translate-y-1 hover:shadow-md transition-all duration-200 cursor-pointer block',
               isDanger
-                ? 'border border-red-200 hover:border-red-400 hover:shadow-md hover:bg-red-50/20'
-                : 'border border-amber-200/70 hover:border-amber-400 hover:shadow-md hover:bg-amber-50/20'
+                ? 'border border-red-200 hover:border-red-400 hover:bg-red-50/20'
+                : 'border border-amber-200/70 hover:border-amber-400 hover:bg-amber-50/20'
             )}
             title={`Klik untuk membuka data: ${metric.label}`}
           >
@@ -81,7 +101,7 @@ export function StatsOverview({ metrics = MOCK_METRICS }: StatsOverviewProps) {
             <div className="mt-2 flex items-baseline gap-1.5">
               <span
                 className={cn(
-                  'font-extrabold text-[28px] leading-none',
+                  'font-extrabold text-[28px] leading-none tabular-nums',
                   isDanger
                     ? 'text-red-600'
                     : metric.id === 'tindak-lanjut-aktif'
@@ -89,7 +109,11 @@ export function StatsOverview({ metrics = MOCK_METRICS }: StatsOverviewProps) {
                     : 'text-slate-900'
                 )}
               >
-                {metric.value}
+                {isAnimated ? (
+                  <AnimatedCounter value={numValue} duration={750 + idx * 80} />
+                ) : (
+                  0
+                )}
               </span>
               <span
                 className={cn(
