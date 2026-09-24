@@ -2,12 +2,38 @@
 
 import React from 'react';
 import { MOCK_BUREAU_WORKLOAD } from '@/lib/mock-data';
+import { BureauWorkload } from '@/lib/types';
 
 interface BureauDistributionProps {
   onBiroClick?: (code: string) => void;
+  workload?: BureauWorkload[];
 }
 
-export function BureauDistribution({ onBiroClick }: BureauDistributionProps) {
+export function BureauDistribution({ onBiroClick, workload: initialWorkload }: BureauDistributionProps) {
+  const [workload, setWorkload] = React.useState<BureauWorkload[]>(
+    initialWorkload || MOCK_BUREAU_WORKLOAD
+  );
+
+  React.useEffect(() => {
+    if (initialWorkload) {
+      setWorkload(initialWorkload);
+      return;
+    }
+
+    let isMounted = true;
+    fetch('/api/stats')
+      .then((res) => res.json())
+      .then((data) => {
+        if (isMounted && data?.bureauWorkload && Array.isArray(data.bureauWorkload) && data.bureauWorkload.length > 0) {
+          setWorkload(data.bureauWorkload);
+        }
+      })
+      .catch((e) => console.warn('Could not load stats from DB:', e));
+
+    return () => {
+      isMounted = false;
+    };
+  }, [initialWorkload]);
   return (
     <div className="lg:col-span-3 rounded-xl bg-white p-6 shadow-sm border border-amber-200/60 flex flex-col justify-between">
       <div>
@@ -27,7 +53,7 @@ export function BureauDistribution({ onBiroClick }: BureauDistributionProps) {
 
         {/* Progress Bars per Bureau */}
         <div className="mt-4 space-y-3.5">
-          {MOCK_BUREAU_WORKLOAD.map((biro) => (
+          {workload.map((biro) => (
             <div
               key={biro.code}
               className="cursor-pointer group"

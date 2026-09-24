@@ -26,6 +26,7 @@ interface MeetingTableProps {
   filterBiro?: BiroCode | null;
   filterStatus?: MeetingStatus | null;
   isLoading?: boolean;
+  initialMeetings?: Meeting[];
 }
 
 export function MeetingTable({
@@ -33,10 +34,44 @@ export function MeetingTable({
   filterBiro,
   filterStatus,
   isLoading = false,
+  initialMeetings,
 }: MeetingTableProps) {
+  const [meetings, setMeetings] = useState<Meeting[]>(initialMeetings || MOCK_MEETINGS);
+  const [fetching, setFetching] = useState(false);
   const [searchFilter, setSearchFilter] = useState('');
   const [selectedMeeting, setSelectedMeeting] = useState<Meeting | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
+
+  // Sync with initialMeetings or fetch from Neon API
+  React.useEffect(() => {
+    if (initialMeetings) {
+      setMeetings(initialMeetings);
+      return;
+    }
+
+    let isMounted = true;
+    const loadFromDb = async () => {
+      try {
+        setFetching(true);
+        const res = await fetch('/api/meetings');
+        if (res.ok) {
+          const data = await res.json();
+          if (isMounted && Array.isArray(data) && data.length > 0) {
+            setMeetings(data);
+          }
+        }
+      } catch (e) {
+        console.warn('Fallback to local mock if DB fetch fails:', e);
+      } finally {
+        if (isMounted) setFetching(false);
+      }
+    };
+
+    loadFromDb();
+    return () => {
+      isMounted = false;
+    };
+  }, [initialMeetings]);
 
   // Biro icon mapping
   const getBiroIcon = (code: BiroCode) => {
@@ -69,7 +104,7 @@ export function MeetingTable({
   // Filter & sort meetings (Guarantee: Tanggal terbaru -> tanggal terlama)
   const filteredMeetings = useMemo(() => {
     // Clone and ensure newest date order
-    const list = [...MOCK_MEETINGS];
+    const list = [...meetings];
 
     return list.filter((m) => {
       if (filterBiro && m.biroCode !== filterBiro) {

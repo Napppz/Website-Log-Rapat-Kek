@@ -18,13 +18,35 @@ export default function BuatRapatPage() {
   const [attendees, setAttendees] = useState('Biro Terkait, Tim Sekretariat Jenderal, Perwakilan Kawasan');
   const [isSubmitted, setIsSubmitted] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitted(true);
-    setTimeout(() => {
-      alert(`Rapat "${title}" untuk ${selectedBiro} berhasil dijadwalkan dalam SIM-RAPAT KEK RI.`);
-      router.push('/semua-rapat');
-    }, 800);
+    try {
+      const { createMeetingAction } = await import('@/app/actions/meeting-actions');
+      const parts = time.split('-').map((s) => s.trim().replace('WIB', '').trim());
+      const startTime = parts[0] || '09:00';
+      const endTime = parts[1] || '12:00';
+
+      const res = await createMeetingAction({
+        title,
+        biroCode: selectedBiro,
+        date,
+        startTime,
+        endTime,
+        location,
+      });
+
+      if (res.success && res.data) {
+        alert(`Rapat "${title}" berhasil dijadwalkan dengan nomor resmi: ${res.data.meetingNumber}`);
+        router.push('/semua-rapat');
+      } else {
+        alert(res.error || 'Gagal membuat rapat');
+        setIsSubmitted(false);
+      }
+    } catch (err: any) {
+      alert(`Terjadi kesalahan: ${err?.message || 'Gagal menyimpan rapat'}`);
+      setIsSubmitted(false);
+    }
   };
 
   return (

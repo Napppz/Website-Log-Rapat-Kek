@@ -33,12 +33,40 @@ export function CreateMeetingDialog({ isOpen, onClose, onSuccess }: CreateMeetin
 
   if (!isOpen) return null;
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const [submitting, setSubmitting] = useState(false);
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    alert(`Rapat baru untuk ${selectedBiro} ("${title}") berhasil dijadwalkan! (Simulasi Mock)`);
-    setTitle('');
-    if (onSuccess) onSuccess();
-    onClose();
+    setSubmitting(true);
+    try {
+      const { createMeetingAction } = await import('@/app/actions/meeting-actions');
+      const parts = time.split('-').map((s) => s.trim().replace('WIB', '').trim());
+      const startTime = parts[0] || '09:00';
+      const endTime = parts[1] || '12:00';
+
+      const res = await createMeetingAction({
+        title,
+        biroCode: selectedBiro,
+        date,
+        startTime,
+        endTime,
+        location,
+      });
+
+      if (res.success && res.data) {
+        alert(`Rapat "${title}" berhasil disimpan di Neon DB dengan nomor otomatis: ${res.data.meetingNumber}`);
+        setTitle('');
+        if (onSuccess) onSuccess();
+        onClose();
+        window.location.reload();
+      } else {
+        alert(res.error || 'Gagal membuat rapat');
+      }
+    } catch (err: any) {
+      alert(`Terjadi kesalahan: ${err?.message || 'Gagal menyimpan rapat'}`);
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   return (
