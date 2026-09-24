@@ -1,4 +1,5 @@
 import { PrismaClient, UserRole, MeetingStatus, AttendanceStatus, ActionItemStatus, ActionItemPriority } from '@prisma/client';
+import bcrypt from 'bcryptjs';
 
 const prisma = new PrismaClient();
 
@@ -68,21 +69,70 @@ async function main() {
     console.log(`   [BIRO] ${biro.code} - ${biro.shortName} (ID: ${biro.id})`);
   }
 
-  // 2. Seed Users across all 5 Bureaus
-  console.log('2. Menyemai Pengguna (Users)...');
+  // 2. Seed Users across all 5 Bureaus & Stage 6 Role Accounts
+  console.log('2. Menyemai Pengguna (Users) & Akun Role RBAC (Stage 6)...');
+  const defaultPasswordHash = await bcrypt.hash('DevOnly!2026', 10);
+
   const dummyUsers = [
+    // --- STAGE 6 DEDICATED ROLE ACCOUNTS (simrapat.local) ---
+    {
+      name: 'Super Admin Dewan KEK',
+      email: 'superadmin@simrapat.local',
+      role: UserRole.SUPER_ADMIN,
+      biroCode: 'UK',
+      isActive: true,
+    },
+    {
+      name: 'Administrator Operasional Rapat',
+      email: 'admin@simrapat.local',
+      role: UserRole.ADMIN,
+      biroCode: 'BPPK',
+      isActive: true,
+    },
+    {
+      name: 'Notulis Sidang Pleno KEK',
+      email: 'notulis@simrapat.local',
+      role: UserRole.NOTULIS,
+      biroCode: 'PKKEK',
+      isActive: true,
+    },
+    {
+      name: 'Staf Pelaksana Teknis KEK',
+      email: 'staff@simrapat.local',
+      role: UserRole.STAFF,
+      biroCode: 'IKK',
+      isActive: true,
+    },
+    {
+      name: 'Viewer Publikasi Dewan KEK',
+      email: 'viewer@simrapat.local',
+      role: UserRole.VIEWER,
+      biroCode: 'HSDMO',
+      isActive: true,
+    },
+    {
+      name: 'Pengguna Nonaktif (Uji Coba)',
+      email: 'inactive@simrapat.local',
+      role: UserRole.STAFF,
+      biroCode: 'UK',
+      isActive: false,
+    },
+
+    // --- BIRO USERS ---
     // BPPK
     {
       name: 'Dr. Ir. Bambang Pranoto, M.T.',
       email: 'user.bppk1@kek.go.id',
       role: UserRole.ADMIN,
       biroCode: 'BPPK',
+      isActive: true,
     },
     {
       name: 'Rian Setyawan, S.T.',
       email: 'user.bppk2@kek.go.id',
       role: UserRole.STAFF,
       biroCode: 'BPPK',
+      isActive: true,
     },
     // PKKEK
     {
@@ -90,12 +140,14 @@ async function main() {
       email: 'user.pkkek1@kek.go.id',
       role: UserRole.ADMIN,
       biroCode: 'PKKEK',
+      isActive: true,
     },
     {
       name: 'Siti Nurhaliza, S.E.',
       email: 'user.pkkek2@kek.go.id',
       role: UserRole.NOTULIS,
       biroCode: 'PKKEK',
+      isActive: true,
     },
     // IKK
     {
@@ -103,12 +155,14 @@ async function main() {
       email: 'user.ikk1@kek.go.id',
       role: UserRole.SUPER_ADMIN,
       biroCode: 'IKK',
+      isActive: true,
     },
     {
       name: 'Maya Puspita, S.Sos',
       email: 'user.ikk2@kek.go.id',
       role: UserRole.NOTULIS,
       biroCode: 'IKK',
+      isActive: true,
     },
     // HSDMO
     {
@@ -116,12 +170,14 @@ async function main() {
       email: 'user.hsdmo1@kek.go.id',
       role: UserRole.ADMIN,
       biroCode: 'HSDMO',
+      isActive: true,
     },
     {
       name: 'Dewi Lestari, S.H.',
       email: 'user.hsdmo2@kek.go.id',
       role: UserRole.STAFF,
       biroCode: 'HSDMO',
+      isActive: true,
     },
     // UK
     {
@@ -129,12 +185,14 @@ async function main() {
       email: 'user.uk1@kek.go.id',
       role: UserRole.ADMIN,
       biroCode: 'UK',
+      isActive: true,
     },
     {
       name: 'Fitri Handayani, S.A.P.',
       email: 'user.uk2@kek.go.id',
       role: UserRole.VIEWER,
       biroCode: 'UK',
+      isActive: true,
     },
   ];
 
@@ -142,22 +200,26 @@ async function main() {
   for (const u of dummyUsers) {
     const biroId = biroMap.get(u.biroCode)!;
     const user = await prisma.user.upsert({
-      where: { email: u.email },
+      where: { email: u.email.toLowerCase().trim() },
       update: {
         name: u.name,
         role: u.role,
         biroId: biroId,
+        password: defaultPasswordHash,
+        isActive: u.isActive,
       },
       create: {
         name: u.name,
-        email: u.email,
+        email: u.email.toLowerCase().trim(),
         role: u.role,
         biroId: biroId,
+        password: defaultPasswordHash,
+        isActive: u.isActive,
       },
     });
     userMap.set(u.email, user.id);
   }
-  console.log(`   Berhasil menyemai ${userMap.size} user.`);
+  console.log(`   Berhasil menyemai ${userMap.size} user dengan password bcrypt ter-hash.`);
 
   // 3. Seed Meetings (12 meeting tersebar di 5 Biro)
   console.log('3. Menyemai Rapat Resmi (Meetings)...');

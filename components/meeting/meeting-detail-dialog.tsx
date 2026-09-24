@@ -22,6 +22,7 @@ import { ActionItemProgress } from '../action-items/action-item-progress';
 import { MeetingMinutesSection } from './meeting-minutes/meeting-minutes-section';
 import { ActionItemList } from '../action-items/action-item-list';
 import { getActionItemsAction } from '@/app/actions/action-item-actions';
+import { useSession } from 'next-auth/react';
 
 interface MeetingDetailDialogProps {
   meeting: Meeting | null;
@@ -36,6 +37,10 @@ export function MeetingDetailDialog({
   onDownloadPdf,
   onMeetingUpdated,
 }: MeetingDetailDialogProps) {
+  const { data: session } = useSession();
+  const userRole = session?.user?.role || 'VIEWER';
+  const canDeleteMeeting = userRole === 'SUPER_ADMIN' || userRole === 'ADMIN';
+
   const [activeTab, setActiveTab] = useState<'info' | 'participants' | 'minutes' | 'actionItems'>('info');
   const [isDeleting, setIsDeleting] = useState(false);
   const [isUpdatingStatus, setIsUpdatingStatus] = useState(false);
@@ -357,16 +362,20 @@ export function MeetingDetailDialog({
 
         {/* Modal Footer */}
         <div className="px-6 py-3.5 bg-slate-50 border-t border-slate-200 flex items-center justify-between gap-3">
-          <button
-            type="button"
-            disabled={isDeleting}
-            onClick={handleDelete}
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-red-200 text-red-600 hover:bg-red-50 hover:border-red-300 text-[12px] font-semibold transition-colors cursor-pointer disabled:opacity-50"
-            title="Hapus rapat dari database"
-          >
-            <Trash2 className="w-4 h-4" />
-            <span>{isDeleting ? 'Menghapus...' : 'Hapus Rapat'}</span>
-          </button>
+          {canDeleteMeeting ? (
+            <button
+              type="button"
+              disabled={isDeleting}
+              onClick={handleDelete}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-red-200 text-red-600 hover:bg-red-50 hover:border-red-300 text-[12px] font-semibold transition-colors cursor-pointer disabled:opacity-50"
+              title="Hapus rapat dari database"
+            >
+              <Trash2 className="w-4 h-4" />
+              <span>{isDeleting ? 'Menghapus...' : 'Hapus Rapat'}</span>
+            </button>
+          ) : (
+            <div />
+          )}
 
           <div className="flex items-center gap-2">
             <button

@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Public_Sans, Plus_Jakarta_Sans } from "next/font/google";
 import "./globals.css";
 import { DashboardShell } from "@/components/layout/dashboard-shell";
+import { AuthProvider } from "@/components/providers/auth-provider";
 
 const publicSans = Public_Sans({
   variable: "--font-public-sans",
@@ -30,7 +31,9 @@ export default function RootLayout({
   return (
     <html lang="id" className={`${publicSans.variable} ${plusJakartaSans.variable}`}>
       <body className="bg-[#FAFAFA] text-slate-800 antialiased selection:bg-amber-100 selection:text-amber-900">
-        <DashboardShell>{children}</DashboardShell>
+        <AuthProvider>
+          <DashboardShell>{children}</DashboardShell>
+        </AuthProvider>
       </body>
     </html>
   );

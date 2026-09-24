@@ -3,6 +3,7 @@
 import { prisma } from '@/lib/prisma';
 import { meetingMinutesSchema, MeetingMinutesInput } from '@/lib/validations/minutes';
 import { revalidatePath } from 'next/cache';
+import { requirePermission } from '@/lib/auth/authorization';
 
 /**
  * Server Action: Get MeetingMinutes by meetingId
@@ -30,6 +31,9 @@ export async function getMeetingMinutesAction(meetingId: string) {
  */
 export async function upsertMeetingMinutesAction(input: MeetingMinutesInput) {
   try {
+    // Authorization Check: Must have 'create:minutes' permission (SUPER_ADMIN, ADMIN, NOTULIS)
+    await requirePermission('create:minutes');
+
     // 1. Zod Validation
     const parsed = meetingMinutesSchema.safeParse(input);
     if (!parsed.success) {

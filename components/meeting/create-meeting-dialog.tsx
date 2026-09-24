@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { X, Calendar, Clock, MapPin, Building2, Plus } from 'lucide-react';
 import { BIRO_LIST } from '@/lib/mock-data';
 import { BiroCode } from '@/lib/types';
+import { useSession } from 'next-auth/react';
 
 interface CreateMeetingDialogProps {
   isOpen: boolean;
@@ -12,6 +13,10 @@ interface CreateMeetingDialogProps {
 }
 
 export function CreateMeetingDialog({ isOpen, onClose, onSuccess }: CreateMeetingDialogProps) {
+  const { data: session } = useSession();
+  const userRole = session?.user?.role || 'VIEWER';
+  const canCreate = userRole === 'SUPER_ADMIN' || userRole === 'ADMIN' || userRole === 'NOTULIS';
+
   const [selectedBiro, setSelectedBiro] = useState<BiroCode>('IKK');
   const [title, setTitle] = useState('');
   const [date, setDate] = useState('2026-09-25');
@@ -31,7 +36,7 @@ export function CreateMeetingDialog({ isOpen, onClose, onSuccess }: CreateMeetin
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [isOpen, onClose]);
 
-  if (!isOpen) return null;
+  if (!isOpen || !canCreate) return null;
 
   const [submitting, setSubmitting] = useState(false);
 

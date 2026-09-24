@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
+import { usePathname } from 'next/navigation';
 import { Sidebar } from './sidebar';
 import { Header } from './header';
 import { CreateMeetingDialog } from '../meeting/create-meeting-dialog';
@@ -11,10 +12,16 @@ interface DashboardShellProps {
 }
 
 export function DashboardShell({ children }: DashboardShellProps) {
+  const pathname = usePathname();
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const [isCreateMeetingOpen, setIsCreateMeetingOpen] = useState(false);
   const [globalSearch, setGlobalSearch] = useState('');
+
+  // If on login page, render full screen without dashboard chrome
+  if (pathname === '/login') {
+    return <main className="min-h-screen bg-slate-900">{children}</main>;
+  }
 
   return (
     <div className="min-h-screen bg-[#FAFAFA] font-sans text-slate-800 antialiased flex flex-col">
