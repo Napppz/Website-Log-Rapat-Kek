@@ -27,6 +27,7 @@ interface MeetingTableProps {
   filterStatus?: MeetingStatus | null;
   isLoading?: boolean;
   initialMeetings?: Meeting[];
+  pageSize?: number;
 }
 
 export function MeetingTable({
@@ -35,6 +36,7 @@ export function MeetingTable({
   filterStatus,
   isLoading = false,
   initialMeetings,
+  pageSize = 8,
 }: MeetingTableProps) {
   const [meetings, setMeetings] = useState<Meeting[]>(initialMeetings || MOCK_MEETINGS);
   const [fetching, setFetching] = useState(false);
@@ -152,6 +154,33 @@ export function MeetingTable({
     setSearchFilter('');
   };
 
+  // Reset page when filters change
+  React.useEffect(() => {
+    setCurrentPage(1);
+  }, [searchFilter, filterBiro, filterStatus]);
+
+  const itemsPerPage = pageSize;
+  const totalPages = Math.max(1, Math.ceil(filteredMeetings.length / itemsPerPage));
+  const safePage = Math.min(Math.max(1, currentPage), totalPages);
+  const startIndex = (safePage - 1) * itemsPerPage;
+  const endIndex = Math.min(startIndex + itemsPerPage, filteredMeetings.length);
+  const paginatedMeetings = filteredMeetings.slice(startIndex, endIndex);
+
+  const getPageNumbers = (current: number, total: number) => {
+    if (total <= 5) {
+      return Array.from({ length: total }, (_, i) => i + 1);
+    }
+    const pages: (number | string)[] = [];
+    if (current <= 3) {
+      pages.push(1, 2, 3, 4, '...', total);
+    } else if (current >= total - 2) {
+      pages.push(1, '...', total - 3, total - 2, total - 1, total);
+    } else {
+      pages.push(1, '...', current - 1, current, current + 1, '...', total);
+    }
+    return pages;
+  };
+
   return (
     <div className="rounded-xl bg-white shadow-sm border border-amber-200/70 overflow-hidden flex flex-col">
       {/* Table Card Header */}
@@ -264,8 +293,8 @@ export function MeetingTable({
                 </td>
               </tr>
             ) : (
-              // Meeting Rows
-              filteredMeetings.map((meeting, index) => {
+              // Meeting Rows (Paginated)
+              paginatedMeetings.map((meeting, index) => {
                 const isEven = index % 2 === 1;
 
                 return (
@@ -362,54 +391,65 @@ export function MeetingTable({
       {!isLoading && filteredMeetings.length > 0 && (
         <div className="p-4 bg-amber-50/40 border-t border-amber-100 flex flex-col sm:flex-row items-center justify-between gap-3 text-[13px] text-slate-600 font-medium">
           <span>
-            Menampilkan {filteredMeetings.length} dari total 148 risalah rapat terdaftar
+            Menampilkan{' '}
+            <strong className="text-slate-800">
+              {filteredMeetings.length === 0 ? 0 : startIndex + 1}–{endIndex}
+            </strong>{' '}
+            dari total <strong className="text-slate-800">{filteredMeetings.length}</strong> risalah rapat terdaftar
           </span>
+
           <div className="flex items-center gap-1.5">
+            {/* Tombol Sebelumnya */}
             <button
               type="button"
-              disabled={currentPage === 1}
-              onClick={() => setCurrentPage(1)}
-              className="px-3 py-1.5 rounded-lg bg-white border border-amber-200 text-slate-400 text-[12px] font-medium shadow-xs opacity-50 cursor-not-allowed"
+              disabled={safePage <= 1}
+              onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+              className={`px-3 py-1.5 rounded-lg border text-[12px] font-medium shadow-xs transition-all ${
+                safePage <= 1
+                  ? 'bg-white border-amber-200 text-slate-400 opacity-50 cursor-not-allowed'
+                  : 'bg-white border-amber-300 text-slate-700 hover:bg-amber-50 cursor-pointer'
+              }`}
             >
               Sebelumnya
             </button>
+
+            {/* Nomor Halaman Dinamis */}
+            {getPageNumbers(safePage, totalPages).map((item, pIdx) => {
+              if (item === '...') {
+                return (
+                  <span key={`dots-${pIdx}`} className="px-2 text-slate-400 select-none">
+                    ...
+                  </span>
+                );
+              }
+              const pageNum = Number(item);
+              const isActive = pageNum === safePage;
+              return (
+                <button
+                  key={pageNum}
+                  type="button"
+                  onClick={() => setCurrentPage(pageNum)}
+                  className={`px-3 py-1.5 rounded-lg text-[12px] font-bold shadow-xs transition-all cursor-pointer ${
+                    isActive
+                      ? 'bg-amber-600 text-white border border-amber-600'
+                      : 'bg-white border border-amber-200 text-slate-700 hover:bg-amber-50'
+                  }`}
+                >
+                  {pageNum}
+                </button>
+              );
+            })}
+
+            {/* Tombol Berikutnya */}
             <button
               type="button"
-              onClick={() => setCurrentPage(1)}
-              className={`px-3 py-1.5 rounded-lg text-[12px] font-bold shadow-xs ${
-                currentPage === 1
-                  ? 'bg-amber-600 text-white'
-                  : 'bg-white border border-amber-200 text-slate-700 hover:bg-amber-50'
+              disabled={safePage >= totalPages}
+              onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+              className={`px-3 py-1.5 rounded-lg border text-[12px] font-medium shadow-xs transition-all ${
+                safePage >= totalPages
+                  ? 'bg-white border-amber-200 text-slate-400 opacity-50 cursor-not-allowed'
+                  : 'bg-white border-amber-300 text-slate-700 hover:bg-amber-50 cursor-pointer'
               }`}
-            >
-              1
-            </button>
-            <button
-              type="button"
-              onClick={() => setCurrentPage(2)}
-              className={`px-3 py-1.5 rounded-lg text-[12px] font-medium shadow-xs ${
-                currentPage === 2
-                  ? 'bg-amber-600 text-white'
-                  : 'bg-white border border-amber-200 text-slate-700 hover:bg-amber-50'
-              }`}
-            >
-              2
-            </button>
-            <button
-              type="button"
-              onClick={() => setCurrentPage(3)}
-              className={`px-3 py-1.5 rounded-lg text-[12px] font-medium shadow-xs ${
-                currentPage === 3
-                  ? 'bg-amber-600 text-white'
-                  : 'bg-white border border-amber-200 text-slate-700 hover:bg-amber-50'
-              }`}
-            >
-              3
-            </button>
-            <button
-              type="button"
-              onClick={() => setCurrentPage(2)}
-              className="px-3 py-1.5 rounded-lg bg-white border border-amber-200 text-slate-700 text-[12px] font-medium shadow-xs hover:bg-amber-50 transition-colors cursor-pointer"
             >
               Berikutnya
             </button>
