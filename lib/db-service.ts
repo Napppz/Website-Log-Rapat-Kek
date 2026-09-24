@@ -232,6 +232,7 @@ export async function getMeetingsFromDb(filters?: {
         biroName: m.primaryBiro.shortName,
         status: m.status as MeetingStatus,
         isNew: m.date.toISOString().slice(0, 10) >= '2026-09-24',
+        involvedBiros: involvedBiroNames,
         actionItems: {
           total: fallbackTotal,
           completed: fallbackCompleted,

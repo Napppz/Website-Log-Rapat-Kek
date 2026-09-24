@@ -68,6 +68,7 @@ export interface Meeting {
   biroName: string;
   status: MeetingStatus;
   isNew?: boolean;
+  involvedBiros?: string;
   actionItems: ActionItemProgressData;
   attendees?: string[];
   agendaSummary?: string;
