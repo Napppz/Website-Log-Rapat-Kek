@@ -17,19 +17,27 @@ import {
   ChevronRight,
   Shield,
   Layers,
+  CheckSquare,
 } from 'lucide-react';
 import { MeetingStatusBadge } from '@/components/meeting/meeting-status-badge';
 import { MeetingMinutesSection } from '@/components/meeting/meeting-minutes/meeting-minutes-section';
+import { ActionItemList } from '@/components/action-items/action-item-list';
 import { MeetingStatus } from '@/lib/types';
 import { updateMeetingStatusAction, deleteMeetingAction } from '@/app/actions/meeting-actions';
 
 interface MeetingDetailViewProps {
   meeting: any;
+  availableBiros?: any[];
+  availableUsers?: any[];
 }
 
-export function MeetingDetailView({ meeting }: MeetingDetailViewProps) {
+export function MeetingDetailView({
+  meeting,
+  availableBiros = [],
+  availableUsers = [],
+}: MeetingDetailViewProps) {
   const router = useRouter();
-  const [activeTab, setActiveTab] = useState<'overview' | 'participants' | 'minutes'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview' | 'participants' | 'minutes' | 'actionItems'>('overview');
   const [isDeleting, setIsDeleting] = useState(false);
   const [isUpdatingStatus, setIsUpdatingStatus] = useState(false);
   const [status, setStatus] = useState<MeetingStatus>(meeting.status);
@@ -272,6 +280,19 @@ export function MeetingDetailView({ meeting }: MeetingDetailViewProps) {
             <span className="w-2 h-2 rounded-full bg-emerald-500" title="Notulen telah terisi" />
           )}
         </button>
+
+        <button
+          type="button"
+          onClick={() => setActiveTab('actionItems')}
+          className={`flex items-center gap-2 px-5 py-3 font-bold text-[13px] border-b-2 transition-all cursor-pointer ${
+            activeTab === 'actionItems'
+              ? 'border-amber-600 text-amber-900 bg-amber-50/50 rounded-t-lg'
+              : 'border-transparent text-slate-600 hover:text-amber-800 hover:bg-amber-50/20'
+          }`}
+        >
+          <CheckSquare className="w-4 h-4" />
+          <span>Tindak Lanjut ({meeting.actionItems ? meeting.actionItems.length : 0})</span>
+        </button>
       </div>
 
       {/* Tab 1: Informasi Rapat / Overview */}
@@ -300,6 +321,29 @@ export function MeetingDetailView({ meeting }: MeetingDetailViewProps) {
                 className="px-4 py-2 rounded-lg bg-amber-600 hover:bg-amber-700 text-white font-semibold text-[12px] transition-all shrink-0 cursor-pointer shadow-xs"
               >
                 {meeting.minutes ? 'Buka Notulen Rapat' : '+ Buat Notulen Sekarang'}
+              </button>
+            </div>
+
+            {/* Matriks Tindak Lanjut Quick Card */}
+            <div className="p-4 bg-amber-50/50 rounded-xl border border-amber-200 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+              <div>
+                <h4 className="font-bold text-slate-900">Matriks &amp; Komitmen Tindak Lanjut</h4>
+                <p className="text-[12px] text-slate-500">
+                  {meeting.actionItems && meeting.actionItems.length > 0
+                    ? `Terdapat ${meeting.actionItems.length} butir tindak lanjut terdaftar (${
+                        meeting.actionItems.filter((a: any) => a.status === 'COMPLETED').length
+                      } selesai).`
+                    : 'Belum ada butir tindak lanjut yang dibuat untuk rapat ini.'}
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setActiveTab('actionItems')}
+                className="px-4 py-2 rounded-lg bg-white border border-amber-300 hover:bg-amber-100 text-amber-900 font-semibold text-[12px] transition-all shrink-0 cursor-pointer shadow-xs"
+              >
+                {meeting.actionItems && meeting.actionItems.length > 0
+                  ? 'Buka Matriks Tindak Lanjut'
+                  : '+ Tambah Tindak Lanjut'}
               </button>
             </div>
           </div>
@@ -342,6 +386,18 @@ export function MeetingDetailView({ meeting }: MeetingDetailViewProps) {
             meetingId={meeting.id}
             initialMinutes={meeting.minutes}
             defaultMode={meeting.minutes ? 'preview' : 'edit'}
+          />
+        </div>
+      )}
+
+      {/* Tab 4: Tindak Lanjut */}
+      {activeTab === 'actionItems' && (
+        <div className="space-y-4">
+          <ActionItemList
+            meetingId={meeting.id}
+            initialItems={meeting.actionItems || []}
+            availableBiros={availableBiros}
+            availableUsers={availableUsers}
           />
         </div>
       )}

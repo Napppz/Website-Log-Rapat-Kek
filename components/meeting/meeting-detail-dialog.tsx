@@ -14,11 +14,14 @@ import {
   Trash2,
   ExternalLink,
   Layers,
+  CheckSquare,
 } from 'lucide-react';
 import { Meeting, MeetingStatus } from '@/lib/types';
 import { MeetingStatusBadge } from './meeting-status-badge';
 import { ActionItemProgress } from '../action-items/action-item-progress';
 import { MeetingMinutesSection } from './meeting-minutes/meeting-minutes-section';
+import { ActionItemList } from '../action-items/action-item-list';
+import { getActionItemsAction } from '@/app/actions/action-item-actions';
 
 interface MeetingDetailDialogProps {
   meeting: Meeting | null;
@@ -33,9 +36,23 @@ export function MeetingDetailDialog({
   onDownloadPdf,
   onMeetingUpdated,
 }: MeetingDetailDialogProps) {
-  const [activeTab, setActiveTab] = useState<'info' | 'participants' | 'minutes'>('info');
+  const [activeTab, setActiveTab] = useState<'info' | 'participants' | 'minutes' | 'actionItems'>('info');
   const [isDeleting, setIsDeleting] = useState(false);
   const [isUpdatingStatus, setIsUpdatingStatus] = useState(false);
+  const [actionItems, setActionItems] = useState<any[]>([]);
+  const [isLoadingItems, setIsLoadingItems] = useState(false);
+
+  useEffect(() => {
+    if (activeTab === 'actionItems' && meeting?.id) {
+      setIsLoadingItems(true);
+      getActionItemsAction(meeting.id).then((res) => {
+        if (res.success && res.data) {
+          setActionItems(res.data);
+        }
+        setIsLoadingItems(false);
+      });
+    }
+  }, [activeTab, meeting?.id]);
 
   // Close on Escape key
   useEffect(() => {
@@ -183,6 +200,19 @@ export function MeetingDetailDialog({
             <FileText className="w-3.5 h-3.5" />
             <span>Notulen &amp; Hasil Rapat</span>
           </button>
+
+          <button
+            type="button"
+            onClick={() => setActiveTab('actionItems')}
+            className={`flex items-center gap-1.5 py-2.5 px-3 font-bold text-[12px] border-b-2 transition-all cursor-pointer ${
+              activeTab === 'actionItems'
+                ? 'border-amber-600 text-amber-900 bg-white rounded-t-md'
+                : 'border-transparent text-slate-600 hover:text-amber-800'
+            }`}
+          >
+            <CheckSquare className="w-3.5 h-3.5" />
+            <span>Tindak Lanjut</span>
+          </button>
         </div>
 
         {/* Modal Body */}
@@ -307,6 +337,20 @@ export function MeetingDetailDialog({
           {activeTab === 'minutes' && (
             <div className="pt-1">
               <MeetingMinutesSection meetingId={meeting.id} />
+            </div>
+          )}
+
+          {/* TAB 4: TINDAK LANJUT */}
+          {activeTab === 'actionItems' && (
+            <div className="pt-1">
+              {isLoadingItems ? (
+                <div className="p-8 text-center text-slate-500">Memuat tindak lanjut rapat...</div>
+              ) : (
+                <ActionItemList
+                  meetingId={meeting.id}
+                  initialItems={actionItems}
+                />
+              )}
             </div>
           )}
         </div>

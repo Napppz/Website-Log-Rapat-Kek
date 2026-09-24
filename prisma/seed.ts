@@ -1,4 +1,4 @@
-import { PrismaClient, UserRole, MeetingStatus, AttendanceStatus } from '@prisma/client';
+import { PrismaClient, UserRole, MeetingStatus, AttendanceStatus, ActionItemStatus, ActionItemPriority } from '@prisma/client';
 
 const prisma = new PrismaClient();
 
@@ -606,7 +606,161 @@ async function main() {
     console.log(`   [MINUTES] Notulen resmi untuk BPPK-001 berhasil disemai.`);
   }
 
-  console.log('--- SEEDING DATABASE FOUNDATION & NOTULEN SELESAI DENGAN SUKSES ---');
+  // 6. Seed ActionItems (Stage 5 Matriks Tindak Lanjut)
+  console.log('6. Menyemai Matriks Tindak Lanjut / Action Items (Stage 5)...');
+  const actionItemsToSeed = [
+    // BPPK-001 items
+    {
+      meetingNumber: 'BPPK-001',
+      title: 'Menyusun laporan progres pembangunan infrastruktur KEK',
+      description: 'Laporan komprehensif mencakup penyediaan air baku, jalan akses lingkar kawasan, dan gardu induk PLN.',
+      picBiroCode: 'BPPK',
+      picUserEmail: 'user.bppk1@kek.go.id',
+      dueDate: new Date('2026-09-30T17:00:00.000Z'),
+      priority: ActionItemPriority.HIGH,
+      status: ActionItemStatus.IN_PROGRESS,
+    },
+    {
+      meetingNumber: 'BPPK-001',
+      title: 'Validasi koordinat deliniasi zonasi dengan Pemprov & ATR/BPN',
+      description: 'Penyelesaian berita acara pengukuran batas patok kawasan bersama dinas teknis setempat.',
+      picBiroCode: 'BPPK',
+      picUserEmail: 'user.bppk2@kek.go.id',
+      dueDate: new Date('2026-09-20T17:00:00.000Z'),
+      priority: ActionItemPriority.MEDIUM,
+      status: ActionItemStatus.COMPLETED,
+      completedAt: new Date('2026-09-20T15:30:00.000Z'),
+    },
+    {
+      meetingNumber: 'BPPK-001',
+      title: 'Harmonisasi draf naskah akademik regulasi fasilitas fiskal',
+      description: 'Koordinasi perumusan pasal-pasal kemudahan pajak bersama Badan Kebijakan Fiskal.',
+      picBiroCode: 'HSDMO',
+      picUserEmail: 'user.hsdmo1@kek.go.id',
+      dueDate: new Date('2026-10-05T17:00:00.000Z'),
+      priority: ActionItemPriority.HIGH,
+      status: ActionItemStatus.PENDING,
+    },
+
+    // PKKEK-001 items
+    {
+      meetingNumber: 'PKKEK-001',
+      title: 'Audit kelayakan teknis fasilitas shore power terminal kontainer Bitung',
+      description: 'Pemeriksaan suplai daya listrik kapal saat sandar untuk efisiensi energi hijau pelabuhan.',
+      picBiroCode: 'PKKEK',
+      picUserEmail: 'user.pkkek1@kek.go.id',
+      dueDate: new Date('2026-09-18T17:00:00.000Z'), // Past due date -> triggers OVERDUE logic
+      priority: ActionItemPriority.URGENT,
+      status: ActionItemStatus.PENDING,
+    },
+    {
+      meetingNumber: 'PKKEK-001',
+      title: 'Penyusunan SOP inspeksi operasional rutin pelabuhan internasional',
+      description: 'Standarisasi alur pengawasan waktu labuh dan pemuatan kontainer kawasan.',
+      picBiroCode: 'PKKEK',
+      picUserEmail: 'user.pkkek2@kek.go.id',
+      dueDate: new Date('2026-10-10T17:00:00.000Z'),
+      priority: ActionItemPriority.MEDIUM,
+      status: ActionItemStatus.IN_PROGRESS,
+    },
+
+    // IKK-001 items
+    {
+      meetingNumber: 'IKK-001',
+      title: 'Fasilitasi penandatanganan MoU pasokan gas industri KEK Gresik dengan PGN',
+      description: 'Kepastian alokasi 40 MMSCFD gas industri untuk tenant utama smelter.',
+      picBiroCode: 'IKK',
+      picUserEmail: 'user.ikk1@kek.go.id',
+      dueDate: new Date('2026-09-28T17:00:00.000Z'),
+      priority: ActionItemPriority.HIGH,
+      status: ActionItemStatus.IN_PROGRESS,
+    },
+    {
+      meetingNumber: 'IKK-001',
+      title: 'Penerbitan surat rekomendasi teknis perizinan lingkungan hidup KEK Gresik',
+      description: 'Penyampaian rekomendasi percepatan persetujuan teknis air limbah ke Kementerian LHK.',
+      picBiroCode: 'IKK',
+      picUserEmail: 'user.ikk2@kek.go.id',
+      dueDate: new Date('2026-09-21T17:00:00.000Z'),
+      priority: ActionItemPriority.MEDIUM,
+      status: ActionItemStatus.COMPLETED,
+      completedAt: new Date('2026-09-21T14:00:00.000Z'),
+    },
+
+    // HSDMO-001 items
+    {
+      meetingNumber: 'HSDMO-001',
+      title: 'Harmonisasi Peraturan Menteri Keuangan tentang fasilitas kepabeanan KEK Sanur',
+      description: 'Penyelarasan fasilitas pembebasan bea masuk atas impor peralatan medis berteknologi tinggi.',
+      picBiroCode: 'HSDMO',
+      picUserEmail: 'user.hsdmo1@kek.go.id',
+      dueDate: new Date('2026-10-08T17:00:00.000Z'),
+      priority: ActionItemPriority.URGENT,
+      status: ActionItemStatus.PENDING,
+    },
+
+    // UK-001 items
+    {
+      meetingNumber: 'UK-001',
+      title: 'Konsolidasi pagu indikatif belanja modal posko KEK TA 2027',
+      description: 'Sinkronisasi usulan kebutuhan sarana persidangan dan sistem TI dengan Biro Perencanaan.',
+      picBiroCode: 'UK',
+      picUserEmail: 'user.uk1@kek.go.id',
+      dueDate: new Date('2026-10-12T17:00:00.000Z'),
+      priority: ActionItemPriority.MEDIUM,
+      status: ActionItemStatus.IN_PROGRESS,
+    },
+  ];
+
+  for (const item of actionItemsToSeed) {
+    const meeting = await prisma.meeting.findUnique({
+      where: { meetingNumber: item.meetingNumber },
+    });
+    const picBiroId = biroMap.get(item.picBiroCode);
+    const picUserId = userMap.get(item.picUserEmail);
+
+    if (meeting && picBiroId) {
+      // Find existing by title and meetingId or create
+      const existing = await prisma.actionItem.findFirst({
+        where: {
+          meetingId: meeting.id,
+          title: item.title,
+        },
+      });
+
+      if (existing) {
+        await prisma.actionItem.update({
+          where: { id: existing.id },
+          data: {
+            description: item.description,
+            picBiroId,
+            picUserId: picUserId || null,
+            dueDate: item.dueDate,
+            priority: item.priority,
+            status: item.status,
+            completedAt: (item as any).completedAt || null,
+          },
+        });
+      } else {
+        await prisma.actionItem.create({
+          data: {
+            meetingId: meeting.id,
+            title: item.title,
+            description: item.description,
+            picBiroId,
+            picUserId: picUserId || null,
+            dueDate: item.dueDate,
+            priority: item.priority,
+            status: item.status,
+            completedAt: (item as any).completedAt || null,
+          },
+        });
+      }
+      console.log(`   [ACTION ITEM] ${item.meetingNumber} - ${item.title.substring(0, 45)}...`);
+    }
+  }
+
+  console.log('--- SEEDING DATABASE FOUNDATION, NOTULEN & ACTION ITEMS SELESAI DENGAN SUKSES ---');
 }
 
 main()
