@@ -14,12 +14,16 @@ import {
   FileText,
   SearchX,
   RotateCcw,
+  Trash2,
+  Loader2,
 } from 'lucide-react';
 import { Meeting, BiroCode, MeetingStatus } from '@/lib/types';
 import { MOCK_MEETINGS } from '@/lib/mock-data';
 import { MeetingStatusBadge } from './meeting-status-badge';
 import { ActionItemProgress } from '../action-items/action-item-progress';
 import { MeetingDetailDialog } from './meeting-detail-dialog';
+import { useSession } from 'next-auth/react';
+import { deleteMeetingAction } from '@/app/actions/meeting-actions';
 
 interface MeetingTableProps {
   onViewAllMeetings?: () => void;
@@ -44,6 +48,35 @@ export function MeetingTable({
   const [selectedMeeting, setSelectedMeeting] = useState<Meeting | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [downloadingId, setDownloadingId] = useState<string | null>(null);
+  const [deletingRowId, setDeletingRowId] = useState<string | null>(null);
+  const { data: session } = useSession();
+  const userRole = session?.user?.role || 'VIEWER';
+  const canDeleteMeeting = userRole === 'SUPER_ADMIN' || userRole === 'ADMIN';
+
+  const handleDeleteSingleMeeting = async (m: Meeting) => {
+    if (
+      !confirm(
+        `Apakah Anda yakin ingin menghapus permanen rapat "${m.code} - ${m.title}" beserta seluruh notulen dan tindak lanjutnya?`
+      )
+    ) {
+      return;
+    }
+
+    try {
+      setDeletingRowId(m.id);
+      const res = await deleteMeetingAction(m.id);
+      if (res.success) {
+        setMeetings((prev) => prev.filter((item) => item.id !== m.id));
+        alert(`Rapat ${m.code} berhasil dihapus dari database.`);
+      } else {
+        alert(res.error || 'Gagal menghapus rapat.');
+      }
+    } catch (err: any) {
+      alert(`Terjadi kesalahan: ${err?.message || 'Gagal menghapus rapat'}`);
+    } finally {
+      setDeletingRowId(null);
+    }
+  };
 
   const handleDownloadPdf = async (mId: string, mCode: string) => {
     try {
@@ -382,6 +415,21 @@ export function MeetingTable({
                         >
                           <FileDown className="w-4 h-4" />
                         </button>
+                        {canDeleteMeeting && (
+                          <button
+                            type="button"
+                            disabled={deletingRowId === meeting.id}
+                            onClick={() => handleDeleteSingleMeeting(meeting)}
+                            className="p-1.5 rounded-lg text-slate-400 hover:text-red-600 hover:bg-red-50 transition-colors cursor-pointer disabled:opacity-50"
+                            title={`Hapus Rapat ${meeting.code}`}
+                          >
+                            {deletingRowId === meeting.id ? (
+                              <Loader2 className="w-4 h-4 animate-spin text-red-600" />
+                            ) : (
+                              <Trash2 className="w-4 h-4" />
+                            )}
+                          </button>
+                        )}
                       </div>
                     </td>
                   </tr>

@@ -435,6 +435,13 @@ export async function deleteMeetingAction(meetingId: string) {
       throw new Error('Rapat tidak ditemukan.');
     }
 
+    // 1. Explicitly delete child relations for maximum reliability across database drivers
+    await prisma.actionItem.deleteMany({ where: { meetingId } });
+    await prisma.meetingMinutes.deleteMany({ where: { meetingId } });
+    await prisma.meetingParticipant.deleteMany({ where: { meetingId } });
+    await prisma.meetingBiro.deleteMany({ where: { meetingId } });
+
+    // 2. Delete the meeting record
     await prisma.meeting.delete({
       where: { id: meetingId },
     });
@@ -442,6 +449,10 @@ export async function deleteMeetingAction(meetingId: string) {
     safeRevalidate([
       '/',
       '/semua-rapat',
+      '/kalender',
+      '/dokumen',
+      '/tindak-lanjut',
+      '/laporan',
       `/biro/${meeting.primaryBiro.code.toLowerCase()}`,
     ]);
 
