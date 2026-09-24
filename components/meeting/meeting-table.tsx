@@ -41,6 +41,31 @@ export function MeetingTable({
   const [searchFilter, setSearchFilter] = useState('');
   const [selectedMeeting, setSelectedMeeting] = useState<Meeting | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
+  const [downloadingId, setDownloadingId] = useState<string | null>(null);
+
+  const handleDownloadPdf = async (mId: string, mCode: string) => {
+    try {
+      setDownloadingId(mId);
+      const res = await fetch(`/api/meetings/${mId}/pdf`);
+      if (!res.ok) {
+        const err = await res.json().catch(() => null);
+        throw new Error(err?.error || 'Gagal mengunduh PDF');
+      }
+      const blob = await res.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `Risalah-Rapat-${mCode}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+    } catch (e: any) {
+      alert(e?.message || 'Gagal mengunduh dokumen PDF.');
+    } finally {
+      setDownloadingId(null);
+    }
+  };
 
   // Sync with initialMeetings or fetch from Neon API
   React.useEffect(() => {
@@ -316,13 +341,10 @@ export function MeetingTable({
                         </button>
                         <button
                           type="button"
-                          onClick={() =>
-                            alert(
-                              `Mengunduh risalah notulen resmi ${meeting.code} (Format PDF Resmi KEK RI)...`
-                            )
-                          }
-                          className="p-1.5 rounded-lg text-amber-700 hover:bg-amber-100 transition-colors cursor-pointer"
-                          title="Unduh Notulen PDF"
+                          disabled={downloadingId === meeting.id}
+                          onClick={() => handleDownloadPdf(meeting.id, meeting.code)}
+                          className="p-1.5 rounded-lg text-amber-700 hover:bg-amber-100 transition-colors cursor-pointer disabled:opacity-50"
+                          title="Unduh Risalah Rapat (PDF)"
                         >
                           <FileDown className="w-4 h-4" />
                         </button>
