@@ -18,6 +18,8 @@ import {
   Trash2,
   Check,
   PlayCircle,
+  FileSpreadsheet,
+  Loader2,
 } from 'lucide-react';
 import { ActionItem, ActionItemStatus } from '@/lib/types';
 import { ActionItemStatusBadge, ActionItemPriorityBadge } from './action-item-status-badge';
@@ -53,6 +55,49 @@ export function ActionItemMatrixView({
   const [editingItem, setEditingItem] = useState<ActionItem | null>(null);
   const [deletingItem, setDeletingItem] = useState<ActionItem | null>(null);
   const [updatingStatusId, setUpdatingStatusId] = useState<string | null>(null);
+  const [isExporting, setIsExporting] = useState(false);
+
+  /**
+   * Export Excel — uses the same active filters as the visible table.
+   * Consistency: UI row count == Excel row count.
+   */
+  const handleExportExcel = async () => {
+    try {
+      setIsExporting(true);
+      const params = new URLSearchParams();
+      if (statusParam && statusParam !== 'ALL') params.set('status', statusParam);
+      if (selectedBiro && selectedBiro !== 'ALL') params.set('biro', selectedBiro);
+      if (search.trim()) params.set('search', search.trim());
+
+      const url = `/api/action-items/export?${params.toString()}`;
+      const res = await fetch(url);
+
+      if (res.status === 401) {
+        alert('Sesi Anda telah berakhir. Silakan masuk kembali ke sistem.');
+        return;
+      }
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({}));
+        alert(`Gagal mengekspor: ${body?.error ?? 'Terjadi kesalahan server.'}`);
+        return;
+      }
+
+      const blob = await res.blob();
+      const disposition = res.headers.get('Content-Disposition') ?? '';
+      const match = disposition.match(/filename="([^"]+)"/);
+      const filename = match?.[1] ?? 'Matriks-Tindak-Lanjut.xlsx';
+
+      const anchor = document.createElement('a');
+      anchor.href = URL.createObjectURL(blob);
+      anchor.download = filename;
+      anchor.click();
+      URL.revokeObjectURL(anchor.href);
+    } catch (err: any) {
+      alert(`Terjadi kesalahan saat mengekspor: ${err?.message ?? 'Error tidak diketahui'}`);
+    } finally {
+      setIsExporting(false);
+    }
+  };
 
   // Compute live metrics across all items
   const totalCount = items.length;
@@ -265,6 +310,23 @@ export function ActionItemMatrixView({
             />
             <Search className="w-3.5 h-3.5 absolute left-2.5 top-2.5 text-amber-600 pointer-events-none" />
           </div>
+
+          {/* Export Excel button */}
+          <button
+            type="button"
+            id="export-excel-btn"
+            onClick={handleExportExcel}
+            disabled={isExporting}
+            className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 disabled:bg-emerald-400 text-white font-semibold text-[12px] shadow-sm transition-all cursor-pointer shrink-0"
+            title="Export data tindak lanjut sesuai filter aktif ke Excel"
+          >
+            {isExporting ? (
+              <Loader2 className="w-3.5 h-3.5 animate-spin" />
+            ) : (
+              <FileSpreadsheet className="w-3.5 h-3.5" />
+            )}
+            <span>{isExporting ? 'Mengekspor...' : 'Export Excel'}</span>
+          </button>
 
           {/* New Action Item Trigger */}
           {availableMeetings.length > 0 && (
