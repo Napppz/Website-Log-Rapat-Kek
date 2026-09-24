@@ -24,6 +24,7 @@ import { MeetingMinutesSection } from '@/components/meeting/meeting-minutes/meet
 import { ActionItemList } from '@/components/action-items/action-item-list';
 import { MeetingStatus } from '@/lib/types';
 import { updateMeetingStatusAction, deleteMeetingAction } from '@/app/actions/meeting-actions';
+import { useSession } from 'next-auth/react';
 
 interface MeetingDetailViewProps {
   meeting: any;
@@ -37,6 +38,11 @@ export function MeetingDetailView({
   availableUsers = [],
 }: MeetingDetailViewProps) {
   const router = useRouter();
+  const { data: session } = useSession();
+  const userRole = session?.user?.role || 'VIEWER';
+  const canEditMeeting = userRole === 'SUPER_ADMIN' || userRole === 'ADMIN';
+  const canDeleteMeeting = userRole === 'SUPER_ADMIN' || userRole === 'ADMIN';
+
   const [activeTab, setActiveTab] = useState<'overview' | 'participants' | 'minutes' | 'actionItems'>('overview');
   const [isDeleting, setIsDeleting] = useState(false);
   const [isUpdatingStatus, setIsUpdatingStatus] = useState(false);
@@ -104,17 +110,19 @@ export function MeetingDetailView({
           <span>Kembali ke Semua Rapat</span>
         </Link>
 
-        {/* Delete button */}
-        <button
-          type="button"
-          disabled={isDeleting}
-          onClick={handleDelete}
-          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-red-200 text-red-600 hover:bg-red-50 text-[12px] font-semibold transition-colors cursor-pointer disabled:opacity-50"
-          title="Hapus Rapat dari Database"
-        >
-          <Trash2 className="w-3.5 h-3.5" />
-          <span>{isDeleting ? 'Menghapus...' : 'Hapus Rapat'}</span>
-        </button>
+        {/* Delete button (SUPER_ADMIN, ADMIN) */}
+        {canDeleteMeeting && (
+          <button
+            type="button"
+            disabled={isDeleting}
+            onClick={handleDelete}
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-red-200 text-red-600 hover:bg-red-50 text-[12px] font-semibold transition-colors cursor-pointer disabled:opacity-50"
+            title="Hapus Rapat dari Database"
+          >
+            <Trash2 className="w-3.5 h-3.5" />
+            <span>{isDeleting ? 'Menghapus...' : 'Hapus Rapat'}</span>
+          </button>
+        )}
       </div>
 
       {/* Main Header Card */}
@@ -127,25 +135,27 @@ export function MeetingDetailView({
             <MeetingStatusBadge status={status} />
           </div>
 
-          {/* Quick Status Update */}
-          <div className="flex items-center gap-1.5 bg-amber-50/70 p-1.5 rounded-xl border border-amber-200">
-            <span className="text-[11px] font-bold text-slate-600 px-1.5 hidden sm:inline">Ubah Status:</span>
-            {(['DRAFT', 'REVIEW', 'APPROVED', 'FINAL'] as MeetingStatus[]).map((st) => (
-              <button
-                key={st}
-                type="button"
-                disabled={status === st || isUpdatingStatus}
-                onClick={() => handleStatusChange(st)}
-                className={`px-2.5 py-1 rounded-md text-[11px] font-bold transition-all cursor-pointer ${
-                  status === st
-                    ? 'bg-amber-600 text-white shadow-xs'
-                    : 'bg-white hover:bg-amber-100 text-slate-700 border border-amber-200'
-                }`}
-              >
-                {st}
-              </button>
-            ))}
-          </div>
+          {/* Quick Status Update (SUPER_ADMIN, ADMIN) */}
+          {canEditMeeting && (
+            <div className="flex items-center gap-1.5 bg-amber-50/70 p-1.5 rounded-xl border border-amber-200">
+              <span className="text-[11px] font-bold text-slate-600 px-1.5 hidden sm:inline">Ubah Status:</span>
+              {(['DRAFT', 'REVIEW', 'APPROVED', 'FINAL'] as MeetingStatus[]).map((st) => (
+                <button
+                  key={st}
+                  type="button"
+                  disabled={status === st || isUpdatingStatus}
+                  onClick={() => handleStatusChange(st)}
+                  className={`px-2.5 py-1 rounded-md text-[11px] font-bold transition-all cursor-pointer ${
+                    status === st
+                      ? 'bg-amber-600 text-white shadow-xs'
+                      : 'bg-white hover:bg-amber-100 text-slate-700 border border-amber-200'
+                  }`}
+                >
+                  {st}
+                </button>
+              ))}
+            </div>
+          )}
         </div>
 
         <div>

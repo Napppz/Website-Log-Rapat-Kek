@@ -11,6 +11,7 @@ import {
   UpdateActionItemStatusInput,
 } from '@/lib/validations/action-item';
 import { revalidatePath } from 'next/cache';
+import { requirePermission } from '@/lib/auth/authorization';
 
 /**
  * Helper to safely revalidate paths without crashing in standalone tests
@@ -76,6 +77,9 @@ export async function getActionItemsAction(meetingId?: string) {
  */
 export async function createActionItemAction(input: ActionItemInput) {
   try {
+    // Authorization Check: Must have 'create:action_item' permission (SUPER_ADMIN, ADMIN, NOTULIS)
+    await requirePermission('create:action_item');
+
     // 1. Zod Validation
     const parsed = actionItemSchema.safeParse(input);
     if (!parsed.success) {
@@ -204,6 +208,12 @@ export async function updateActionItemAction(input: UpdateActionItemInput) {
       return { success: false, error: 'Tindak lanjut tidak ditemukan.' };
     }
 
+    // Authorization Check: Must have 'edit:action_item' permission
+    // For STAFF, ownership check is applied: user can only edit if assigned to them
+    await requirePermission('edit:action_item', {
+      actionItemPicUserId: existing.picUserId,
+    });
+
     // 3. Ensure Meeting exists
     const meeting = await prisma.meeting.findUnique({
       where: { id: meetingId },
@@ -311,6 +321,11 @@ export async function updateActionItemStatusAction(input: UpdateActionItemStatus
       return { success: false, error: 'Tindak lanjut tidak ditemukan.' };
     }
 
+    // Authorization Check: Must have 'edit:action_item' permission
+    await requirePermission('edit:action_item', {
+      actionItemPicUserId: existing.picUserId,
+    });
+
     let completedAt: Date | null = existing.completedAt;
     if (status === 'COMPLETED' && existing.status !== 'COMPLETED') {
       completedAt = new Date();
@@ -357,6 +372,9 @@ export async function updateActionItemStatusAction(input: UpdateActionItemStatus
  */
 export async function deleteActionItemAction(id: string) {
   try {
+    // Authorization Check: Must have 'delete:action_item' permission (SUPER_ADMIN, ADMIN, NOTULIS)
+    await requirePermission('delete:action_item');
+
     if (!id) {
       return { success: false, error: 'ID tindak lanjut tidak valid.' };
     }

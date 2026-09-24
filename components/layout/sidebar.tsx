@@ -17,8 +17,10 @@ import {
   ChevronsLeft,
   ChevronsRight,
   X,
+  UserCog,
 } from 'lucide-react';
 import Image from 'next/image';
+import { useSession } from 'next-auth/react';
 import { BIRO_LIST } from '@/lib/mock-data';
 import { cn } from '@/lib/utils';
 
@@ -36,6 +38,12 @@ export function Sidebar({
   onToggleCollapse,
 }: SidebarProps) {
   const pathname = usePathname();
+  const { data: session } = useSession();
+  const userRole = session?.user?.role || 'VIEWER';
+
+  const isSuperAdmin = userRole === 'SUPER_ADMIN';
+  const isAdmin = userRole === 'ADMIN';
+  const isNotulis = userRole === 'NOTULIS';
 
   const isRapatRoute = pathname.includes('/semua-rapat') || pathname.includes('/buat-rapat');
   const isTindakLanjutRoute = pathname.includes('/tindak-lanjut');
@@ -64,6 +72,25 @@ export function Sidebar({
   };
 
   const isDashboardActive = pathname === '/';
+
+  const rapatSubItems = [
+    { name: 'Semua Rapat', href: '/semua-rapat' },
+    ...(isSuperAdmin || isAdmin || isNotulis
+      ? [{ name: 'Buat Rapat', href: '/buat-rapat' }]
+      : []),
+    { name: 'Draft', href: '/semua-rapat?status=DRAFT' },
+    { name: 'Menunggu Review', href: '/semua-rapat?status=REVIEW' },
+    { name: 'Disetujui', href: '/semua-rapat?status=APPROVED' },
+    { name: 'Selesai', href: '/semua-rapat?status=FINAL' },
+  ];
+
+  const roleLabelMap: Record<string, string> = {
+    SUPER_ADMIN: 'Super Admin',
+    ADMIN: 'Administrator',
+    NOTULIS: 'Notulis',
+    STAFF: 'Staf',
+    VIEWER: 'Viewer',
+  };
 
   return (
     <>
@@ -177,14 +204,7 @@ export function Sidebar({
 
                 {!collapsed && isRapatOpen && (
                   <div className="pl-7 pr-2 py-1 space-y-1">
-                    {[
-                      { name: 'Semua Rapat', href: '/semua-rapat' },
-                      { name: 'Buat Rapat', href: '/buat-rapat' },
-                      { name: 'Draft', href: '/semua-rapat?status=DRAFT' },
-                      { name: 'Menunggu Review', href: '/semua-rapat?status=REVIEW' },
-                      { name: 'Disetujui', href: '/semua-rapat?status=APPROVED' },
-                      { name: 'Selesai', href: '/semua-rapat?status=FINAL' },
-                    ].map((item) => {
+                    {rapatSubItems.map((item) => {
                       const isActive = pathname === item.href;
                       return (
                         <Link
@@ -261,106 +281,114 @@ export function Sidebar({
                 )}
               </div>
 
-              {/* Kalender */}
-              <Link
-                href="/kalender"
-                onClick={handleLinkClick}
-                className={cn(
-                  "flex items-center gap-3 px-3 py-2 rounded-lg transition-all font-medium text-[14px]",
-                  pathname === '/kalender'
-                    ? "bg-amber-50 text-amber-800 font-bold border-l-4 border-amber-600 shadow-sm"
-                    : "text-slate-700 hover:bg-amber-50/70 hover:text-amber-800"
-                )}
-                title="Kalender"
-              >
-                <Calendar className="w-5 h-5 text-slate-500 shrink-0" />
-                {!collapsed && <span>Kalender</span>}
-              </Link>
-
-              {/* Biro (Collapsible) */}
-              <div>
-                <button
-                  type="button"
-                  onClick={() => toggleSection('biro')}
+              {/* Kalender (SUPER_ADMIN, ADMIN) */}
+              {(isSuperAdmin || isAdmin) && (
+                <Link
+                  href="/kalender"
+                  onClick={handleLinkClick}
                   className={cn(
-                    "w-full flex items-center justify-between px-3 py-2 rounded-lg text-slate-700 hover:bg-amber-50/70 hover:text-amber-800 transition-all font-medium text-[14px] cursor-pointer",
-                    pathname.startsWith('/biro') ? "text-amber-800 font-semibold" : ""
+                    "flex items-center gap-3 px-3 py-2 rounded-lg transition-all font-medium text-[14px]",
+                    pathname === '/kalender'
+                      ? "bg-amber-50 text-amber-800 font-bold border-l-4 border-amber-600 shadow-sm"
+                      : "text-slate-700 hover:bg-amber-50/70 hover:text-amber-800"
                   )}
-                  title="Biro"
+                  title="Kalender"
                 >
-                  <div className="flex items-center gap-3">
-                    <Building2 className="w-5 h-5 text-slate-500 shrink-0" />
-                    {!collapsed && <span>Biro</span>}
-                  </div>
-                  {!collapsed && (
-                    <ChevronDown
-                      className={cn(
-                        "w-4 h-4 text-slate-400 transition-transform duration-200",
-                        isBiroOpen ? "rotate-180" : ""
-                      )}
-                    />
+                  <Calendar className="w-5 h-5 text-slate-500 shrink-0" />
+                  {!collapsed && <span>Kalender</span>}
+                </Link>
+              )}
+
+              {/* Biro (SUPER_ADMIN, ADMIN) */}
+              {(isSuperAdmin || isAdmin) && (
+                <div>
+                  <button
+                    type="button"
+                    onClick={() => toggleSection('biro')}
+                    className={cn(
+                      "w-full flex items-center justify-between px-3 py-2 rounded-lg text-slate-700 hover:bg-amber-50/70 hover:text-amber-800 transition-all font-medium text-[14px] cursor-pointer",
+                      pathname.startsWith('/biro') ? "text-amber-800 font-semibold" : ""
+                    )}
+                    title="Biro"
+                  >
+                    <div className="flex items-center gap-3">
+                      <Building2 className="w-5 h-5 text-slate-500 shrink-0" />
+                      {!collapsed && <span>Biro</span>}
+                    </div>
+                    {!collapsed && (
+                      <ChevronDown
+                        className={cn(
+                          "w-4 h-4 text-slate-400 transition-transform duration-200",
+                          isBiroOpen ? "rotate-180" : ""
+                        )}
+                      />
+                    )}
+                  </button>
+
+                  {!collapsed && isBiroOpen && (
+                    <div className="pl-7 pr-2 py-1 space-y-1">
+                      {BIRO_LIST.map((biro) => {
+                        const biroHref = `/biro/${biro.code.toLowerCase()}`;
+                        const isActive = pathname === biroHref;
+                        return (
+                          <Link
+                            key={biro.code}
+                            href={biroHref}
+                            onClick={handleLinkClick}
+                            title={biro.name}
+                            className={cn(
+                              "block px-2.5 py-1.5 rounded-md text-[13px] font-medium transition-all leading-snug",
+                              isActive
+                                ? "bg-amber-100 text-amber-900 font-bold"
+                                : "text-slate-600 hover:bg-amber-50 hover:text-amber-800"
+                            )}
+                          >
+                            {biro.shortName}
+                          </Link>
+                        );
+                      })}
+                    </div>
                   )}
-                </button>
+                </div>
+              )}
 
-                {!collapsed && isBiroOpen && (
-                  <div className="pl-7 pr-2 py-1 space-y-1">
-                    {BIRO_LIST.map((biro) => {
-                      const biroHref = `/biro/${biro.code.toLowerCase()}`;
-                      const isActive = pathname === biroHref;
-                      return (
-                        <Link
-                          key={biro.code}
-                          href={biroHref}
-                          onClick={handleLinkClick}
-                          title={biro.name}
-                          className={cn(
-                            "block px-2.5 py-1.5 rounded-md text-[13px] font-medium transition-all leading-snug",
-                            isActive
-                              ? "bg-amber-100 text-amber-900 font-bold"
-                              : "text-slate-600 hover:bg-amber-50 hover:text-amber-800"
-                          )}
-                        >
-                          {biro.shortName}
-                        </Link>
-                      );
-                    })}
-                  </div>
-                )}
-              </div>
+              {/* Dokumen (SUPER_ADMIN, ADMIN) */}
+              {(isSuperAdmin || isAdmin) && (
+                <Link
+                  href="/dokumen"
+                  onClick={handleLinkClick}
+                  className={cn(
+                    "flex items-center gap-3 px-3 py-2 rounded-lg transition-all font-medium text-[14px]",
+                    pathname === '/dokumen'
+                      ? "bg-amber-50 text-amber-800 font-bold border-l-4 border-amber-600 shadow-sm"
+                      : "text-slate-700 hover:bg-amber-50/70 hover:text-amber-800"
+                  )}
+                  title="Dokumen"
+                >
+                  <FileText className="w-5 h-5 text-slate-500 shrink-0" />
+                  {!collapsed && <span>Dokumen</span>}
+                </Link>
+              )}
 
-              {/* Dokumen */}
-              <Link
-                href="/dokumen"
-                onClick={handleLinkClick}
-                className={cn(
-                  "flex items-center gap-3 px-3 py-2 rounded-lg transition-all font-medium text-[14px]",
-                  pathname === '/dokumen'
-                    ? "bg-amber-50 text-amber-800 font-bold border-l-4 border-amber-600 shadow-sm"
-                    : "text-slate-700 hover:bg-amber-50/70 hover:text-amber-800"
-                )}
-                title="Dokumen"
-              >
-                <FileText className="w-5 h-5 text-slate-500 shrink-0" />
-                {!collapsed && <span>Dokumen</span>}
-              </Link>
+              {/* Laporan (SUPER_ADMIN, ADMIN) */}
+              {(isSuperAdmin || isAdmin) && (
+                <Link
+                  href="/laporan"
+                  onClick={handleLinkClick}
+                  className={cn(
+                    "flex items-center gap-3 px-3 py-2 rounded-lg transition-all font-medium text-[14px]",
+                    pathname === '/laporan'
+                      ? "bg-amber-50 text-amber-800 font-bold border-l-4 border-amber-600 shadow-sm"
+                      : "text-slate-700 hover:bg-amber-50/70 hover:text-amber-800"
+                  )}
+                  title="Laporan"
+                >
+                  <BarChart3 className="w-5 h-5 text-slate-500 shrink-0" />
+                  {!collapsed && <span>Laporan</span>}
+                </Link>
+              )}
 
-              {/* Laporan */}
-              <Link
-                href="/laporan"
-                onClick={handleLinkClick}
-                className={cn(
-                  "flex items-center gap-3 px-3 py-2 rounded-lg transition-all font-medium text-[14px]",
-                  pathname === '/laporan'
-                    ? "bg-amber-50 text-amber-800 font-bold border-l-4 border-amber-600 shadow-sm"
-                    : "text-slate-700 hover:bg-amber-50/70 hover:text-amber-800"
-                )}
-                title="Laporan"
-              >
-                <BarChart3 className="w-5 h-5 text-slate-500 shrink-0" />
-                {!collapsed && <span>Laporan</span>}
-              </Link>
-
-              {/* Notifikasi */}
+              {/* Notifikasi (All roles) */}
               <Link
                 href="/notifikasi"
                 onClick={handleLinkClick}
@@ -383,21 +411,41 @@ export function Sidebar({
                 )}
               </Link>
 
-              {/* Pengaturan */}
-              <Link
-                href="/pengaturan"
-                onClick={handleLinkClick}
-                className={cn(
-                  "flex items-center gap-3 px-3 py-2 rounded-lg transition-all font-medium text-[14px]",
-                  pathname === '/pengaturan'
-                    ? "bg-amber-50 text-amber-800 font-bold border-l-4 border-amber-600 shadow-sm"
-                    : "text-slate-700 hover:bg-amber-50/70 hover:text-amber-800"
-                )}
-                title="Pengaturan"
-              >
-                <Settings className="w-5 h-5 text-slate-500 shrink-0" />
-                {!collapsed && <span>Pengaturan</span>}
-              </Link>
+              {/* Manajemen Pengguna (SUPER_ADMIN ONLY) */}
+              {isSuperAdmin && (
+                <Link
+                  href="/pengguna"
+                  onClick={handleLinkClick}
+                  className={cn(
+                    "flex items-center gap-3 px-3 py-2 rounded-lg transition-all font-medium text-[14px]",
+                    pathname.startsWith('/pengguna')
+                      ? "bg-amber-50 text-amber-800 font-bold border-l-4 border-amber-600 shadow-sm"
+                      : "text-slate-700 hover:bg-amber-50/70 hover:text-amber-800"
+                  )}
+                  title="Manajemen Pengguna"
+                >
+                  <UserCog className="w-5 h-5 text-amber-600 shrink-0" />
+                  {!collapsed && <span>Pengguna</span>}
+                </Link>
+              )}
+
+              {/* Pengaturan (SUPER_ADMIN) */}
+              {isSuperAdmin && (
+                <Link
+                  href="/pengaturan"
+                  onClick={handleLinkClick}
+                  className={cn(
+                    "flex items-center gap-3 px-3 py-2 rounded-lg transition-all font-medium text-[14px]",
+                    pathname === '/pengaturan'
+                      ? "bg-amber-50 text-amber-800 font-bold border-l-4 border-amber-600 shadow-sm"
+                      : "text-slate-700 hover:bg-amber-50/70 hover:text-amber-800"
+                  )}
+                  title="Pengaturan"
+                >
+                  <Settings className="w-5 h-5 text-slate-500 shrink-0" />
+                  {!collapsed && <span>Pengaturan</span>}
+                </Link>
+              )}
             </nav>
           </div>
         </div>
@@ -406,8 +454,8 @@ export function Sidebar({
         <div className="p-3 bg-amber-50/60 border-t border-amber-200/70 flex items-center justify-between shrink-0">
           {!collapsed ? (
             <div className="flex items-center gap-2 min-w-0">
-              <span className="px-2.5 py-1 rounded-md bg-amber-100 border border-amber-300 text-amber-900 font-bold text-[11px] tracking-wider uppercase">
-                SUPER ADMIN
+              <span className="px-2.5 py-1 rounded-md bg-amber-100 border border-amber-300 text-amber-900 font-bold text-[11px] tracking-wider uppercase truncate">
+                {roleLabelMap[userRole] || userRole}
               </span>
             </div>
           ) : (

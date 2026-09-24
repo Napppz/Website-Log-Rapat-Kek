@@ -1,7 +1,8 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Search, Plus, Bell, ChevronDown, Menu } from 'lucide-react';
+import { Search, Plus, Bell, ChevronDown, Menu, LogOut, User as UserIcon } from 'lucide-react';
+import { useSession, signOut } from 'next-auth/react';
 import { cn } from '@/lib/utils';
 
 interface HeaderProps {
@@ -12,6 +13,21 @@ interface HeaderProps {
   onCreateMeetingClick?: () => void;
 }
 
+const ROLE_LABELS: Record<string, string> = {
+  SUPER_ADMIN: 'Super Admin',
+  ADMIN: 'Administrator',
+  NOTULIS: 'Notulis',
+  STAFF: 'Staf',
+  VIEWER: 'Viewer',
+};
+
+const getInitials = (name?: string | null) => {
+  if (!name) return 'U';
+  const parts = name.trim().split(/\s+/);
+  if (parts.length >= 2) return `${parts[0][0]}${parts[1][0]}`.toUpperCase();
+  return parts[0].slice(0, 2).toUpperCase();
+};
+
 export function Header({
   onOpenMobile,
   collapsed = false,
@@ -19,8 +35,21 @@ export function Header({
   onSearchChange,
   onCreateMeetingClick,
 }: HeaderProps) {
+  const { data: session } = useSession();
   const [profileDropdownOpen, setProfileDropdownOpen] = useState(false);
   const [notifDropdownOpen, setNotifDropdownOpen] = useState(false);
+
+  const currentUser = session?.user;
+  const userName = currentUser?.name || 'Pengguna SIM-RAPAT';
+  const userEmail = currentUser?.email || '';
+  const userRole = currentUser?.role || 'VIEWER';
+  const roleLabel = ROLE_LABELS[userRole] || userRole;
+  const biroLabel = currentUser?.biroCode
+    ? `${currentUser.biroCode} - ${currentUser.biroName || 'Biro KEK'}`
+    : null;
+
+  const canCreateMeeting =
+    userRole === 'SUPER_ADMIN' || userRole === 'ADMIN' || userRole === 'NOTULIS';
 
   return (
     <header
@@ -54,15 +83,17 @@ export function Header({
 
       {/* Right: Actions, Notifications & Profile */}
       <div className="flex items-center gap-2 sm:gap-4 shrink-0 ml-3">
-        {/* "+ Buat Rapat" button */}
-        <button
-          type="button"
-          onClick={onCreateMeetingClick}
-          className="flex items-center gap-1.5 px-3.5 py-2 rounded-lg bg-amber-600 hover:bg-amber-700 text-white transition-all shadow-sm shadow-amber-600/20 font-semibold text-[13px] cursor-pointer"
-        >
-          <Plus className="w-4 h-4" />
-          <span className="hidden sm:inline">Buat Rapat</span>
-        </button>
+        {/* "+ Buat Rapat" button (Hidden for STAFF & VIEWER) */}
+        {canCreateMeeting && (
+          <button
+            type="button"
+            onClick={onCreateMeetingClick}
+            className="flex items-center gap-1.5 px-3.5 py-2 rounded-lg bg-amber-600 hover:bg-amber-700 text-white transition-all shadow-sm shadow-amber-600/20 font-semibold text-[13px] cursor-pointer"
+          >
+            <Plus className="w-4 h-4" />
+            <span className="hidden sm:inline">Buat Rapat</span>
+          </button>
+        )}
 
         {/* Notification Bell */}
         <div className="relative">
@@ -107,42 +138,57 @@ export function Header({
             className="flex items-center gap-2.5 cursor-pointer p-1.5 rounded-lg hover:bg-amber-50/80 transition-colors"
           >
             <div className="w-9 h-9 rounded-full bg-amber-600 text-white font-bold flex items-center justify-center text-[13px] ring-2 ring-amber-300 shrink-0">
-              HS
+              {getInitials(userName)}
             </div>
             <div className="hidden md:flex flex-col text-left">
               <span className="font-bold text-[13px] text-slate-900 leading-tight">
-                Dr. Hendra Suprayitno, M.Si
+                {userName}
               </span>
-              <span className="text-[11px] text-amber-700 font-medium leading-tight truncate max-w-[220px]">
-                SUPER ADMIN - Biro Investasi, Kerja Sama &amp; Komunikasi
-              </span>
+              <div className="flex items-center gap-1.5 mt-0.5">
+                <span className="text-[10px] font-bold text-amber-800 bg-amber-100 px-1.5 py-0.5 rounded leading-none">
+                  {roleLabel}
+                </span>
+                {biroLabel && (
+                  <span className="text-[11px] text-slate-500 font-medium leading-tight truncate max-w-[200px]">
+                    • {biroLabel}
+                  </span>
+                )}
+              </div>
             </div>
             <ChevronDown className="w-4 h-4 text-slate-400" />
           </div>
 
           {profileDropdownOpen && (
-            <div className="absolute right-0 mt-2 w-56 bg-white rounded-xl shadow-lg border border-amber-200 p-2 z-50 text-[13px]">
+            <div className="absolute right-0 mt-2 w-64 bg-white rounded-xl shadow-lg border border-amber-200 p-2 z-50 text-[13px]">
               <div className="px-3 py-2 border-b border-amber-100 mb-1">
-                <p className="font-bold text-slate-900">Dr. Hendra Suprayitno</p>
-                <p className="text-[11px] text-slate-500">hendra.suprayitno@kek.go.id</p>
+                <p className="font-bold text-slate-900 truncate">{userName}</p>
+                <p className="text-[11px] text-slate-500 truncate">{userEmail}</p>
+                <div className="flex flex-wrap items-center gap-1.5 mt-1.5">
+                  <span className="text-[10px] font-bold text-amber-800 bg-amber-100 px-1.5 py-0.5 rounded">
+                    {roleLabel}
+                  </span>
+                  {biroLabel && (
+                    <span className="text-[10px] text-amber-700 bg-amber-50 px-1.5 py-0.5 rounded font-medium truncate max-w-[180px]">
+                      {biroLabel}
+                    </span>
+                  )}
+                </div>
               </div>
               <button
                 type="button"
-                className="w-full text-left px-3 py-1.5 rounded-md hover:bg-amber-50 text-slate-700 hover:text-amber-800 transition-colors"
+                className="w-full flex items-center gap-2 text-left px-3 py-1.5 rounded-md hover:bg-amber-50 text-slate-700 hover:text-amber-800 transition-colors cursor-pointer"
+                onClick={() => setProfileDropdownOpen(false)}
               >
-                Profil Akun
+                <UserIcon className="w-3.5 h-3.5 text-slate-500" />
+                <span>Profil Akun</span>
               </button>
               <button
                 type="button"
-                className="w-full text-left px-3 py-1.5 rounded-md hover:bg-amber-50 text-slate-700 hover:text-amber-800 transition-colors"
+                onClick={() => signOut({ callbackUrl: '/login' })}
+                className="w-full flex items-center gap-2 text-left px-3 py-1.5 rounded-md hover:bg-red-50 text-red-600 transition-colors mt-1 border-t border-amber-100 pt-1.5 cursor-pointer font-medium"
               >
-                Pengaturan Sistem
-              </button>
-              <button
-                type="button"
-                className="w-full text-left px-3 py-1.5 rounded-md hover:bg-red-50 text-red-600 transition-colors mt-1 border-t border-amber-100 pt-1.5"
-              >
-                Keluar
+                <LogOut className="w-3.5 h-3.5 text-red-600" />
+                <span>Keluar</span>
               </button>
             </div>
           )}

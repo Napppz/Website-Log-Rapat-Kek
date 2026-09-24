@@ -6,6 +6,7 @@ import { MeetingTable } from '@/components/meeting/meeting-table';
 import { MeetingStatus, BiroCode, Meeting } from '@/lib/types';
 import { PlusCircle, Filter } from 'lucide-react';
 import Link from 'next/link';
+import { useSession } from 'next-auth/react';
 
 interface SemuaRapatClientProps {
   initialMeetings: Meeting[];
@@ -14,6 +15,9 @@ interface SemuaRapatClientProps {
 export function SemuaRapatClient({ initialMeetings }: SemuaRapatClientProps) {
   const searchParams = useSearchParams();
   const router = useRouter();
+  const { data: session } = useSession();
+  const userRole = session?.user?.role || 'VIEWER';
+  const canCreate = userRole === 'SUPER_ADMIN' || userRole === 'ADMIN' || userRole === 'NOTULIS';
 
   const statusParam = searchParams.get('status') as MeetingStatus | null;
   const biroParam = searchParams.get('biro') as BiroCode | null;
@@ -50,13 +54,15 @@ export function SemuaRapatClient({ initialMeetings }: SemuaRapatClientProps) {
           </p>
         </div>
 
-        <Link
-          href="/buat-rapat"
-          className="inline-flex items-center gap-2 px-4 py-2.5 rounded-lg bg-amber-600 text-white font-semibold text-[13px] hover:bg-amber-700 shadow-md shadow-amber-600/20 transition-all shrink-0 self-start sm:self-center"
-        >
-          <PlusCircle className="w-4 h-4" />
-          <span>+ Jadwalkan Rapat Baru</span>
-        </Link>
+        {canCreate && (
+          <Link
+            href="/buat-rapat"
+            className="inline-flex items-center gap-2 px-4 py-2.5 rounded-lg bg-amber-600 text-white font-semibold text-[13px] hover:bg-amber-700 shadow-md shadow-amber-600/20 transition-all shrink-0 self-start sm:self-center"
+          >
+            <PlusCircle className="w-4 h-4" />
+            <span>+ Jadwalkan Rapat Baru</span>
+          </Link>
+        )}
       </div>
 
       {/* Filter Tabs */}

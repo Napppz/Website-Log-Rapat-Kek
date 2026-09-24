@@ -2,13 +2,18 @@
 
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Calendar, Clock, MapPin, Building2, Plus, ArrowLeft, Shield, Users, CheckCircle } from 'lucide-react';
+import { Calendar, Clock, MapPin, Building2, Plus, ArrowLeft, Shield, Users, CheckCircle, ShieldAlert } from 'lucide-react';
 import { BIRO_LIST } from '@/lib/mock-data';
 import { BiroCode } from '@/lib/types';
 import Link from 'next/link';
+import { useSession } from 'next-auth/react';
 
 export default function BuatRapatPage() {
   const router = useRouter();
+  const { data: session } = useSession();
+  const userRole = session?.user?.role || 'VIEWER';
+  const canCreate = userRole === 'SUPER_ADMIN' || userRole === 'ADMIN' || userRole === 'NOTULIS';
+
   const [selectedBiro, setSelectedBiro] = useState<BiroCode>('IKK');
   const [title, setTitle] = useState('');
   const [date, setDate] = useState('2026-09-25');
@@ -17,6 +22,26 @@ export default function BuatRapatPage() {
   const [classification, setClassification] = useState('STRATEGIS');
   const [attendees, setAttendees] = useState('Biro Terkait, Tim Sekretariat Jenderal, Perwakilan Kawasan');
   const [isSubmitted, setIsSubmitted] = useState(false);
+
+  if (session && !canCreate) {
+    return (
+      <div className="max-w-md mx-auto my-16 bg-white p-8 rounded-2xl border border-amber-200 text-center shadow-sm space-y-4">
+        <div className="w-12 h-12 rounded-full bg-red-100 text-red-600 flex items-center justify-center mx-auto">
+          <ShieldAlert className="w-6 h-6" />
+        </div>
+        <h2 className="text-[18px] font-bold text-slate-800">Anda tidak memiliki akses ke halaman ini.</h2>
+        <p className="text-[13px] text-slate-500">
+          Peran Anda hanya memiliki izin terbatas dan tidak dapat membuat rapat baru.
+        </p>
+        <Link
+          href="/"
+          className="inline-flex items-center justify-center px-4 py-2 rounded-lg bg-amber-600 hover:bg-amber-700 text-white font-semibold text-[13px] transition-all"
+        >
+          Kembali ke Dashboard
+        </Link>
+      </div>
+    );
+  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

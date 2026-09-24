@@ -21,6 +21,7 @@ import { ActionItemStatusBadge, ActionItemPriorityBadge } from './action-item-st
 import { ActionItemFormDialog } from './action-item-form-dialog';
 import { ActionItemDeleteDialog } from './action-item-delete-dialog';
 import { updateActionItemStatusAction } from '@/app/actions/action-item-actions';
+import { useSession } from 'next-auth/react';
 
 interface ActionItemListProps {
   meetingId: string;
@@ -38,6 +39,23 @@ export function ActionItemList({
   readOnly = false,
 }: ActionItemListProps) {
   const router = useRouter();
+  const { data: session } = useSession();
+  const currentUser = session?.user;
+  const userRole = currentUser?.role || 'VIEWER';
+  const currentUserId = currentUser?.id;
+
+  const canCreateItem = !readOnly && (userRole === 'SUPER_ADMIN' || userRole === 'ADMIN' || userRole === 'NOTULIS');
+  const canDeleteItem = !readOnly && (userRole === 'SUPER_ADMIN' || userRole === 'ADMIN' || userRole === 'NOTULIS');
+
+  const canEditThisItem = (item: ActionItem) => {
+    if (readOnly || userRole === 'VIEWER') return false;
+    if (userRole === 'SUPER_ADMIN' || userRole === 'ADMIN' || userRole === 'NOTULIS') return true;
+    if (userRole === 'STAFF') {
+      return Boolean(item.picUserId && currentUserId && item.picUserId === currentUserId);
+    }
+    return false;
+  };
+
   const [items, setItems] = useState<ActionItem[]>(initialItems);
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingItem, setEditingItem] = useState<ActionItem | null>(null);
@@ -144,7 +162,7 @@ export function ActionItemList({
             )}
           </div>
 
-          {!readOnly && (
+          {canCreateItem && (
             <button
               type="button"
               onClick={() => {
@@ -173,7 +191,7 @@ export function ActionItemList({
             <p className="text-[13px] text-slate-500 leading-relaxed">
               Rapat ini belum memiliki tindak lanjut yang terdaftar. Tambahkan butir pekerjaan dan delegasikan kepada biro pelaksana.
             </p>
-            {!readOnly && (
+            {canCreateItem && (
               <button
                 type="button"
                 onClick={() => {
@@ -221,27 +239,31 @@ export function ActionItemList({
                   </div>
 
                   {/* Actions buttons */}
-                  {!readOnly && (
+                  {(canEditThisItem(item) || canDeleteItem) && (
                     <div className="flex items-center gap-1.5 shrink-0">
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setEditingItem(item);
-                          setIsFormOpen(true);
-                        }}
-                        className="p-1.5 text-slate-500 hover:text-amber-800 hover:bg-amber-50 rounded-lg transition-colors cursor-pointer"
-                        title="Ubah Tindak Lanjut"
-                      >
-                        <Edit2 className="w-4 h-4" />
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => setDeletingItem(item)}
-                        className="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors cursor-pointer"
-                        title="Hapus Tindak Lanjut"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </button>
+                      {canEditThisItem(item) && (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setEditingItem(item);
+                            setIsFormOpen(true);
+                          }}
+                          className="p-1.5 text-slate-500 hover:text-amber-800 hover:bg-amber-50 rounded-lg transition-colors cursor-pointer"
+                          title="Ubah Tindak Lanjut"
+                        >
+                          <Edit2 className="w-4 h-4" />
+                        </button>
+                      )}
+                      {canDeleteItem && (
+                        <button
+                          type="button"
+                          onClick={() => setDeletingItem(item)}
+                          className="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors cursor-pointer"
+                          title="Hapus Tindak Lanjut"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      )}
                     </div>
                   )}
                 </div>
@@ -285,7 +307,7 @@ export function ActionItemList({
                   </div>
 
                   {/* Status Transition controls */}
-                  {!readOnly && (
+                  {canEditThisItem(item) && (
                     <div className="flex items-center gap-1 bg-slate-50 p-1 rounded-lg border border-slate-200">
                       <span className="text-[11px] font-semibold text-slate-500 px-1 hidden md:inline">
                         Ubah Progres:

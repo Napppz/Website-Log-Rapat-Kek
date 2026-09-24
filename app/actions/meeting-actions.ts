@@ -4,6 +4,7 @@ import { prisma } from '@/lib/prisma';
 import { getNextMeetingNumber } from '@/lib/sequence';
 import { MeetingStatus } from '@prisma/client';
 import { revalidatePath } from 'next/cache';
+import { requirePermission } from '@/lib/auth/authorization';
 
 export interface CreateMeetingInput {
   title: string;
@@ -15,12 +16,25 @@ export interface CreateMeetingInput {
   involvedBiroCodes?: string[];
 }
 
+function safeRevalidate(paths: string[]) {
+  try {
+    for (const p of paths) {
+      revalidatePath(p);
+    }
+  } catch {
+    // Suppress Next.js static store missing errors when run in scripts
+  }
+}
+
 /**
  * Server action to create a new meeting in Neon PostgreSQL
  * with concurrency-safe, transactionally incremented meeting numbers.
  */
 export async function createMeetingAction(input: CreateMeetingInput) {
   try {
+    // Authorization Check: Must have 'create:meeting' permission (SUPER_ADMIN, ADMIN, NOTULIS)
+    await requirePermission('create:meeting');
+
     const result = await prisma.$transaction(async (tx) => {
       // 1. Generate sequence atomically
       const seq = await getNextMeetingNumber(input.biroCode, tx);
@@ -72,9 +86,11 @@ export async function createMeetingAction(input: CreateMeetingInput) {
       };
     });
 
-    revalidatePath('/');
-    revalidatePath('/semua-rapat');
-    revalidatePath(`/biro/${input.biroCode.toLowerCase()}`);
+    safeRevalidate([
+      '/',
+      '/semua-rapat',
+      `/biro/${input.biroCode.toLowerCase()}`,
+    ]);
 
     return { success: true, data: result };
   } catch (error: any) {
@@ -88,17 +104,20 @@ export async function createMeetingAction(input: CreateMeetingInput) {
  */
 export async function updateMeetingStatusAction(meetingId: string, status: MeetingStatus) {
   try {
+    // Authorization Check: Must have 'edit:meeting' permission (SUPER_ADMIN, ADMIN)
+    await requirePermission('edit:meeting');
+
     const updated = await prisma.meeting.update({
       where: { id: meetingId },
       data: { status },
       include: { primaryBiro: true },
     });
 
-    revalidatePath('/');
-    revalidatePath('/semua-rapat');
-    if (updated.primaryBiro?.code) {
-      revalidatePath(`/biro/${updated.primaryBiro.code.toLowerCase()}`);
-    }
+    safeRevalidate([
+      '/',
+      '/semua-rapat',
+      updated.primaryBiro?.code ? `/biro/${updated.primaryBiro.code.toLowerCase()}` : '',
+    ].filter(Boolean));
 
     return { success: true, data: updated };
   } catch (error: any) {
@@ -112,16 +131,19 @@ export async function updateMeetingStatusAction(meetingId: string, status: Meeti
  */
 export async function deleteMeetingAction(meetingId: string) {
   try {
+    // Authorization Check: Must have 'delete:meeting' permission (SUPER_ADMIN, ADMIN)
+    await requirePermission('delete:meeting');
+
     const deleted = await prisma.meeting.delete({
       where: { id: meetingId },
       include: { primaryBiro: true },
     });
 
-    revalidatePath('/');
-    revalidatePath('/semua-rapat');
-    if (deleted.primaryBiro?.code) {
-      revalidatePath(`/biro/${deleted.primaryBiro.code.toLowerCase()}`);
-    }
+    safeRevalidate([
+      '/',
+      '/semua-rapat',
+      deleted.primaryBiro?.code ? `/biro/${deleted.primaryBiro.code.toLowerCase()}` : '',
+    ].filter(Boolean));
 
     return { success: true, data: deleted };
   } catch (error: any) {

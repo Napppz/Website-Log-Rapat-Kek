@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import { useSession } from 'next-auth/react';
 import { MeetingMinutesEditor } from './meeting-minutes-editor';
 import { MeetingMinutesPreview } from './meeting-minutes-preview';
 import { getMeetingMinutesAction } from '@/app/actions/minute-actions';
@@ -17,6 +18,10 @@ export function MeetingMinutesSection({
   initialMinutes: propMinutes,
   defaultMode,
 }: MeetingMinutesSectionProps) {
+  const { data: session } = useSession();
+  const userRole = session?.user?.role || 'VIEWER';
+  const canEditMinutes = userRole === 'SUPER_ADMIN' || userRole === 'ADMIN' || userRole === 'NOTULIS';
+
   const [minutes, setMinutes] = useState<any>(propMinutes || null);
   const [isLoading, setIsLoading] = useState(!propMinutes);
   const [mode, setMode] = useState<'empty' | 'edit' | 'preview'>('empty');
@@ -29,7 +34,13 @@ export function MeetingMinutesSection({
       setMinutes(propMinutes);
       const hasContent =
         propMinutes.agenda || propMinutes.discussion || propMinutes.decisions || propMinutes.conclusion;
-      setMode(hasContent ? (defaultMode || 'preview') : (defaultMode || 'edit'));
+      setMode(
+        hasContent
+          ? defaultMode || 'preview'
+          : canEditMinutes
+          ? defaultMode || 'edit'
+          : 'empty'
+      );
       setIsLoading(false);
       return;
     }
@@ -88,20 +99,22 @@ export function MeetingMinutesSection({
           </p>
         </div>
 
-        <button
-          type="button"
-          onClick={() => setMode('edit')}
-          className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg bg-amber-600 hover:bg-amber-700 text-white font-semibold text-[13px] transition-all shadow-md shadow-amber-600/20 cursor-pointer"
-        >
-          <Plus className="w-4 h-4" />
-          <span>+ Buat Notulen</span>
-        </button>
+        {canEditMinutes && (
+          <button
+            type="button"
+            onClick={() => setMode('edit')}
+            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg bg-amber-600 hover:bg-amber-700 text-white font-semibold text-[13px] transition-all shadow-md shadow-amber-600/20 cursor-pointer"
+          >
+            <Plus className="w-4 h-4" />
+            <span>+ Buat Notulen</span>
+          </button>
+        )}
       </div>
     );
   }
 
   // MODE 2 — EDIT STATE
-  if (mode === 'edit') {
+  if (mode === 'edit' && canEditMinutes) {
     return (
       <div className="space-y-4">
         <div className="flex items-center justify-between">
@@ -154,14 +167,16 @@ export function MeetingMinutesSection({
           </p>
         </div>
 
-        <button
-          type="button"
-          onClick={() => setMode('edit')}
-          className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg bg-amber-600 hover:bg-amber-700 text-white font-semibold text-[12px] transition-all shadow-sm cursor-pointer shrink-0"
-        >
-          <FileEdit className="w-3.5 h-3.5" />
-          <span>Edit Notulen</span>
-        </button>
+        {canEditMinutes && (
+          <button
+            type="button"
+            onClick={() => setMode('edit')}
+            className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg bg-amber-600 hover:bg-amber-700 text-white font-semibold text-[12px] transition-all shadow-sm cursor-pointer shrink-0"
+          >
+            <FileEdit className="w-3.5 h-3.5" />
+            <span>Edit Notulen</span>
+          </button>
+        )}
       </div>
 
       <MeetingMinutesPreview
