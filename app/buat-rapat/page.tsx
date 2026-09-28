@@ -18,12 +18,17 @@ import {
   LogIn,
   Check,
   UserCheck,
+  Link2,
 } from 'lucide-react';
 import { BIRO_LIST } from '@/lib/mock-data';
 import { BiroCode } from '@/lib/types';
 import Link from 'next/link';
 import { useSession } from 'next-auth/react';
-import { getActiveUsersAction, createMeetingAction } from '@/app/actions/meeting-actions';
+import {
+  getActiveUsersAction,
+  createMeetingAction,
+  getMeetingOptionsAction,
+} from '@/app/actions/meeting-actions';
 import { toast } from '@/components/providers/toast-provider';
 
 interface AvailableUser {
@@ -57,11 +62,14 @@ export default function BuatRapatPage() {
     'Dr. Hendra Suprayitno, Maya Puspita, S.Sos, Tim Sekretariat Jenderal'
   );
   const [availableUsers, setAvailableUsers] = useState<AvailableUser[]>([]);
+  const [availableMeetings, setAvailableMeetings] = useState<any[]>([]);
+  const [previousMeetingId, setPreviousMeetingId] = useState<string>('');
+  const [chairpersonId, setChairpersonId] = useState<string>('');
   const [selectedUserIds, setSelectedUserIds] = useState<string[]>([]);
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
-  // Fetch available users on mount
+  // Fetch available users and existing meetings on mount
   useEffect(() => {
     getActiveUsersAction()
       .then((res) => {
@@ -76,6 +84,14 @@ export default function BuatRapatPage() {
         }
       })
       .catch((err) => console.warn('Could not load users for meeting:', err));
+
+    getMeetingOptionsAction()
+      .then((res) => {
+        if (res.success && res.data) {
+          setAvailableMeetings(res.data);
+        }
+      })
+      .catch((err) => console.warn('Could not load meetings:', err));
   }, []);
 
   // Loading session state
@@ -181,6 +197,8 @@ export default function BuatRapatPage() {
         location,
         attendees,
         participantUserIds: selectedUserIds,
+        previousMeetingId: previousMeetingId || undefined,
+        chairpersonId: chairpersonId || undefined,
       });
 
       if (res.success && res.data) {
@@ -240,8 +258,8 @@ export default function BuatRapatPage() {
 
         {/* Form Content */}
         <form onSubmit={handleSubmit} className="p-6 space-y-5 text-xs">
-          {/* Biro Penyelenggara */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {/* Biro Penyelenggara, Sifat Pertemuan & Pimpinan Rapat */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div>
               <label className="block font-semibold text-slate-700 mb-1 flex items-center gap-1.5">
                 <Building2 className="w-4 h-4 text-amber-600" />
@@ -275,6 +293,48 @@ export default function BuatRapatPage() {
                 <option value="DARURAT">Eskalasi Mendesak</option>
               </select>
             </div>
+
+            <div>
+              <label className="block font-semibold text-slate-700 mb-1 flex items-center gap-1.5">
+                <UserCheck className="w-4 h-4 text-amber-600" />
+                Ketua / Pimpinan Sidang
+              </label>
+              <select
+                value={chairpersonId}
+                onChange={(e) => setChairpersonId(e.target.value)}
+                className="w-full px-3 py-2 rounded-lg border border-amber-200 bg-white text-slate-800 focus:outline-none focus:ring-2 focus:ring-amber-500"
+              >
+                <option value="">-- Bebas / Diatur di Notula --</option>
+                {availableUsers.map((u) => (
+                  <option key={u.id} value={u.id}>
+                    {u.name} {u.biro?.code ? `[${u.biro.code}]` : ''}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
+
+          {/* Rapat Rujukan / Lanjutan (Opsional) */}
+          <div className="p-4 bg-amber-50/60 rounded-xl border border-amber-200/90 space-y-1.5">
+            <label className="block font-semibold text-slate-800 flex items-center gap-1.5">
+              <Link2 className="w-4 h-4 text-amber-600" />
+              <span>Tautkan ke Rapat Sebelumnya (Opsional — Jika Rapat Lanjutan)</span>
+            </label>
+            <p className="text-[11px] text-slate-500">
+              Jika rapat ini merupakan tindak lanjut dari rapat terdahulu, pilih rapat rujukan agar peserta dapat langsung meninjau notula dan memantau status butir tindak lanjut rapat ke-1.
+            </p>
+            <select
+              value={previousMeetingId}
+              onChange={(e) => setPreviousMeetingId(e.target.value)}
+              className="w-full px-3 py-2 rounded-lg border border-amber-200 bg-white text-slate-800 focus:outline-none focus:ring-2 focus:ring-amber-500"
+            >
+              <option value="">-- Tidak Ada (Rapat Baru Mandiri / Bukan Rapat Lanjutan) --</option>
+              {availableMeetings.map((m) => (
+                <option key={m.id} value={m.id}>
+                  [{m.meetingNumber}] {m.title} ({new Date(m.date).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' })})
+                </option>
+              ))}
+            </select>
           </div>
 
           {/* Agenda / Judul */}

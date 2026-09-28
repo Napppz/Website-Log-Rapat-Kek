@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { X, Calendar, Clock, MapPin, Building2, Plus } from 'lucide-react';
+import { X, Calendar, Clock, MapPin, Building2, Plus, Link2 } from 'lucide-react';
 import { BIRO_LIST } from '@/lib/mock-data';
 import { BiroCode } from '@/lib/types';
 import { useSession } from 'next-auth/react';
@@ -25,6 +25,21 @@ export function CreateMeetingDialog({ isOpen, onClose, onSuccess }: CreateMeetin
   const [date, setDate] = useState('2026-09-25');
   const [time, setTime] = useState('09:00 - 12:00 WIB');
   const [location, setLocation] = useState('Ruang Rapat Utama Gedung Posko KEK & Hybrid Zoom');
+  const [previousMeetingId, setPreviousMeetingId] = useState<string>('');
+  const [availableMeetings, setAvailableMeetings] = useState<any[]>([]);
+
+  // Load meeting options when dialog opens
+  useEffect(() => {
+    if (isOpen) {
+      import('@/app/actions/meeting-actions').then(({ getMeetingOptionsAction }) => {
+        getMeetingOptionsAction().then((res) => {
+          if (res.success && res.data) {
+            setAvailableMeetings(res.data);
+          }
+        });
+      });
+    }
+  }, [isOpen]);
 
   // Close on Escape key
   useEffect(() => {
@@ -59,6 +74,7 @@ export function CreateMeetingDialog({ isOpen, onClose, onSuccess }: CreateMeetin
         startTime,
         endTime,
         location,
+        previousMeetingId: previousMeetingId || undefined,
       });
 
       if (res.success && res.data) {
@@ -120,6 +136,26 @@ export function CreateMeetingDialog({ isOpen, onClose, onSuccess }: CreateMeetin
               {BIRO_LIST.map((biro) => (
                 <option key={biro.code} value={biro.code}>
                   {biro.code} — {biro.name}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {/* Rapat Sebelumnya (Opsional) */}
+          <div className="p-3 bg-amber-50/50 rounded-xl border border-amber-200/80 space-y-1">
+            <label className="block font-semibold text-slate-800 text-[12px] flex items-center gap-1.5">
+              <Link2 className="w-3.5 h-3.5 text-amber-600" />
+              <span>Rapat Sebelumnya (Opsional — Rapat Lanjutan)</span>
+            </label>
+            <select
+              value={previousMeetingId}
+              onChange={(e) => setPreviousMeetingId(e.target.value)}
+              className="w-full px-3 py-1.5 rounded-lg border border-amber-200 bg-white text-slate-800 text-[12px] focus:outline-none focus:ring-2 focus:ring-amber-500"
+            >
+              <option value="">-- Bukan Rapat Lanjutan (Rapat Baru) --</option>
+              {availableMeetings.map((m) => (
+                <option key={m.id} value={m.id}>
+                  [{m.meetingNumber}] {m.title}
                 </option>
               ))}
             </select>

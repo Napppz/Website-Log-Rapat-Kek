@@ -133,6 +133,21 @@ export async function getMeetingByIdFromDb(idOrNumber: string) {
             },
             orderBy: [{ dueDate: 'asc' }, { createdAt: 'desc' }],
           },
+          previousMeeting: {
+            include: {
+              primaryBiro: true,
+              chairperson: true,
+              secretary: true,
+              minutes: true,
+              actionItems: {
+                include: {
+                  picBiro: true,
+                  picUser: true,
+                },
+                orderBy: [{ dueDate: 'asc' }],
+              },
+            },
+          },
         },
       });
 

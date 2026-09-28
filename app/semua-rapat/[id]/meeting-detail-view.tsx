@@ -28,10 +28,15 @@ import {
   AlertCircle,
   Sparkles,
   Info,
+  Link2,
+  Eye,
+  ExternalLink,
 } from 'lucide-react';
 import { MeetingStatusBadge } from '@/components/meeting/meeting-status-badge';
 import { MeetingMinutesSection } from '@/components/meeting/meeting-minutes/meeting-minutes-section';
 import { ActionItemList } from '@/components/action-items/action-item-list';
+import { PreviousMeetingModal } from '@/components/meeting/previous-meeting-modal';
+import { LinkMeetingDialog } from '@/components/meeting/link-meeting-dialog';
 import { MeetingStatus } from '@/lib/types';
 import { AttendanceStatus } from '@prisma/client';
 import {
@@ -110,6 +115,11 @@ export function MeetingDetailView({
   const [isUpdatingStatus, setIsUpdatingStatus] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
   const [status, setStatus] = useState<MeetingStatus>(meeting.status);
+
+  // Rapat Lanjutan / Rujukan states
+  const [previousMeeting, setPreviousMeeting] = useState<any>(meeting.previousMeeting || null);
+  const [showPreviousMeetingModal, setShowPreviousMeetingModal] = useState<boolean>(false);
+  const [showLinkMeetingModal, setShowLinkMeetingModal] = useState<boolean>(false);
 
   // Participant attendance states
   const [participants, setParticipants] = useState<any[]>(meeting.participants || []);
@@ -495,7 +505,11 @@ export function MeetingDetailView({
             <div>
               <p className="text-[11px] text-slate-400 font-semibold uppercase">Ketua Sidang</p>
               <p className="font-bold text-slate-800">
-                {meeting.chairperson ? meeting.chairperson.name : 'Belum Ditugaskan'}
+                {(meeting.minutes?.conclusion as any)?.chairpersonName ||
+                  (meeting.minutes?.decisions as any)?.chairpersonName ||
+                  (meeting.minutes?.discussion as any)?.chairpersonName ||
+                  (meeting.minutes?.agenda as any)?.chairpersonName ||
+                  (meeting.chairperson ? meeting.chairperson.name : 'Belum Ditugaskan')}
               </p>
               {meeting.chairperson?.biro && (
                 <p className="text-[11px] text-slate-500">{meeting.chairperson.biro.shortName}</p>
@@ -509,7 +523,11 @@ export function MeetingDetailView({
             <div>
               <p className="text-[11px] text-slate-400 font-semibold uppercase">Notulis Sidang</p>
               <p className="font-bold text-slate-800">
-                {meeting.secretary ? meeting.secretary.name : 'Tim Notulensi Dewan KEK'}
+                {(meeting.minutes?.conclusion as any)?.signerName ||
+                  (meeting.minutes?.decisions as any)?.signerName ||
+                  (meeting.minutes?.discussion as any)?.signerName ||
+                  (meeting.minutes?.agenda as any)?.signerName ||
+                  (meeting.secretary ? meeting.secretary.name : 'Tim Notulensi Dewan KEK')}
               </p>
               {meeting.secretary?.biro && (
                 <p className="text-[11px] text-slate-500">{meeting.secretary.biro.shortName}</p>
@@ -529,6 +547,99 @@ export function MeetingDetailView({
           </div>
         </div>
       </div>
+
+      {/* Rapat Lanjutan / Rujukan Section */}
+      {previousMeeting ? (
+        <div className="bg-gradient-to-r from-amber-500/10 via-amber-100/40 to-amber-500/5 rounded-2xl border border-amber-300/90 p-5 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <div className="flex items-start gap-3.5">
+            <div className="p-2.5 rounded-xl bg-amber-600 text-white shadow-xs shrink-0 mt-0.5">
+              <Link2 className="w-5 h-5" />
+            </div>
+            <div>
+              <div className="flex items-center gap-2 flex-wrap">
+                <span className="text-[11px] font-extrabold uppercase tracking-wider text-amber-800 bg-amber-200/80 px-2 py-0.5 rounded-md border border-amber-300">
+                  Rapat Lanjutan
+                </span>
+                <span className="text-[12px] font-bold text-slate-700">
+                  Merujuk ke Rapat Sebelumnya:
+                </span>
+                <span className="font-bold text-[12px] text-amber-900 bg-white px-2 py-0.5 rounded-md border border-amber-200 shadow-2xs">
+                  {previousMeeting.meetingNumber}
+                </span>
+              </div>
+              <h4 className="font-bold text-[15px] text-slate-900 mt-1">
+                {previousMeeting.title}
+              </h4>
+              <div className="flex items-center gap-4 text-[12px] text-slate-600 mt-1.5 flex-wrap">
+                <span className="flex items-center gap-1">
+                  <Calendar className="w-3.5 h-3.5 text-amber-600" />
+                  {new Date(previousMeeting.date).toLocaleDateString('id-ID', {
+                    weekday: 'short',
+                    day: 'numeric',
+                    month: 'short',
+                    year: 'numeric',
+                  })}
+                </span>
+                <span className="flex items-center gap-1">
+                  <Building2 className="w-3.5 h-3.5 text-amber-600" />
+                  {previousMeeting.primaryBiro?.code || 'Biro KEK'}
+                </span>
+                <span className="flex items-center gap-1">
+                  <FileText className="w-3.5 h-3.5 text-amber-600" />
+                  {previousMeeting.minutes ? 'Notula Tersedia' : 'Belum Ada Notula'}
+                </span>
+                {previousMeeting.actionItems && (
+                  <span className="flex items-center gap-1">
+                    <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
+                    {previousMeeting.actionItems.filter((a: any) => a.status === 'COMPLETED').length}/
+                    {previousMeeting.actionItems.length} Tindak Lanjut Selesai
+                  </span>
+                )}
+              </div>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-2 shrink-0 self-start md:self-center">
+            <button
+              type="button"
+              onClick={() => setShowPreviousMeetingModal(true)}
+              className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-amber-600 hover:bg-amber-700 text-white font-semibold text-[12px] transition-all shadow-xs cursor-pointer"
+            >
+              <FileText className="w-4 h-4" />
+              <span>Lihat Hasil Rapat {previousMeeting.meetingNumber}</span>
+            </button>
+
+            {canEditMeeting && (
+              <button
+                type="button"
+                onClick={() => setShowLinkMeetingModal(true)}
+                className="inline-flex items-center gap-1 px-3 py-2 rounded-xl bg-white border border-amber-300 hover:bg-amber-100/80 text-amber-900 font-semibold text-[12px] transition-colors cursor-pointer"
+                title="Ubah Rujukan Rapat Sebelumnya"
+              >
+                <Link2 className="w-3.5 h-3.5" />
+                <span>Ubah</span>
+              </button>
+            )}
+          </div>
+        </div>
+      ) : canEditMeeting ? (
+        <div className="bg-amber-50/40 rounded-xl border border-dashed border-amber-300 p-3.5 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-[12px]">
+          <div className="flex items-center gap-2.5 text-slate-700">
+            <Link2 className="w-4 h-4 text-amber-600 shrink-0" />
+            <span>
+              Apakah rapat ini merupakan <strong>rapat lanjutan</strong> dari rapat sebelumnya?
+            </span>
+          </div>
+          <button
+            type="button"
+            onClick={() => setShowLinkMeetingModal(true)}
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white border border-amber-300 hover:bg-amber-100 text-amber-900 font-semibold text-[12px] transition-all shadow-2xs cursor-pointer self-start sm:self-auto shrink-0"
+          >
+            <Link2 className="w-3.5 h-3.5 text-amber-600" />
+            <span>+ Tautkan Rapat Sebelumnya</span>
+          </button>
+        </div>
+      ) : null}
 
       {/* Tabs Navigation */}
       <div className="flex items-center gap-2 border-b border-amber-200/80 pb-0">
@@ -639,6 +750,34 @@ export function MeetingDetailView({
                   : '+ Tambah Tindak Lanjut'}
               </button>
             </div>
+
+            {/* Rujukan Rapat Sebelumnya di Overview */}
+            {previousMeeting && (
+              <div className="p-4 bg-gradient-to-r from-amber-50 to-amber-100/50 rounded-xl border border-amber-300/80 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div className="space-y-1">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <span className="text-[10px] font-bold uppercase tracking-wider text-amber-800 bg-amber-200/90 px-2 py-0.5 rounded">
+                      Rapat Rujukan / Sidang Ke-1
+                    </span>
+                    <span className="font-bold text-[12px] text-amber-950">
+                      {previousMeeting.meetingNumber}
+                    </span>
+                  </div>
+                  <h4 className="font-bold text-slate-900 text-[13px]">{previousMeeting.title}</h4>
+                  <p className="text-[12px] text-slate-600">
+                    Sidang ini diselenggarakan sebagai tindak lanjut resmi dari agenda sebelumnya. Anda dapat meninjau seluruh notula dan progres butir tindak lanjut rapat ke-1.
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setShowPreviousMeetingModal(true)}
+                  className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg bg-amber-600 hover:bg-amber-700 text-white font-semibold text-[12px] transition-all shrink-0 cursor-pointer shadow-xs"
+                >
+                  <Eye className="w-3.5 h-3.5" />
+                  <span>Buka Hasil Rapat 1</span>
+                </button>
+              </div>
+            )}
           </div>
         </div>
       )}
@@ -865,6 +1004,24 @@ export function MeetingDetailView({
       {/* Tab 3: Notulen & Hasil Rapat */}
       {activeTab === 'minutes' && (
         <div className="space-y-4">
+          {previousMeeting && (
+            <div className="p-3.5 bg-gradient-to-r from-amber-50 to-amber-100/70 rounded-xl border border-amber-300/80 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-[12px]">
+              <div className="flex items-center gap-2.5 text-slate-700">
+                <Sparkles className="w-4 h-4 text-amber-600 shrink-0" />
+                <span>
+                  <strong>Referensi Rapat Sebelumnya:</strong> Notula &amp; butir tindak lanjut dari rapat <strong>{previousMeeting.meetingNumber} ({previousMeeting.title})</strong> dapat Anda tinjau atau salin langsung ke risalah rapat ini.
+                </span>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowPreviousMeetingModal(true)}
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-amber-600 hover:bg-amber-700 text-white font-semibold text-[11px] shrink-0 transition-all shadow-xs cursor-pointer self-start sm:self-auto"
+              >
+                <FileText className="w-3.5 h-3.5" />
+                <span>Tinjau Risalah {previousMeeting.meetingNumber}</span>
+              </button>
+            </div>
+          )}
           <MeetingMinutesSection
             meetingId={meeting.id}
             meeting={meeting}
@@ -1082,6 +1239,33 @@ export function MeetingDetailView({
           </div>
         </div>
       )}
+
+      {/* Modal: Tinjau Rapat Sebelumnya (Risalah & Butir Tindak Lanjut Rapat 1) */}
+      {previousMeeting && (
+        <PreviousMeetingModal
+          isOpen={showPreviousMeetingModal}
+          onClose={() => setShowPreviousMeetingModal(false)}
+          previousMeeting={previousMeeting}
+          onOpenLinkDialog={() => {
+            setShowPreviousMeetingModal(false);
+            setShowLinkMeetingModal(true);
+          }}
+        />
+      )}
+
+      {/* Modal: Tautkan / Ubah Rujukan Rapat Sebelumnya */}
+      <LinkMeetingDialog
+        isOpen={showLinkMeetingModal}
+        onClose={() => setShowLinkMeetingModal(false)}
+        currentMeetingId={meeting.id}
+        currentMeetingNumber={meeting.meetingNumber}
+        currentLinkedMeetingId={previousMeeting?.id || null}
+        onLinkedSuccess={(updated) => {
+          setPreviousMeeting(updated.previousMeeting || null);
+          setShowLinkMeetingModal(false);
+          router.refresh();
+        }}
+      />
     </div>
   );
 }

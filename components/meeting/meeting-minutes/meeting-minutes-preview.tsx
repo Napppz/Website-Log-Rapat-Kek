@@ -73,14 +73,20 @@ export function MeetingMinutesPreview({
     );
   }
 
-  const meetingNumber = meeting?.meetingNumber || '${nomor_naskah}';
+  const meetingNumber = meeting?.meetingNumber || (meeting as any)?.code || 'KEK/ND/2026';
   const meetingTitle = meeting?.title || 'Rapat Koordinasi Dewan Nasional KEK';
   const meetingDate = formatIndonesianDate(meeting?.date);
   const meetingTime =
     meeting?.startTime && meeting?.endTime
       ? `${meeting.startTime.replace(':', '.')} WIB – ${meeting.endTime.replace(':', '.')} WIB`
       : '08.00 WIB - selesai';
-  const chairperson = meeting?.chairperson?.name || 'Wakil Ketua II, Tim Pelaksana Dewan Nasional KEK, Budi Santoso';
+  const chairperson =
+    (conclusion as any)?.chairpersonName ||
+    (decisions as any)?.chairpersonName ||
+    (discussion as any)?.chairpersonName ||
+    (agenda as any)?.chairpersonName ||
+    meeting?.chairperson?.name ||
+    'Wakil Ketua II, Tim Pelaksana Dewan Nasional KEK, Budi Santoso';
 
   const customSignerName =
     (conclusion as any)?.signerName ||
@@ -131,14 +137,14 @@ export function MeetingMinutesPreview({
       {/* Real A4 Paper Preview Container */}
       <div className="bg-white rounded-2xl border border-slate-300 shadow-xl max-w-4xl mx-auto p-8 sm:p-14 font-['Arial',sans-serif] text-[11pt] text-slate-900 space-y-6">
         {/* 1. KOP SURAT */}
-        <div className="relative pb-4">
-          {/* Logo on Left */}
-          <div className="absolute left-0 top-0">
+        <div className="relative pb-2">
+          {/* Logo on Left: Vertically centered relative to text block, sitting right above divider line */}
+          <div className="absolute left-0 top-1/2 -translate-y-1/2 flex items-center">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
-              src="/lambang-kek.jpg"
+              src="/lambang-kek.png"
               alt="Logo Dewan Nasional KEK"
-              className="w-14 h-14 object-contain"
+              className="w-20 h-20 sm:w-[94px] sm:h-[94px] object-contain"
               onError={(e) => {
                 // Fallback to standard logo if emblem not loaded
                 (e.target as HTMLImageElement).src = '/logo-kek.png';
@@ -147,7 +153,7 @@ export function MeetingMinutesPreview({
           </div>
 
           {/* Centered Kop Text: Tahoma-Bold 12pt & Tahoma 8pt */}
-          <div className="text-center pl-16 pr-4 sm:px-16 font-['Tahoma',sans-serif]">
+          <div className="text-center px-16 sm:px-24 font-['Tahoma',sans-serif]">
             <h1 className="font-bold text-[12pt] sm:text-[12pt] tracking-wide text-slate-950 leading-tight">
               DEWAN NASIONAL KAWASAN EKONOMI KHUSUS
             </h1>
@@ -164,7 +170,7 @@ export function MeetingMinutesPreview({
           </div>
 
           {/* Solid Divider Line */}
-          <div className="w-full h-[1.8px] bg-slate-950 mt-4"></div>
+          <div className="w-full h-[1.8px] bg-slate-950 mt-3.5"></div>
         </div>
 
         {/* 2. JUDUL DOKUMEN: NOTULA */}

@@ -98,20 +98,24 @@ model Meeting {
   location      String
   chairpersonId String?
   secretaryId   String?
+  previousMeetingId String?
   status        MeetingStatus @default(DRAFT)
   createdAt     DateTime      @default(now())
   updatedAt     DateTime      @updatedAt
 
-  primaryBiro  Biro                 @relation("PrimaryBiroMeetings", fields: [primaryBiroId], references: [id], onDelete: Restrict)
-  chairperson  User?                @relation("ChairpersonMeetings", fields: [chairpersonId], references: [id], onDelete: SetNull)
-  secretary    User?                @relation("SecretaryMeetings", fields: [secretaryId], references: [id], onDelete: SetNull)
-  meetingBiros MeetingBiro[]
-  participants MeetingParticipant[]
-  minutes      MeetingMinutes?
-  actionItems  ActionItem[]
+  primaryBiro      Biro                 @relation("PrimaryBiroMeetings", fields: [primaryBiroId], references: [id], onDelete: Restrict)
+  chairperson      User?                @relation("ChairpersonMeetings", fields: [chairpersonId], references: [id], onDelete: SetNull)
+  secretary        User?                @relation("SecretaryMeetings", fields: [secretaryId], references: [id], onDelete: SetNull)
+  previousMeeting  Meeting?             @relation("FollowUpMeetings", fields: [previousMeetingId], references: [id], onDelete: SetNull)
+  followUpMeetings Meeting[]            @relation("FollowUpMeetings")
+  meetingBiros     MeetingBiro[]
+  participants     MeetingParticipant[]
+  minutes          MeetingMinutes?
+  actionItems      ActionItem[]
 
   @@index([meetingNumber])
   @@index([primaryBiroId])
+  @@index([previousMeetingId])
   @@index([date])
   @@index([status])
   @@index([createdAt])

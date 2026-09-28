@@ -266,7 +266,7 @@ export async function generateMeetingPdf(meeting: MeetingPdfData): Promise<Buffe
         },
         bufferPages: true,
         info: {
-          Title: `Notula - ${meeting.meetingNumber || '${nomor_naskah}'}`,
+          Title: `Notula - ${meeting.meetingNumber || (meeting as any).code || 'KEK/ND/2026'}`,
           Author: 'Sekretariat Jenderal Dewan Nasional KEK RI',
           Subject: `Notula Rapat ${meeting.title}`,
           Creator: 'SIM-RAPAT KEK RI',
@@ -283,12 +283,19 @@ export async function generateMeetingPdf(meeting: MeetingPdfData): Promise<Buffe
       // -------------------------------------------------------------
       // 1. KOP SURAT RESMI SEKRETARIAT JENDERAL DEWAN KEK (HALAMAN 1)
       // -------------------------------------------------------------
-      const emblemPath = path.join(process.cwd(), 'public', 'lambang-kek.jpg');
+      const emblemPng = path.join(process.cwd(), 'public', 'lambang-kek.png');
+      const emblemJpg = path.join(process.cwd(), 'public', 'lambang-kek.jpg');
       const logoPath = path.join(process.cwd(), 'public', 'logo-kek.png');
 
-      if (fs.existsSync(emblemPath)) {
+      const emblemPath = fs.existsSync(emblemPng)
+        ? emblemPng
+        : fs.existsSync(emblemJpg)
+        ? emblemJpg
+        : null;
+
+      if (emblemPath) {
         try {
-          doc.image(emblemPath, leftMargin, 34, { width: 56, height: 56 });
+          doc.image(emblemPath, leftMargin, 28, { width: 68, height: 68 });
         } catch (e) {
           console.warn('Could not load circular emblem, fallback to standard logo:', e);
         }
@@ -351,7 +358,7 @@ export async function generateMeetingPdf(meeting: MeetingPdfData): Promise<Buffe
           align: 'center',
         });
 
-      const nomorNaskah = meeting.meetingNumber || '${nomor_naskah}';
+      const nomorNaskah = meeting.meetingNumber || (meeting as any).code || 'KEK/ND/2026';
       doc
         .font(fonts.arial)
         .fontSize(11)
@@ -411,8 +418,19 @@ export async function generateMeetingPdf(meeting: MeetingPdfData): Promise<Buffe
       doc.text('Pelaksana Rapat:', leftMargin, doc.y);
       doc.moveDown(0.3);
 
-      // Ketua / Pimpinan Rapat
-      const chairpersonName = meeting.chairperson?.name || '-';
+      // Ketua / Pimpinan Rapat (kustom dari notula dinas atau data rapat)
+      const customChairpersonName =
+        (meeting.minutes?.conclusion as any)?.chairpersonName ||
+        (meeting.minutes?.decisions as any)?.chairpersonName ||
+        (meeting.minutes?.discussion as any)?.chairpersonName ||
+        (meeting.minutes?.agenda as any)?.chairpersonName ||
+        meeting.chairperson?.name ||
+        '';
+
+      const chairpersonName =
+        customChairpersonName.trim() ||
+        'Wakil Ketua II, Tim Pelaksana Dewan Nasional KEK, Budi Santoso';
+
       renderMetaRow('Ketua/Pimpinan Rapat', chairpersonName);
 
       // Ekstraksi nama dan jabatan notulis kustom jika diinput di notulen, fallback ke data rapat

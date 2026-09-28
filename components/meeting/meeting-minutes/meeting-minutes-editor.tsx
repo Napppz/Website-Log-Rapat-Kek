@@ -20,6 +20,7 @@ import {
   PenTool,
   User,
   BadgeCheck,
+  UserCheck,
 } from 'lucide-react';
 
 interface MeetingMinutesEditorProps {
@@ -58,6 +59,17 @@ export function MeetingMinutesEditor({
   const [decisions, setDecisions] = useState<JSONContent | null>(initialMinutes?.decisions || null);
   const [conclusion, setConclusion] = useState<JSONContent | null>(initialMinutes?.conclusion || null);
 
+  // Inisialisasi Nama Ketua / Pimpinan Rapat (Dapat Diisi Sendiri)
+  const initialChairpersonName =
+    (initialMinutes?.conclusion as any)?.chairpersonName ||
+    (initialMinutes?.decisions as any)?.chairpersonName ||
+    (initialMinutes?.discussion as any)?.chairpersonName ||
+    (initialMinutes?.agenda as any)?.chairpersonName ||
+    meeting?.chairperson?.name ||
+    'Wakil Ketua II, Tim Pelaksana Dewan Nasional KEK, Budi Santoso';
+
+  const [chairpersonName, setChairpersonName] = useState<string>(initialChairpersonName);
+
   // Inisialisasi Nama dan Jabatan Notulis Penandatangan
   const initialSignerName =
     (initialMinutes?.conclusion as any)?.signerName ||
@@ -89,11 +101,12 @@ export function MeetingMinutesEditor({
       setStatusMessage('Menyimpan...');
 
       try {
-        // Sematkan signerName dan signerRole ke dalam payload conclusion & decisions agar selalu tersimpan
+        // Sematkan signerName, signerRole, dan chairpersonName ke dalam payload conclusion & decisions agar selalu tersimpan
         const conclusionPayload = {
           ...(conclusion || { type: 'doc', content: [] }),
           signerName: signerName.trim(),
           signerRole: signerRole.trim(),
+          chairpersonName: chairpersonName.trim(),
         };
 
         const decisionsPayload = decisions
@@ -101,6 +114,7 @@ export function MeetingMinutesEditor({
               ...decisions,
               signerName: signerName.trim(),
               signerRole: signerRole.trim(),
+              chairpersonName: chairpersonName.trim(),
             }
           : undefined;
 
@@ -129,7 +143,7 @@ export function MeetingMinutesEditor({
         setStatusMessage('Gagal menyimpan');
       }
     },
-    [meetingId, agenda, discussion, decisions, conclusion, signerName, signerRole, onSaved]
+    [meetingId, agenda, discussion, decisions, conclusion, signerName, signerRole, chairpersonName, onSaved]
   );
 
   // Autosave trigger with 2.5s debounce
@@ -334,14 +348,14 @@ export function MeetingMinutesEditor({
               FORMAT NOTULA RESMI
             </span>
             <span className="text-[12px] font-semibold text-slate-700">
-              NOMOR: {meeting?.meetingNumber || '${nomor_naskah}'}
+              NOMOR: {meeting?.meetingNumber || (meeting as any)?.code || 'KEK/ND/2026'}
             </span>
           </div>
           <h3 className="font-bold text-[16px] text-slate-900 mt-1">
             {meeting?.title || 'Pengisian Notula Rapat'}
           </h3>
           <p className="text-[12px] text-slate-600 mt-0.5">
-            Pimpinan: {meeting?.chairperson?.name || 'Belum Ditugaskan'} • Notulis: {signerName || 'Pranata Hubungan Masyarakat Terampil'}
+            Pimpinan: <span className="font-semibold text-slate-800">{chairpersonName || 'Belum Ditugaskan'}</span> • Notulis: <span className="font-semibold text-slate-800">{signerName || 'Pranata Hubungan Masyarakat Terampil'}</span>
           </p>
         </div>
 
@@ -569,8 +583,8 @@ export function MeetingMinutesEditor({
           </div>
         )}
 
-        {/* BAGIAN 5: PENANDATANGAN NOTULA (NOTULIS / PENCATAT) */}
-        <div className="bg-white rounded-2xl border border-amber-200/90 p-6 shadow-xs space-y-5">
+        {/* BAGIAN 5: PELAKSANA RAPAT & PENANDATANGAN (KETUA & NOTULIS) */}
+        <div className="bg-white rounded-2xl border border-amber-200/90 p-6 shadow-xs space-y-6">
           <div className="flex items-center justify-between pb-3 border-b border-amber-100">
             <div className="flex items-center gap-2.5">
               <div className="w-8 h-8 rounded-xl bg-amber-100 text-amber-700 flex items-center justify-center">
@@ -578,10 +592,10 @@ export function MeetingMinutesEditor({
               </div>
               <div>
                 <h4 className="font-bold text-[15px] text-slate-900 uppercase tracking-wide">
-                  Identitas Penandatangan Notula
+                  Identitas Pelaksana Rapat &amp; Penandatangan
                 </h4>
                 <p className="text-[11.5px] text-slate-500">
-                  Ubah nama dan jabatan pejabat notulis yang akan tercantum pada naskah dinas &amp; kolom tanda tangan
+                  Ubah nama &amp; jabatan Ketua/Pimpinan Rapat serta Notulis yang akan tercantum pada lembar naskah notula dinas &amp; berkas PDF
                 </p>
               </div>
             </div>
@@ -591,13 +605,60 @@ export function MeetingMinutesEditor({
             </span>
           </div>
 
+          {/* Input Ketua / Pimpinan Rapat */}
+          <div className="space-y-2 p-4 bg-amber-50/50 rounded-xl border border-amber-200/80">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1.5">
+              <label className="text-[12.5px] font-bold text-slate-800 flex items-center gap-1.5">
+                <UserCheck className="w-4 h-4 text-amber-600" />
+                <span>Ketua / Pimpinan Rapat (Pejabat yang Memimpin Sidang)</span>
+              </label>
+              <div className="flex flex-wrap items-center gap-2">
+                {meeting?.chairperson?.name && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setChairpersonName(meeting.chairperson!.name);
+                      hasChangesRef.current = true;
+                    }}
+                    className="text-[11px] font-semibold text-amber-700 hover:text-amber-800 hover:underline cursor-pointer"
+                  >
+                    + Pimpinan Rapat ({meeting.chairperson.name})
+                  </button>
+                )}
+                <button
+                  type="button"
+                  onClick={() => {
+                    setChairpersonName('Wakil Ketua II, Tim Pelaksana Dewan Nasional KEK, Budi Santoso');
+                    hasChangesRef.current = true;
+                  }}
+                  className="text-[11px] font-semibold text-slate-600 hover:text-slate-800 hover:underline cursor-pointer"
+                >
+                  Gunakan Standar KEK
+                </button>
+              </div>
+            </div>
+            <input
+              type="text"
+              value={chairpersonName}
+              onChange={(e) => {
+                setChairpersonName(e.target.value);
+                hasChangesRef.current = true;
+              }}
+              placeholder="Contoh: Wakil Ketua II, Tim Pelaksana Dewan Nasional KEK, Budi Santoso"
+              className="w-full px-4 py-2.5 text-[13.5px] bg-white border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-600 transition-all text-slate-900 font-medium placeholder:text-slate-400"
+            />
+            <p className="text-[11px] text-slate-500">
+              Ketikkan jabatan kedinasan dan nama lengkap pejabat pimpinan rapat. Baris ini dicetak pada bagian <strong>Pelaksana Rapat &rarr; Ketua/Pimpinan Rapat</strong> di naskah dinas &amp; dokumen PDF.
+            </p>
+          </div>
+
           <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
             {/* Input Nama Notulis */}
             <div className="space-y-2">
               <div className="flex items-center justify-between">
                 <label className="text-[12.5px] font-bold text-slate-800 flex items-center gap-1.5">
                   <User className="w-3.5 h-3.5 text-slate-500" />
-                  <span>Nama Lengkap Notulis</span>
+                  <span>Nama Lengkap Notulis (Pencatat)</span>
                 </label>
                 {session?.user?.name && (
                   <button
@@ -648,20 +709,46 @@ export function MeetingMinutesEditor({
             </div>
           </div>
 
-          {/* Pratinjau Kotak Tanda Tangan */}
+          {/* Pratinjau Tampilan Format Lembar Notula & Tanda Tangan */}
           <div className="pt-2">
-            <p className="text-[11.5px] font-bold text-slate-700 mb-2">Pratinjau Format Tanda Tangan Notula:</p>
-            <div className="p-4 bg-slate-50 rounded-xl border border-slate-200 max-w-xs font-sans text-[13px] text-slate-900 space-y-1">
-              <p className="font-normal">Notulis,</p>
-              <p className="font-normal text-slate-800 leading-tight">
-                {signerRole || 'Pranata Hubungan Masyarakat Terampil,'}
-              </p>
-              <div className="py-4 text-slate-400 font-mono text-[11.5px]">
-                ${'{ttd_pengirim}'}
+            <p className="text-[11.5px] font-bold text-slate-700 mb-2">Pratinjau Pelaksana Rapat &amp; Kolom Tanda Tangan:</p>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="p-4 bg-slate-50 rounded-xl border border-slate-200 text-[12px] text-slate-900 space-y-2">
+                <p className="font-bold text-slate-800 border-b border-slate-200 pb-1.5 flex items-center justify-between">
+                  <span>Baris Pelaksana Rapat:</span>
+                  <span className="text-[10.5px] text-amber-700 font-normal">Halaman Depan</span>
+                </p>
+                <div className="space-y-1.5 text-[12px]">
+                  <p className="font-semibold text-slate-800">Pelaksana Rapat:</p>
+                  <div className="grid grid-cols-[120px_10px_1fr] items-start text-[11.5px] leading-relaxed">
+                    <span className="text-slate-600">Ketua/Pimpinan Rapat</span>
+                    <span>:</span>
+                    <span className="text-slate-950 font-medium">{chairpersonName || 'Wakil Ketua II, Tim Pelaksana Dewan Nasional KEK, Budi Santoso'}</span>
+                  </div>
+                  <div className="grid grid-cols-[120px_10px_1fr] items-start text-[11.5px] leading-relaxed">
+                    <span className="text-slate-600">Pencatat</span>
+                    <span>:</span>
+                    <span className="text-slate-950 font-medium">{signerRole || 'Pranata Hubungan Masyarakat Terampil'}, {signerName || 'Sri Aurelia Rosyana Hari Habyby'}</span>
+                  </div>
+                </div>
               </div>
-              <p className="font-normal text-slate-950">
-                {signerName || 'Sri Aurelia Rosyana Hari Habyby'}
-              </p>
+
+              <div className="p-4 bg-slate-50 rounded-xl border border-slate-200 text-[12.5px] text-slate-900 space-y-1">
+                <p className="font-bold text-slate-800 border-b border-slate-200 pb-1.5 flex items-center justify-between">
+                  <span>Kolom Tanda Tangan:</span>
+                  <span className="text-[10.5px] text-amber-700 font-normal">Halaman Penutup</span>
+                </p>
+                <p className="font-normal mt-1">Notulis,</p>
+                <p className="font-normal text-slate-800 leading-tight">
+                  {signerRole || 'Pranata Hubungan Masyarakat Terampil,'}
+                </p>
+                <div className="py-2.5 text-slate-400 font-mono text-[11px]">
+                  ${'{ttd_pengirim}'}
+                </div>
+                <p className="font-semibold text-slate-950">
+                  {signerName || 'Sri Aurelia Rosyana Hari Habyby'}
+                </p>
+              </div>
             </div>
           </div>
         </div>

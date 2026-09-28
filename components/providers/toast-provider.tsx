@@ -1,6 +1,6 @@
 'use client';
 
-import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react';
 import {
   CheckCircle2,
   AlertTriangle,
@@ -247,32 +247,29 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
   );
 }
 
-// Individual Toast Card with Entrance Animation & Progress Bar
+// Individual Toast Card with Entrance Animation & Hardware-Accelerated Progress Bar
 function ToastCard({ toast: item, onClose }: { toast: ToastItem; onClose: () => void }) {
   const [isPaused, setIsPaused] = useState(false);
-  const [progress, setProgress] = useState(100);
-
   const duration = item.duration || 4000;
+  const remainingRef = useRef<number>(duration);
+  const startRef = useRef<number>(Date.now());
+  const onCloseRef = useRef(onClose);
+  onCloseRef.current = onClose;
 
   useEffect(() => {
-    if (isPaused) return;
+    if (isPaused) {
+      const elapsed = Date.now() - startRef.current;
+      remainingRef.current = Math.max(0, remainingRef.current - elapsed);
+      return;
+    }
 
-    const intervalTime = 40;
-    const step = (intervalTime / duration) * 100;
+    startRef.current = Date.now();
+    const timer = setTimeout(() => {
+      onCloseRef.current();
+    }, remainingRef.current);
 
-    const interval = setInterval(() => {
-      setProgress((prev) => {
-        if (prev <= step) {
-          clearInterval(interval);
-          onClose();
-          return 0;
-        }
-        return prev - step;
-      });
-    }, intervalTime);
-
-    return () => clearInterval(interval);
-  }, [isPaused, duration, onClose]);
+    return () => clearTimeout(timer);
+  }, [isPaused]);
 
   const config = {
     success: {
@@ -345,11 +342,15 @@ function ToastCard({ toast: item, onClose }: { toast: ToastItem; onClose: () => 
         <X className="w-4 h-4" />
       </button>
 
-      {/* Shrinking Animated Progress Bar */}
+      {/* Shrinking Animated Progress Bar (CSS Animation) */}
       <div className="absolute bottom-0 left-0 right-0 h-1 bg-white/10 overflow-hidden">
         <div
-          className={cn('h-full transition-all ease-linear', config.progressBar)}
-          style={{ width: `${progress}%` }}
+          className={cn('h-full', config.progressBar)}
+          style={{
+            width: '100%',
+            animation: `toast-shrink ${duration}ms linear forwards`,
+            animationPlayState: isPaused ? 'paused' : 'running',
+          }}
         />
       </div>
     </div>

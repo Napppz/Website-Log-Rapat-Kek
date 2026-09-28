@@ -16,6 +16,8 @@ export interface CreateMeetingInput {
   involvedBiroCodes?: string[];
   attendees?: string;
   participantUserIds?: string[];
+  previousMeetingId?: string | null;
+  chairpersonId?: string | null;
 }
 
 function safeRevalidate(paths: string[]) {
@@ -91,6 +93,8 @@ export async function createMeetingAction(input: CreateMeetingInput) {
           endTime: input.endTime,
           location: input.location,
           status: MeetingStatus.DRAFT,
+          previousMeetingId: input.previousMeetingId || null,
+          chairpersonId: input.chairpersonId || null,
         },
       });
 
@@ -505,6 +509,71 @@ export async function deleteAllMeetingsAction() {
   } catch (error: any) {
     console.error('Error deleting all meetings:', error);
     return { success: false, error: error?.message || 'Gagal menghapus seluruh data rapat' };
+  }
+}
+
+/**
+ * Server action to link or unlink a previous meeting (Rapat Rujukan / Lanjutan)
+ */
+export async function linkPreviousMeetingAction(
+  meetingId: string,
+  previousMeetingId: string | null
+) {
+  try {
+    await requirePermission('edit:meeting');
+    const updated = await prisma.meeting.update({
+      where: { id: meetingId },
+      data: { previousMeetingId },
+      include: {
+        previousMeeting: {
+          include: {
+            primaryBiro: true,
+            chairperson: true,
+            secretary: true,
+            minutes: true,
+            actionItems: {
+              include: { picBiro: true, picUser: true },
+              orderBy: [{ dueDate: 'asc' }],
+            },
+          },
+        },
+      },
+    });
+
+    safeRevalidate([
+      `/semua-rapat/${meetingId}`,
+      '/semua-rapat',
+      '/',
+    ]);
+
+    return { success: true, data: updated };
+  } catch (error: any) {
+    console.error('Error linking previous meeting:', error);
+    return { success: false, error: error?.message || 'Gagal menautkan rapat sebelumnya' };
+  }
+}
+
+/**
+ * Server action to get meeting list options for linking a previous meeting
+ */
+export async function getMeetingOptionsAction(excludeMeetingId?: string) {
+  try {
+    const meetings = await prisma.meeting.findMany({
+      where: excludeMeetingId ? { id: { not: excludeMeetingId } } : {},
+      select: {
+        id: true,
+        meetingNumber: true,
+        title: true,
+        date: true,
+        status: true,
+        primaryBiro: { select: { code: true, shortName: true } },
+      },
+      orderBy: { date: 'desc' },
+      take: 100,
+    });
+    return { success: true, data: meetings };
+  } catch (error: any) {
+    return { success: false, data: [] };
   }
 }
 

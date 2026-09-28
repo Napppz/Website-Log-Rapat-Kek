@@ -87,3 +87,12 @@
   animation: shimmer-sweep 2.2s infinite ease-in-out;
 }
 
+@keyframes toast-shrink {
+  from {
+    width: 100%;
+  }
+  to {
+    width: 0%;
+  }
+}
+
