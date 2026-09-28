@@ -6,7 +6,11 @@ import {
   actionItemSchema,
   ActionItemInput,
 } from '@/lib/validations/action-item';
-import { createActionItemAction, updateActionItemAction } from '@/app/actions/action-item-actions';
+import {
+  createActionItemAction,
+  updateActionItemAction,
+  getActionItemFormOptionsAction,
+} from '@/app/actions/action-item-actions';
 import { ActionItem, ActionItemPriority, ActionItemStatus } from '@/lib/types';
 
 interface ActionItemFormDialogProps {
@@ -33,6 +37,24 @@ export function ActionItemFormDialog({
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const isEditing = Boolean(actionItem);
 
+  // Resilient biros and users state with auto-fetch
+  const [birosList, setBirosList] = useState(availableBiros);
+  const [usersList, setUsersList] = useState(availableUsers);
+  const [isLoadingOptions, setIsLoadingOptions] = useState(false);
+
+  // Sync state if props change
+  useEffect(() => {
+    if (availableBiros.length > 0) {
+      setBirosList(availableBiros);
+    }
+  }, [availableBiros]);
+
+  useEffect(() => {
+    if (availableUsers.length > 0) {
+      setUsersList(availableUsers);
+    }
+  }, [availableUsers]);
+
   // Form State
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
@@ -41,6 +63,28 @@ export function ActionItemFormDialog({
   const [dueDate, setDueDate] = useState('');
   const [priority, setPriority] = useState<ActionItemPriority>('MEDIUM');
   const [status, setStatus] = useState<ActionItemStatus>('PENDING');
+
+  // Auto-fetch biros & users if not passed via props or currently empty
+  useEffect(() => {
+    if (isOpen && birosList.length === 0) {
+      setIsLoadingOptions(true);
+      getActionItemFormOptionsAction()
+        .then((res) => {
+          if (res.success) {
+            if (res.biros && res.biros.length > 0) {
+              setBirosList(res.biros);
+              setPicBiroId((prev) => (prev ? prev : res.biros[0]?.id || ''));
+            }
+            if (res.users && res.users.length > 0) {
+              setUsersList(res.users);
+            }
+          }
+        })
+        .finally(() => {
+          setIsLoadingOptions(false);
+        });
+    }
+  }, [isOpen, birosList.length]);
 
   useEffect(() => {
     if (isOpen) {
@@ -55,7 +99,7 @@ export function ActionItemFormDialog({
 
         setTitle(actionItem.title || '');
         setDescription(actionItem.description || '');
-        setPicBiroId(actionItem.picBiroId || (availableBiros[0]?.id ?? ''));
+        setPicBiroId(actionItem.picBiroId || (birosList[0]?.id ?? ''));
         setPicUserId(actionItem.picUserId || '');
         setDueDate(`${yyyy}-${mm}-${dd}`);
         setPriority(actionItem.priority || 'MEDIUM');
@@ -68,14 +112,14 @@ export function ActionItemFormDialog({
 
         setTitle('');
         setDescription('');
-        setPicBiroId(availableBiros[0]?.id || '');
+        setPicBiroId(birosList[0]?.id || '');
         setPicUserId('');
         setDueDate(`${yyyy}-${mm}-${dd}`);
         setPriority('MEDIUM');
         setStatus('PENDING');
       }
     }
-  }, [isOpen, actionItem, availableBiros]);
+  }, [isOpen, actionItem, birosList]);
 
   if (!isOpen) return null;
 
@@ -216,10 +260,12 @@ export function ActionItemFormDialog({
                   onChange={(e) => setPicBiroId(e.target.value)}
                   className="w-full px-3 py-2 rounded-lg border border-amber-200 focus:outline-none focus:ring-2 focus:ring-amber-500 bg-white font-medium text-slate-800 text-[13px] cursor-pointer"
                 >
-                  <option value="">-- Pilih Biro Resmi KEK --</option>
-                  {availableBiros.map((b) => (
+                  <option value="">
+                    {isLoadingOptions ? '-- Memuat Biro Resmi KEK... --' : '-- Pilih Biro Resmi KEK --'}
+                  </option>
+                  {birosList.map((b) => (
                     <option key={b.id} value={b.id}>
-                      {b.code} — {b.shortName}
+                      {b.code} — {b.shortName || b.name}
                     </option>
                   ))}
                 </select>
@@ -239,9 +285,9 @@ export function ActionItemFormDialog({
                   className="w-full px-3 py-2 rounded-lg border border-amber-200 focus:outline-none focus:ring-2 focus:ring-amber-500 bg-white text-slate-800 text-[13px] cursor-pointer"
                 >
                   <option value="">-- Belum Ditentukan (Semua Tim) --</option>
-                  {availableUsers.map((u) => (
+                  {usersList.map((u) => (
                     <option key={u.id} value={u.id}>
-                      {u.name}
+                      {u.name} {u.email ? `(${u.email})` : ''}
                     </option>
                   ))}
                 </select>

@@ -867,6 +867,7 @@ export function MeetingDetailView({
         <div className="space-y-4">
           <MeetingMinutesSection
             meetingId={meeting.id}
+            meeting={meeting}
             initialMinutes={meeting.minutes}
             defaultMode={meeting.minutes ? 'preview' : 'edit'}
           />

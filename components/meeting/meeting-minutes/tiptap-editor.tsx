@@ -56,10 +56,10 @@ export function TiptapEditor({
     editorProps: {
       attributes: {
         class: cn(
-          'prose prose-sm prose-amber max-w-none focus:outline-none p-3.5 text-slate-800 leading-relaxed text-[13px]',
+          'prose prose-sm prose-amber max-w-none focus:outline-none p-3.5 text-slate-800 leading-relaxed font-[\'Arial\',sans-serif] text-[11pt]',
           'prose-headings:font-bold prose-headings:text-slate-900',
-          'prose-h2:text-[16px] prose-h2:mb-1.5 prose-h2:mt-3',
-          'prose-h3:text-[14px] prose-h3:mb-1 prose-h3:mt-2',
+          'prose-h2:text-[13pt] prose-h2:mb-1.5 prose-h2:mt-3',
+          'prose-h3:text-[11pt] prose-h3:mb-1 prose-h3:mt-2',
           'prose-p:my-1',
           'prose-ul:my-1.5 prose-ul:list-disc prose-ul:pl-5',
           'prose-ol:my-1.5 prose-ol:list-decimal prose-ol:pl-5',

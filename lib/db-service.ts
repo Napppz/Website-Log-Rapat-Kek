@@ -5,19 +5,57 @@ import { Biro, Meeting, BiroCode, MeetingStatus, BureauWorkload, DashboardMetric
  * Service to fetch official data directly from Neon PostgreSQL database.
  */
 
+/**
+ * Executes a database operation with automatic retry on cold start / connection drop.
+ * Neon Serverless compute auto-suspends after 5 min of inactivity.
+ * When waking up, initial queries may encounter P1001 / connection timeout before resuming.
+ */
+export async function withDbRetry<T>(
+  operation: () => Promise<T>,
+  maxRetries = 2,
+  delayMs = 1500
+): Promise<T> {
+  let attempt = 0;
+  while (true) {
+    try {
+      return await operation();
+    } catch (error: any) {
+      attempt++;
+      const isConnectionError =
+        error?.code === 'P1001' ||
+        error?.name === 'PrismaClientKnownRequestError' && error?.code === 'P1001' ||
+        error?.message?.includes("Can't reach database server") ||
+        error?.message?.includes('connect ETIMEDOUT') ||
+        error?.message?.includes('connection closed') ||
+        error?.message?.includes('terminating connection');
+
+      if (isConnectionError && attempt <= maxRetries) {
+        console.warn(
+          `[Neon DB Cold Start] Database compute resuming from sleep (attempt ${attempt}/${maxRetries}). Retrying query in ${delayMs}ms...`
+        );
+        await new Promise((res) => setTimeout(res, delayMs));
+        continue;
+      }
+      throw error;
+    }
+  }
+}
+
 export async function getOfficialBiros(): Promise<Biro[]> {
   try {
-    const biros = await prisma.biro.findMany({
-      where: { isActive: true },
-      orderBy: { code: 'asc' },
-    });
+    return await withDbRetry(async () => {
+      const biros = await prisma.biro.findMany({
+        where: { isActive: true },
+        orderBy: { code: 'asc' },
+      });
 
-    return biros.map((b) => ({
-      code: b.code as BiroCode,
-      name: b.name,
-      shortName: b.shortName,
-      description: b.description || '',
-    }));
+      return biros.map((b) => ({
+        code: b.code as BiroCode,
+        name: b.name,
+        shortName: b.shortName,
+        description: b.description || '',
+      }));
+    });
   } catch (error) {
     console.error('Error fetching biros from Neon DB:', error);
     return [];
@@ -26,38 +64,40 @@ export async function getOfficialBiros(): Promise<Biro[]> {
 
 export async function getBiroDetail(code: string) {
   try {
-    let upperCode = code.toUpperCase();
-    if (upperCode === 'PPK' || upperCode === 'REN' || upperCode === 'IT') upperCode = 'BPPK';
-    if (upperCode === 'DAL' || upperCode === 'OPS') upperCode = 'PKKEK';
-    if (upperCode === 'INV') upperCode = 'IKK';
-    if (upperCode === 'HUK' || upperCode === 'LEG') upperCode = 'HSDMO';
-    if (upperCode === 'BUK' || upperCode === 'ADM') upperCode = 'UK';
+    return await withDbRetry(async () => {
+      let upperCode = code.toUpperCase();
+      if (upperCode === 'PPK' || upperCode === 'REN' || upperCode === 'IT') upperCode = 'BPPK';
+      if (upperCode === 'DAL' || upperCode === 'OPS') upperCode = 'PKKEK';
+      if (upperCode === 'INV') upperCode = 'IKK';
+      if (upperCode === 'HUK' || upperCode === 'LEG') upperCode = 'HSDMO';
+      if (upperCode === 'BUK' || upperCode === 'ADM') upperCode = 'UK';
 
-    const biro = await prisma.biro.findUnique({
-      where: { code: upperCode },
-      include: {
-        users: {
-          orderBy: { name: 'asc' },
-        },
-        primaryMeetings: {
-          orderBy: [{ date: 'desc' }, { createdAt: 'desc' }],
-          include: {
-            primaryBiro: true,
-            meetingBiros: {
-              include: { biro: true },
-            },
-            participants: {
-              include: { user: true },
-            },
-            chairperson: true,
-            secretary: true,
+      const biro = await prisma.biro.findUnique({
+        where: { code: upperCode },
+        include: {
+          users: {
+            orderBy: { name: 'asc' },
           },
+          primaryMeetings: {
+            orderBy: [{ date: 'desc' }, { createdAt: 'desc' }],
+            include: {
+              primaryBiro: true,
+              meetingBiros: {
+                include: { biro: true },
+              },
+              participants: {
+                include: { user: true },
+              },
+              chairperson: true,
+              secretary: true,
+            },
+          },
+          sequence: true,
         },
-        sequence: true,
-      },
-    });
+      });
 
-    return biro;
+      return biro;
+    });
   } catch (error) {
     console.error(`Error fetching biro ${code} from Neon DB:`, error);
     return null;
@@ -66,36 +106,38 @@ export async function getBiroDetail(code: string) {
 
 export async function getMeetingByIdFromDb(idOrNumber: string) {
   try {
-    const meeting = await prisma.meeting.findFirst({
-      where: {
-        OR: [{ id: idOrNumber }, { meetingNumber: idOrNumber.toUpperCase() }],
-      },
-      include: {
-        primaryBiro: true,
-        meetingBiros: {
-          include: { biro: true },
+    return await withDbRetry(async () => {
+      const meeting = await prisma.meeting.findFirst({
+        where: {
+          OR: [{ id: idOrNumber }, { meetingNumber: idOrNumber.toUpperCase() }],
         },
-        participants: {
-          include: { user: { include: { biro: true } } },
-        },
-        chairperson: {
-          include: { biro: true },
-        },
-        secretary: {
-          include: { biro: true },
-        },
-        minutes: true,
-        actionItems: {
-          include: {
-            picBiro: true,
-            picUser: true,
+        include: {
+          primaryBiro: true,
+          meetingBiros: {
+            include: { biro: true },
           },
-          orderBy: [{ dueDate: 'asc' }, { createdAt: 'desc' }],
+          participants: {
+            include: { user: { include: { biro: true } } },
+          },
+          chairperson: {
+            include: { biro: true },
+          },
+          secretary: {
+            include: { biro: true },
+          },
+          minutes: true,
+          actionItems: {
+            include: {
+              picBiro: true,
+              picUser: true,
+            },
+            orderBy: [{ dueDate: 'asc' }, { createdAt: 'desc' }],
+          },
         },
-      },
-    });
+      });
 
-    return meeting;
+      return meeting;
+    });
   } catch (error) {
     console.error(`Error fetching meeting ${idOrNumber} from Neon DB:`, error);
     return null;
@@ -108,46 +150,48 @@ export async function getActionItemsFromDb(filters?: {
   status?: string;
 }) {
   try {
-    const whereClause: any = {};
+    return await withDbRetry(async () => {
+      const whereClause: any = {};
 
-    if (filters?.meetingId) {
-      whereClause.meetingId = filters.meetingId;
-    }
-
-    if (filters?.biroCode) {
-      whereClause.picBiro = {
-        code: filters.biroCode.toUpperCase(),
-      };
-    }
-
-    if (filters?.status && filters.status !== 'ALL') {
-      if (filters.status === 'OVERDUE') {
-        whereClause.status = { not: 'COMPLETED' };
-        whereClause.dueDate = { lt: new Date() };
-      } else {
-        whereClause.status = filters.status;
+      if (filters?.meetingId) {
+        whereClause.meetingId = filters.meetingId;
       }
-    }
 
-    const items = await prisma.actionItem.findMany({
-      where: whereClause,
-      include: {
-        picBiro: true,
-        picUser: true,
-        meeting: true,
-      },
-      orderBy: [{ dueDate: 'asc' }, { createdAt: 'desc' }],
-    });
+      if (filters?.biroCode) {
+        whereClause.picBiro = {
+          code: filters.biroCode.toUpperCase(),
+        };
+      }
 
-    const now = Date.now();
-    return items.map((item) => {
-      const isOverdue = item.status !== 'COMPLETED' && new Date(item.dueDate).getTime() < now;
-      const computedStatus = isOverdue ? 'OVERDUE' : item.status;
-      return {
-        ...item,
-        computedStatus,
-        isOverdue,
-      };
+      if (filters?.status && filters.status !== 'ALL') {
+        if (filters.status === 'OVERDUE') {
+          whereClause.status = { not: 'COMPLETED' };
+          whereClause.dueDate = { lt: new Date() };
+        } else {
+          whereClause.status = filters.status;
+        }
+      }
+
+      const items = await prisma.actionItem.findMany({
+        where: whereClause,
+        include: {
+          picBiro: true,
+          picUser: true,
+          meeting: true,
+        },
+        orderBy: [{ dueDate: 'asc' }, { createdAt: 'desc' }],
+      });
+
+      const now = Date.now();
+      return items.map((item) => {
+        const isOverdue = item.status !== 'COMPLETED' && new Date(item.dueDate).getTime() < now;
+        const computedStatus = isOverdue ? 'OVERDUE' : item.status;
+        return {
+          ...item,
+          computedStatus,
+          isOverdue,
+        };
+      });
     });
   } catch (error) {
     console.error('Error fetching action items from Neon DB:', error);
@@ -160,97 +204,99 @@ export async function getMeetingsFromDb(filters?: {
   status?: MeetingStatus | null;
 }): Promise<Meeting[]> {
   try {
-    const whereClause: any = {};
+    return await withDbRetry(async () => {
+      const whereClause: any = {};
 
-    if (filters?.biroCode) {
-      whereClause.primaryBiro = {
-        code: filters.biroCode.toUpperCase(),
-      };
-    }
-
-    if (filters?.status) {
-      whereClause.status = filters.status;
-    }
-
-    const meetings = await prisma.meeting.findMany({
-      where: whereClause,
-      include: {
-        primaryBiro: true,
-        meetingBiros: {
-          include: { biro: true },
-        },
-        participants: {
-          include: { user: true },
-        },
-        chairperson: true,
-        secretary: true,
-        actionItems: true,
-      },
-      orderBy: [{ date: 'desc' }, { createdAt: 'desc' }],
-    });
-
-    return meetings.map((m) => {
-      const attendees = m.participants.map((p) => p.user.name);
-      if (m.chairperson && !attendees.includes(m.chairperson.name)) {
-        attendees.unshift(m.chairperson.name);
+      if (filters?.biroCode) {
+        whereClause.primaryBiro = {
+          code: filters.biroCode.toUpperCase(),
+        };
       }
 
-      const involvedBiroNames = m.meetingBiros.map((mb) => mb.biro.code).join(', ');
+      if (filters?.status) {
+        whereClause.status = filters.status;
+      }
 
-      const totalItems = m.actionItems.length;
-      const completedItems = m.actionItems.filter((a) => a.status === 'COMPLETED').length;
-      const inProgressItems = m.actionItems.filter((a) => a.status === 'IN_PROGRESS').length;
-      const pendingItems = m.actionItems.filter((a) => a.status === 'PENDING').length;
-
-      // Fallback display if no action items registered yet for this meeting
-      const fallbackTotal = totalItems > 0 ? totalItems : 4;
-      const fallbackCompleted =
-        totalItems > 0
-          ? completedItems
-          : m.status === 'FINAL'
-          ? 4
-          : m.status === 'APPROVED'
-          ? 3
-          : 1;
-      const fallbackInProgress =
-        totalItems > 0
-          ? inProgressItems
-          : m.status === 'APPROVED'
-          ? 1
-          : m.status === 'REVIEW'
-          ? 2
-          : 1;
-
-      return {
-        id: m.id,
-        code: m.meetingNumber,
-        title: m.title,
-        date: m.date.toISOString().slice(0, 10),
-        time: `${m.startTime} - ${m.endTime} WIB`,
-        location: m.location,
-        biroCode: m.primaryBiro.code as BiroCode,
-        biroName: m.primaryBiro.shortName,
-        status: m.status as MeetingStatus,
-        isNew: m.date.toISOString().slice(0, 10) >= '2026-09-24',
-        involvedBiros: involvedBiroNames,
-        actionItems: {
-          total: fallbackTotal,
-          completed: fallbackCompleted,
-          inProgress: fallbackInProgress,
-          pending: pendingItems,
-          summaryText:
-            totalItems > 0
-              ? `${completedItems}/${totalItems} Tindak Lanjut Selesai`
-              : involvedBiroNames.length > 0
-              ? `Biro Terlibat: ${involvedBiroNames}`
-              : `Biro Utama: ${m.primaryBiro.code}`,
-          isCompletePercentage: totalItems > 0 ? completedItems === totalItems : m.status === 'FINAL',
+      const meetings = await prisma.meeting.findMany({
+        where: whereClause,
+        include: {
+          primaryBiro: true,
+          meetingBiros: {
+            include: { biro: true },
+          },
+          participants: {
+            include: { user: true },
+          },
+          chairperson: true,
+          secretary: true,
+          actionItems: true,
         },
-        attendees,
-        agendaSummary: `Diselenggarakan oleh ${m.primaryBiro.name}. ${
-          involvedBiroNames ? `Biro terlibat: ${involvedBiroNames}.` : ''
-        }`,
-      };
+        orderBy: [{ date: 'desc' }, { createdAt: 'desc' }],
+      });
+
+      return meetings.map((m) => {
+        const attendees = m.participants.map((p) => p.user.name);
+        if (m.chairperson && !attendees.includes(m.chairperson.name)) {
+          attendees.unshift(m.chairperson.name);
+        }
+
+        const involvedBiroNames = m.meetingBiros.map((mb) => mb.biro.code).join(', ');
+
+        const totalItems = m.actionItems.length;
+        const completedItems = m.actionItems.filter((a) => a.status === 'COMPLETED').length;
+        const inProgressItems = m.actionItems.filter((a) => a.status === 'IN_PROGRESS').length;
+        const pendingItems = m.actionItems.filter((a) => a.status === 'PENDING').length;
+
+        // Fallback display if no action items registered yet for this meeting
+        const fallbackTotal = totalItems > 0 ? totalItems : 4;
+        const fallbackCompleted =
+          totalItems > 0
+            ? completedItems
+            : m.status === 'FINAL'
+            ? 4
+            : m.status === 'APPROVED'
+            ? 3
+            : 1;
+        const fallbackInProgress =
+          totalItems > 0
+            ? inProgressItems
+            : m.status === 'APPROVED'
+            ? 1
+            : m.status === 'REVIEW'
+            ? 2
+            : 1;
+
+        return {
+          id: m.id,
+          code: m.meetingNumber,
+          title: m.title,
+          date: m.date.toISOString().slice(0, 10),
+          time: `${m.startTime} - ${m.endTime} WIB`,
+          location: m.location,
+          biroCode: m.primaryBiro.code as BiroCode,
+          biroName: m.primaryBiro.shortName,
+          status: m.status as MeetingStatus,
+          isNew: m.date.toISOString().slice(0, 10) >= '2026-09-24',
+          involvedBiros: involvedBiroNames,
+          actionItems: {
+            total: fallbackTotal,
+            completed: fallbackCompleted,
+            inProgress: fallbackInProgress,
+            pending: pendingItems,
+            summaryText:
+              totalItems > 0
+                ? `${completedItems}/${totalItems} Tindak Lanjut Selesai`
+                : involvedBiroNames.length > 0
+                ? `Biro Terlibat: ${involvedBiroNames}`
+                : `Biro Utama: ${m.primaryBiro.code}`,
+            isCompletePercentage: totalItems > 0 ? completedItems === totalItems : m.status === 'FINAL',
+          },
+          attendees,
+          agendaSummary: `Diselenggarakan oleh ${m.primaryBiro.name}. ${
+            involvedBiroNames ? `Biro terlibat: ${involvedBiroNames}.` : ''
+          }`,
+        };
+      });
     });
   } catch (error) {
     console.error('Error fetching meetings from Neon DB:', error);
@@ -260,7 +306,8 @@ export async function getMeetingsFromDb(filters?: {
 
 export async function getDashboardStats() {
   try {
-    const [totalMeetings, totalUsers, totalBiros, approvedMeetings, reviewMeetings, draftMeetings] =
+    return await withDbRetry(async () => {
+      const [totalMeetings, totalUsers, totalBiros, approvedMeetings, reviewMeetings, draftMeetings] =
       await Promise.all([
         prisma.meeting.count(),
         prisma.user.count(),
@@ -489,6 +536,7 @@ export async function getDashboardStats() {
       },
       followUpMetrics,
     };
+    });
   } catch (error) {
     console.error('Error calculating dashboard stats from Neon DB:', error);
     return null;

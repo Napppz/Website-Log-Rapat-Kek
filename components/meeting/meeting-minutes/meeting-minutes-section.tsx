@@ -5,16 +5,19 @@ import { useSession } from 'next-auth/react';
 import { MeetingMinutesEditor } from './meeting-minutes-editor';
 import { MeetingMinutesPreview } from './meeting-minutes-preview';
 import { getMeetingMinutesAction } from '@/app/actions/minute-actions';
-import { FileEdit, Plus, Eye, FileText, Loader2, Sparkles } from 'lucide-react';
+import { FileEdit, Plus, Eye, FileText, Loader2, Download } from 'lucide-react';
+import { toast } from '@/components/providers/toast-provider';
 
 interface MeetingMinutesSectionProps {
   meetingId: string;
+  meeting?: any;
   initialMinutes?: any;
   defaultMode?: 'preview' | 'edit';
 }
 
 export function MeetingMinutesSection({
   meetingId,
+  meeting,
   initialMinutes: propMinutes,
   defaultMode,
 }: MeetingMinutesSectionProps) {
@@ -25,6 +28,7 @@ export function MeetingMinutesSection({
   const [minutes, setMinutes] = useState<any>(propMinutes || null);
   const [isLoading, setIsLoading] = useState(!propMinutes);
   const [mode, setMode] = useState<'empty' | 'edit' | 'preview'>('empty');
+  const [isDownloadingPdf, setIsDownloadingPdf] = useState(false);
 
   // Load minutes on mount if not provided as prop
   useEffect(() => {
@@ -71,15 +75,43 @@ export function MeetingMinutesSection({
     return () => {
       isMounted = false;
     };
-  }, [meetingId, propMinutes, defaultMode]);
+  }, [meetingId, propMinutes, defaultMode, canEditMinutes]);
+
+  // Handler Download PDF Notula
+  const handleDownloadPdf = async () => {
+    try {
+      setIsDownloadingPdf(true);
+      const res = await fetch(`/api/meetings/${meetingId}/pdf`);
+      if (!res.ok) {
+        const errJson = await res.json().catch(() => null);
+        throw new Error(errJson?.error || 'Gagal mengunduh dokumen Notula PDF.');
+      }
+
+      const blob = await res.blob();
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      const code = meeting?.meetingNumber || meetingId;
+      link.download = `Notula-Rapat-${code.replace(/[^a-zA-Z0-9_-]/g, '_')}.pdf`;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(url);
+      toast.success('Notula Rapat resmi berhasil diunduh (PDF).');
+    } catch (err: any) {
+      toast.error(err?.message || 'Terjadi kesalahan saat mengunduh Notula PDF.');
+    } finally {
+      setIsDownloadingPdf(false);
+    }
+  };
 
   // Loading state
   if (isLoading) {
     return (
       <div className="p-12 text-center bg-white rounded-xl border border-amber-200 shadow-xs flex flex-col items-center justify-center">
         <Loader2 className="w-8 h-8 text-amber-600 animate-spin mb-3" />
-        <p className="text-[14px] font-semibold text-slate-800">Memuat Notulen Resmi Rapat...</p>
-        <p className="text-[12px] text-slate-500 mt-1">Mengambil arsip agenda dan keputusan dari Neon DB</p>
+        <p className="text-[14px] font-semibold text-slate-800">Memuat Notula Resmi Rapat...</p>
+        <p className="text-[12px] text-slate-500 mt-1">Mengambil arsip agenda dan risalah pembahasan dari database</p>
       </div>
     );
   }
@@ -93,9 +125,9 @@ export function MeetingMinutesSection({
         </div>
 
         <div className="max-w-md">
-          <h3 className="text-[18px] font-bold text-slate-900">Belum ada notulen untuk rapat ini.</h3>
+          <h3 className="text-[18px] font-bold text-slate-900">Belum ada notula untuk rapat ini.</h3>
           <p className="text-[13px] text-slate-500 mt-1.5 leading-relaxed">
-            Catatan agenda, risalah pembahasan, keputusan sidang, dan langkah lanjutan belum diinputkan untuk sesi pertemuan ini.
+            Agenda naskah dinas, substansi inti pembahasan, kesimpulan, dan butir tindak lanjut belum dituliskan untuk sesi rapat ini.
           </p>
         </div>
 
@@ -106,7 +138,7 @@ export function MeetingMinutesSection({
             className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg bg-amber-600 hover:bg-amber-700 text-white font-semibold text-[13px] transition-all shadow-md shadow-amber-600/20 cursor-pointer"
           >
             <Plus className="w-4 h-4" />
-            <span>+ Buat Notulen</span>
+            <span>+ Tulis Notula Dinas</span>
           </button>
         )}
       </div>
@@ -117,29 +149,32 @@ export function MeetingMinutesSection({
   if (mode === 'edit' && canEditMinutes) {
     return (
       <div className="space-y-4">
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
           <div>
             <h3 className="text-[18px] font-bold text-slate-900 flex items-center gap-2">
               <FileEdit className="w-5 h-5 text-amber-600" />
-              <span>Editor Notulen &amp; Hasil Rapat</span>
+              <span>Penyusunan Notula Rapat (Format Tata Naskah Dinas)</span>
             </h3>
             <p className="text-[12px] text-slate-500">
-              Gunakan rich text editor untuk menyusun agenda, ringkasan diskusi, keputusan resmi, dan kesimpulan.
+              Isikan agenda, substansi inti pembahasan, kesimpulan, dan tindak lanjut sesuai kaidah naskah dinas Dewan KEK.
             </p>
           </div>
 
-          <button
-            type="button"
-            onClick={() => setMode('preview')}
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-amber-300 bg-white hover:bg-amber-50 text-amber-800 font-semibold text-[12px] transition-colors cursor-pointer shadow-xs"
-          >
-            <Eye className="w-3.5 h-3.5" />
-            <span>Lihat Preview</span>
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => setMode('preview')}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-amber-300 bg-white hover:bg-amber-50 text-amber-800 font-semibold text-[12px] transition-colors cursor-pointer shadow-xs"
+            >
+              <Eye className="w-3.5 h-3.5" />
+              <span>Lihat Lembar Notula</span>
+            </button>
+          </div>
         </div>
 
         <MeetingMinutesEditor
           meetingId={meetingId}
+          meeting={meeting}
           initialMinutes={minutes}
           onSaved={(savedData) => {
             setMinutes(savedData);
@@ -159,24 +194,36 @@ export function MeetingMinutesSection({
           <div className="flex items-center gap-2">
             <span className="w-2.5 h-2.5 rounded-full bg-emerald-500"></span>
             <h3 className="font-bold text-[16px] text-slate-900">
-              Dokumen Notulen Resmi (Mode Preview)
+              Dokumen Notula Resmi (Mode Pratinjau Naskah)
             </h3>
           </div>
           <p className="text-[12px] text-slate-500 mt-0.5">
-            Tampilan risalah rapat resmi dalam format baca, bebas dari kontrol pengeditan.
+            Tampilan persis sesuai format naskah dinas resmi yang akan diunduh saat ekspor PDF.
           </p>
         </div>
 
-        {canEditMinutes && (
+        <div className="flex items-center gap-2">
+          {canEditMinutes && (
+            <button
+              type="button"
+              onClick={() => setMode('edit')}
+              className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg bg-amber-600 hover:bg-amber-700 text-white font-semibold text-[12px] transition-all shadow-sm cursor-pointer shrink-0"
+            >
+              <FileEdit className="w-3.5 h-3.5" />
+              <span>Edit Notula</span>
+            </button>
+          )}
+
           <button
             type="button"
-            onClick={() => setMode('edit')}
-            className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg bg-amber-600 hover:bg-amber-700 text-white font-semibold text-[12px] transition-all shadow-sm cursor-pointer shrink-0"
+            disabled={isDownloadingPdf}
+            onClick={handleDownloadPdf}
+            className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg bg-slate-900 hover:bg-slate-800 text-white font-semibold text-[12px] transition-all shadow-sm cursor-pointer shrink-0 disabled:opacity-60"
           >
-            <FileEdit className="w-3.5 h-3.5" />
-            <span>Edit Notulen</span>
+            <Download className="w-3.5 h-3.5 text-amber-400" />
+            <span>{isDownloadingPdf ? 'Membuat PDF...' : 'Unduh PDF'}</span>
           </button>
-        )}
+        </div>
       </div>
 
       <MeetingMinutesPreview
@@ -185,6 +232,8 @@ export function MeetingMinutesSection({
         decisions={minutes?.decisions}
         conclusion={minutes?.conclusion}
         updatedAt={minutes?.updatedAt}
+        meeting={meeting}
+        onDownloadPdf={handleDownloadPdf}
       />
     </div>
   );

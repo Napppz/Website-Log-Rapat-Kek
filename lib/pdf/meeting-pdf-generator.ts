@@ -1,8 +1,7 @@
 import PDFDocument from 'pdfkit';
 import path from 'path';
 import fs from 'fs';
-import { parseRichText, ParsedBlock } from './tiptap-parser';
-import { computeActionItemStatus } from '../validations/action-item';
+import { parseRichText, ParsedBlock, TextSegment } from './tiptap-parser';
 
 export interface MeetingPdfData {
   id: string;
@@ -75,728 +74,563 @@ export interface MeetingPdfData {
   }>;
 }
 
-const ATTENDANCE_MAP: Record<string, string> = {
-  PRESENT: 'Hadir',
-  ABSENT: 'Tidak Hadir',
-  EXCUSED: 'Izin',
-  INVITED: 'Diundang',
-};
-
-const STATUS_MAP: Record<string, string> = {
-  PENDING: 'Menunggu',
-  IN_PROGRESS: 'Berjalan',
-  COMPLETED: 'Selesai',
-  OVERDUE: 'Terlambat',
-};
-
-const PRIORITY_MAP: Record<string, string> = {
-  LOW: 'Rendah',
-  MEDIUM: 'Sedang',
-  HIGH: 'Tinggi',
-  URGENT: 'Mendesak',
-};
-
-const MEETING_STATUS_MAP: Record<string, string> = {
-  DRAFT: 'Draft / Konsep',
-  REVIEW: 'Menunggu Review',
-  APPROVED: 'Disetujui',
-  FINAL: 'Final / Selesai',
-};
-
+/**
+ * Format tanggal Indonesia dengan koma (Contoh: "Jumat, 5 September 2026")
+ */
 function formatIndonesianDate(d: Date | string): string {
   try {
     const obj = typeof d === 'string' ? new Date(d) : d;
-    return obj.toLocaleDateString('id-ID', {
-      weekday: 'long',
-      day: 'numeric',
-      month: 'long',
-      year: 'numeric',
-    });
+    const days = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
+    const months = [
+      'Januari',
+      'Februari',
+      'Maret',
+      'April',
+      'Mei',
+      'Juni',
+      'Juli',
+      'Agustus',
+      'September',
+      'Oktober',
+      'November',
+      'Desember',
+    ];
+    const dayName = days[obj.getDay()];
+    const dateNum = obj.getDate();
+    const monthName = months[obj.getMonth()];
+    const year = obj.getFullYear();
+    return `${dayName}, ${dateNum} ${monthName} ${year}`;
   } catch {
     return String(d);
   }
 }
 
-function formatShortDate(d: Date | string): string {
-  try {
-    const obj = typeof d === 'string' ? new Date(d) : d;
-    return obj.toLocaleDateString('id-ID', {
-      day: 'numeric',
-      month: 'short',
-      year: 'numeric',
-    });
-  } catch {
-    return String(d);
-  }
-}
-
+/**
+ * Format rentang waktu rapat (Contoh: "08.00 WIB - selesai" atau "13.00 – 15.00 WIB")
+ */
 function normalizeTime(start: string, end: string): string {
   const s = (start || '').replace('WIB', '').replace(':', '.').trim();
   const e = (end || '').replace('WIB', '').replace(':', '.').trim();
   if (!s && !e) return '-';
+  if (s && (!e || e.toLowerCase() === 'selesai' || e === '-')) return `${s} WIB - selesai`;
   if (s && !e) return `${s} WIB`;
   return `${s} – ${e} WIB`;
 }
 
+/**
+ * Ekstraksi teks polos dari Rich Text blok Tiptap
+ */
+function extractPlainText(input: any): string {
+  if (!input) return '';
+  const blocks = parseRichText(input);
+  return blocks
+    .map((b) => b.segments.map((s) => s.text).join(''))
+    .filter(Boolean)
+    .join('\n');
+}
+
+interface AppFonts {
+  tahomaBold: string;
+  tahoma: string;
+  arial: string;
+  arialBold: string;
+  arialItalic: string;
+}
+
+/**
+ * Registrasi font resmi (Tahoma & Arial) persis naskah dinas Setjen Dewan Nasional KEK RI
+ */
+function registerAppFonts(doc: PDFKit.PDFDocument): AppFonts {
+  const fontDir = path.join(process.cwd(), 'public', 'fonts');
+  const winFontDir = 'C:\\Windows\\Fonts';
+
+  const tryRegister = (fontName: string, filenames: string[], fallbackFont: string): string => {
+    for (const f of filenames) {
+      const localPath = path.join(fontDir, f);
+      if (fs.existsSync(localPath)) {
+        try {
+          doc.registerFont(fontName, localPath);
+          return fontName;
+        } catch {}
+      }
+      const winPath = path.join(winFontDir, f);
+      if (fs.existsSync(winPath)) {
+        try {
+          doc.registerFont(fontName, winPath);
+          return fontName;
+        } catch {}
+      }
+    }
+    return fallbackFont;
+  };
+
+  return {
+    tahomaBold: tryRegister('Tahoma-Bold', ['Tahoma-Bold.ttf', 'tahomabd.ttf'], 'Helvetica-Bold'),
+    tahoma: tryRegister('Tahoma', ['Tahoma.ttf', 'tahoma.ttf'], 'Helvetica'),
+    arial: tryRegister('Arial', ['Arial.ttf', 'arial.ttf'], 'Helvetica'),
+    arialBold: tryRegister('Arial-Bold', ['Arial-Bold.ttf', 'arialbd.ttf'], 'Helvetica-Bold'),
+    arialItalic: tryRegister('Arial-Italic', ['Arial-Italic.ttf', 'ariali.ttf'], 'Helvetica-Oblique'),
+  };
+}
+
+/**
+ * Render satu blok rich text dengan mempertahankan formatting inline (Bold, Italic, Underline)
+ */
+function renderFormattedBlock(
+  doc: PDFKit.PDFDocument,
+  block: ParsedBlock,
+  leftMargin: number,
+  printableWidth: number,
+  fonts: AppFonts,
+  numberPrefix?: string
+) {
+  const lineGap = 3.5;
+  const fontSize = 11;
+
+  if (block.type === 'heading') {
+    const raw = block.segments.map((s) => s.text).join('').trim();
+    if (!raw) return;
+    doc.font(fonts.arialBold).fontSize(fontSize).fillColor('#000000');
+    doc.text(raw, leftMargin, doc.y, {
+      width: printableWidth,
+      lineGap,
+    });
+    doc.moveDown(0.3);
+    return;
+  }
+
+  const rawSegments = [...block.segments];
+  if (rawSegments.length === 0) return;
+
+  if (numberPrefix) {
+    // Bersihkan penomoran lama jika sudah diawali angka (misal "1. ...")
+    const cleanedFirstText = rawSegments[0].text.replace(/^\d+\.\s*/, '');
+    rawSegments[0] = { ...rawSegments[0], text: `${numberPrefix}${cleanedFirstText}` };
+  }
+
+  const startX = block.type === 'bullet' ? leftMargin + 10 : leftMargin;
+  const targetW = block.type === 'bullet' ? printableWidth - 10 : printableWidth;
+  const startY = doc.y;
+
+  rawSegments.forEach((seg, idx) => {
+    const isLast = idx === rawSegments.length - 1;
+    let chosenFont = fonts.arial;
+    if (seg.bold) {
+      chosenFont = fonts.arialBold;
+    } else if (seg.italic) {
+      chosenFont = fonts.arialItalic;
+    }
+
+    doc.font(chosenFont).fontSize(fontSize).fillColor('#000000');
+
+    if (idx === 0) {
+      doc.text(seg.text, startX, startY, {
+        width: targetW,
+        align: 'justify',
+        lineGap,
+        continued: !isLast,
+        underline: !!seg.underline,
+      });
+    } else {
+      doc.text(seg.text, {
+        continued: !isLast,
+        underline: !!seg.underline,
+      });
+    }
+  });
+
+  doc.moveDown(0.4);
+}
+
+/**
+ * Generator PDF Format Notula Resmi Naskah Dinas
+ * Sesuai Standar Tata Naskah Dinas Sekretariat Jenderal Dewan Nasional KEK RI
+ */
 export async function generateMeetingPdf(meeting: MeetingPdfData): Promise<Buffer> {
   return new Promise((resolve, reject) => {
     try {
+      const leftMargin = 72; // 1 inch standar naskah dinas
+      const rightMargin = 72; // 1 inch
+      const topMargin = 65; // Margin atas pada halaman berikutnya (di bawah header - X - di Y=36)
+      const bottomMargin = 55;
+      const pageWidth = 595.28; // Ukuran standar kertas A4 (210 mm)
+      const printableWidth = pageWidth - leftMargin - rightMargin; // 451.28 pt
+
       const doc = new PDFDocument({
         size: 'A4',
-        margin: 42,
+        margins: {
+          top: topMargin,
+          bottom: bottomMargin,
+          left: leftMargin,
+          right: rightMargin,
+        },
         bufferPages: true,
         info: {
-          Title: `Risalah Rapat - ${meeting.meetingNumber}`,
-          Author: 'SIM-RAPAT KEK RI',
-          Subject: `Risalah Rapat ${meeting.meetingNumber}`,
+          Title: `Notula - ${meeting.meetingNumber || '${nomor_naskah}'}`,
+          Author: 'Sekretariat Jenderal Dewan Nasional KEK RI',
+          Subject: `Notula Rapat ${meeting.title}`,
           Creator: 'SIM-RAPAT KEK RI',
         },
       });
+
+      const fonts = registerAppFonts(doc);
 
       const chunks: Buffer[] = [];
       doc.on('data', (chunk) => chunks.push(chunk));
       doc.on('end', () => resolve(Buffer.concat(chunks)));
       doc.on('error', (err) => reject(err));
 
-      const pageWidth = 595.28;
-      const pageHeight = 841.89;
-      const leftMargin = 42;
-      const rightMargin = 42;
-      const printableWidth = pageWidth - leftMargin - rightMargin; // 511.28
-      const maxContentY = 750;
-
-      const ensureSpace = (neededHeight: number) => {
-        if (doc.y + neededHeight > maxContentY) {
-          doc.addPage();
-        }
-      };
-
       // -------------------------------------------------------------
-      // 1. KOP SURAT / HEADER RESMI
+      // 1. KOP SURAT RESMI SEKRETARIAT JENDERAL DEWAN KEK (HALAMAN 1)
       // -------------------------------------------------------------
+      const emblemPath = path.join(process.cwd(), 'public', 'lambang-kek.jpg');
       const logoPath = path.join(process.cwd(), 'public', 'logo-kek.png');
-      const hasLogo = fs.existsSync(logoPath);
 
-      if (hasLogo) {
+      if (fs.existsSync(emblemPath)) {
         try {
-          doc.image(logoPath, leftMargin, 38, { width: 75, height: 32 });
+          doc.image(emblemPath, leftMargin, 34, { width: 56, height: 56 });
         } catch (e) {
-          console.warn('Could not load logo in PDF, skipping image:', e);
+          console.warn('Could not load circular emblem, fallback to standard logo:', e);
+        }
+      } else if (fs.existsSync(logoPath)) {
+        try {
+          doc.image(logoPath, leftMargin, 42, { width: 68, height: 30 });
+        } catch (e) {
+          console.warn('Could not load logo in PDF:', e);
         }
       }
 
-      const headerTextX = hasLogo ? leftMargin + 85 : leftMargin;
-      const headerTextWidth = hasLogo ? printableWidth - 85 : printableWidth;
-
+      // Teks Kop Surat Rata Tengah: Tahoma-Bold 12pt & Tahoma 8pt
       doc
-        .font('Helvetica-Bold')
-        .fontSize(11)
-        .fillColor('#0f172a')
-        .text('DEWAN NASIONAL KAWASAN EKONOMI KHUSUS', headerTextX, 36, {
-          width: headerTextWidth,
-          align: 'left',
+        .font(fonts.tahomaBold)
+        .fontSize(12)
+        .fillColor('#000000')
+        .text('DEWAN NASIONAL KAWASAN EKONOMI KHUSUS', leftMargin, 36, {
+          width: printableWidth,
+          align: 'center',
         })
-        .fontSize(9.5)
-        .fillColor('#1e293b')
-        .text('REPUBLIK INDONESIA', {
-          width: headerTextWidth,
-          align: 'left',
+        .fontSize(12)
+        .fillColor('#000000')
+        .text('SEKRETARIAT JENDERAL', {
+          width: printableWidth,
+          align: 'center',
         })
-        .font('Helvetica')
-        .fontSize(7.5)
-        .fillColor('#64748b')
-        .text('Sistem Informasi Manajemen Rapat & Tindak Lanjut (SIM-RAPAT KEK RI)', {
-          width: headerTextWidth,
-          align: 'left',
+        .font(fonts.tahoma)
+        .fontSize(8)
+        .fillColor('#000000')
+        .text('Gedung MNC Tower Lantai 3, Jl. Kebon Sirih No.17 – 19, Jakarta Pusat 10340', {
+          width: printableWidth,
+          align: 'center',
+          lineGap: 1.5,
+        })
+        .text('Telp: (021) 3912491, email: info@kek.go.id', {
+          width: printableWidth,
+          align: 'center',
         });
 
-      // Decorative double lines
-      const lineY = 78;
+      // Garis Pemisah Tunggal Standar Naskah Dinas
+      const lineY = 104;
       doc
-        .strokeColor('#d97706')
-        .lineWidth(1.8)
+        .strokeColor('#000000')
+        .lineWidth(1.5)
         .moveTo(leftMargin, lineY)
         .lineTo(leftMargin + printableWidth, lineY)
         .stroke();
 
-      doc
-        .strokeColor('#fde68a')
-        .lineWidth(0.8)
-        .moveTo(leftMargin, lineY + 2.5)
-        .lineTo(leftMargin + printableWidth, lineY + 2.5)
-        .stroke();
+      // -------------------------------------------------------------
+      // 2. JUDUL DOKUMEN: NOTULA & NOMOR
+      // -------------------------------------------------------------
+      doc.y = lineY + 20;
 
-      // Document Title Box
-      doc.y = lineY + 12;
       doc
-        .font('Helvetica-Bold')
-        .fontSize(13)
-        .fillColor('#92400e')
-        .text('RISALAH RAPAT', leftMargin, doc.y, {
+        .font(fonts.arialBold)
+        .fontSize(11)
+        .fillColor('#000000')
+        .text('NOTULA', leftMargin, doc.y, {
           width: printableWidth,
           align: 'center',
         });
 
+      const nomorNaskah = meeting.meetingNumber || '${nomor_naskah}';
       doc
-        .font('Helvetica-Bold')
-        .fontSize(10)
-        .fillColor('#1e293b')
-        .text(`NOMOR: ${meeting.meetingNumber}`, {
+        .font(fonts.arial)
+        .fontSize(11)
+        .fillColor('#000000')
+        .text(`NOMOR: ${nomorNaskah}`, leftMargin, doc.y + 3, {
           width: printableWidth,
           align: 'center',
         });
 
-      doc.moveDown(0.8);
-
-      // Section Header Helper
-      const renderSectionHeader = (title: string) => {
-        ensureSpace(40);
-        doc.moveDown(0.4);
-        const y = doc.y;
-
-        // Background accent box
-        doc
-          .rect(leftMargin, y, printableWidth, 18)
-          .fillAndStroke('#fef3c7', '#fde68a');
-
-        doc
-          .font('Helvetica-Bold')
-          .fontSize(9.5)
-          .fillColor('#92400e')
-          .text(title, leftMargin + 8, y + 4.5, {
-            width: printableWidth - 16,
-          });
-
-        doc.y = y + 24;
-      };
+      doc.moveDown(1.4);
 
       // -------------------------------------------------------------
-      // 2. SECTION A: IDENTITAS RAPAT
+      // 3. IDENTITAS & METADATA RAPAT
       // -------------------------------------------------------------
-      renderSectionHeader('A. IDENTITAS RAPAT');
-
-      const participatingBiros = (meeting.meetingBiros || [])
-        .map((mb) => `${mb.biro.code} (${mb.biro.shortName})`)
-        .join(', ');
-
-      const identityRows: Array<[string, string]> = [
-        ['Nomor Rapat', meeting.meetingNumber],
-        ['Judul / Agenda Utama', meeting.title],
-        ['Hari / Tanggal', formatIndonesianDate(meeting.date)],
-        ['Waktu Pelaksanaan', normalizeTime(meeting.startTime, meeting.endTime)],
-        ['Tempat / Media', meeting.location || '-'],
-        ['Biro Penyelenggara', `${meeting.primaryBiro.code} – ${meeting.primaryBiro.name}`],
-        ['Biro Peserta Terlibat', participatingBiros || 'Tidak ada biro lain terdaftar'],
-        ['Pimpinan Rapat', meeting.chairperson?.name ? `${meeting.chairperson.name}${meeting.chairperson.biro ? ` (${meeting.chairperson.biro.shortName})` : ''}` : 'Belum Ditugaskan'],
-        ['Notulis Sidang', meeting.secretary?.name ? `${meeting.secretary.name}${meeting.secretary.biro ? ` (${meeting.secretary.biro.shortName})` : ''}` : 'Tim Notulensi Dewan KEK'],
-        ['Status Dokumen', MEETING_STATUS_MAP[meeting.status] || meeting.status],
-      ];
-
-      const colLabelW = 125;
-      const colSepW = 12;
+      const colLabelW = 120;
+      const colSepW = 15;
       const colValW = printableWidth - colLabelW - colSepW;
 
-      for (const [lbl, val] of identityRows) {
-        doc.font('Helvetica').fontSize(8.5);
-        const valHeight = doc.heightOfString(val, { width: colValW });
-        const rowH = Math.max(14, valHeight + 3);
-        ensureSpace(rowH);
+      const renderMetaRow = (label: string, value: string) => {
+        doc.font(fonts.arial).fontSize(11);
+        const labelH = doc.heightOfString(label, { width: colLabelW });
+        const valH = doc.heightOfString(value, { width: colValW });
+        const rowH = Math.max(labelH, valH) + 3;
 
-        const currentY = doc.y;
+        const curY = doc.y;
+        doc.font(fonts.arial).fontSize(11).fillColor('#000000');
+        doc.text(label, leftMargin, curY, { width: colLabelW, lineGap: 1.5 });
+        doc.text(':', leftMargin + colLabelW, curY, { width: colSepW });
+        doc.text(value, leftMargin + colLabelW + colSepW, curY, { width: colValW, lineGap: 1.5 });
 
-        doc
-          .font('Helvetica-Bold')
-          .fontSize(8.5)
-          .fillColor('#334155')
-          .text(lbl, leftMargin + 4, currentY, { width: colLabelW });
-
-        doc
-          .font('Helvetica')
-          .fontSize(8.5)
-          .fillColor('#64748b')
-          .text(':', leftMargin + colLabelW, currentY, { width: colSepW });
-
-        doc
-          .font('Helvetica')
-          .fontSize(8.5)
-          .fillColor('#0f172a')
-          .text(val, leftMargin + colLabelW + colSepW, currentY, { width: colValW });
-
-        doc.y = currentY + rowH;
-      }
-
-      // -------------------------------------------------------------
-      // 3. SECTION B: PESERTA RAPAT
-      // -------------------------------------------------------------
-      renderSectionHeader('B. PESERTA RAPAT');
-
-      const participants = meeting.participants || [];
-
-      if (participants.length === 0) {
-        doc
-          .font('Helvetica-Oblique')
-          .fontSize(8.5)
-          .fillColor('#64748b')
-          .text('Belum terdapat data peserta yang tercatat.', leftMargin + 8, doc.y);
-        doc.moveDown(0.5);
-      } else {
-        const pCols = [
-          { label: 'No', width: 28, align: 'center' as const },
-          { label: 'Nama Pejabat / Perwakilan', width: 200, align: 'left' as const },
-          { label: 'Instansi / Biro KEK', width: 170, align: 'left' as const },
-          { label: 'Status Kehadiran', width: 113.28, align: 'center' as const },
-        ];
-
-        // Draw Table Header
-        const renderParticipantHeader = () => {
-          ensureSpace(24);
-          const y = doc.y;
-          doc.rect(leftMargin, y, printableWidth, 18).fill('#f1f5f9');
-          let curX = leftMargin;
-          pCols.forEach((col) => {
-            doc
-              .font('Helvetica-Bold')
-              .fontSize(8)
-              .fillColor('#1e293b')
-              .text(col.label, curX + 2, y + 5, { width: col.width - 4, align: col.align });
-            curX += col.width;
-          });
-          doc.y = y + 18;
-        };
-
-        renderParticipantHeader();
-
-        participants.forEach((p, idx) => {
-          const biroName = p.user.biro ? `${p.user.biro.code} - ${p.user.biro.shortName}` : 'Biro KEK';
-          const statusText = ATTENDANCE_MAP[p.attendanceStatus] || p.attendanceStatus;
-
-          doc.font('Helvetica').fontSize(8);
-          const h1 = doc.heightOfString(p.user.name, { width: pCols[1].width - 8 });
-          const h2 = doc.heightOfString(biroName, { width: pCols[2].width - 8 });
-          const rowHeight = Math.max(16, h1 + 6, h2 + 6);
-
-          if (doc.y + rowHeight > maxContentY) {
-            doc.addPage();
-            renderParticipantHeader();
-          }
-
-          const rowY = doc.y;
-          // Row zebra background
-          if (idx % 2 === 1) {
-            doc.rect(leftMargin, rowY, printableWidth, rowHeight).fill('#f8fafc');
-          }
-
-          // Border bottom
-          doc
-            .strokeColor('#e2e8f0')
-            .lineWidth(0.5)
-            .moveTo(leftMargin, rowY + rowHeight)
-            .lineTo(leftMargin + printableWidth, rowY + rowHeight)
-            .stroke();
-
-          let cellX = leftMargin;
-
-          // Col 0: No
-          doc
-            .font('Helvetica')
-            .fontSize(8)
-            .fillColor('#334155')
-            .text(String(idx + 1), cellX, rowY + 4, { width: pCols[0].width, align: 'center' });
-          cellX += pCols[0].width;
-
-          // Col 1: Nama
-          doc
-            .font('Helvetica-Bold')
-            .fontSize(8)
-            .fillColor('#0f172a')
-            .text(p.user.name, cellX + 4, rowY + 4, { width: pCols[1].width - 8 });
-          cellX += pCols[1].width;
-
-          // Col 2: Biro
-          doc
-            .font('Helvetica')
-            .fontSize(8)
-            .fillColor('#334155')
-            .text(biroName, cellX + 4, rowY + 4, { width: pCols[2].width - 8 });
-          cellX += pCols[2].width;
-
-          // Col 3: Status
-          doc
-            .font('Helvetica-Bold')
-            .fontSize(8)
-            .fillColor(statusText === 'Hadir' ? '#15803d' : '#64748b')
-            .text(statusText, cellX, rowY + 4, { width: pCols[3].width, align: 'center' });
-
-          doc.y = rowY + rowHeight;
-        });
-
-        doc.moveDown(0.5);
-      }
-
-      // Helper to render Rich Text Blocks
-      const renderRichTextBlocks = (blocks: ParsedBlock[], emptyFallback: string) => {
-        if (!blocks || blocks.length === 0) {
-          doc
-            .font('Helvetica-Oblique')
-            .fontSize(8.5)
-            .fillColor('#64748b')
-            .text(emptyFallback, leftMargin + 8, doc.y);
-          doc.moveDown(0.5);
-          return;
-        }
-
-        for (const b of blocks) {
-          ensureSpace(20);
-
-          if (b.type === 'heading') {
-            doc.moveDown(0.3);
-            doc.font('Helvetica-Bold').fontSize(b.level === 1 ? 10.5 : 9.5).fillColor('#0f172a');
-            const headingText = b.segments.map((s) => s.text).join(' ');
-            doc.text(headingText, leftMargin + 6, doc.y, { width: printableWidth - 12 });
-            doc.moveDown(0.2);
-          } else if (b.type === 'paragraph') {
-            doc.font('Helvetica').fontSize(8.5).fillColor('#1e293b');
-            const pText = b.segments.map((s) => s.text).join('');
-            doc.text(pText, leftMargin + 6, doc.y, {
-              width: printableWidth - 12,
-              lineGap: 2,
-              align: 'justify',
-            });
-            doc.moveDown(0.3);
-          } else if (b.type === 'bullet') {
-            doc.font('Helvetica').fontSize(8.5).fillColor('#1e293b');
-            const itemText = b.segments.map((s) => s.text).join('');
-            doc.text(`•  ${itemText}`, leftMargin + 14, doc.y, {
-              width: printableWidth - 20,
-              lineGap: 1.5,
-            });
-            doc.moveDown(0.2);
-          } else if (b.type === 'ordered') {
-            doc.font('Helvetica').fontSize(8.5).fillColor('#1e293b');
-            const itemText = b.segments.map((s) => s.text).join('');
-            doc.text(`${b.number}.  ${itemText}`, leftMargin + 14, doc.y, {
-              width: printableWidth - 20,
-              lineGap: 1.5,
-            });
-            doc.moveDown(0.2);
-          } else if (b.type === 'blockquote') {
-            const quoteY = doc.y;
-            const quoteText = b.segments.map((s) => s.text).join('');
-            doc.font('Helvetica-Oblique').fontSize(8.5);
-            const qH = doc.heightOfString(quoteText, { width: printableWidth - 28 });
-
-            doc.rect(leftMargin + 10, quoteY, printableWidth - 20, qH + 6).fill('#f8fafc');
-            doc.strokeColor('#cbd5e1').lineWidth(2).moveTo(leftMargin + 10, quoteY).lineTo(leftMargin + 10, quoteY + qH + 6).stroke();
-
-            doc
-              .font('Helvetica-Oblique')
-              .fontSize(8.5)
-              .fillColor('#475569')
-              .text(quoteText, leftMargin + 18, quoteY + 3, { width: printableWidth - 36 });
-
-            doc.y = quoteY + qH + 8;
-          }
-        }
-
-        doc.moveDown(0.4);
+        doc.y = curY + rowH;
       };
 
-      // -------------------------------------------------------------
-      // 4. SECTION C: AGENDA & TOPIK
-      // -------------------------------------------------------------
-      renderSectionHeader('C. AGENDA & TOPIK');
-      const agendaBlocks = parseRichText(meeting.minutes?.agenda);
-      renderRichTextBlocks(agendaBlocks, 'Belum terdapat agenda yang dicatat.');
+      // 1. Judul Rapat
+      renderMetaRow('Judul Rapat', meeting.title || '-');
+
+      // 2. Hari/Tanggal
+      renderMetaRow('Hari/Tanggal', formatIndonesianDate(meeting.date));
+
+      // 3. Nomor Surat Undangan
+      renderMetaRow('Nomor Surat\nUndangan', '-');
+
+      // 4. Pukul
+      renderMetaRow('Pukul', normalizeTime(meeting.startTime, meeting.endTime));
+
+      // 5. Agenda
+      const agendaText =
+        extractPlainText(meeting.minutes?.agenda) ||
+        `1. ${meeting.title || 'Pembahasan Koordinasi dan Pelaksanaan Tugas'}`;
+      renderMetaRow('Agenda', agendaText);
 
       // -------------------------------------------------------------
-      // 5. SECTION D: PEMBAHASAN & DINAMIKA DISKUSI
+      // 4. PELAKSANA RAPAT & PESERTA
       // -------------------------------------------------------------
-      renderSectionHeader('D. PEMBAHASAN & DINAMIKA DISKUSI');
-      const discussionBlocks = parseRichText(meeting.minutes?.discussion);
-      renderRichTextBlocks(discussionBlocks, 'Belum terdapat catatan dinamika pembahasan yang dicatat.');
+      doc.moveDown(0.7);
+      doc.font(fonts.arialBold).fontSize(11).fillColor('#000000');
+      doc.text('Pelaksana Rapat:', leftMargin, doc.y);
+      doc.moveDown(0.3);
 
-      // -------------------------------------------------------------
-      // 6. SECTION E: KEPUTUSAN & ARAHAN SIDANG
-      // -------------------------------------------------------------
-      renderSectionHeader('E. KEPUTUSAN & ARAHAN SIDANG');
-      const decisionsBlocks = parseRichText(meeting.minutes?.decisions);
-      renderRichTextBlocks(decisionsBlocks, 'Belum terdapat keputusan yang dicatat.');
+      // Ketua / Pimpinan Rapat
+      const chairpersonName = meeting.chairperson?.name || '-';
+      renderMetaRow('Ketua/Pimpinan Rapat', chairpersonName);
 
-      // -------------------------------------------------------------
-      // 7. SECTION F: KESIMPULAN
-      // -------------------------------------------------------------
-      renderSectionHeader('F. KESIMPULAN');
-      const conclusionBlocks = parseRichText(meeting.minutes?.conclusion);
-      renderRichTextBlocks(conclusionBlocks, 'Belum terdapat kesimpulan yang dicatat.');
+      // Ekstraksi nama dan jabatan notulis kustom jika diinput di notulen, fallback ke data rapat
+      const customSignerName =
+        (meeting.minutes?.conclusion as any)?.signerName ||
+        (meeting.minutes?.decisions as any)?.signerName ||
+        (meeting.minutes?.discussion as any)?.signerName ||
+        (meeting.minutes?.agenda as any)?.signerName ||
+        meeting.secretary?.name ||
+        '';
 
-      // -------------------------------------------------------------
-      // 8. SECTION G: TINDAK LANJUT
-      // -------------------------------------------------------------
-      renderSectionHeader('G. TINDAK LANJUT');
+      const customSignerRole =
+        (meeting.minutes?.conclusion as any)?.signerRole ||
+        (meeting.minutes?.decisions as any)?.signerRole ||
+        (meeting.minutes?.discussion as any)?.signerRole ||
+        (meeting.minutes?.agenda as any)?.signerRole ||
+        '';
 
-      const rawActionItems = meeting.actionItems || [];
+      const finalSignerName =
+        customSignerName.trim() ||
+        meeting.secretary?.name ||
+        'Sri Aurelia Rosyana Hari Habyby';
 
-      if (rawActionItems.length === 0) {
-        doc
-          .font('Helvetica-Oblique')
-          .fontSize(8.5)
-          .fillColor('#64748b')
-          .text('Tidak terdapat tindak lanjut yang tercatat.', leftMargin + 8, doc.y);
-        doc.moveDown(0.5);
-      } else {
-        const actionCols = [
-          { label: 'No', width: 24, align: 'center' as const },
-          { label: 'Butir Tindak Lanjut & Deskripsi', width: 175, align: 'left' as const },
-          { label: 'PIC Biro', width: 55, align: 'left' as const },
-          { label: 'PIC Pengampu', width: 75, align: 'left' as const },
-          { label: 'Tenggat', width: 68, align: 'center' as const },
-          { label: 'Prioritas', width: 52, align: 'center' as const },
-          { label: 'Status', width: 62.28, align: 'center' as const },
-        ];
+      const finalSignerRole =
+        customSignerRole.trim() ||
+        'Pranata Hubungan Masyarakat Terampil';
 
-        const renderActionHeader = () => {
-          ensureSpace(24);
-          const y = doc.y;
-          doc.rect(leftMargin, y, printableWidth, 18).fill('#f1f5f9');
-          let curX = leftMargin;
-          actionCols.forEach((col) => {
-            doc
-              .font('Helvetica-Bold')
-              .fontSize(7.5)
-              .fillColor('#1e293b')
-              .text(col.label, curX + 2, y + 5, { width: col.width - 4, align: col.align });
-            curX += col.width;
-          });
-          doc.y = y + 18;
-        };
+      // Pencatat
+      const roleClean = finalSignerRole.replace(/[\r\n]+/g, ' ').replace(/,\s*$/, '').trim();
+      const secretaryMetaText = `${roleClean}, ${finalSignerName}`;
+      renderMetaRow('Pencatat', secretaryMetaText);
 
-        renderActionHeader();
+      // Peserta Rapat
+      const participants = meeting.participants || [];
+      const pCurY = doc.y;
+      doc.font(fonts.arial).fontSize(11).fillColor('#000000');
+      doc.text('Peserta Rapat', leftMargin, pCurY, { width: colLabelW });
+      doc.text(':', leftMargin + colLabelW, pCurY, { width: colSepW });
 
-        rawActionItems.forEach((ai, idx) => {
-          // Compute status using centralized helper
-          const computed = computeActionItemStatus(ai);
-          const statusText = STATUS_MAP[computed.computedStatus] || computed.computedStatus;
-          const priorityText = PRIORITY_MAP[ai.priority] || ai.priority;
-          const biroCode = ai.picBiro?.code || 'Biro KEK';
-          const picName = ai.picUser?.name || '-';
-
-          const titleDesc = ai.description ? `${ai.title}\n(${ai.description})` : ai.title;
-          doc.font('Helvetica').fontSize(7.5);
-          const hTitle = doc.heightOfString(titleDesc, { width: actionCols[1].width - 8 });
-          const rowHeight = Math.max(16, hTitle + 6);
-
-          if (doc.y + rowHeight > maxContentY) {
-            doc.addPage();
-            renderActionHeader();
-          }
-
-          const rowY = doc.y;
-          if (idx % 2 === 1) {
-            doc.rect(leftMargin, rowY, printableWidth, rowHeight).fill('#f8fafc');
-          }
-
-          doc
-            .strokeColor('#e2e8f0')
-            .lineWidth(0.5)
-            .moveTo(leftMargin, rowY + rowHeight)
-            .lineTo(leftMargin + printableWidth, rowY + rowHeight)
-            .stroke();
-
-          let cX = leftMargin;
-
-          // No
-          doc
-            .font('Helvetica')
-            .fontSize(7.5)
-            .fillColor('#334155')
-            .text(String(idx + 1), cX, rowY + 3.5, { width: actionCols[0].width, align: 'center' });
-          cX += actionCols[0].width;
-
-          // Title & desc
-          doc
-            .font('Helvetica-Bold')
-            .fontSize(7.5)
-            .fillColor('#0f172a')
-            .text(ai.title, cX + 4, rowY + 3.5, { width: actionCols[1].width - 8 });
-
-          if (ai.description) {
-            doc.font('Helvetica-Bold').fontSize(7.5);
-            const titleH = doc.heightOfString(ai.title, { width: actionCols[1].width - 8 });
-            doc
-              .font('Helvetica-Oblique')
-              .fontSize(7)
-              .fillColor('#64748b')
-              .text(ai.description, cX + 4, rowY + 3.5 + titleH, { width: actionCols[1].width - 8 });
-          }
-          cX += actionCols[1].width;
-
-          // PIC Biro
-          doc
-            .font('Helvetica')
-            .fontSize(7.5)
-            .fillColor('#1e293b')
-            .text(biroCode, cX + 3, rowY + 3.5, { width: actionCols[2].width - 6 });
-          cX += actionCols[2].width;
-
-          // PIC User
-          doc
-            .font('Helvetica')
-            .fontSize(7.5)
-            .fillColor('#334155')
-            .text(picName, cX + 3, rowY + 3.5, { width: actionCols[3].width - 6 });
-          cX += actionCols[3].width;
-
-          // Deadline
-          doc
-            .font('Helvetica')
-            .fontSize(7)
-            .fillColor(computed.isOverdue ? '#dc2626' : '#334155')
-            .text(formatShortDate(ai.dueDate), cX, rowY + 3.5, { width: actionCols[4].width, align: 'center' });
-          cX += actionCols[4].width;
-
-          // Priority
-          doc
-            .font('Helvetica')
-            .fontSize(7)
-            .fillColor('#334155')
-            .text(priorityText, cX, rowY + 3.5, { width: actionCols[5].width, align: 'center' });
-          cX += actionCols[5].width;
-
-          // Status
-          let statusColor = '#475569';
-          if (computed.computedStatus === 'COMPLETED') statusColor = '#15803d';
-          else if (computed.computedStatus === 'IN_PROGRESS') statusColor = '#b45309';
-          else if (computed.computedStatus === 'OVERDUE') statusColor = '#dc2626';
-
-          doc
-            .font('Helvetica-Bold')
-            .fontSize(7)
-            .fillColor(statusColor)
-            .text(statusText, cX, rowY + 3.5, { width: actionCols[6].width, align: 'center' });
-
-          doc.y = rowY + rowHeight;
+      if (participants.length === 0) {
+        doc.text('1  Belum terdapat data peserta yang tercatat.', leftMargin + colLabelW + colSepW, pCurY, {
+          width: colValW,
         });
+        doc.y = pCurY + 18;
+      } else {
+        let curListY = pCurY;
+        participants.forEach((p, idx) => {
+          const num = idx + 1;
+          const pText = `${num < 10 ? ' ' : ''}${num}  ${p.user.name}`;
+          doc.font(fonts.arial).fontSize(11);
+          const itemH = doc.heightOfString(pText, { width: colValW });
 
-        doc.moveDown(0.5);
+          const actualY = idx === 0 ? pCurY : curListY;
+          doc.text(pText, leftMargin + colLabelW + colSepW, actualY, { width: colValW });
+          curListY = actualY + itemH + 2;
+          doc.y = curListY;
+        });
       }
 
       // -------------------------------------------------------------
-      // 9. SECTION H: PENUTUP
+      // 5. SUBSTANSI INTI PEMBAHASAN RAPAT
       // -------------------------------------------------------------
-      renderSectionHeader('H. PENUTUP');
-      doc
-        .font('Helvetica')
-        .fontSize(8.5)
-        .fillColor('#1e293b')
-        .text(
-          'Demikian risalah rapat ini dibuat berdasarkan hasil pelaksanaan rapat dan catatan yang tersimpan dalam Sistem Manajemen Rapat & Tindak Lanjut Dewan Nasional KEK RI.',
-          leftMargin + 6,
+      doc.moveDown(0.8);
+      const subCurY = doc.y;
+      doc.font(fonts.arial).fontSize(11).fillColor('#000000');
+      doc.text('Substansi Inti', leftMargin, subCurY, { width: colLabelW });
+      doc.text('Pembahasan Rapat', leftMargin, subCurY + 13, { width: colLabelW });
+      doc.text(':', leftMargin + colLabelW, subCurY, { width: colSepW });
+      doc.y = subCurY + 30;
+
+      const discussionBlocks = parseRichText(meeting.minutes?.discussion);
+
+      if (discussionBlocks.length === 0) {
+        doc.font(fonts.arial).fontSize(11).fillColor('#000000');
+        doc.text(
+          'Rapat membahas terkait kajian dampak KEK terhadap perekonomian, adapun hasil rapat sebagaimana berikut:',
+          leftMargin,
           doc.y,
-          { width: printableWidth - 12, lineGap: 2, align: 'justify' }
+          { width: printableWidth, align: 'justify', lineGap: 3.5 }
         );
+        doc.moveDown(0.5);
+      } else {
+        let orderedCounter = 1;
 
-      doc.moveDown(1.5);
+        for (const b of discussionBlocks) {
+          if (b.type === 'ordered') {
+            const num = b.number || orderedCounter++;
+            renderFormattedBlock(doc, b, leftMargin, printableWidth, fonts, `${num}. `);
+          } else {
+            renderFormattedBlock(doc, b, leftMargin, printableWidth, fonts);
+          }
+        }
+      }
 
       // -------------------------------------------------------------
-      // 10. AREA TANDA TANGAN (SIGNATURE AREA)
+      // 6. KESIMPULAN
       // -------------------------------------------------------------
-      // Need ~115 pt for signatures
-      if (doc.y + 115 > maxContentY) {
+      doc.moveDown(0.8);
+      doc.font(fonts.arialBold).fontSize(11).fillColor('#000000');
+      doc.text('Kesimpulan', leftMargin, doc.y);
+      doc.moveDown(0.4);
+
+      const conclusionBlocks = parseRichText(meeting.minutes?.conclusion);
+
+      if (conclusionBlocks.length === 0) {
+        doc.font(fonts.arial).fontSize(11).fillColor('#000000');
+        doc.text(
+          '1. Berdasarkan hasil pembahasan, kajian dampak KEK perlu diarahkan untuk mengukur manfaat nyata keberadaan KEK terhadap perekonomian dan pengembangan wilayah, sekaligus mengidentifikasi faktor keberhasilan serta praktik yang dapat direplikasi di luar kawasan.',
+          leftMargin,
+          doc.y,
+          { width: printableWidth, align: 'justify', lineGap: 3.5 }
+        );
+        doc.moveDown(0.4);
+      } else {
+        let cIndex = 1;
+        for (const b of conclusionBlocks) {
+          const itemNum = b.type === 'ordered' && b.number ? b.number : cIndex++;
+          const prefix = b.type === 'ordered' || b.type === 'paragraph' ? `${itemNum}. ` : undefined;
+          renderFormattedBlock(doc, b, leftMargin, printableWidth, fonts, prefix);
+        }
+      }
+
+      // -------------------------------------------------------------
+      // 7. TINDAK LANJUT
+      // -------------------------------------------------------------
+      doc.moveDown(0.8);
+      doc.font(fonts.arialBold).fontSize(11).fillColor('#000000');
+      doc.text('Tindak Lanjut', leftMargin, doc.y);
+      doc.moveDown(0.4);
+
+      const actionItems = meeting.actionItems || [];
+      const decisionsBlocks = parseRichText(meeting.minutes?.decisions);
+
+      if (actionItems.length > 0) {
+        actionItems.forEach((ai, idx) => {
+          const desc = ai.description ? ` ${ai.description}` : '';
+          const itemText = `${idx + 1}. ${ai.title}${desc}`;
+          doc.font(fonts.arial).fontSize(11).fillColor('#000000');
+          doc.text(itemText, leftMargin, doc.y, {
+            width: printableWidth,
+            align: 'justify',
+            lineGap: 3.5,
+          });
+          doc.moveDown(0.4);
+        });
+      } else if (decisionsBlocks.length > 0) {
+        let dIndex = 1;
+        for (const b of decisionsBlocks) {
+          const itemNum = b.type === 'ordered' && b.number ? b.number : dIndex++;
+          const prefix = b.type === 'ordered' || b.type === 'paragraph' ? `${itemNum}. ` : undefined;
+          renderFormattedBlock(doc, b, leftMargin, printableWidth, fonts, prefix);
+        }
+      } else {
+        doc.font(fonts.arial).fontSize(11).fillColor('#000000');
+        doc.text(
+          '1. Tim kerja akan segera melakukan pembahasan lebih lanjut untuk menajamkan desain pelaksanaan serta kebutuhan data terkait.',
+          leftMargin,
+          doc.y,
+          { width: printableWidth, align: 'justify', lineGap: 3.5 }
+        );
+        doc.moveDown(0.4);
+      }
+
+      // -------------------------------------------------------------
+      // 8. TANDA TANGAN (SIGNATURE BLOCK)
+      // -------------------------------------------------------------
+      // Jika sisa ruang di halaman saat ini kurang dari 120 pt, tambah halaman baru
+      if (doc.y + 120 > 790) {
         doc.addPage();
       }
 
-      const sigY = doc.y;
-      const colSigW = (printableWidth - 40) / 2;
+      doc.moveDown(1.5);
 
-      const chairpersonName = meeting.chairperson?.name || '____________________';
-      const chairpersonBiro = meeting.chairperson?.biro?.shortName || meeting.primaryBiro.shortName;
-      const secretaryName = meeting.secretary?.name || '____________________';
-      const secretaryBiro = meeting.secretary?.biro?.shortName || 'Tim Notulensi Dewan KEK';
+      const sigColW = 220;
+      const sigX = leftMargin + printableWidth - sigColW;
 
-      // Left Column: Pimpinan Rapat
-      doc
-        .font('Helvetica-Bold')
-        .fontSize(8.5)
-        .fillColor('#1e293b')
-        .text('Pimpinan Rapat / Ketua Sidang,', leftMargin + 10, sigY, { width: colSigW, align: 'center' });
+      doc.font(fonts.arial).fontSize(11).fillColor('#000000');
+      doc.text('Notulis,', sigX, doc.y, { width: sigColW, align: 'left' });
 
-      doc
-        .font('Helvetica')
-        .fontSize(8)
-        .fillColor('#64748b')
-        .text(chairpersonBiro, leftMargin + 10, sigY + 12, { width: colSigW, align: 'center' });
+      // Jabatan Notulis
+      const roleBlock = finalSignerRole.endsWith(',') ? finalSignerRole : `${finalSignerRole},`;
+      doc.text(roleBlock, sigX, doc.y, {
+        width: sigColW,
+        align: 'left',
+        lineGap: 2,
+      });
 
-      // Space for physical signature
-      doc
-        .font('Helvetica-Bold')
-        .fontSize(8.5)
-        .fillColor('#0f172a')
-        .text(`( ${chairpersonName} )`, leftMargin + 10, sigY + 68, { width: colSigW, align: 'center' });
+      doc.moveDown(1.8);
+      doc.font(fonts.arial).fontSize(11).fillColor('#000000');
+      doc.text('${ttd_pengirim}', sigX, doc.y, { width: sigColW, align: 'left' });
 
-      // Right Column: Notulis
-      const rightSigX = leftMargin + colSigW + 40;
-      doc
-        .font('Helvetica-Bold')
-        .fontSize(8.5)
-        .fillColor('#1e293b')
-        .text('Notulis Sidang,', rightSigX, sigY, { width: colSigW, align: 'center' });
-
-      doc
-        .font('Helvetica')
-        .fontSize(8)
-        .fillColor('#64748b')
-        .text(secretaryBiro, rightSigX, sigY + 12, { width: colSigW, align: 'center' });
-
-      // Space for physical signature
-      doc
-        .font('Helvetica-Bold')
-        .fontSize(8.5)
-        .fillColor('#0f172a')
-        .text(`( ${secretaryName} )`, rightSigX, sigY + 68, { width: colSigW, align: 'center' });
+      doc.moveDown(1.8);
+      doc.font(fonts.arial).fontSize(11).fillColor('#000000');
+      doc.text(finalSignerName, sigX, doc.y, {
+        width: sigColW,
+        align: 'left',
+        lineGap: 2,
+      });
 
       // -------------------------------------------------------------
-      // 11. FOOTER PADA SELURUH HALAMAN (Page X of Y)
+      // 9. HEADER PENOMORAN HALAMAN RESMI (- 2 -, - 3 -, - 4 -, ...)
       // -------------------------------------------------------------
       const range = doc.bufferedPageRange();
       const totalPages = range.count;
 
-      for (let i = 0; i < totalPages; i++) {
+      for (let i = 1; i < totalPages; i++) {
         doc.switchToPage(i);
-
-        const footerY = 804;
-
-        // Thin separator line
         doc
-          .strokeColor('#e2e8f0')
-          .lineWidth(0.5)
-          .moveTo(leftMargin, footerY - 4)
-          .lineTo(leftMargin + printableWidth, footerY - 4)
-          .stroke();
-
-        // Footer left: System & Meeting Number
-        doc
-          .font('Helvetica')
-          .fontSize(7)
-          .fillColor('#64748b')
-          .text(
-            `SIM-RAPAT KEK RI | Dokumen Risalah Resmi Nomor: ${meeting.meetingNumber}`,
-            leftMargin,
-            footerY,
-            { width: printableWidth - 100, align: 'left' }
-          );
-
-        // Footer right: Page number
-        doc
-          .font('Helvetica')
-          .fontSize(7)
-          .fillColor('#64748b')
-          .text(`Halaman ${i + 1} dari ${totalPages}`, leftMargin + printableWidth - 100, footerY, {
-            width: 100,
-            align: 'right',
+          .font(fonts.arial)
+          .fontSize(12)
+          .fillColor('#000000')
+          .text(`- ${i + 1} -`, leftMargin, 36, {
+            width: printableWidth,
+            align: 'center',
           });
       }
 
-      // Finalize the PDF
+      // Selesai membuat dokumen PDF
       doc.end();
     } catch (error) {
       reject(error);

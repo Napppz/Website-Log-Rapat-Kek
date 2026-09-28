@@ -1,6 +1,7 @@
 import React from 'react';
 import Link from 'next/link';
 import { prisma } from '@/lib/prisma';
+import { withDbRetry } from '@/lib/db-service';
 import { getCurrentUser } from '@/lib/auth/authorization';
 import { UserManagementView } from '@/components/users/user-management-view';
 import { ShieldAlert, ArrowLeft } from 'lucide-react';
@@ -42,33 +43,35 @@ export default async function PenggunaPage() {
   }
 
   // Fetch users & biros for SUPER_ADMIN
-  const [users, biros] = await Promise.all([
-    prisma.user.findMany({
-      select: {
-        id: true,
-        name: true,
-        email: true,
-        role: true,
-        biroId: true,
-        isActive: true,
-        createdAt: true,
-        biro: {
-          select: {
-            id: true,
-            code: true,
-            name: true,
-            shortName: true,
+  const [users, biros] = await withDbRetry(async () =>
+    Promise.all([
+      prisma.user.findMany({
+        select: {
+          id: true,
+          name: true,
+          email: true,
+          role: true,
+          biroId: true,
+          isActive: true,
+          createdAt: true,
+          biro: {
+            select: {
+              id: true,
+              code: true,
+              name: true,
+              shortName: true,
+            },
           },
         },
-      },
-      orderBy: [{ isActive: 'desc' }, { role: 'asc' }, { name: 'asc' }],
-    }),
-    prisma.biro.findMany({
-      where: { isActive: true },
-      select: { id: true, code: true, shortName: true, name: true },
-      orderBy: { code: 'asc' },
-    }),
-  ]);
+        orderBy: [{ isActive: 'desc' }, { role: 'asc' }, { name: 'asc' }],
+      }),
+      prisma.biro.findMany({
+        where: { isActive: true },
+        select: { id: true, code: true, shortName: true, name: true },
+        orderBy: { code: 'asc' },
+      }),
+    ])
+  );
 
   return (
     <UserManagementView

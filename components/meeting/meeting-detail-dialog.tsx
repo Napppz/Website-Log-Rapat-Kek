@@ -22,7 +22,7 @@ import { MeetingStatusBadge } from './meeting-status-badge';
 import { ActionItemProgress } from '../action-items/action-item-progress';
 import { MeetingMinutesSection } from './meeting-minutes/meeting-minutes-section';
 import { ActionItemList } from '../action-items/action-item-list';
-import { getActionItemsAction } from '@/app/actions/action-item-actions';
+import { getActionItemsAction, getActionItemFormOptionsAction } from '@/app/actions/action-item-actions';
 import { useSession } from 'next-auth/react';
 import { toast, confirmModal } from '@/components/providers/toast-provider';
 
@@ -48,6 +48,8 @@ export function MeetingDetailDialog({
   const [isUpdatingStatus, setIsUpdatingStatus] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
   const [actionItems, setActionItems] = useState<any[]>([]);
+  const [availableBiros, setAvailableBiros] = useState<any[]>([]);
+  const [availableUsers, setAvailableUsers] = useState<any[]>([]);
   const [isLoadingItems, setIsLoadingItems] = useState(false);
 
   const handleExportPdf = async () => {
@@ -78,12 +80,22 @@ export function MeetingDetailDialog({
   useEffect(() => {
     if (activeTab === 'actionItems' && meeting?.id) {
       setIsLoadingItems(true);
-      getActionItemsAction(meeting.id).then((res) => {
-        if (res.success && res.data) {
-          setActionItems(res.data);
-        }
-        setIsLoadingItems(false);
-      });
+      Promise.all([
+        getActionItemsAction(meeting.id),
+        getActionItemFormOptionsAction(),
+      ])
+        .then(([itemsRes, optRes]) => {
+          if (itemsRes.success && itemsRes.data) {
+            setActionItems(itemsRes.data);
+          }
+          if (optRes.success) {
+            if (optRes.biros) setAvailableBiros(optRes.biros);
+            if (optRes.users) setAvailableUsers(optRes.users);
+          }
+        })
+        .finally(() => {
+          setIsLoadingItems(false);
+        });
     }
   }, [activeTab, meeting?.id]);
 
@@ -376,7 +388,7 @@ export function MeetingDetailDialog({
           {/* TAB 3: NOTULEN & HASIL RAPAT */}
           {activeTab === 'minutes' && (
             <div className="pt-1">
-              <MeetingMinutesSection meetingId={meeting.id} />
+              <MeetingMinutesSection meetingId={meeting.id} meeting={meeting} />
             </div>
           )}
 
@@ -389,6 +401,8 @@ export function MeetingDetailDialog({
                 <ActionItemList
                   meetingId={meeting.id}
                   initialItems={actionItems}
+                  availableBiros={availableBiros}
+                  availableUsers={availableUsers}
                 />
               )}
             </div>

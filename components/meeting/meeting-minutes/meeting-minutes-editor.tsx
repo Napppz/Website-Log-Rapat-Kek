@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { useSession } from 'next-auth/react';
 import { TiptapEditor } from './tiptap-editor';
 import { JSONContent } from '@tiptap/react';
 import { upsertMeetingMinutesAction } from '@/app/actions/minute-actions';
@@ -12,13 +13,27 @@ import {
   Eye,
   ListChecks,
   MessageSquare,
-  Award,
   CheckCircle,
   FileCheck,
+  Sparkles,
+  ClipboardList,
+  PenTool,
+  User,
+  BadgeCheck,
 } from 'lucide-react';
 
 interface MeetingMinutesEditorProps {
   meetingId: string;
+  meeting?: {
+    id?: string;
+    meetingNumber?: string;
+    title?: string;
+    date?: Date | string;
+    startTime?: string;
+    endTime?: string;
+    chairperson?: { name: string } | null;
+    secretary?: { name: string } | null;
+  } | null;
   initialMinutes?: {
     agenda?: JSONContent | null;
     discussion?: JSONContent | null;
@@ -31,16 +46,35 @@ interface MeetingMinutesEditorProps {
 
 export function MeetingMinutesEditor({
   meetingId,
+  meeting,
   initialMinutes,
   onSaved,
   onPreviewClick,
 }: MeetingMinutesEditorProps) {
+  const { data: session } = useSession();
+
   const [agenda, setAgenda] = useState<JSONContent | null>(initialMinutes?.agenda || null);
   const [discussion, setDiscussion] = useState<JSONContent | null>(initialMinutes?.discussion || null);
   const [decisions, setDecisions] = useState<JSONContent | null>(initialMinutes?.decisions || null);
   const [conclusion, setConclusion] = useState<JSONContent | null>(initialMinutes?.conclusion || null);
 
-  const [activeTab, setActiveTab] = useState<'all' | 'agenda' | 'discussion' | 'decisions' | 'conclusion'>('all');
+  // Inisialisasi Nama dan Jabatan Notulis Penandatangan
+  const initialSignerName =
+    (initialMinutes?.conclusion as any)?.signerName ||
+    (initialMinutes?.decisions as any)?.signerName ||
+    meeting?.secretary?.name ||
+    session?.user?.name ||
+    'Sri Aurelia Rosyana Hari Habyby';
+
+  const initialSignerRole =
+    (initialMinutes?.conclusion as any)?.signerRole ||
+    (initialMinutes?.decisions as any)?.signerRole ||
+    'Pranata Hubungan Masyarakat Terampil';
+
+  const [signerName, setSignerName] = useState<string>(initialSignerName);
+  const [signerRole, setSignerRole] = useState<string>(initialSignerRole);
+
+  const [activeTab, setActiveTab] = useState<'all' | 'agenda' | 'discussion' | 'conclusion' | 'decisions'>('all');
   const [saveStatus, setSaveStatus] = useState<'saved' | 'saving' | 'error' | 'idle'>('idle');
   const [statusMessage, setStatusMessage] = useState<string>('');
   const [isManualSaving, setIsManualSaving] = useState(false);
@@ -55,12 +89,27 @@ export function MeetingMinutesEditor({
       setStatusMessage('Menyimpan...');
 
       try {
+        // Sematkan signerName dan signerRole ke dalam payload conclusion & decisions agar selalu tersimpan
+        const conclusionPayload = {
+          ...(conclusion || { type: 'doc', content: [] }),
+          signerName: signerName.trim(),
+          signerRole: signerRole.trim(),
+        };
+
+        const decisionsPayload = decisions
+          ? {
+              ...decisions,
+              signerName: signerName.trim(),
+              signerRole: signerRole.trim(),
+            }
+          : undefined;
+
         const payload = {
           meetingId,
           agenda: agenda ?? undefined,
           discussion: discussion ?? undefined,
-          decisions: decisions ?? undefined,
-          conclusion: conclusion ?? undefined,
+          decisions: decisionsPayload,
+          conclusion: conclusionPayload,
         };
 
         const res = await upsertMeetingMinutesAction(payload);
@@ -80,7 +129,7 @@ export function MeetingMinutesEditor({
         setStatusMessage('Gagal menyimpan');
       }
     },
-    [meetingId, agenda, discussion, decisions, conclusion, onSaved]
+    [meetingId, agenda, discussion, decisions, conclusion, signerName, signerRole, onSaved]
   );
 
   // Autosave trigger with 2.5s debounce
@@ -103,7 +152,7 @@ export function MeetingMinutesEditor({
         clearTimeout(debounceTimerRef.current);
       }
     };
-  }, [agenda, discussion, decisions, conclusion, executeSave]);
+  }, [agenda, discussion, decisions, conclusion, signerName, signerRole, executeSave]);
 
   const handleFieldChange = (setter: React.Dispatch<React.SetStateAction<JSONContent | null>>) => {
     return (json: JSONContent) => {
@@ -118,25 +167,225 @@ export function MeetingMinutesEditor({
     setIsManualSaving(false);
   };
 
+  // Muat draf template resmi naskah dinas notula
+  const handleLoadOfficialTemplate = () => {
+    const isConfirmed = window.confirm(
+      'Gunakan format baku Notula Dinas KEK? Template pengantar dan nomor butir pembahasan akan diisikan ke editor.'
+    );
+    if (!isConfirmed) return;
+
+    const topicTitle = meeting?.title || 'Kajian Dampak KEK terhadap Perekonomian';
+
+    const defaultAgenda: JSONContent = {
+      type: 'doc',
+      content: [
+        {
+          type: 'paragraph',
+          content: [
+            {
+              type: 'text',
+              text: `1. Pembahasan ${topicTitle}`,
+            },
+          ],
+        },
+      ],
+    };
+
+    const defaultDiscussion: JSONContent = {
+      type: 'doc',
+      content: [
+        {
+          type: 'paragraph',
+          content: [
+            {
+              type: 'text',
+              text: `Rapat membahas terkait ${topicTitle.toLowerCase()}, adapun hasil rapat sebagaimana berikut:`,
+            },
+          ],
+        },
+        {
+          type: 'orderedList',
+          content: [
+            {
+              type: 'listItem',
+              content: [
+                {
+                  type: 'paragraph',
+                  content: [
+                    {
+                      type: 'text',
+                      text: 'Setjen Dewan Nasional KEK menyampaikan arahan pembuka dan rencana koordinasi pelaksanaan agenda bersama pihak terkait.',
+                    },
+                  ],
+                },
+              ],
+            },
+            {
+              type: 'listItem',
+              content: [
+                {
+                  type: 'paragraph',
+                  content: [
+                    {
+                      type: 'text',
+                      text: 'Pemaparan substansi teknis dan identifikasi kebutuhan penyiapan data dukung pelaksanaan kegiatan.',
+                    },
+                  ],
+                },
+              ],
+            },
+            {
+              type: 'listItem',
+              content: [
+                {
+                  type: 'paragraph',
+                  content: [
+                    {
+                      type: 'text',
+                      text: 'Tanggapan dan masukan dari seluruh perwakilan biro serta mitra pelaksana terkait penajaman sasaran.',
+                    },
+                  ],
+                },
+              ],
+            },
+          ],
+        },
+      ],
+    };
+
+    const defaultConclusion: JSONContent = {
+      type: 'doc',
+      content: [
+        {
+          type: 'orderedList',
+          content: [
+            {
+              type: 'listItem',
+              content: [
+                {
+                  type: 'paragraph',
+                  content: [
+                    {
+                      type: 'text',
+                      text: 'Berdasarkan hasil pembahasan, seluruh pihak menyepakati kesiapan teknis pelaksanaan kegiatan dan koordinasi intensif antar unit kerja.',
+                    },
+                  ],
+                },
+              ],
+            },
+          ],
+        },
+      ],
+    };
+
+    const defaultDecisions: JSONContent = {
+      type: 'doc',
+      content: [
+        {
+          type: 'orderedList',
+          content: [
+            {
+              type: 'listItem',
+              content: [
+                {
+                  type: 'paragraph',
+                  content: [
+                    {
+                      type: 'text',
+                      text: 'Tim kerja akan segera memproses penyiapan administrasi serta dokumen teknis pendukung.',
+                    },
+                  ],
+                },
+              ],
+            },
+            {
+              type: 'listItem',
+              content: [
+                {
+                  type: 'paragraph',
+                  content: [
+                    {
+                      type: 'text',
+                      text: 'Melakukan koordinasi berkala dan pelaporan progres pelaksanaan secara berkelanjutan.',
+                    },
+                  ],
+                },
+              ],
+            },
+          ],
+        },
+      ],
+    };
+
+    setAgenda(defaultAgenda);
+    setDiscussion(defaultDiscussion);
+    setConclusion(defaultConclusion);
+    setDecisions(defaultDecisions);
+    hasChangesRef.current = true;
+  };
+
   return (
     <div className="flex flex-col gap-6">
-      {/* Action Bar Header */}
+      {/* Top Helper Header: Form Info Sesuai Naskah Dinas */}
+      <div className="bg-gradient-to-r from-amber-500/10 via-amber-500/5 to-transparent border border-amber-200/90 rounded-2xl p-4 sm:p-5 flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div>
+          <div className="flex items-center gap-2">
+            <span className="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-bold bg-amber-600 text-white">
+              FORMAT NOTULA RESMI
+            </span>
+            <span className="text-[12px] font-semibold text-slate-700">
+              NOMOR: {meeting?.meetingNumber || '${nomor_naskah}'}
+            </span>
+          </div>
+          <h3 className="font-bold text-[16px] text-slate-900 mt-1">
+            {meeting?.title || 'Pengisian Notula Rapat'}
+          </h3>
+          <p className="text-[12px] text-slate-600 mt-0.5">
+            Pimpinan: {meeting?.chairperson?.name || 'Belum Ditugaskan'} • Notulis: {signerName || 'Pranata Hubungan Masyarakat Terampil'}
+          </p>
+        </div>
+
+        <div className="flex flex-wrap items-center gap-2 shrink-0">
+          <button
+            type="button"
+            onClick={handleLoadOfficialTemplate}
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-amber-300 bg-amber-50 hover:bg-amber-100 text-amber-900 font-semibold text-[12px] transition-colors cursor-pointer shadow-xs"
+            title="Muat struktur kalimat dan format baku naskah dinas"
+          >
+            <Sparkles className="w-3.5 h-3.5 text-amber-600" />
+            <span>Gunakan Template Dinas</span>
+          </button>
+
+          {onPreviewClick && (
+            <button
+              type="button"
+              onClick={onPreviewClick}
+              className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg bg-slate-900 hover:bg-slate-800 text-white font-semibold text-[12px] transition-colors cursor-pointer shadow-xs"
+            >
+              <Eye className="w-3.5 h-3.5 text-amber-400" />
+              <span>Lihat Lembar Notula</span>
+            </button>
+          )}
+        </div>
+      </div>
+
+      {/* Action Bar & Section Navigation */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 p-4 bg-white rounded-xl border border-amber-200/80 shadow-xs">
-        {/* Left: Section Navigator / View Options */}
+        {/* Left: Section Tabs (Sesuai Urutan Tata Naskah Dinas) */}
         <div className="flex flex-wrap items-center gap-1.5 text-[12px]">
-          <span className="font-bold text-slate-700 mr-1 hidden sm:inline">Navigasi Bagian:</span>
+          <span className="font-bold text-slate-700 mr-1 hidden sm:inline">Navigasi:</span>
           {[
             { id: 'all', label: 'Semua Bagian' },
-            { id: 'agenda', label: 'A. Agenda' },
-            { id: 'discussion', label: 'B. Pembahasan' },
-            { id: 'decisions', label: 'C. Keputusan' },
-            { id: 'conclusion', label: 'D. Kesimpulan' },
+            { id: 'agenda', label: '1. Agenda' },
+            { id: 'discussion', label: '2. Substansi Pembahasan' },
+            { id: 'conclusion', label: '3. Kesimpulan' },
+            { id: 'decisions', label: '4. Tindak Lanjut' },
           ].map((tab) => (
             <button
               key={tab.id}
               type="button"
               onClick={() => setActiveTab(tab.id as any)}
-              className={`px-2.5 py-1 rounded-md font-semibold transition-all cursor-pointer ${
+              className={`px-3 py-1.5 rounded-md font-semibold transition-all cursor-pointer ${
                 activeTab === tab.id
                   ? 'bg-amber-600 text-white shadow-xs'
                   : 'bg-amber-50/70 hover:bg-amber-100 text-slate-700'
@@ -171,18 +420,6 @@ export function MeetingMinutesEditor({
             )}
           </div>
 
-          {/* Mode Preview Toggle */}
-          {onPreviewClick && (
-            <button
-              type="button"
-              onClick={onPreviewClick}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-amber-300 bg-amber-50/50 hover:bg-amber-100 text-amber-900 font-semibold text-[12px] transition-colors cursor-pointer"
-            >
-              <Eye className="w-3.5 h-3.5" />
-              <span>Lihat Preview</span>
-            </button>
-          )}
-
           {/* Simpan Draft */}
           <button
             type="button"
@@ -206,9 +443,9 @@ export function MeetingMinutesEditor({
         </div>
       </div>
 
-      {/* Editor Sections */}
+      {/* Editor Sections (Berurutan Persis Seperti Naskah Dinas) */}
       <div className="space-y-6">
-        {/* SECTION A: AGENDA */}
+        {/* BAGIAN 1: AGENDA RAPAT */}
         {(activeTab === 'all' || activeTab === 'agenda') && (
           <div className="bg-white rounded-xl border border-amber-200/90 p-5 shadow-xs space-y-3">
             <div className="flex items-center justify-between pb-2 border-b border-amber-100">
@@ -218,26 +455,28 @@ export function MeetingMinutesEditor({
                 </div>
                 <div>
                   <h4 className="font-bold text-[14px] text-slate-900 uppercase tracking-wide">
-                    A. Agenda &amp; Topik Pembahasan
+                    1. Agenda Rapat
                   </h4>
-                  <p className="text-[11px] text-slate-500">Materi pokok atau urutan pembahasan persidangan</p>
+                  <p className="text-[11px] text-slate-500">
+                    Pokok materi yang dicantumkan pada bagian atas identitas notula
+                  </p>
                 </div>
               </div>
               <span className="text-[11px] font-bold text-amber-700 bg-amber-50 px-2 py-0.5 rounded border border-amber-200">
-                Wajib Diisi
+                Identitas Notula
               </span>
             </div>
 
             <TiptapEditor
               content={agenda}
               onChange={handleFieldChange(setAgenda)}
-              placeholder="Contoh: 1. Pembahasan kesiapan relokasi tenant KEK... 2. Penyesuaian zonasi..."
-              minHeight="140px"
+              placeholder="Contoh: 1. Pembahasan Kajian Dampak KEK terhadap Perekonomian"
+              minHeight="110px"
             />
           </div>
         )}
 
-        {/* SECTION B: PEMBAHASAN */}
+        {/* BAGIAN 2: SUBSTANSI INTI PEMBAHASAN RAPAT */}
         {(activeTab === 'all' || activeTab === 'discussion') && (
           <div className="bg-white rounded-xl border border-amber-200/90 p-5 shadow-xs space-y-3">
             <div className="flex items-center justify-between pb-2 border-b border-amber-100">
@@ -247,52 +486,28 @@ export function MeetingMinutesEditor({
                 </div>
                 <div>
                   <h4 className="font-bold text-[14px] text-slate-900 uppercase tracking-wide">
-                    B. Pembahasan &amp; Dinamika Diskusi
+                    2. Substansi Inti Pembahasan Rapat
                   </h4>
-                  <p className="text-[11px] text-slate-500">Uraian substansi dialog, sanggahan, tanggapan teknis biro, dan arahan pengarah</p>
+                  <p className="text-[11px] text-slate-500">
+                    Paragraf pengantar hasil rapat dan butir-butir pembahasan bernomor (1., 2., 3., dst.)
+                  </p>
                 </div>
               </div>
+              <span className="text-[11px] font-bold text-amber-700 bg-amber-50 px-2 py-0.5 rounded border border-amber-200">
+                Isi Pokok Notula
+              </span>
             </div>
 
             <TiptapEditor
               content={discussion}
               onChange={handleFieldChange(setDiscussion)}
-              placeholder="Tuliskan catatan dinamika pembahasan rapat di sini..."
-              minHeight="180px"
+              placeholder={`Rapat membahas terkait [topik rapat], adapun hasil rapat sebagaimana berikut:\n\n1. [Poin pembahasan pertama]...\n2. [Poin pembahasan kedua]...`}
+              minHeight="220px"
             />
           </div>
         )}
 
-        {/* SECTION C: KEPUTUSAN */}
-        {(activeTab === 'all' || activeTab === 'decisions') && (
-          <div className="bg-white rounded-xl border border-amber-200/90 p-5 shadow-xs space-y-3">
-            <div className="flex items-center justify-between pb-2 border-b border-amber-100">
-              <div className="flex items-center gap-2">
-                <div className="w-7 h-7 rounded-lg bg-amber-100 text-amber-700 flex items-center justify-center">
-                  <Award className="w-4 h-4" />
-                </div>
-                <div>
-                  <h4 className="font-bold text-[14px] text-slate-900 uppercase tracking-wide">
-                    C. Keputusan &amp; Arahan Sidang
-                  </h4>
-                  <p className="text-[11px] text-slate-500">Poin ketetapan bersama yang disepakati untuk ditindaklanjuti</p>
-                </div>
-              </div>
-              <span className="text-[11px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">
-                Poin Keputusan
-              </span>
-            </div>
-
-            <TiptapEditor
-              content={decisions}
-              onChange={handleFieldChange(setDecisions)}
-              placeholder="Contoh: 1. Menyetujui usulan penetapan perluasan kawasan... 2. Menugaskan Biro Pengendalian..."
-              minHeight="150px"
-            />
-          </div>
-        )}
-
-        {/* SECTION D: KESIMPULAN */}
+        {/* BAGIAN 3: KESIMPULAN */}
         {(activeTab === 'all' || activeTab === 'conclusion') && (
           <div className="bg-white rounded-xl border border-amber-200/90 p-5 shadow-xs space-y-3">
             <div className="flex items-center justify-between pb-2 border-b border-amber-100">
@@ -302,30 +517,163 @@ export function MeetingMinutesEditor({
                 </div>
                 <div>
                   <h4 className="font-bold text-[14px] text-slate-900 uppercase tracking-wide">
-                    D. Kesimpulan &amp; Langkah Lanjutan
+                    3. Kesimpulan
                   </h4>
-                  <p className="text-[11px] text-slate-500">Rangkuman akhir dan tindak lanjut utama</p>
+                  <p className="text-[11px] text-slate-500">
+                    Poin-poin kesimpulan dan arahan akhir hasil musyawarah rapat
+                  </p>
                 </div>
               </div>
+              <span className="text-[11px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">
+                Poin Kesimpulan
+              </span>
             </div>
 
             <TiptapEditor
               content={conclusion}
               onChange={handleFieldChange(setConclusion)}
-              placeholder="Contoh: Rapat koordinasi berjalan lancar dan seluruh pihak sepakat menyelesaikan draf regulasi..."
+              placeholder="Contoh: 1. Berdasarkan hasil pembahasan, kajian dampak KEK perlu diarahkan untuk mengukur manfaat nyata..."
               minHeight="140px"
             />
           </div>
         )}
+
+        {/* BAGIAN 4: TINDAK LANJUT */}
+        {(activeTab === 'all' || activeTab === 'decisions') && (
+          <div className="bg-white rounded-xl border border-amber-200/90 p-5 shadow-xs space-y-3">
+            <div className="flex items-center justify-between pb-2 border-b border-amber-100">
+              <div className="flex items-center gap-2">
+                <div className="w-7 h-7 rounded-lg bg-amber-100 text-amber-700 flex items-center justify-center">
+                  <ClipboardList className="w-4 h-4" />
+                </div>
+                <div>
+                  <h4 className="font-bold text-[14px] text-slate-900 uppercase tracking-wide">
+                    4. Tindak Lanjut
+                  </h4>
+                  <p className="text-[11px] text-slate-500">
+                    Poin penugasan, pembagian tanggung jawab, dan target waktu penyelesaian
+                  </p>
+                </div>
+              </div>
+              <span className="text-[11px] font-bold text-blue-700 bg-blue-50 px-2 py-0.5 rounded border border-blue-200">
+                Poin Tindak Lanjut
+              </span>
+            </div>
+
+            <TiptapEditor
+              content={decisions}
+              onChange={handleFieldChange(setDecisions)}
+              placeholder="Contoh: 1. Tim kerja akan segera melakukan pembahasan lebih lanjut untuk menajamkan desain kajian...\n2. Mekanisme dan bentuk kerja sama akan segera dibahas..."
+              minHeight="140px"
+            />
+          </div>
+        )}
+
+        {/* BAGIAN 5: PENANDATANGAN NOTULA (NOTULIS / PENCATAT) */}
+        <div className="bg-white rounded-2xl border border-amber-200/90 p-6 shadow-xs space-y-5">
+          <div className="flex items-center justify-between pb-3 border-b border-amber-100">
+            <div className="flex items-center gap-2.5">
+              <div className="w-8 h-8 rounded-xl bg-amber-100 text-amber-700 flex items-center justify-center">
+                <PenTool className="w-4 h-4" />
+              </div>
+              <div>
+                <h4 className="font-bold text-[15px] text-slate-900 uppercase tracking-wide">
+                  Identitas Penandatangan Notula
+                </h4>
+                <p className="text-[11.5px] text-slate-500">
+                  Ubah nama dan jabatan pejabat notulis yang akan tercantum pada naskah dinas &amp; kolom tanda tangan
+                </p>
+              </div>
+            </div>
+            <span className="text-[11px] font-bold text-amber-800 bg-amber-50 px-2.5 py-1 rounded-md border border-amber-200 flex items-center gap-1">
+              <BadgeCheck className="w-3.5 h-3.5 text-amber-600" />
+              <span>Dapat Diisi Sendiri</span>
+            </span>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+            {/* Input Nama Notulis */}
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <label className="text-[12.5px] font-bold text-slate-800 flex items-center gap-1.5">
+                  <User className="w-3.5 h-3.5 text-slate-500" />
+                  <span>Nama Lengkap Notulis</span>
+                </label>
+                {session?.user?.name && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setSignerName(session.user.name || '');
+                      hasChangesRef.current = true;
+                    }}
+                    className="text-[11px] font-semibold text-amber-700 hover:text-amber-800 hover:underline cursor-pointer"
+                  >
+                    + Gunakan Nama Saya ({session.user.name})
+                  </button>
+                )}
+              </div>
+              <input
+                type="text"
+                value={signerName}
+                onChange={(e) => {
+                  setSignerName(e.target.value);
+                  hasChangesRef.current = true;
+                }}
+                placeholder="Contoh: Sri Aurelia Rosyana Hari Habyby"
+                className="w-full px-4 py-2.5 text-[13.5px] bg-slate-50/80 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-600 transition-all text-slate-900 font-medium placeholder:text-slate-400"
+              />
+              <p className="text-[11px] text-slate-500">
+                Nama ini akan dicetak pada baris pencatat dan bagian bawah tanda tangan.
+              </p>
+            </div>
+
+            {/* Input Jabatan Notulis */}
+            <div className="space-y-2">
+              <label className="text-[12.5px] font-bold text-slate-800">
+                Jabatan Kedinasan Notulis
+              </label>
+              <input
+                type="text"
+                value={signerRole}
+                onChange={(e) => {
+                  setSignerRole(e.target.value);
+                  hasChangesRef.current = true;
+                }}
+                placeholder="Contoh: Pranata Hubungan Masyarakat Terampil"
+                className="w-full px-4 py-2.5 text-[13.5px] bg-slate-50/80 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-600 transition-all text-slate-900 font-medium placeholder:text-slate-400"
+              />
+              <p className="text-[11px] text-slate-500">
+                Contoh: <em>Pranata Hubungan Masyarakat Terampil</em> atau <em>Analis Kebijakan Ahli Muda</em>.
+              </p>
+            </div>
+          </div>
+
+          {/* Pratinjau Kotak Tanda Tangan */}
+          <div className="pt-2">
+            <p className="text-[11.5px] font-bold text-slate-700 mb-2">Pratinjau Format Tanda Tangan Notula:</p>
+            <div className="p-4 bg-slate-50 rounded-xl border border-slate-200 max-w-xs font-sans text-[13px] text-slate-900 space-y-1">
+              <p className="font-normal">Notulis,</p>
+              <p className="font-normal text-slate-800 leading-tight">
+                {signerRole || 'Pranata Hubungan Masyarakat Terampil,'}
+              </p>
+              <div className="py-4 text-slate-400 font-mono text-[11.5px]">
+                ${'{ttd_pengirim}'}
+              </div>
+              <p className="font-normal text-slate-950">
+                {signerName || 'Sri Aurelia Rosyana Hari Habyby'}
+              </p>
+            </div>
+          </div>
+        </div>
       </div>
 
       {/* Bottom Save Bar */}
-      <div className="p-4 bg-amber-50/60 rounded-xl border border-amber-200 flex items-center justify-between">
-        <span className="text-[12px] text-slate-500">
-          Setiap perubahan teks otomatis disimpan (Autosave aktif). Klik tombol Simpan untuk kepastian pembaruan data.
+      <div className="p-4 bg-amber-50/60 rounded-xl border border-amber-200 flex flex-col sm:flex-row items-center justify-between gap-3">
+        <span className="text-[12px] text-slate-600">
+          💡 Setiap ketikan otomatis disimpan (Autosave aktif). Klik tombol <strong>Simpan Notulen</strong> untuk konfirmasi data final.
         </span>
 
-        <div className="flex items-center gap-2 shrink-0">
+        <div className="flex items-center gap-2 shrink-0 self-end sm:self-center">
           <button
             type="button"
             disabled={isManualSaving}

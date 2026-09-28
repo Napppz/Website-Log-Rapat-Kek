@@ -73,6 +73,50 @@ export async function getActionItemsAction(meetingId?: string) {
 }
 
 /**
+ * Server Action: Mengambil opsi biro resmi KEK dan pengguna aktif untuk formulir tindak lanjut
+ */
+export async function getActionItemFormOptionsAction() {
+  try {
+    const [biros, users] = await Promise.all([
+      prisma.biro.findMany({
+        where: { isActive: true },
+        select: {
+          id: true,
+          code: true,
+          name: true,
+          shortName: true,
+        },
+        orderBy: { code: 'asc' },
+      }),
+      prisma.user.findMany({
+        where: { isActive: true },
+        select: {
+          id: true,
+          name: true,
+          email: true,
+          biroId: true,
+        },
+        orderBy: { name: 'asc' },
+      }),
+    ]);
+
+    return {
+      success: true,
+      biros,
+      users,
+    };
+  } catch (error: any) {
+    console.error('Error fetching action item form options:', error);
+    return {
+      success: false,
+      biros: [],
+      users: [],
+      error: 'Gagal memuat daftar biro & pengguna.',
+    };
+  }
+}
+
+/**
  * Server Action: Create an Action Item
  */
 export async function createActionItemAction(input: ActionItemInput) {
