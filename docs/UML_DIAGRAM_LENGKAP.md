@@ -10,18 +10,18 @@ Dokumen ini memuat standarisasi penamaan Primary Key (PK) & Foreign Key (FK), Ka
 
 Dalam perancangan basis data dan pemodelan UML profesional, setiap tabel memiliki identitas Primary Key (PK) yang eksplisit dan deskriptif:
 
-| No | Nama Tabel / Entitas | Primary Key (PK) | Foreign Key (FK) | Relasi & Deskripsi |
-|:---|:---------------------|:-----------------|:-----------------|:-------------------|
-| 1  | **`biro`** | `biro_id` *(UUID)* | - | Master 5 Biro resmi di Sekretariat Jenderal Dewan Nasional KEK (`code`: BPPK, PKKEK, IKK, HSDMO, UK). |
-| 2  | **`user`** | `user_id` *(UUID)* | `biro_id` → `biro.biro_id` | Data pengguna/pegawai, PIC tindak lanjut, dan akun pimpinan sidang. |
-| 3  | **`meeting`** | `meeting_id` *(UUID)* | • `primary_biro_id` → `biro.biro_id`<br>• `chairperson_id` → `user.user_id`<br>• `secretary_id` → `user.user_id`<br>• `previous_meeting_id` → `meeting.meeting_id` | Entitas utama agenda rapat dinas KEK. Memiliki Unique Key `meeting_number`. |
-| 4  | **`meeting_minutes`** | `minutes_id` *(UUID)* | `meeting_id` → `meeting.meeting_id` *(1:1 Unique)* | Dokumen naskah notula resmi (agenda, substansi pembahasan, keputusan, dan penandatangan). |
-| 5  | **`meeting_participant`** | `participant_id` *(UUID)* | • `meeting_id` → `meeting.meeting_id`<br>• `user_id` → `user.user_id` | Daftar absensi peserta sidang dan status kehadiran (`INVITED`, `PRESENT`, `ABSENT`, `EXCUSED`). |
-| 6  | **`meeting_biro`** | `(meeting_id, biro_id)` *(Composite PK)* | • `meeting_id` → `meeting.meeting_id`<br>• `biro_id` → `biro.biro_id` | Tabel pivot/junction relasi Many-to-Many untuk biro-biro yang terlibat dalam rapat. |
-| 7  | **`action_item`** | `action_item_id` *(UUID)* | • `meeting_id` → `meeting.meeting_id`<br>• `pic_biro_id` → `biro.biro_id`<br>• `pic_user_id` → `user.user_id` *(Opsional)* | Butir arahan/resolusi tindak lanjut hasil rapat, tenggat waktu (*due date*), status, dan prioritas. |
-| 8  | **`biro_meeting_sequence`** | `sequence_id` *(UUID)* | `biro_id` → `biro.biro_id` *(1:1 Unique)* | Generator penomoran urut surat rapat otomatis per biro (contoh: `IKK-015`). |
-| 9  | **`account`** | `account_id` *(UUID)* | `user_id` → `user.user_id` | Penyimpanan otentikasi login OAuth dan kredensial aman (NextAuth). |
-| 10 | **`session`** | `session_id` *(UUID)* | `user_id` → `user.user_id` | Penyimpanan token sesi aktif pengguna (NextAuth). |
+| No | Nama Tabel / Entitas | Primary Key (PK) | Contoh Format Bersih | Foreign Key (FK) | Relasi & Deskripsi |
+|:---|:---------------------|:-----------------|:---------------------|:-----------------|:-------------------|
+| 1  | **`biro`** | `biro_id` *(String)* | `BIRO-BPPK`, `BIRO-IKK` | - | Master 5 Biro resmi di Sekretariat Jenderal Dewan Nasional KEK (`code`: BPPK, PKKEK, IKK, HSDMO, UK). |
+| 2  | **`user`** | `user_id` *(String)* | `USR-001`, `USR-002` | `biro_id` → `biro.biro_id` | Data pengguna/pegawai, PIC tindak lanjut, dan akun pimpinan sidang. |
+| 3  | **`meeting`** | `meeting_id` *(String)* | `MTG-001`, `MTG-002` | • `primary_biro_id` → `biro.biro_id`<br>• `chairperson_id` → `user.user_id`<br>• `secretary_id` → `user.user_id`<br>• `previous_meeting_id` → `meeting.meeting_id` | Entitas utama agenda rapat dinas KEK. Memiliki Unique Key `meeting_number`. |
+| 4  | **`meeting_minutes`** | `minutes_id` *(String)* | `NOT-001`, `NOT-002` | `meeting_id` → `meeting.meeting_id` *(1:1 Unique)* | Dokumen naskah notula resmi (agenda, substansi pembahasan, keputusan, dan penandatangan). |
+| 5  | **`meeting_participant`** | `participant_id` *(String)* | `PRT-001`, `PRT-002` | • `meeting_id` → `meeting.meeting_id`<br>• `user_id` → `user.user_id` | Daftar absensi peserta sidang dan status kehadiran (`INVITED`, `PRESENT`, `ABSENT`, `EXCUSED`). |
+| 6  | **`meeting_biro`** | `(meeting_id, biro_id)` *(Composite PK)* | `(MTG-001, BIRO-IKK)` | • `meeting_id` → `meeting.meeting_id`<br>• `biro_id` → `biro.biro_id` | Tabel pivot/junction relasi Many-to-Many untuk biro-biro yang terlibat dalam rapat. |
+| 7  | **`action_item`** | `action_item_id` *(String)* | `ACT-001`, `ACT-002` | • `meeting_id` → `meeting.meeting_id`<br>• `pic_biro_id` → `biro.biro_id`<br>• `pic_user_id` → `user.user_id` *(Opsional)* | Butir arahan/resolusi tindak lanjut hasil rapat, tenggat waktu (*due date*), status, dan prioritas. |
+| 8  | **`biro_meeting_sequence`** | `sequence_id` *(String)* | `SEQ-001`, `SEQ-002` | `biro_id` → `biro.biro_id` *(1:1 Unique)* | Generator penomoran urut surat rapat otomatis per biro (contoh: `IKK-015`). |
+| 9  | **`account`** | `account_id` *(String)* | `ACC-001`, `ACC-002` | `user_id` → `user.user_id` | Penyimpanan otentikasi login OAuth dan kredensial aman (NextAuth). |
+| 10 | **`session`** | `session_id` *(String)* | `SES-001`, `SES-002` | `user_id` → `user.user_id` | Penyimpanan token sesi aktif pengguna (NextAuth). |
 
 ---
 
