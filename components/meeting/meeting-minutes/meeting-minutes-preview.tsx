@@ -3,7 +3,6 @@
 import React, { useState } from 'react';
 import {
   FileText,
-  Printer,
   Download,
   FileEdit,
   ExternalLink,
@@ -129,10 +128,6 @@ export function MeetingMinutesPreview({
   // PDF direct stream URL
   const pdfUrl = meetingId ? `/api/meetings/${meetingId}/pdf?inline=true` : '';
 
-  const handlePrint = () => {
-    window.print();
-  };
-
   return (
     <div className="space-y-4">
       {/* Top Controls Toolbar */}
@@ -188,16 +183,6 @@ export function MeetingMinutesPreview({
           </div>
 
           {/* Action buttons */}
-          <button
-            type="button"
-            onClick={handlePrint}
-            className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg border border-slate-300 bg-white hover:bg-slate-50 text-slate-700 font-semibold text-[12px] transition-colors cursor-pointer"
-            title="Cetak lembar notula"
-          >
-            <Printer className="w-3.5 h-3.5" />
-            <span className="hidden sm:inline">Cetak</span>
-          </button>
-
           {onDownloadPdf && (
             <button
               type="button"
