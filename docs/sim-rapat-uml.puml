@@ -1,0 +1,177 @@
+@startuml SIM_RAPAT_KEK_UML
+!theme plain
+skinparam classAttributeIconSize 0
+skinparam monochrome false
+skinparam linetype ortho
+skinparam roundcorner 10
+skinparam class {
+    BackgroundColor #FFFFFF
+    ArrowColor #31889C
+    BorderColor #215865
+}
+
+title SISTEM INFORMASI MANAJEMEN RAPAT & TINDAK LANJUT (SIM-RAPAT KEK RI)\nUML Class Diagram
+
+enum UserRole {
+  SUPER_ADMIN
+  ADMIN
+  NOTULIS
+  STAFF
+  VIEWER
+}
+
+enum MeetingStatus {
+  DRAFT
+  REVIEW
+  APPROVED
+  FINAL
+}
+
+enum AttendanceStatus {
+  INVITED
+  PRESENT
+  ABSENT
+  EXCUSED
+}
+
+enum ActionItemStatus {
+  PENDING
+  IN_PROGRESS
+  COMPLETED
+  OVERDUE
+}
+
+enum ActionItemPriority {
+  LOW
+  MEDIUM
+  HIGH
+  URGENT
+}
+
+class Biro {
+  + String biro_id <<PK>>
+  + String code <<UK>>
+  + String name
+  + String shortName
+  + String description
+  + Boolean isActive
+  + DateTime createdAt
+  + DateTime updatedAt
+  --
+  + getWorkload()
+  + getStaffList()
+}
+
+class User {
+  + String user_id <<PK>>
+  + String biro_id <<FK>>
+  + String name
+  + String email <<UK>>
+  + String password
+  + UserRole role
+  + Boolean isActive
+  + DateTime createdAt
+  + DateTime updatedAt
+  --
+  + authenticate()
+  + updateProfile()
+}
+
+class Meeting {
+  + String meeting_id <<PK>>
+  + String meeting_number <<UK>>
+  + String title
+  + String primary_biro_id <<FK>>
+  + DateTime date
+  + String startTime
+  + String endTime
+  + String location
+  + String chairperson_id <<FK>>
+  + String secretary_id <<FK>>
+  + String previous_meeting_id <<FK>>
+  + MeetingStatus status
+  + DateTime createdAt
+  + DateTime updatedAt
+  --
+  + createMeeting()
+  + updateStatus()
+  + exportPdf()
+}
+
+class MeetingMinutes {
+  + String minutes_id <<PK>>
+  + String meeting_id <<FK, UK>>
+  + Json agenda
+  + Json discussion
+  + Json decisions
+  + Json conclusion
+  + DateTime createdAt
+  + DateTime updatedAt
+  --
+  + saveMinutes()
+  + generatePdf()
+}
+
+class MeetingParticipant {
+  + String participant_id <<PK>>
+  + String meeting_id <<FK>>
+  + String user_id <<FK>>
+  + AttendanceStatus attendanceStatus
+  + DateTime createdAt
+  --
+  + updateAttendance()
+}
+
+class MeetingBiro {
+  + String meeting_id <<PK, FK>>
+  + String biro_id <<PK, FK>>
+}
+
+class ActionItem {
+  + String action_item_id <<PK>>
+  + String meeting_id <<FK>>
+  + String title
+  + String description
+  + String pic_biro_id <<FK>>
+  + String pic_user_id <<FK>>
+  + DateTime dueDate
+  + ActionItemStatus status
+  + ActionItemPriority priority
+  + DateTime completedAt
+  + DateTime createdAt
+  + DateTime updatedAt
+  --
+  + updateStatus()
+  + markCompleted()
+}
+
+class BiroMeetingSequence {
+  + String sequence_id <<PK>>
+  + String biro_id <<FK, UK>>
+  + Int currentNumber
+  + DateTime createdAt
+  + DateTime updatedAt
+  --
+  + getNextNumber()
+}
+
+' Relations
+Biro "1" *-- "0..*" User : mempekerjakan (biro_id)
+Biro "1" --> "0..*" Meeting : menyelenggarakan (primary_biro_id)
+Biro "1" *-- "1" BiroMeetingSequence : penomoran surat (biro_id)
+User "1" --> "0..*" Meeting : memimpin (chairperson_id)
+User "1" --> "0..*" Meeting : mencatat (secretary_id)
+Meeting "1" --> "0..1" Meeting : rujukan (previous_meeting_id)
+
+Meeting "1" *-- "1" MeetingMinutes : menghasilkan naskah (meeting_id)
+Meeting "1" *-- "0..*" ActionItem : menghasilkan resolusi (meeting_id)
+Biro "1" --> "0..*" ActionItem : penanggung jawab (pic_biro_id)
+User "0..1" --> "0..*" ActionItem : staf pelaksana (pic_user_id)
+
+Meeting "1" *-- "0..*" MeetingParticipant : dihadiri (meeting_id)
+User "1" --> "0..*" MeetingParticipant : sebagai peserta (user_id)
+
+Meeting "1" -- "0..*" MeetingBiro : melibatkan (meeting_id)
+Biro "1" -- "0..*" MeetingBiro : terlibat (biro_id)
+
+@enduml

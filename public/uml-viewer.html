@@ -1,0 +1,731 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SIM-RAPAT KEK RI | Diagram UML &amp; ERD Resmi</title>
+  <!-- Google Fonts: Inter -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Mermaid.js CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+  <script>
+    mermaid.initialize({
+      startOnLoad: true,
+      theme: 'default',
+      themeVariables: {
+        primaryColor: '#E8F5F7',
+        primaryTextColor: '#215865',
+        primaryBorderColor: '#31889C',
+        lineColor: '#31889C',
+        secondaryColor: '#FFF8CC',
+        tertiaryColor: '#FFFFFF',
+        fontFamily: 'Inter, system-ui, sans-serif'
+      }
+    });
+  </script>
+  <style>
+    body { font-family: 'Inter', sans-serif; }
+    .mono { font-family: 'JetBrains Mono', monospace; }
+  </style>
+</head>
+<body class="bg-slate-50 text-slate-800 antialiased min-h-screen flex flex-col">
+
+  <!-- Header -->
+  <header class="bg-white border-b border-slate-200 sticky top-0 z-50 shadow-2xs">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 py-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <div class="flex items-center gap-3">
+        <div class="w-11 h-11 rounded-xl bg-gradient-to-br from-[#31889C] to-[#215865] p-2 flex items-center justify-center shadow-sm">
+          <img src="/lambang-kek.png" alt="Logo KEK" class="w-full h-full object-contain brightness-0 invert" onerror="this.src='/logo-kek.png'" />
+        </div>
+        <div>
+          <div class="text-[11px] font-bold tracking-wider text-[#31889C] uppercase">Dewan Nasional Kawasan Ekonomi Khusus RI</div>
+          <h1 class="text-[18px] font-bold text-slate-900 leading-tight">Spesifikasi Struktur ID, UML Class Diagram &amp; ERD</h1>
+        </div>
+      </div>
+      <div class="flex items-center gap-2">
+        <a href="/" class="px-3.5 py-1.5 rounded-lg text-xs font-semibold bg-slate-100 hover:bg-slate-200 text-slate-700 transition-colors">
+          &larr; Kembali ke Dashboard
+        </a>
+        <button onclick="window.print()" class="px-3.5 py-1.5 rounded-lg text-xs font-semibold bg-[#31889C] hover:bg-[#266F80] text-white shadow-xs transition-colors">
+          Cetak / PDF
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Navigation Tabs -->
+  <div class="bg-white border-b border-slate-200">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6">
+      <nav class="flex space-x-6 overflow-x-auto" aria-label="Tabs">
+        <button onclick="switchTab('kamus-data')" id="tab-kamus-data" class="tab-btn py-3.5 px-1 border-b-2 border-[#31889C] font-bold text-sm text-[#31889C] whitespace-nowrap">
+          1. Kamus Data ID (PK &amp; FK)
+        </button>
+        <button onclick="switchTab('class-diagram')" id="tab-class-diagram" class="tab-btn py-3.5 px-1 border-b-2 border-transparent font-medium text-sm text-slate-500 hover:text-slate-700 whitespace-nowrap">
+          2. UML Class Diagram
+        </button>
+        <button onclick="switchTab('erd')" id="tab-erd" class="tab-btn py-3.5 px-1 border-b-2 border-transparent font-medium text-sm text-slate-500 hover:text-slate-700 whitespace-nowrap">
+          3. Entity Relationship Diagram (ERD)
+        </button>
+        <button onclick="switchTab('plantuml')" id="tab-plantuml" class="tab-btn py-3.5 px-1 border-b-2 border-transparent font-medium text-sm text-slate-500 hover:text-slate-700 whitespace-nowrap">
+          4. PlantUML Source (.puml)
+        </button>
+      </nav>
+    </div>
+  </div>
+
+  <!-- Main Container -->
+  <main class="max-w-7xl mx-auto px-4 sm:px-6 py-8 flex-1 w-full">
+
+    <!-- TAB 1: KAMUS DATA ID -->
+    <div id="content-kamus-data" class="tab-content space-y-6">
+      <div class="bg-white rounded-2xl border border-slate-200 shadow-xs p-6">
+        <div class="flex items-center justify-between mb-4">
+          <div>
+            <h2 class="text-[17px] font-bold text-slate-900">Standarisasi Nama ID Setiap Tabel (Primary Key &amp; Foreign Key)</h2>
+            <p class="text-xs text-slate-500 mt-1">
+              Daftar penamaan ID deskriptif terstandar untuk mempermudah perancangan UML, relasi foreign key, dan analisis database.
+            </p>
+          </div>
+          <span class="px-3 py-1 bg-[#E8F5F7] border border-[#BCE3EB] text-[#215865] rounded-full text-xs font-bold">
+            10 Entitas Lengkap
+          </span>
+        </div>
+
+        <div class="overflow-x-auto">
+          <table class="w-full text-left text-xs border-collapse">
+            <thead>
+              <tr class="bg-slate-50 border-b border-slate-200 text-slate-700 font-bold">
+                <th class="py-3 px-4">Nama Entitas</th>
+                <th class="py-3 px-4">Primary Key (PK)</th>
+                <th class="py-3 px-4">Foreign Key (FK)</th>
+                <th class="py-3 px-4">Kardinalitas &amp; Deskripsi</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-100 font-medium">
+              <tr class="hover:bg-slate-50/50">
+                <td class="py-3.5 px-4 font-bold text-slate-900">Biro</td>
+                <td class="py-3.5 px-4"><span class="mono bg-[#E8F5F7] text-[#215865] px-2 py-0.5 rounded font-bold border border-[#BCE3EB]">biro_id</span></td>
+                <td class="py-3.5 px-4 text-slate-400">-</td>
+                <td class="py-3.5 px-4 text-slate-600">Master 5 Biro resmi KEK (<span class="mono">code</span>: BPPK, PKKEK, IKK, HSDMO, UK).</td>
+              </tr>
+              <tr class="hover:bg-slate-50/50">
+                <td class="py-3.5 px-4 font-bold text-slate-900">User (Pengguna)</td>
+                <td class="py-3.5 px-4"><span class="mono bg-[#E8F5F7] text-[#215865] px-2 py-0.5 rounded font-bold border border-[#BCE3EB]">user_id</span></td>
+                <td class="py-3.5 px-4"><span class="mono bg-slate-100 text-slate-700 px-2 py-0.5 rounded">biro_id &rarr; biro</span></td>
+                <td class="py-3.5 px-4 text-slate-600">Pengguna sistem, login NextAuth, pimpinan sidang, notulis, dan PIC tindak lanjut.</td>
+              </tr>
+              <tr class="hover:bg-slate-50/50">
+                <td class="py-3.5 px-4 font-bold text-slate-900">Meeting (Rapat)</td>
+                <td class="py-3.5 px-4"><span class="mono bg-[#E8F5F7] text-[#215865] px-2 py-0.5 rounded font-bold border border-[#BCE3EB]">meeting_id</span></td>
+                <td class="py-3.5 px-4 space-y-1">
+                  <div><span class="mono bg-slate-100 text-slate-700 px-1.5 py-0.5 rounded">primary_biro_id &rarr; biro</span></div>
+                  <div><span class="mono bg-slate-100 text-slate-700 px-1.5 py-0.5 rounded">chairperson_id &rarr; user</span></div>
+                  <div><span class="mono bg-slate-100 text-slate-700 px-1.5 py-0.5 rounded">secretary_id &rarr; user</span></div>
+                  <div><span class="mono bg-slate-100 text-slate-700 px-1.5 py-0.5 rounded">previous_meeting_id &rarr; meeting</span></div>
+                </td>
+                <td class="py-3.5 px-4 text-slate-600">Agenda rapat dinas KEK. Memiliki Unique Key resmi <span class="mono font-bold">meeting_number</span> (contoh: <span class="mono">IKK-015</span>).</td>
+              </tr>
+              <tr class="hover:bg-slate-50/50">
+                <td class="py-3.5 px-4 font-bold text-slate-900">MeetingMinutes (Notulen)</td>
+                <td class="py-3.5 px-4"><span class="mono bg-[#E8F5F7] text-[#215865] px-2 py-0.5 rounded font-bold border border-[#BCE3EB]">minutes_id</span></td>
+                <td class="py-3.5 px-4"><span class="mono bg-slate-100 text-slate-700 px-2 py-0.5 rounded">meeting_id &rarr; meeting (1:1)</span></td>
+                <td class="py-3.5 px-4 text-slate-600">Dokumen notula dinas resmi: agenda, substansi inti, keputusan, dan penandatangan.</td>
+              </tr>
+              <tr class="hover:bg-slate-50/50">
+                <td class="py-3.5 px-4 font-bold text-slate-900">MeetingParticipant</td>
+                <td class="py-3.5 px-4"><span class="mono bg-[#E8F5F7] text-[#215865] px-2 py-0.5 rounded font-bold border border-[#BCE3EB]">participant_id</span></td>
+                <td class="py-3.5 px-4 space-y-1">
+                  <div><span class="mono bg-slate-100 text-slate-700 px-1.5 py-0.5 rounded">meeting_id &rarr; meeting</span></div>
+                  <div><span class="mono bg-slate-100 text-slate-700 px-1.5 py-0.5 rounded">user_id &rarr; user</span></div>
+                </td>
+                <td class="py-3.5 px-4 text-slate-600">Daftar kehadiran peserta rapat dan status absensi (<span class="mono">INVITED</span>, <span class="mono">PRESENT</span>, dll.).</td>
+              </tr>
+              <tr class="hover:bg-slate-50/50">
+                <td class="py-3.5 px-4 font-bold text-slate-900">MeetingBiro</td>
+                <td class="py-3.5 px-4"><span class="mono bg-amber-50 text-amber-800 px-2 py-0.5 rounded font-bold border border-amber-200">(meeting_id, biro_id) PK</span></td>
+                <td class="py-3.5 px-4"><span class="mono bg-slate-100 text-slate-700 px-2 py-0.5 rounded">Composite FK</span></td>
+                <td class="py-3.5 px-4 text-slate-600">Junction Many-to-Many untuk biro-biro yang terlibat dalam agenda rapat lintas instansi.</td>
+              </tr>
+              <tr class="hover:bg-slate-50/50">
+                <td class="py-3.5 px-4 font-bold text-slate-900">ActionItem (Tindak Lanjut)</td>
+                <td class="py-3.5 px-4"><span class="mono bg-[#E8F5F7] text-[#215865] px-2 py-0.5 rounded font-bold border border-[#BCE3EB]">action_item_id</span></td>
+                <td class="py-3.5 px-4 space-y-1">
+                  <div><span class="mono bg-slate-100 text-slate-700 px-1.5 py-0.5 rounded">meeting_id &rarr; meeting</span></div>
+                  <div><span class="mono bg-slate-100 text-slate-700 px-1.5 py-0.5 rounded">pic_biro_id &rarr; biro</span></div>
+                  <div><span class="mono bg-slate-100 text-slate-700 px-1.5 py-0.5 rounded">pic_user_id &rarr; user</span></div>
+                </td>
+                <td class="py-3.5 px-4 text-slate-600">Butir resolusi arahan rapat, tenggat waktu (<span class="mono">dueDate</span>), status pengerjaan, dan prioritas.</td>
+              </tr>
+              <tr class="hover:bg-slate-50/50">
+                <td class="py-3.5 px-4 font-bold text-slate-900">BiroMeetingSequence</td>
+                <td class="py-3.5 px-4"><span class="mono bg-[#E8F5F7] text-[#215865] px-2 py-0.5 rounded font-bold border border-[#BCE3EB]">sequence_id</span></td>
+                <td class="py-3.5 px-4"><span class="mono bg-slate-100 text-slate-700 px-2 py-0.5 rounded">biro_id &rarr; biro (1:1)</span></td>
+                <td class="py-3.5 px-4 text-slate-600">Generator nomor urut resmi penomoran rapat otomatis per biro (atomic sequence counter).</td>
+              </tr>
+              <tr class="hover:bg-slate-50/50">
+                <td class="py-3.5 px-4 font-bold text-slate-900">Account</td>
+                <td class="py-3.5 px-4"><span class="mono bg-[#E8F5F7] text-[#215865] px-2 py-0.5 rounded font-bold border border-[#BCE3EB]">account_id</span></td>
+                <td class="py-3.5 px-4"><span class="mono bg-slate-100 text-slate-700 px-2 py-0.5 rounded">user_id &rarr; user</span></td>
+                <td class="py-3.5 px-4 text-slate-600">Tabel manajemen otentikasi login provider (OAuth / Kredensial lokal).</td>
+              </tr>
+              <tr class="hover:bg-slate-50/50">
+                <td class="py-3.5 px-4 font-bold text-slate-900">Session</td>
+                <td class="py-3.5 px-4"><span class="mono bg-[#E8F5F7] text-[#215865] px-2 py-0.5 rounded font-bold border border-[#BCE3EB]">session_id</span></td>
+                <td class="py-3.5 px-4"><span class="mono bg-slate-100 text-slate-700 px-2 py-0.5 rounded">user_id &rarr; user</span></td>
+                <td class="py-3.5 px-4 text-slate-600">Manajemen sesi login aktif pengguna pada peramban web.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB 2: UML CLASS DIAGRAM -->
+    <div id="content-class-diagram" class="tab-content hidden space-y-6">
+      <div class="bg-white rounded-2xl border border-slate-200 shadow-xs p-6 overflow-hidden">
+        <div class="flex items-center justify-between mb-4">
+          <div>
+            <h2 class="text-[17px] font-bold text-slate-900">UML Class Diagram (Struktur Objek &amp; Relasi)</h2>
+            <p class="text-xs text-slate-500 mt-1">
+              Menampilkan struktur kelas entitas, atribut data, hak akses (<span class="mono">+</span> public), dan relasi asosiasi / komposisi.
+            </p>
+          </div>
+          <button onclick="copyMermaid('mermaid-class')" class="px-3 py-1.5 rounded-lg text-xs font-bold bg-[#F0F9FA] text-[#215865] border border-[#BCE3EB] hover:bg-[#E8F5F7] transition-all">
+            Salin Kode Diagram
+          </button>
+        </div>
+
+        <div class="bg-slate-50 rounded-xl p-4 border border-slate-200 overflow-x-auto flex justify-center">
+          <pre class="mermaid" id="mermaid-class">
+classDiagram
+    direction TB
+
+    class UserRole {
+        <<enumeration>>
+        SUPER_ADMIN
+        ADMIN
+        NOTULIS
+        STAFF
+        VIEWER
+    }
+
+    class MeetingStatus {
+        <<enumeration>>
+        DRAFT
+        REVIEW
+        APPROVED
+        FINAL
+    }
+
+    class AttendanceStatus {
+        <<enumeration>>
+        INVITED
+        PRESENT
+        ABSENT
+        EXCUSED
+    }
+
+    class ActionItemStatus {
+        <<enumeration>>
+        PENDING
+        IN_PROGRESS
+        COMPLETED
+        OVERDUE
+    }
+
+    class ActionItemPriority {
+        <<enumeration>>
+        LOW
+        MEDIUM
+        HIGH
+        URGENT
+    }
+
+    class Biro {
+        +String biro_id PK
+        +String code UK
+        +String name
+        +String shortName
+        +String description
+        +Boolean isActive
+        +DateTime createdAt
+        +DateTime updatedAt
+        +getWorkload()
+        +getStaffList()
+    }
+
+    class User {
+        +String user_id PK
+        +String biro_id FK
+        +String name
+        +String email UK
+        +String password
+        +UserRole role
+        +Boolean isActive
+        +DateTime createdAt
+        +DateTime updatedAt
+        +authenticate()
+        +updateProfile()
+    }
+
+    class Meeting {
+        +String meeting_id PK
+        +String meeting_number UK
+        +String title
+        +String primary_biro_id FK
+        +DateTime date
+        +String startTime
+        +String endTime
+        +String location
+        +String chairperson_id FK
+        +String secretary_id FK
+        +String previous_meeting_id FK
+        +MeetingStatus status
+        +DateTime createdAt
+        +DateTime updatedAt
+        +createMeeting()
+        +updateStatus()
+        +exportPdf()
+    }
+
+    class MeetingMinutes {
+        +String minutes_id PK
+        +String meeting_id FK
+        +Json agenda
+        +Json discussion
+        +Json decisions
+        +Json conclusion
+        +DateTime createdAt
+        +DateTime updatedAt
+        +saveMinutes()
+        +generatePdf()
+    }
+
+    class MeetingParticipant {
+        +String participant_id PK
+        +String meeting_id FK
+        +String user_id FK
+        +AttendanceStatus attendanceStatus
+        +DateTime createdAt
+        +updateAttendance()
+    }
+
+    class MeetingBiro {
+        +String meeting_id PK_FK
+        +String biro_id PK_FK
+    }
+
+    class ActionItem {
+        +String action_item_id PK
+        +String meeting_id FK
+        +String title
+        +String description
+        +String pic_biro_id FK
+        +String pic_user_id FK
+        +DateTime dueDate
+        +ActionItemStatus status
+        +ActionItemPriority priority
+        +DateTime completedAt
+        +DateTime createdAt
+        +DateTime updatedAt
+        +updateStatus()
+        +markCompleted()
+    }
+
+    class BiroMeetingSequence {
+        +String sequence_id PK
+        +String biro_id FK
+        +Int currentNumber
+        +DateTime createdAt
+        +DateTime updatedAt
+        +getNextNumber()
+    }
+
+    Biro "1" --> "0..*" User : biro_id
+    Biro "1" --> "0..*" Meeting : primary_biro_id
+    Biro "1" --> "1" BiroMeetingSequence : biro_id
+    User "1" --> "0..*" Meeting : chairperson_id
+    User "1" --> "0..*" Meeting : secretary_id
+    Meeting "1" --> "0..1" Meeting : previous_meeting_id
+    Meeting "1" *-- "0..1" MeetingMinutes : meeting_id
+    Meeting "1" *-- "0..*" ActionItem : meeting_id
+    Meeting "1" -- "0..*" MeetingBiro : meeting_id
+    Biro "1" -- "0..*" MeetingBiro : biro_id
+    Meeting "1" *-- "0..*" MeetingParticipant : meeting_id
+    User "1" -- "0..*" MeetingParticipant : user_id
+    Biro "1" --> "0..*" ActionItem : pic_biro_id
+    User "0..1" --> "0..*" ActionItem : pic_user_id
+          </pre>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB 3: ERD DIAGRAM -->
+    <div id="content-erd" class="tab-content hidden space-y-6">
+      <div class="bg-white rounded-2xl border border-slate-200 shadow-xs p-6 overflow-hidden">
+        <div class="flex items-center justify-between mb-4">
+          <div>
+            <h2 class="text-[17px] font-bold text-slate-900">Entity Relationship Diagram (ERD - Physical Model)</h2>
+            <p class="text-xs text-slate-500 mt-1">
+              Diagram relasi entitas fisik menggunakan notasi Crow's Foot lengkap dengan Primary Key (PK) dan Foreign Key (FK).
+            </p>
+          </div>
+          <button onclick="copyMermaid('mermaid-erd')" class="px-3 py-1.5 rounded-lg text-xs font-bold bg-[#F0F9FA] text-[#215865] border border-[#BCE3EB] hover:bg-[#E8F5F7] transition-all">
+            Salin Kode ERD
+          </button>
+        </div>
+
+        <div class="bg-slate-50 rounded-xl p-4 border border-slate-200 overflow-x-auto flex justify-center">
+          <pre class="mermaid" id="mermaid-erd">
+erDiagram
+    BIRO ||--o{ USER : "memiliki pegawai"
+    BIRO ||--o{ MEETING : "menyelenggarakan"
+    BIRO ||--|| BIRO_MEETING_SEQUENCE : "nomor urut surat"
+    BIRO ||--o{ ACTION_ITEM : "penanggung jawab biro"
+    BIRO ||--o{ MEETING_BIRO : "terlibat sidang"
+
+    USER ||--o{ MEETING_PARTICIPANT : "kehadiran sidang"
+    USER ||--o{ ACTION_ITEM : "PIC personal"
+    USER ||--o{ MEETING : "pimpinan atau notulis"
+
+    MEETING ||--|| MEETING_MINUTES : "memiliki 1 dokumen naskah"
+    MEETING ||--o{ ACTION_ITEM : "menghasilkan resolusi"
+    MEETING ||--o{ MEETING_PARTICIPANT : "daftar peserta"
+    MEETING ||--o{ MEETING_BIRO : "biro terlibat"
+    MEETING ||--o| MEETING : "rujukan rapat sebelumnya"
+
+    BIRO {
+        string biro_id PK "UUID"
+        string code UK "Kode Biro (IKK/BPPK/dll)"
+        string name "Nama Lengkap Biro"
+        string shortName "Nama Singkat Biro"
+        string description "Deskripsi Tugas"
+        boolean isActive "Status Aktif"
+        datetime createdAt "Waktu Dibuat"
+        datetime updatedAt "Waktu Diubah"
+    }
+
+    USER {
+        string user_id PK "UUID"
+        string biro_id FK "Relasi ke BIRO"
+        string name "Nama Pengguna"
+        string email UK "Email Login"
+        string password "Password Terenkripsi"
+        string role "UserRole (SUPER_ADMIN/ADMIN/dll)"
+        boolean isActive "Status Akun Aktif"
+        datetime createdAt "Waktu Dibuat"
+        datetime updatedAt "Waktu Diubah"
+    }
+
+    MEETING {
+        string meeting_id PK "UUID"
+        string meeting_number UK "Nomor Surat Rapat (IKK-015)"
+        string primary_biro_id FK "Biro Penyelenggara"
+        string chairperson_id FK "Pimpinan Sidang (User)"
+        string secretary_id FK "Notulis Sidang (User)"
+        string previous_meeting_id FK "Rujukan Rapat Sebelumnya"
+        string title "Judul Rapat"
+        datetime date "Tanggal Pelaksanaan"
+        string startTime "Waktu Mulai"
+        string endTime "Waktu Selesai"
+        string location "Ruang Rapat / Tautan Virtual"
+        string status "Status (DRAFT/REVIEW/APPROVED/FINAL)"
+        datetime createdAt "Waktu Dibuat"
+        datetime updatedAt "Waktu Diubah"
+    }
+
+    MEETING_MINUTES {
+        string minutes_id PK "UUID"
+        string meeting_id FK "Relasi Unik ke MEETING"
+        json agenda "Agenda Pembahasan"
+        json discussion "Substansi Pembahasan"
+        json decisions "Keputusan / Hasil Sidang"
+        json conclusion "Pengesahan, Pimpinan, dan TTD"
+        datetime createdAt "Waktu Dibuat"
+        datetime updatedAt "Waktu Diubah"
+    }
+
+    ACTION_ITEM {
+        string action_item_id PK "UUID"
+        string meeting_id FK "Relasi ke MEETING"
+        string pic_biro_id FK "Biro Penanggung Jawab"
+        string pic_user_id FK "Pegawai PIC Spesifik"
+        string title "Judul Tindak Lanjut"
+        string description "Deskripsi Tindak Lanjut"
+        datetime dueDate "Tenggat Waktu Selesai"
+        string status "Status (PENDING/IN_PROGRESS/dll)"
+        string priority "Prioritas (LOW/MEDIUM/HIGH/URGENT)"
+        datetime completedAt "Waktu Selesai"
+        datetime createdAt "Waktu Dibuat"
+        datetime updatedAt "Waktu Diubah"
+    }
+
+    MEETING_PARTICIPANT {
+        string participant_id PK "UUID"
+        string meeting_id FK "Relasi ke MEETING"
+        string user_id FK "Relasi ke USER"
+        string attendanceStatus "Status Kehadiran"
+        datetime createdAt "Waktu Dicatat"
+    }
+
+    MEETING_BIRO {
+        string meeting_id PK_FK "Relasi ke MEETING"
+        string biro_id PK_FK "Relasi ke BIRO"
+    }
+
+    BIRO_MEETING_SEQUENCE {
+        string sequence_id PK "UUID"
+        string biro_id FK "Relasi Unik ke BIRO"
+        int currentNumber "Nomor Urut Terakhir"
+        datetime createdAt "Waktu Dibuat"
+        datetime updatedAt "Waktu Diubah"
+    }
+          </pre>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB 4: PLANTUML RAW -->
+    <div id="content-plantuml" class="tab-content hidden space-y-6">
+      <div class="bg-white rounded-2xl border border-slate-200 shadow-xs p-6">
+        <div class="flex items-center justify-between mb-4">
+          <div>
+            <h2 class="text-[17px] font-bold text-slate-900">Kode PlantUML Resmi (.puml)</h2>
+            <p class="text-xs text-slate-500 mt-1">
+              Bisa langsung Anda salin dan tempel ke <strong>PlantText, Visual Paradigm, StarUML</strong>, atau ekstensi PlantUML di VS Code.
+            </p>
+          </div>
+          <button onclick="copyPlantUml()" id="btn-copy-plant" class="px-3.5 py-1.5 rounded-lg text-xs font-bold bg-[#31889C] text-white hover:bg-[#266F80] transition-all shadow-xs">
+            Salin Kode PlantUML
+          </button>
+        </div>
+
+        <pre id="plantuml-code" class="mono bg-slate-900 text-slate-200 p-5 rounded-xl text-xs overflow-x-auto leading-relaxed border border-slate-800">@startuml SIM_RAPAT_KEK_UML
+!theme plain
+skinparam classAttributeIconSize 0
+skinparam monochrome false
+skinparam linetype ortho
+skinparam roundcorner 10
+skinparam class {
+    BackgroundColor #FFFFFF
+    ArrowColor #31889C
+    BorderColor #215865
+}
+
+title SISTEM INFORMASI MANAJEMEN RAPAT &amp; TINDAK LANJUT (SIM-RAPAT KEK RI)\nUML Class Diagram
+
+enum UserRole {
+  SUPER_ADMIN
+  ADMIN
+  NOTULIS
+  STAFF
+  VIEWER
+}
+
+enum MeetingStatus {
+  DRAFT
+  REVIEW
+  APPROVED
+  FINAL
+}
+
+enum AttendanceStatus {
+  INVITED
+  PRESENT
+  ABSENT
+  EXCUSED
+}
+
+enum ActionItemStatus {
+  PENDING
+  IN_PROGRESS
+  COMPLETED
+  OVERDUE
+}
+
+enum ActionItemPriority {
+  LOW
+  MEDIUM
+  HIGH
+  URGENT
+}
+
+class Biro {
+  + String biro_id <<PK>>
+  + String code <<UK>>
+  + String name
+  + String shortName
+  + String description
+  + Boolean isActive
+  + DateTime createdAt
+  + DateTime updatedAt
+  --
+  + getWorkload()
+  + getStaffList()
+}
+
+class User {
+  + String user_id <<PK>>
+  + String biro_id <<FK>>
+  + String name
+  + String email <<UK>>
+  + String password
+  + UserRole role
+  + Boolean isActive
+  + DateTime createdAt
+  + DateTime updatedAt
+  --
+  + authenticate()
+  + updateProfile()
+}
+
+class Meeting {
+  + String meeting_id <<PK>>
+  + String meeting_number <<UK>>
+  + String title
+  + String primary_biro_id <<FK>>
+  + DateTime date
+  + String startTime
+  + String endTime
+  + String location
+  + String chairperson_id <<FK>>
+  + String secretary_id <<FK>>
+  + String previous_meeting_id <<FK>>
+  + MeetingStatus status
+  + DateTime createdAt
+  + DateTime updatedAt
+  --
+  + createMeeting()
+  + updateStatus()
+  + exportPdf()
+}
+
+class MeetingMinutes {
+  + String minutes_id <<PK>>
+  + String meeting_id <<FK, UK>>
+  + Json agenda
+  + Json discussion
+  + Json decisions
+  + Json conclusion
+  + DateTime createdAt
+  + DateTime updatedAt
+  --
+  + saveMinutes()
+  + generatePdf()
+}
+
+class MeetingParticipant {
+  + String participant_id <<PK>>
+  + String meeting_id <<FK>>
+  + String user_id <<FK>>
+  + AttendanceStatus attendanceStatus
+  + DateTime createdAt
+  --
+  + updateAttendance()
+}
+
+class MeetingBiro {
+  + String meeting_id <<PK, FK>>
+  + String biro_id <<PK, FK>>
+}
+
+class ActionItem {
+  + String action_item_id <<PK>>
+  + String meeting_id <<FK>>
+  + String title
+  + String description
+  + String pic_biro_id <<FK>>
+  + String pic_user_id <<FK>>
+  + DateTime dueDate
+  + ActionItemStatus status
+  + ActionItemPriority priority
+  + DateTime completedAt
+  + DateTime createdAt
+  + DateTime updatedAt
+  --
+  + updateStatus()
+  + markCompleted()
+}
+
+class BiroMeetingSequence {
+  + String sequence_id <<PK>>
+  + String biro_id <<FK, UK>>
+  + Int currentNumber
+  + DateTime createdAt
+  + DateTime updatedAt
+  --
+  + getNextNumber()
+}
+
+' Relations
+Biro "1" *-- "0..*" User : mempekerjakan (biro_id)
+Biro "1" --> "0..*" Meeting : menyelenggarakan (primary_biro_id)
+Biro "1" *-- "1" BiroMeetingSequence : penomoran surat (biro_id)
+User "1" --> "0..*" Meeting : memimpin (chairperson_id)
+User "1" --> "0..*" Meeting : mencatat (secretary_id)
+Meeting "1" --> "0..1" Meeting : rujukan (previous_meeting_id)
+
+Meeting "1" *-- "1" MeetingMinutes : menghasilkan naskah (meeting_id)
+Meeting "1" *-- "0..*" ActionItem : menghasilkan resolusi (meeting_id)
+Biro "1" --> "0..*" ActionItem : penanggung jawab (pic_biro_id)
+User "0..1" --> "0..*" ActionItem : staf pelaksana (pic_user_id)
+
+Meeting "1" *-- "0..*" MeetingParticipant : dihadiri (meeting_id)
+User "1" --> "0..*" MeetingParticipant : sebagai peserta (user_id)
+
+Meeting "1" -- "0..*" MeetingBiro : melibatkan (meeting_id)
+Biro "1" -- "0..*" MeetingBiro : terlibat (biro_id)
+
+@enduml</pre>
+      </div>
+    </div>
+
+  </main>
+
+  <footer class="bg-white border-t border-slate-200 py-4 text-center text-xs text-slate-500">
+    SIM-RAPAT KEK RI &bull; Sistem Informasi Manajemen Rapat &amp; Tindak Lanjut Dewan Nasional Kawasan Ekonomi Khusus RI &copy; 2026
+  </footer>
+
+  <script>
+    function switchTab(tabId) {
+      document.querySelectorAll('.tab-btn').forEach(btn => {
+        btn.classList.remove('border-[#31889C]', 'text-[#31889C]', 'font-bold');
+        btn.classList.add('border-transparent', 'text-slate-500', 'font-medium');
+      });
+      document.querySelectorAll('.tab-content').forEach(content => {
+        content.classList.add('hidden');
+      });
+
+      const activeBtn = document.getElementById(`tab-${tabId}`);
+      const activeContent = document.getElementById(`content-${tabId}`);
+      if (activeBtn) {
+        activeBtn.classList.add('border-[#31889C]', 'text-[#31889C]', 'font-bold');
+        activeBtn.classList.remove('border-transparent', 'text-slate-500', 'font-medium');
+      }
+      if (activeContent) {
+        activeContent.classList.remove('hidden');
+      }
+    }
+
+    function copyMermaid(elementId) {
+      const code = document.getElementById(elementId).innerText;
+      navigator.clipboard.writeText(code).then(() => {
+        alert('Kode diagram Mermaid berhasil disalin ke clipboard!');
+      });
+    }
+
+    function copyPlantUml() {
+      const code = document.getElementById('plantuml-code').innerText;
+      navigator.clipboard.writeText(code).then(() => {
+        const btn = document.getElementById('btn-copy-plant');
+        btn.innerText = 'Tersalin!';
+        setTimeout(() => { btn.innerText = 'Salin Kode PlantUML'; }, 2000);
+      });
+    }
+  </script>
+</body>
+</html>

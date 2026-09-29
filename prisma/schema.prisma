@@ -45,7 +45,7 @@ enum ActionItemPriority {
 }
 
 model Biro {
-  id          String   @id @default(uuid())
+  id          String   @id @default(uuid()) @map("biro_id")
   code        String   @unique
   name        String
   shortName   String
@@ -64,12 +64,12 @@ model Biro {
 }
 
 model User {
-  id        String   @id @default(uuid())
+  id        String   @id @default(uuid()) @map("user_id")
   name      String
   email     String   @unique
   password  String?
   role      UserRole @default(STAFF)
-  biroId    String
+  biroId    String   @map("biro_id")
   isActive  Boolean  @default(true)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -88,20 +88,20 @@ model User {
 }
 
 model Meeting {
-  id            String        @id @default(uuid())
-  meetingNumber String        @unique
-  title         String
-  primaryBiroId String
-  date          DateTime
-  startTime     String
-  endTime       String
-  location      String
-  chairpersonId String?
-  secretaryId   String?
-  previousMeetingId String?
-  status        MeetingStatus @default(DRAFT)
-  createdAt     DateTime      @default(now())
-  updatedAt     DateTime      @updatedAt
+  id                String        @id @default(uuid()) @map("meeting_id")
+  meetingNumber     String        @unique
+  title             String
+  primaryBiroId     String        @map("primary_biro_id")
+  date              DateTime
+  startTime         String
+  endTime           String
+  location          String
+  chairpersonId     String?       @map("chairperson_id")
+  secretaryId       String?       @map("secretary_id")
+  previousMeetingId String?       @map("previous_meeting_id")
+  status            MeetingStatus @default(DRAFT)
+  createdAt         DateTime      @default(now())
+  updatedAt         DateTime      @updatedAt
 
   primaryBiro      Biro                 @relation("PrimaryBiroMeetings", fields: [primaryBiroId], references: [id], onDelete: Restrict)
   chairperson      User?                @relation("ChairpersonMeetings", fields: [chairpersonId], references: [id], onDelete: SetNull)
@@ -122,8 +122,8 @@ model Meeting {
 }
 
 model MeetingBiro {
-  meetingId String
-  biroId    String
+  meetingId String @map("meeting_id")
+  biroId    String @map("biro_id")
 
   meeting Meeting @relation(fields: [meetingId], references: [id], onDelete: Cascade)
   biro    Biro    @relation(fields: [biroId], references: [id], onDelete: Restrict)
@@ -134,9 +134,9 @@ model MeetingBiro {
 }
 
 model MeetingParticipant {
-  id               String           @id @default(uuid())
-  meetingId        String
-  userId           String
+  id               String           @id @default(uuid()) @map("participant_id")
+  meetingId        String           @map("meeting_id")
+  userId           String           @map("user_id")
   attendanceStatus AttendanceStatus @default(INVITED)
   createdAt        DateTime         @default(now())
 
@@ -149,8 +149,8 @@ model MeetingParticipant {
 }
 
 model BiroMeetingSequence {
-  id            String   @id @default(uuid())
-  biroId        String   @unique
+  id            String   @id @default(uuid()) @map("sequence_id")
+  biroId        String   @unique @map("biro_id")
   currentNumber Int      @default(0)
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
@@ -161,8 +161,8 @@ model BiroMeetingSequence {
 }
 
 model MeetingMinutes {
-  id         String   @id @default(uuid())
-  meetingId  String   @unique
+  id         String   @id @default(uuid()) @map("minutes_id")
+  meetingId  String   @unique @map("meeting_id")
   agenda     Json?
   discussion Json?
   decisions  Json?
@@ -176,12 +176,12 @@ model MeetingMinutes {
 }
 
 model ActionItem {
-  id          String             @id @default(uuid())
-  meetingId   String
+  id          String             @id @default(uuid()) @map("action_item_id")
+  meetingId   String             @map("meeting_id")
   title       String
   description String?
-  picBiroId   String
-  picUserId   String?
+  picBiroId   String             @map("pic_biro_id")
+  picUserId   String?            @map("pic_user_id")
   dueDate     DateTime
   status      ActionItemStatus   @default(PENDING)
   priority    ActionItemPriority @default(MEDIUM)
@@ -201,8 +201,8 @@ model ActionItem {
 }
 
 model Account {
-  id                String  @id @default(uuid())
-  userId            String
+  id                String  @id @default(uuid()) @map("account_id")
+  userId            String  @map("user_id")
   type              String
   provider          String
   providerAccountId String
@@ -224,9 +224,9 @@ model Account {
 }
 
 model Session {
-  id           String   @id @default(uuid())
+  id           String   @id @default(uuid()) @map("session_id")
   sessionToken String   @unique
-  userId       String
+  userId       String   @map("user_id")
   expires      DateTime
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
