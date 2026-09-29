@@ -17,14 +17,17 @@ import {
   X,
   Save,
   AlertCircle,
+  Trash2,
+  Loader2,
 } from 'lucide-react';
 import { UserRole } from '@prisma/client';
 import {
   createUserAction,
   updateUserAction,
   toggleUserStatusAction,
+  deleteUserAction,
 } from '@/app/actions/user-actions';
-import { toast } from '@/components/providers/toast-provider';
+import { toast, confirmModal } from '@/components/providers/toast-provider';
 
 interface UserItem {
   id: string;
@@ -64,6 +67,7 @@ export function UserManagementView({
   const [editingUser, setEditingUser] = useState<UserItem | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
+  const [deletingUserId, setDeletingUserId] = useState<string | null>(null);
 
   // Form Fields
   const [formName, setFormName] = useState('');
@@ -177,6 +181,41 @@ export function UserManagementView({
       }
     } catch (err: any) {
       toast.error(err?.message || 'Terjadi kesalahan sistem.');
+    }
+  };
+
+  // Delete user permanently
+  const handleDeleteUser = async (user: UserItem) => {
+    if (user.id === currentUserId) {
+      toast.warning('Anda tidak dapat menghapus akun yang sedang aktif digunakan.');
+      return;
+    }
+
+    const confirmed = await confirmModal({
+      title: 'Hapus Akun Pengguna?',
+      message: `Apakah Anda yakin ingin menghapus akun "${user.name}" (${user.email}) secara permanen? Data penugasan dan riwayat notulensi akan tetap tersimpan namun status keterikatan akun akan dilepas. Tindakan ini tidak dapat dibatalkan.`,
+      confirmText: 'Ya, Hapus Pengguna',
+      variant: 'danger',
+    });
+
+    if (!confirmed) {
+      return;
+    }
+
+    try {
+      setDeletingUserId(user.id);
+      const res = await deleteUserAction(user.id);
+      if (res.success) {
+        setUsers((prev) => prev.filter((u) => u.id !== user.id));
+        toast.success(res.message || `Pengguna "${user.name}" berhasil dihapus.`);
+        router.refresh();
+      } else {
+        toast.error(res.error || 'Gagal menghapus pengguna.');
+      }
+    } catch (err: any) {
+      toast.error(err?.message || 'Terjadi kesalahan sistem saat menghapus pengguna.');
+    } finally {
+      setDeletingUserId(null);
     }
   };
 
@@ -413,14 +452,39 @@ export function UserManagementView({
                         <button
                           type="button"
                           onClick={() => handleToggleStatus(user.id)}
-                          className={`p-1.5 rounded-lg transition-colors cursor-pointer ${
+                          disabled={user.id === currentUserId}
+                          className={`p-1.5 rounded-lg transition-colors cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed ${
                             user.isActive
-                              ? 'text-slate-400 hover:text-red-600 hover:bg-red-50'
+                              ? 'text-slate-400 hover:text-amber-600 hover:bg-amber-50'
                               : 'text-slate-400 hover:text-emerald-600 hover:bg-emerald-50'
                           }`}
-                          title={user.isActive ? 'Nonaktifkan Pengguna' : 'Aktifkan Pengguna'}
+                          title={
+                            user.id === currentUserId
+                              ? 'Tidak dapat menonaktifkan akun sendiri'
+                              : user.isActive
+                              ? 'Nonaktifkan Pengguna'
+                              : 'Aktifkan Pengguna'
+                          }
                         >
                           <Power className="w-4 h-4" />
+                        </button>
+
+                        <button
+                          type="button"
+                          onClick={() => handleDeleteUser(user)}
+                          disabled={user.id === currentUserId || deletingUserId === user.id}
+                          className="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed"
+                          title={
+                            user.id === currentUserId
+                              ? 'Tidak dapat menghapus akun Anda sendiri'
+                              : 'Hapus Pengguna'
+                          }
+                        >
+                          {deletingUserId === user.id ? (
+                            <Loader2 className="w-4 h-4 animate-spin text-red-600" />
+                          ) : (
+                            <Trash2 className="w-4 h-4" />
+                          )}
                         </button>
                       </div>
                     </td>

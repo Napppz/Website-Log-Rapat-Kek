@@ -72,12 +72,16 @@ export async function GET(
     const safeMeetingNumber = (meeting.meetingNumber || 'Dokumen').replace(/[^a-zA-Z0-9_-]/g, '_');
     const filename = `Risalah-Rapat-${safeMeetingNumber}.pdf`;
 
-    // 6. Return PDF response as attachment
+    const isInline =
+      request.nextUrl.searchParams.get('inline') === 'true' ||
+      request.nextUrl.searchParams.get('preview') === 'true';
+
+    // 6. Return PDF response as attachment or inline
     return new Response(new Uint8Array(pdfBuffer), {
       status: 200,
       headers: {
         'Content-Type': 'application/pdf',
-        'Content-Disposition': `attachment; filename="${filename}"`,
+        'Content-Disposition': `${isInline ? 'inline' : 'attachment'}; filename="${filename}"`,
         'Content-Length': String(pdfBuffer.length),
         'Cache-Control': 'no-store, no-cache, must-revalidate',
       },

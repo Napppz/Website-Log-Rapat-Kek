@@ -2,6 +2,7 @@
 
 import { prisma } from '@/lib/prisma';
 import { getNextMeetingNumber } from '@/lib/sequence';
+import { getMeetingByIdFromDb } from '@/lib/db-service';
 import { MeetingStatus, AttendanceStatus } from '@prisma/client';
 import { revalidatePath } from 'next/cache';
 import { requirePermission, requireAuth } from '@/lib/auth/authorization';
@@ -576,4 +577,24 @@ export async function getMeetingOptionsAction(excludeMeetingId?: string) {
     return { success: false, data: [] };
   }
 }
+
+/**
+ * Server action to get full meeting details for preview and official documents
+ */
+export async function getMeetingDetailAction(meetingId: string) {
+  try {
+    if (!meetingId) {
+      return { success: false, error: 'ID Rapat tidak valid' };
+    }
+    const meeting = await getMeetingByIdFromDb(meetingId);
+    if (!meeting) {
+      return { success: false, error: 'Rapat tidak ditemukan' };
+    }
+    return { success: true, data: meeting };
+  } catch (error: any) {
+    console.error('Error fetching meeting detail:', error);
+    return { success: false, error: error?.message || 'Gagal memuat data rapat' };
+  }
+}
+
 

@@ -377,167 +377,171 @@ export function LaporanClient() {
       )}
 
       {/* ── 9 KPI CARDS ───────────────────────────────────────────────────── */}
+      {/* ── 9 KPI CARDS ───────────────────────────────────────────────────── */}
       {!loading && summary && (
-        <>
+        <div className="space-y-6 animate-in fade-in duration-300">
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {/* KPI 1: Total Rapat */}
-            <div className="p-4 bg-white rounded-xl border border-slate-200 shadow-sm flex items-start justify-between">
+            <div className="p-4 bg-white rounded-xl border border-slate-200/90 shadow-xs hover:-translate-y-1 hover:shadow-md hover:border-amber-300 transition-all duration-300 flex items-start justify-between">
               <div>
                 <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
                   Total Rapat
                 </span>
-                <div className="text-2xl font-bold text-slate-900 mt-1">
+                <div className="text-2xl font-black text-slate-900 mt-1">
                   {summary.kpi.totalMeetings}
                 </div>
                 <div className="text-[11px] text-slate-400 mt-0.5">
                   Aktivitas rapat dalam periode
                 </div>
               </div>
-              <div className="w-10 h-10 rounded-lg bg-blue-50 border border-blue-200 flex items-center justify-center text-blue-600">
+              <div className="w-10 h-10 rounded-xl bg-blue-50 border border-blue-200 flex items-center justify-center text-blue-600 shadow-2xs">
                 <Calendar className="w-5 h-5" />
               </div>
             </div>
 
             {/* KPI 2: Total Action Items */}
-            <div className="p-4 bg-white rounded-xl border border-slate-200 shadow-sm flex items-start justify-between">
+            <div className="p-4 bg-white rounded-xl border border-slate-200/90 shadow-xs hover:-translate-y-1 hover:shadow-md hover:border-amber-300 transition-all duration-300 flex items-start justify-between">
               <div>
                 <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
                   Total Tindak Lanjut
                 </span>
-                <div className="text-2xl font-bold text-slate-900 mt-1">
+                <div className="text-2xl font-black text-slate-900 mt-1">
                   {summary.kpi.totalActionItems}
                 </div>
                 <div className="text-[11px] text-slate-400 mt-0.5">
                   Terkait rapat periode terpilih
                 </div>
               </div>
-              <div className="w-10 h-10 rounded-lg bg-indigo-50 border border-indigo-200 flex items-center justify-center text-indigo-600">
+              <div className="w-10 h-10 rounded-xl bg-indigo-50 border border-indigo-200 flex items-center justify-center text-indigo-600 shadow-2xs">
                 <ListTodo className="w-5 h-5" />
               </div>
             </div>
 
             {/* KPI 7: Completion Rate */}
-            <div className="p-4 bg-white rounded-xl border border-slate-200 shadow-sm flex items-start justify-between">
+            <div className="p-4 bg-white rounded-xl border border-slate-200/90 shadow-xs hover:-translate-y-1 hover:shadow-md hover:border-emerald-300 transition-all duration-300 flex items-start justify-between ring-1 ring-emerald-500/10">
               <div>
-                <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
-                  Tingkat Penyelesaian
-                </span>
-                <div className="text-2xl font-bold text-emerald-600 mt-1">
+                <div className="flex items-center gap-1.5">
+                  <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
+                    Tingkat Penyelesaian
+                  </span>
+                  <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                </div>
+                <div className="text-2xl font-black text-emerald-600 mt-1">
                   {summary.kpi.completionRate}%
                 </div>
                 <div className="text-[11px] text-slate-400 mt-0.5">
                   Persentase tindak lanjut selesai
                 </div>
               </div>
-              <div className="w-10 h-10 rounded-lg bg-emerald-50 border border-emerald-200 flex items-center justify-center text-emerald-600">
+              <div className="w-10 h-10 rounded-xl bg-emerald-50 border border-emerald-200 flex items-center justify-center text-emerald-600 shadow-2xs">
                 <Percent className="w-5 h-5" />
               </div>
             </div>
 
             {/* KPI 3: Tindak Lanjut Selesai */}
-            <div className="p-4 bg-white rounded-xl border border-slate-200 shadow-sm flex items-start justify-between">
+            <div className="p-4 bg-white rounded-xl border border-slate-200/90 shadow-xs hover:-translate-y-1 hover:shadow-md hover:border-emerald-300 transition-all duration-300 flex items-start justify-between">
               <div>
                 <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
                   Tindak Lanjut Selesai
                 </span>
-                <div className="text-2xl font-bold text-emerald-600 mt-1">
+                <div className="text-2xl font-black text-emerald-600 mt-1">
                   {summary.kpi.completedActionItems}
                 </div>
                 <div className="text-[11px] text-slate-400 mt-0.5">
                   Status COMPLETED
                 </div>
               </div>
-              <div className="w-10 h-10 rounded-lg bg-emerald-50 border border-emerald-200 flex items-center justify-center text-emerald-600">
+              <div className="w-10 h-10 rounded-xl bg-emerald-50 border border-emerald-200 flex items-center justify-center text-emerald-600 shadow-2xs">
                 <CheckCircle2 className="w-5 h-5" />
               </div>
             </div>
 
             {/* KPI 4: Tindak Lanjut Berjalan */}
-            <div className="p-4 bg-white rounded-xl border border-slate-200 shadow-sm flex items-start justify-between">
+            <div className="p-4 bg-white rounded-xl border border-slate-200/90 shadow-xs hover:-translate-y-1 hover:shadow-md hover:border-amber-300 transition-all duration-300 flex items-start justify-between">
               <div>
                 <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
                   Tindak Lanjut Berjalan
                 </span>
-                <div className="text-2xl font-bold text-amber-600 mt-1">
+                <div className="text-2xl font-black text-amber-600 mt-1">
                   {summary.kpi.inProgressActionItems}
                 </div>
                 <div className="text-[11px] text-slate-400 mt-0.5">
                   Status IN_PROGRESS
                 </div>
               </div>
-              <div className="w-10 h-10 rounded-lg bg-amber-50 border border-amber-200 flex items-center justify-center text-amber-600">
+              <div className="w-10 h-10 rounded-xl bg-amber-50 border border-amber-200 flex items-center justify-center text-amber-600 shadow-2xs">
                 <Clock className="w-5 h-5" />
               </div>
             </div>
 
             {/* KPI 5: Tindak Lanjut Menunggu */}
-            <div className="p-4 bg-white rounded-xl border border-slate-200 shadow-sm flex items-start justify-between">
+            <div className="p-4 bg-white rounded-xl border border-slate-200/90 shadow-xs hover:-translate-y-1 hover:shadow-md hover:border-slate-300 transition-all duration-300 flex items-start justify-between">
               <div>
                 <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
                   Tindak Lanjut Menunggu
                 </span>
-                <div className="text-2xl font-bold text-slate-700 mt-1">
+                <div className="text-2xl font-black text-slate-700 mt-1">
                   {summary.kpi.pendingActionItems}
                 </div>
                 <div className="text-[11px] text-slate-400 mt-0.5">
                   Status PENDING
                 </div>
               </div>
-              <div className="w-10 h-10 rounded-lg bg-slate-50 border border-slate-200 flex items-center justify-center text-slate-600">
+              <div className="w-10 h-10 rounded-xl bg-slate-50 border border-slate-200 flex items-center justify-center text-slate-600 shadow-2xs">
                 <Hourglass className="w-5 h-5" />
               </div>
             </div>
 
             {/* KPI 6: Tindak Lanjut Terlambat */}
-            <div className="p-4 bg-white rounded-xl border border-slate-200 shadow-sm flex items-start justify-between">
+            <div className="p-4 bg-white rounded-xl border border-slate-200/90 shadow-xs hover:-translate-y-1 hover:shadow-md hover:border-red-300 transition-all duration-300 flex items-start justify-between ring-1 ring-red-500/10">
               <div>
                 <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
                   Tindak Lanjut Terlambat
                 </span>
-                <div className="text-2xl font-bold text-red-600 mt-1">
+                <div className="text-2xl font-black text-red-600 mt-1">
                   {summary.kpi.overdueActionItems}
                 </div>
                 <div className="text-[11px] text-slate-400 mt-0.5">
                   Status OVERDUE (lewat deadline)
                 </div>
               </div>
-              <div className="w-10 h-10 rounded-lg bg-red-50 border border-red-200 flex items-center justify-center text-red-600">
+              <div className="w-10 h-10 rounded-xl bg-red-50 border border-red-200 flex items-center justify-center text-red-600 shadow-2xs">
                 <AlertTriangle className="w-5 h-5" />
               </div>
             </div>
 
             {/* KPI 8: Rapat dengan Notulen */}
-            <div className="p-4 bg-white rounded-xl border border-slate-200 shadow-sm flex items-start justify-between">
+            <div className="p-4 bg-white rounded-xl border border-slate-200/90 shadow-xs hover:-translate-y-1 hover:shadow-md hover:border-sky-300 transition-all duration-300 flex items-start justify-between">
               <div>
                 <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
                   Rapat Ada Notulen
                 </span>
-                <div className="text-2xl font-bold text-sky-700 mt-1">
+                <div className="text-2xl font-black text-sky-700 mt-1">
                   {summary.kpi.meetingsWithMinutes}
                 </div>
                 <div className="text-[11px] text-slate-400 mt-0.5">
                   {summary.kpi.minutesCompletionRate}% dari total rapat
                 </div>
               </div>
-              <div className="w-10 h-10 rounded-lg bg-sky-50 border border-sky-200 flex items-center justify-center text-sky-600">
+              <div className="w-10 h-10 rounded-xl bg-sky-50 border border-sky-200 flex items-center justify-center text-sky-600 shadow-2xs">
                 <FileText className="w-5 h-5" />
               </div>
             </div>
 
             {/* KPI 9: Rapat tanpa Notulen */}
-            <div className="p-4 bg-white rounded-xl border border-slate-200 shadow-sm flex items-start justify-between">
+            <div className="p-4 bg-white rounded-xl border border-slate-200/90 shadow-xs hover:-translate-y-1 hover:shadow-md hover:border-purple-300 transition-all duration-300 flex items-start justify-between">
               <div>
                 <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
                   Rapat Tanpa Notulen
                 </span>
-                <div className="text-2xl font-bold text-purple-700 mt-1">
+                <div className="text-2xl font-black text-purple-700 mt-1">
                   {summary.kpi.meetingsWithoutMinutes}
                 </div>
                 <div className="text-[11px] text-slate-400 mt-0.5">
                   Belum disusun notulis
                 </div>
               </div>
-              <div className="w-10 h-10 rounded-lg bg-purple-50 border border-purple-200 flex items-center justify-center text-purple-600">
+              <div className="w-10 h-10 rounded-xl bg-purple-50 border border-purple-200 flex items-center justify-center text-purple-600 shadow-2xs">
                 <FileX className="w-5 h-5" />
               </div>
             </div>
@@ -546,13 +550,13 @@ export function LaporanClient() {
           {/* ── CHARTS SECTION ──────────────────────────────────────────────── */}
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
             {/* Trend Chart (7 cols) */}
-            <div className="lg:col-span-7 bg-white p-6 rounded-xl border border-slate-200 shadow-sm flex flex-col justify-between">
+            <div className="lg:col-span-7 bg-white p-6 rounded-2xl border border-slate-200/90 shadow-xs hover:shadow-md transition-all duration-300 flex flex-col justify-between">
               <div>
                 <div className="flex items-center justify-between mb-1">
                   <h2 className="font-bold text-slate-900 text-base">
                     Tren Aktivitas Rapat &amp; Tindak Lanjut
                   </h2>
-                  <span className="text-xs font-semibold text-amber-700 bg-amber-50 px-2 py-0.5 rounded border border-amber-200">
+                  <span className="text-xs font-semibold text-amber-700 bg-amber-50 px-2.5 py-0.5 rounded-full border border-amber-200">
                     {summary.period.period}
                   </span>
                 </div>
@@ -564,13 +568,13 @@ export function LaporanClient() {
             </div>
 
             {/* Donut Chart (5 cols) */}
-            <div className="lg:col-span-5 bg-white p-6 rounded-xl border border-slate-200 shadow-sm flex flex-col justify-between">
+            <div className="lg:col-span-5 bg-white p-6 rounded-2xl border border-slate-200/90 shadow-xs hover:shadow-md transition-all duration-300 flex flex-col justify-between">
               <div>
                 <div className="flex items-center justify-between mb-1">
                   <h2 className="font-bold text-slate-900 text-base">
                     Distribusi Status Tindak Lanjut
                   </h2>
-                  <span className="text-xs text-slate-400">
+                  <span className="text-xs font-semibold text-slate-500 bg-slate-100 px-2 py-0.5 rounded-md">
                     {summary.kpi.totalActionItems} Butir
                   </span>
                 </div>
@@ -583,7 +587,7 @@ export function LaporanClient() {
           </div>
 
           {/* ── REKAPITULASI PER BIRO (5 BIRO RESMI) ─────────────────────────── */}
-          <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+          <div className="bg-white rounded-2xl border border-slate-200/90 shadow-xs overflow-hidden">
             <div className="p-5 border-b border-slate-100 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
               <div>
                 <h2 className="font-bold text-slate-900 text-base">
@@ -593,34 +597,34 @@ export function LaporanClient() {
                   Statistik 5 Biro resmi Sekretariat Dewan Nasional KEK RI.
                 </p>
               </div>
-              <span className="text-xs font-medium text-slate-400">
+              <span className="text-xs font-semibold text-amber-800 bg-amber-50 px-2.5 py-1 rounded-full border border-amber-200">
                 5 Biro Resmi
               </span>
             </div>
 
             <div className="overflow-x-auto">
               <table className="w-full text-left text-xs">
-                <thead className="bg-slate-50 border-b border-slate-200 text-slate-600 font-semibold">
+                <thead className="bg-slate-50/80 border-b border-slate-200 text-slate-600 font-semibold">
                   <tr>
-                    <th className="py-3 px-4">Biro</th>
-                    <th className="py-3 px-3 text-center">Rapat</th>
-                    <th className="py-3 px-3 text-center">Tindak Lanjut</th>
-                    <th className="py-3 px-3 text-center">Selesai</th>
-                    <th className="py-3 px-3 text-center">Berjalan</th>
-                    <th className="py-3 px-3 text-center">Menunggu</th>
-                    <th className="py-3 px-3 text-center">Terlambat</th>
-                    <th className="py-3 px-4 text-center">Completion Rate</th>
+                    <th className="py-3.5 px-4">Biro</th>
+                    <th className="py-3.5 px-3 text-center">Rapat</th>
+                    <th className="py-3.5 px-3 text-center">Tindak Lanjut</th>
+                    <th className="py-3.5 px-3 text-center">Selesai</th>
+                    <th className="py-3.5 px-3 text-center">Berjalan</th>
+                    <th className="py-3.5 px-3 text-center">Menunggu</th>
+                    <th className="py-3.5 px-3 text-center">Terlambat</th>
+                    <th className="py-3.5 px-4 text-center">Completion Rate</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100 text-slate-700">
                   {summary.biroSummary.map((b) => (
                     <tr
                       key={b.code}
-                      className="hover:bg-slate-50/70 transition-colors"
+                      className="hover:bg-amber-50/30 transition-colors"
                     >
                       <td className="py-3 px-4 font-semibold text-slate-900">
                         <div className="flex flex-col">
-                          <span>{b.code}</span>
+                          <span className="font-bold text-slate-900">{b.code}</span>
                           <span className="text-[11px] font-normal text-slate-500">
                             {b.shortName}
                           </span>
@@ -643,7 +647,7 @@ export function LaporanClient() {
                       </td>
                       <td className="py-3 px-3 text-center">
                         {b.overdue > 0 ? (
-                          <span className="px-2 py-0.5 rounded bg-red-50 text-red-600 font-bold border border-red-200">
+                          <span className="px-2 py-0.5 rounded-full bg-red-50 text-red-600 font-bold border border-red-200">
                             {b.overdue}
                           </span>
                         ) : (
@@ -651,14 +655,20 @@ export function LaporanClient() {
                         )}
                       </td>
                       <td className="py-3 px-4 text-center font-bold text-slate-900">
-                        <div className="flex items-center justify-center gap-2">
-                          <div className="w-16 h-2 bg-slate-100 rounded-full overflow-hidden">
+                        <div className="flex items-center justify-center gap-2.5">
+                          <div className="w-18 h-2 bg-slate-100 rounded-full overflow-hidden">
                             <div
-                              className="h-full bg-emerald-500 rounded-full"
+                              className={`h-full rounded-full transition-all duration-700 ${
+                                b.completionRate >= 75
+                                  ? 'bg-emerald-500'
+                                  : b.completionRate >= 40
+                                  ? 'bg-amber-500'
+                                  : 'bg-slate-400'
+                              }`}
                               style={{ width: `${b.completionRate}%` }}
                             />
                           </div>
-                          <span>{b.completionRate}%</span>
+                          <span className="min-w-[36px] text-right">{b.completionRate}%</span>
                         </div>
                       </td>
                     </tr>
@@ -778,7 +788,7 @@ export function LaporanClient() {
               </div>
             )}
           </div>
-        </>
+        </div>
       )}
     </div>
   );

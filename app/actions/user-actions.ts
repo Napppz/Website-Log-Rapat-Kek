@@ -239,3 +239,79 @@ export async function toggleUserStatusAction(userId: string) {
     return { success: false, error: error?.message || 'Gagal mengubah status pengguna.' };
   }
 }
+
+/**
+ * Server Action: Delete User (SUPER_ADMIN only)
+ */
+export async function deleteUserAction(userId: string) {
+  try {
+    const currentUser = await requireRole('SUPER_ADMIN');
+
+    if (!userId) {
+      return { success: false, error: 'ID pengguna tidak valid.' };
+    }
+
+    if (currentUser.id === userId) {
+      return { success: false, error: 'Anda tidak dapat menghapus akun Anda sendiri yang sedang aktif.' };
+    }
+
+    const targetUser = await prisma.user.findUnique({
+      where: { id: userId },
+      select: { id: true, name: true, email: true },
+    });
+
+    if (!targetUser) {
+      return { success: false, error: 'Pengguna tidak ditemukan.' };
+    }
+
+    // Safely dissociate references in an atomic transaction before deletion
+    await prisma.$transaction(async (tx) => {
+      // 1. Unlink chairperson in meetings
+      await tx.meeting.updateMany({
+        where: { chairpersonId: userId },
+        data: { chairpersonId: null },
+      });
+
+      // 2. Unlink secretary in meetings
+      await tx.meeting.updateMany({
+        where: { secretaryId: userId },
+        data: { secretaryId: null },
+      });
+
+      // 3. Unlink action item PIC
+      await tx.actionItem.updateMany({
+        where: { picUserId: userId },
+        data: { picUserId: null },
+      });
+
+      // 4. Remove meeting participation records
+      await tx.meetingParticipant.deleteMany({
+        where: { userId },
+      });
+
+      // 5. Remove auth sessions and accounts
+      await tx.session.deleteMany({
+        where: { userId },
+      });
+      await tx.account.deleteMany({
+        where: { userId },
+      });
+
+      // 6. Delete user
+      await tx.user.delete({
+        where: { id: userId },
+      });
+    });
+
+    safeRevalidate(['/pengguna', '/rapat', '/tindak-lanjut', '/laporan']);
+
+    return {
+      success: true,
+      message: `Pengguna "${targetUser.name}" berhasil dihapus secara permanen.`,
+    };
+  } catch (error: any) {
+    console.error('Error deleting user:', error);
+    return { success: false, error: error?.message || 'Gagal menghapus pengguna.' };
+  }
+}
+

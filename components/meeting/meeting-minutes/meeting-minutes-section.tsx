@@ -1,11 +1,12 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useSession } from 'next-auth/react';
 import { MeetingMinutesEditor } from './meeting-minutes-editor';
 import { MeetingMinutesPreview } from './meeting-minutes-preview';
 import { getMeetingMinutesAction } from '@/app/actions/minute-actions';
-import { FileEdit, Plus, Eye, FileText, Loader2, Download } from 'lucide-react';
+import { getMeetingDetailAction } from '@/app/actions/meeting-actions';
+import { FileEdit, Eye, FileText, Loader2, Info } from 'lucide-react';
 import { toast } from '@/components/providers/toast-provider';
 
 interface MeetingMinutesSectionProps {
@@ -17,65 +18,72 @@ interface MeetingMinutesSectionProps {
 
 export function MeetingMinutesSection({
   meetingId,
-  meeting,
+  meeting: propMeeting,
   initialMinutes: propMinutes,
-  defaultMode,
+  defaultMode = 'preview',
 }: MeetingMinutesSectionProps) {
   const { data: session } = useSession();
   const userRole = session?.user?.role || 'VIEWER';
   const canEditMinutes = userRole === 'SUPER_ADMIN' || userRole === 'ADMIN' || userRole === 'NOTULIS';
 
-  const [minutes, setMinutes] = useState<any>(propMinutes || null);
-  const [isLoading, setIsLoading] = useState(!propMinutes);
-  const [mode, setMode] = useState<'empty' | 'edit' | 'preview'>('empty');
+  const [currentMeeting, setCurrentMeeting] = useState<any>(propMeeting || null);
+  const [minutes, setMinutes] = useState<any>(propMinutes || propMeeting?.minutes || null);
+  const [isLoading, setIsLoading] = useState(!propMinutes && !propMeeting);
+  const [mode, setMode] = useState<'edit' | 'preview'>(defaultMode);
   const [isDownloadingPdf, setIsDownloadingPdf] = useState(false);
 
-  // Load minutes on mount if not provided as prop
+  // Check if current meeting object contains full relational records
+  const isMeetingComplete = useCallback((m: any) => {
+    return (
+      m &&
+      Array.isArray(m.participants) &&
+      Array.isArray(m.actionItems) &&
+      (m.chairperson !== undefined || m.secretary !== undefined)
+    );
+  }, []);
+
+  // Load complete meeting details & minutes from database
   useEffect(() => {
     let isMounted = true;
 
-    if (propMinutes) {
-      setMinutes(propMinutes);
-      const hasContent =
-        propMinutes.agenda || propMinutes.discussion || propMinutes.decisions || propMinutes.conclusion;
-      setMode(
-        hasContent
-          ? defaultMode || 'preview'
-          : canEditMinutes
-          ? defaultMode || 'edit'
-          : 'empty'
-      );
-      setIsLoading(false);
-      return;
-    }
-
-    const fetchMinutes = async () => {
+    const loadData = async () => {
       try {
         setIsLoading(true);
-        const res = await getMeetingMinutesAction(meetingId);
-        if (isMounted) {
-          if (res.success && res.data) {
-            setMinutes(res.data);
-            const hasContent =
-              res.data.agenda || res.data.discussion || res.data.decisions || res.data.conclusion;
-            setMode(hasContent ? (defaultMode || 'preview') : 'empty');
-          } else {
-            setMode('empty');
+
+        const needMeetingFetch = !isMeetingComplete(propMeeting);
+        const needMinutesFetch = !propMinutes && !propMeeting?.minutes;
+
+        if (needMeetingFetch) {
+          const detailRes = await getMeetingDetailAction(meetingId);
+          if (isMounted && detailRes.success && detailRes.data) {
+            setCurrentMeeting(detailRes.data);
+            if (detailRes.data.minutes) {
+              setMinutes(detailRes.data.minutes);
+            }
+          }
+        } else {
+          setCurrentMeeting(propMeeting);
+        }
+
+        if (needMinutesFetch && (!propMeeting?.minutes || needMeetingFetch)) {
+          const minRes = await getMeetingMinutesAction(meetingId);
+          if (isMounted && minRes.success && minRes.data) {
+            setMinutes(minRes.data);
           }
         }
       } catch (err) {
-        console.error('Failed to load meeting minutes:', err);
-        if (isMounted) setMode('empty');
+        console.error('Failed to load complete meeting data:', err);
       } finally {
         if (isMounted) setIsLoading(false);
       }
     };
 
-    fetchMinutes();
+    loadData();
+
     return () => {
       isMounted = false;
     };
-  }, [meetingId, propMinutes, defaultMode, canEditMinutes]);
+  }, [meetingId, propMeeting, propMinutes, isMeetingComplete]);
 
   // Handler Download PDF Notula
   const handleDownloadPdf = async () => {
@@ -91,8 +99,8 @@ export function MeetingMinutesSection({
       const url = window.URL.createObjectURL(blob);
       const link = document.createElement('a');
       link.href = url;
-      const code = meeting?.meetingNumber || meetingId;
-      link.download = `Notula-Rapat-${code.replace(/[^a-zA-Z0-9_-]/g, '_')}.pdf`;
+      const code = currentMeeting?.meetingNumber || currentMeeting?.code || meetingId;
+      link.download = `Risalah-Rapat-${code.replace(/[^a-zA-Z0-9_-]/g, '_')}.pdf`;
       document.body.appendChild(link);
       link.click();
       link.remove();
@@ -106,78 +114,57 @@ export function MeetingMinutesSection({
   };
 
   // Loading state
-  if (isLoading) {
+  if (isLoading && !currentMeeting) {
     return (
       <div className="p-12 text-center bg-white rounded-xl border border-amber-200 shadow-xs flex flex-col items-center justify-center">
         <Loader2 className="w-8 h-8 text-amber-600 animate-spin mb-3" />
-        <p className="text-[14px] font-semibold text-slate-800">Memuat Notula Resmi Rapat...</p>
-        <p className="text-[12px] text-slate-500 mt-1">Mengambil arsip agenda dan risalah pembahasan dari database</p>
+        <p className="text-[14px] font-semibold text-slate-800">Menyiapkan Lembar Notula Rapat...</p>
+        <p className="text-[12px] text-slate-500 mt-1">
+          Menyusun naskah dinas resmi, daftar peserta, dan butir pembahasan dari basis data
+        </p>
       </div>
     );
   }
 
-  // MODE 1 — EMPTY STATE
-  if (mode === 'empty') {
-    return (
-      <div className="p-10 text-center bg-white rounded-xl border border-amber-200/90 shadow-xs flex flex-col items-center justify-center space-y-4">
-        <div className="w-16 h-16 rounded-2xl bg-amber-50 border border-amber-200 flex items-center justify-center text-amber-600 shadow-xs">
-          <FileText className="w-8 h-8" />
-        </div>
+  const hasCustomMinutes = Boolean(
+    minutes?.agenda || minutes?.discussion || minutes?.decisions || minutes?.conclusion
+  );
 
-        <div className="max-w-md">
-          <h3 className="text-[18px] font-bold text-slate-900">Belum ada notula untuk rapat ini.</h3>
-          <p className="text-[13px] text-slate-500 mt-1.5 leading-relaxed">
-            Agenda naskah dinas, substansi inti pembahasan, kesimpulan, dan butir tindak lanjut belum dituliskan untuk sesi rapat ini.
-          </p>
-        </div>
-
-        {canEditMinutes && (
-          <button
-            type="button"
-            onClick={() => setMode('edit')}
-            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg bg-amber-600 hover:bg-amber-700 text-white font-semibold text-[13px] transition-all shadow-md shadow-amber-600/20 cursor-pointer"
-          >
-            <Plus className="w-4 h-4" />
-            <span>+ Tulis Notula Dinas</span>
-          </button>
-        )}
-      </div>
-    );
-  }
-
-  // MODE 2 — EDIT STATE
+  // MODE 1 — EDIT STATE (EDITOR FORM)
   if (mode === 'edit' && canEditMinutes) {
     return (
       <div className="space-y-4">
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 p-3.5 bg-amber-50/70 rounded-xl border border-amber-200">
           <div>
-            <h3 className="text-[18px] font-bold text-slate-900 flex items-center gap-2">
-              <FileEdit className="w-5 h-5 text-amber-600" />
+            <h3 className="text-[16px] font-bold text-slate-900 flex items-center gap-2">
+              <FileEdit className="w-4 h-4 text-amber-600" />
               <span>Penyusunan Notula Rapat (Format Tata Naskah Dinas)</span>
             </h3>
-            <p className="text-[12px] text-slate-500">
-              Isikan agenda, substansi inti pembahasan, kesimpulan, dan tindak lanjut sesuai kaidah naskah dinas Dewan KEK.
+            <p className="text-[12px] text-slate-600 mt-0.5">
+              Tuliskan substansi inti pembahasan, kesimpulan, dan tindak lanjut. Hasil ketikan akan langsung tercermin pada lembar naskah dinas dan PDF.
             </p>
           </div>
 
-          <div className="flex items-center gap-2">
-            <button
-              type="button"
-              onClick={() => setMode('preview')}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-amber-300 bg-white hover:bg-amber-50 text-amber-800 font-semibold text-[12px] transition-colors cursor-pointer shadow-xs"
-            >
-              <Eye className="w-3.5 h-3.5" />
-              <span>Lihat Lembar Notula</span>
-            </button>
-          </div>
+          <button
+            type="button"
+            onClick={() => setMode('preview')}
+            className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg border border-amber-300 bg-white hover:bg-amber-50 text-amber-900 font-semibold text-[12px] transition-colors cursor-pointer shadow-xs shrink-0 self-start sm:self-auto"
+          >
+            <Eye className="w-3.5 h-3.5 text-amber-700" />
+            <span>Lihat Pratinjau Naskah</span>
+          </button>
         </div>
 
         <MeetingMinutesEditor
           meetingId={meetingId}
-          meeting={meeting}
+          meeting={currentMeeting}
           initialMinutes={minutes}
           onSaved={(savedData) => {
             setMinutes(savedData);
+            // Optionally update currentMeeting.minutes as well
+            if (currentMeeting) {
+              setCurrentMeeting({ ...currentMeeting, minutes: savedData });
+            }
           }}
           onPreviewClick={() => setMode('preview')}
         />
@@ -185,55 +172,42 @@ export function MeetingMinutesSection({
     );
   }
 
-  // MODE 3 — PREVIEW STATE (READ-ONLY)
+  // MODE 2 — PREVIEW STATE (EXACT OFFICIAL A4 & PDF STREAM)
   return (
-    <div className="space-y-4">
-      {/* Header Preview Bar */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 p-4 bg-white rounded-xl border border-amber-200/90 shadow-xs">
-        <div>
-          <div className="flex items-center gap-2">
-            <span className="w-2.5 h-2.5 rounded-full bg-emerald-500"></span>
-            <h3 className="font-bold text-[16px] text-slate-900">
-              Dokumen Notula Resmi (Mode Pratinjau Naskah)
-            </h3>
+    <div className="space-y-3">
+      {/* Notice if minutes is standard draft vs customized */}
+      {!hasCustomMinutes && (
+        <div className="p-3 bg-amber-50/80 rounded-xl border border-amber-200 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 text-[12px]">
+          <div className="flex items-center gap-2 text-amber-900">
+            <Info className="w-4 h-4 text-amber-600 shrink-0" />
+            <span>
+              <strong>Draf Standar Naskah Dinas:</strong> Belum ada catatan khusus yang disimpan. Lembar pratinjau di bawah menampilkan format lengkap naskah dinas dan peserta persis seperti hasil unduh PDF.
+            </span>
           </div>
-          <p className="text-[12px] text-slate-500 mt-0.5">
-            Tampilan persis sesuai format naskah dinas resmi yang akan diunduh saat ekspor PDF.
-          </p>
-        </div>
-
-        <div className="flex items-center gap-2">
           {canEditMinutes && (
             <button
               type="button"
               onClick={() => setMode('edit')}
-              className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg bg-amber-600 hover:bg-amber-700 text-white font-semibold text-[12px] transition-all shadow-sm cursor-pointer shrink-0"
+              className="inline-flex items-center gap-1 px-3 py-1 rounded-lg bg-amber-600 hover:bg-amber-700 text-white font-semibold text-[11px] shrink-0 transition-colors shadow-xs cursor-pointer self-start sm:self-auto"
             >
-              <FileEdit className="w-3.5 h-3.5" />
-              <span>Edit Notula</span>
+              <FileEdit className="w-3 h-3" />
+              <span>Tulis Notula Khusus</span>
             </button>
           )}
-
-          <button
-            type="button"
-            disabled={isDownloadingPdf}
-            onClick={handleDownloadPdf}
-            className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg bg-slate-900 hover:bg-slate-800 text-white font-semibold text-[12px] transition-all shadow-sm cursor-pointer shrink-0 disabled:opacity-60"
-          >
-            <Download className="w-3.5 h-3.5 text-amber-400" />
-            <span>{isDownloadingPdf ? 'Membuat PDF...' : 'Unduh PDF'}</span>
-          </button>
         </div>
-      </div>
+      )}
 
+      {/* 1:1 Authentic Meeting Minutes Preview Component */}
       <MeetingMinutesPreview
         agenda={minutes?.agenda}
         discussion={minutes?.discussion}
         decisions={minutes?.decisions}
         conclusion={minutes?.conclusion}
         updatedAt={minutes?.updatedAt}
-        meeting={meeting}
+        meeting={currentMeeting}
         onDownloadPdf={handleDownloadPdf}
+        onEditClick={canEditMinutes ? () => setMode('edit') : undefined}
+        canEdit={canEditMinutes}
       />
     </div>
   );

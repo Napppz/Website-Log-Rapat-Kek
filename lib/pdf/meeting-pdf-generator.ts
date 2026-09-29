@@ -2,132 +2,18 @@ import PDFDocument from 'pdfkit';
 import path from 'path';
 import fs from 'fs';
 import { parseRichText, ParsedBlock, TextSegment } from './tiptap-parser';
+import {
+  formatIndonesianDate,
+  normalizeTime,
+  extractPlainText,
+  resolveMeetingSignerInfo,
+  DEFAULT_DISCUSSION_FALLBACK,
+  DEFAULT_CONCLUSION_FALLBACK,
+  DEFAULT_ACTION_ITEM_FALLBACK,
+  type MeetingPdfData,
+} from './pdf-utils';
 
-export interface MeetingPdfData {
-  id: string;
-  meetingNumber: string;
-  title: string;
-  date: Date | string;
-  startTime: string;
-  endTime: string;
-  location: string;
-  status: string;
-  primaryBiro: {
-    code: string;
-    name: string;
-    shortName: string;
-  };
-  chairperson?: {
-    name: string;
-    biro?: {
-      code: string;
-      shortName: string;
-    } | null;
-  } | null;
-  secretary?: {
-    name: string;
-    biro?: {
-      code: string;
-      shortName: string;
-    } | null;
-  } | null;
-  meetingBiros?: Array<{
-    biro: {
-      code: string;
-      name: string;
-      shortName: string;
-    };
-  }>;
-  participants?: Array<{
-    id: string;
-    attendanceStatus: string;
-    user: {
-      name: string;
-      email?: string | null;
-      biro?: {
-        code: string;
-        shortName: string;
-      } | null;
-    };
-  }>;
-  minutes?: {
-    agenda?: any;
-    discussion?: any;
-    decisions?: any;
-    conclusion?: any;
-  } | null;
-  actionItems?: Array<{
-    id: string;
-    title: string;
-    description?: string | null;
-    dueDate: Date | string;
-    status: string;
-    priority: string;
-    completedAt?: Date | string | null;
-    picBiro?: {
-      code: string;
-      shortName: string;
-    } | null;
-    picUser?: {
-      name: string;
-    } | null;
-  }>;
-}
-
-/**
- * Format tanggal Indonesia dengan koma (Contoh: "Jumat, 5 September 2026")
- */
-function formatIndonesianDate(d: Date | string): string {
-  try {
-    const obj = typeof d === 'string' ? new Date(d) : d;
-    const days = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
-    const months = [
-      'Januari',
-      'Februari',
-      'Maret',
-      'April',
-      'Mei',
-      'Juni',
-      'Juli',
-      'Agustus',
-      'September',
-      'Oktober',
-      'November',
-      'Desember',
-    ];
-    const dayName = days[obj.getDay()];
-    const dateNum = obj.getDate();
-    const monthName = months[obj.getMonth()];
-    const year = obj.getFullYear();
-    return `${dayName}, ${dateNum} ${monthName} ${year}`;
-  } catch {
-    return String(d);
-  }
-}
-
-/**
- * Format rentang waktu rapat (Contoh: "08.00 WIB - selesai" atau "13.00 – 15.00 WIB")
- */
-function normalizeTime(start: string, end: string): string {
-  const s = (start || '').replace('WIB', '').replace(':', '.').trim();
-  const e = (end || '').replace('WIB', '').replace(':', '.').trim();
-  if (!s && !e) return '-';
-  if (s && (!e || e.toLowerCase() === 'selesai' || e === '-')) return `${s} WIB - selesai`;
-  if (s && !e) return `${s} WIB`;
-  return `${s} – ${e} WIB`;
-}
-
-/**
- * Ekstraksi teks polos dari Rich Text blok Tiptap
- */
-function extractPlainText(input: any): string {
-  if (!input) return '';
-  const blocks = parseRichText(input);
-  return blocks
-    .map((b) => b.segments.map((s) => s.text).join(''))
-    .filter(Boolean)
-    .join('\n');
-}
+export type { MeetingPdfData };
 
 interface AppFonts {
   tahomaBold: string;

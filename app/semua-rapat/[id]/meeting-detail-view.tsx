@@ -1026,7 +1026,7 @@ export function MeetingDetailView({
             meetingId={meeting.id}
             meeting={meeting}
             initialMinutes={meeting.minutes}
-            defaultMode={meeting.minutes ? 'preview' : 'edit'}
+            defaultMode="preview"
           />
         </div>
       )}
