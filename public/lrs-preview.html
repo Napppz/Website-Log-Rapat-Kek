@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Preview LRS - SIM-RAPAT KEK RI</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    body { font-family: 'Inter', sans-serif; background-color: #f1f5f9; }
+  </style>
+</head>
+<body class="p-6 flex flex-col items-center min-h-screen">
+  
+  <div class="mb-4 flex items-center justify-between w-[1110px]">
+    <div>
+      <h1 class="text-xl font-bold text-slate-900">Logical Record Structure (LRS) - SIM-RAPAT KEK RI</h1>
+      <p class="text-xs text-slate-500">Standar Relasional Akademik (Scribd Reference Style) &bull; Sinkron dengan Database Neon DB</p>
+    </div>
+    <div class="flex gap-2">
+      <a href="/LRS_SIM_RAPAT.drawio" download="LRS_SIM_RAPAT.drawio" class="px-3 py-1.5 bg-[#215865] hover:bg-[#183E47] text-white text-xs font-bold rounded-lg shadow-xs transition-colors flex items-center gap-1.5">
+        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+        Unduh .drawio
+      </a>
+      <a href="/uml-viewer.html" class="px-3 py-1.5 bg-slate-200 hover:bg-slate-300 text-slate-700 text-xs font-bold rounded-lg transition-colors">
+        Buka UML Viewer
+      </a>
+    </div>
+  </div>
+
+  <!-- Main Canvas -->
+  <div class="relative bg-white shadow-xl border border-slate-300 rounded-xl" style="width: 1110px; height: 1020px; min-width: 1110px;">
+    
+    <!-- Title Bar inside canvas -->
+    <div class="absolute left-[80px] top-[20px] w-[940px] h-[44px] bg-[#215865] rounded-lg shadow-sm border border-[#183E47] flex flex-col items-center justify-center text-center text-white">
+      <span class="text-xs font-bold tracking-wide uppercase">LOGICAL RECORD STRUCTURE (LRS)</span>
+      <span class="text-[11px] text-white/90 font-medium">SIM-RAPAT KEK RI (SEKRETARIAT JENDERAL DEWAN NASIONAL KAWASAN EKONOMI KHUSUS)</span>
+    </div>
+
+    <!-- SVG Overlay for Lines & Arrowheads -->
+    <svg class="absolute inset-0 w-full h-full pointer-events-none" style="z-index: 10;">
+      <defs>
+        <marker id="arrow-teal" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+          <path d="M 0 1.5 L 9 5 L 0 8.5 z" fill="#215865" />
+        </marker>
+      </defs>
+
+      <!-- 1. biro -> biro_meeting_sequence (1:1) -->
+      <path d="M 300 135 L 440 135" fill="none" stroke="#215865" stroke-width="1.8" marker-end="url(#arrow-teal)" />
+      <rect x="306" y="118" width="16" height="16" fill="#ffffff" rx="2" />
+      <text x="310" y="130" font-size="11" font-weight="bold" fill="#215865">1</text>
+      <rect x="420" y="118" width="16" height="16" fill="#ffffff" rx="2" />
+      <text x="424" y="130" font-size="11" font-weight="bold" fill="#215865">1</text>
+
+      <!-- 2. biro -> user (1:M via biro_id) through corridor below sequence -->
+      <path d="M 300 245 L 370 245 L 370 235 L 735 235 L 735 245 L 800 245" fill="none" stroke="#215865" stroke-width="1.8" marker-end="url(#arrow-teal)" />
+      <rect x="306" y="235" width="16" height="16" fill="#ffffff" rx="2" />
+      <text x="310" y="247" font-size="11" font-weight="bold" fill="#215865">1</text>
+      <rect x="780" y="235" width="16" height="16" fill="#ffffff" rx="2" />
+      <text x="784" y="247" font-size="11" font-weight="bold" fill="#215865">M</text>
+
+      <!-- 3. biro -> meeting_biro (1:M via biro_id) -->
+      <path d="M 140 295 L 140 400" fill="none" stroke="#215865" stroke-width="1.8" marker-end="url(#arrow-teal)" />
+      <rect x="146" y="305" width="16" height="16" fill="#ffffff" rx="2" />
+      <text x="150" y="317" font-size="11" font-weight="bold" fill="#215865">1</text>
+      <rect x="146" y="380" width="16" height="16" fill="#ffffff" rx="2" />
+      <text x="150" y="392" font-size="11" font-weight="bold" fill="#215865">M</text>
+
+      <!-- 4. meeting -> meeting_biro (1:M via meeting_id) -->
+      <path d="M 440 435 L 300 435" fill="none" stroke="#215865" stroke-width="1.8" marker-end="url(#arrow-teal)" />
+      <rect x="420" y="423" width="16" height="16" fill="#ffffff" rx="2" />
+      <text x="424" y="435" font-size="11" font-weight="bold" fill="#215865">1</text>
+      <rect x="312" y="423" width="16" height="16" fill="#ffffff" rx="2" />
+      <text x="316" y="435" font-size="11" font-weight="bold" fill="#215865">M</text>
+
+      <!-- 5. biro -> meeting (1:M via primary_biro_id) entering TOP at x=500 -->
+      <path d="M 250 295 L 250 330 L 500 330 L 500 360" fill="none" stroke="#215865" stroke-width="1.8" marker-end="url(#arrow-teal)" />
+      <rect x="256" y="305" width="16" height="16" fill="#ffffff" rx="2" />
+      <text x="260" y="317" font-size="11" font-weight="bold" fill="#215865">1</text>
+      <rect x="506" y="340" width="16" height="16" fill="#ffffff" rx="2" />
+      <text x="510" y="352" font-size="11" font-weight="bold" fill="#215865">M</text>
+
+      <!-- 6. user -> meeting (1:M via chairperson/secretary) entering TOP at x=600 -->
+      <path d="M 850 315 L 850 330 L 600 330 L 600 360" fill="none" stroke="#215865" stroke-width="1.8" marker-end="url(#arrow-teal)" />
+      <rect x="856" y="305" width="16" height="16" fill="#ffffff" rx="2" />
+      <text x="860" y="317" font-size="11" font-weight="bold" fill="#215865">1</text>
+      <rect x="606" y="340" width="16" height="16" fill="#ffffff" rx="2" />
+      <text x="610" y="352" font-size="11" font-weight="bold" fill="#215865">M</text>
+
+      <!-- 7. user -> meeting_participant (1:M via user_id) -->
+      <path d="M 910 315 L 910 380" fill="none" stroke="#215865" stroke-width="1.8" marker-end="url(#arrow-teal)" />
+      <rect x="916" y="325" width="16" height="16" fill="#ffffff" rx="2" />
+      <text x="920" y="337" font-size="11" font-weight="bold" fill="#215865">1</text>
+      <rect x="916" y="360" width="16" height="16" fill="#ffffff" rx="2" />
+      <text x="920" y="372" font-size="11" font-weight="bold" fill="#215865">M</text>
+
+      <!-- 8. meeting -> meeting_participant (1:M via meeting_id) -->
+      <path d="M 670 435 L 800 435" fill="none" stroke="#215865" stroke-width="1.8" marker-end="url(#arrow-teal)" />
+      <rect x="680" y="423" width="16" height="16" fill="#ffffff" rx="2" />
+      <text x="684" y="435" font-size="11" font-weight="bold" fill="#215865">1</text>
+      <rect x="780" y="423" width="16" height="16" fill="#ffffff" rx="2" />
+      <text x="784" y="435" font-size="11" font-weight="bold" fill="#215865">M</text>
+
+      <!-- 9. meeting -> meeting (Recursive via previous_meeting_id) right side loop -->
+      <path d="M 670 530 L 735 530 L 735 590 L 670 590" fill="none" stroke="#215865" stroke-width="1.8" marker-end="url(#arrow-teal)" />
+      <rect x="680" y="518" width="16" height="16" fill="#ffffff" rx="2" />
+      <text x="684" y="530" font-size="11" font-weight="bold" fill="#215865">1</text>
+      <rect x="680" y="578" width="16" height="16" fill="#ffffff" rx="2" />
+      <text x="684" y="590" font-size="11" font-weight="bold" fill="#215865">M</text>
+
+      <!-- 10. meeting -> meeting_minutes (1:1 via meeting_id) -->
+      <path d="M 555 675 L 555 720" fill="none" stroke="#215865" stroke-width="1.8" marker-end="url(#arrow-teal)" />
+      <rect x="562" y="682" width="16" height="16" fill="#ffffff" rx="2" />
+      <text x="566" y="694" font-size="11" font-weight="bold" fill="#215865">1</text>
+      <rect x="562" y="702" width="16" height="16" fill="#ffffff" rx="2" />
+      <text x="566" y="714" font-size="11" font-weight="bold" fill="#215865">1</text>
+
+      <!-- 11. meeting -> action_item (1:M via meeting_id) -->
+      <path d="M 470 675 L 470 695 L 260 695 L 260 720" fill="none" stroke="#215865" stroke-width="1.8" marker-end="url(#arrow-teal)" />
+      <rect x="476" y="675" width="16" height="16" fill="#ffffff" rx="2" />
+      <text x="480" y="687" font-size="11" font-weight="bold" fill="#215865">1</text>
+      <rect x="266" y="702" width="16" height="16" fill="#ffffff" rx="2" />
+      <text x="270" y="714" font-size="11" font-weight="bold" fill="#215865">M</text>
+
+      <!-- 12. biro -> action_item (1:M via pic_biro_id) left corridor -->
+      <path d="M 80 180 L 40 180 L 40 810 L 80 810" fill="none" stroke="#215865" stroke-width="1.8" marker-end="url(#arrow-teal)" />
+      <rect x="55" y="168" width="16" height="16" fill="#ffffff" rx="2" />
+      <text x="59" y="180" font-size="11" font-weight="bold" fill="#215865">1</text>
+      <rect x="55" y="798" width="16" height="16" fill="#ffffff" rx="2" />
+      <text x="59" y="810" font-size="11" font-weight="bold" fill="#215865">M</text>
+
+      <!-- 13. user -> action_item (1:M via pic_user_id) internal corridor -->
+      <path d="M 820 315 L 820 350 L 755 350 L 755 680 L 200 680 L 200 720" fill="none" stroke="#215865" stroke-width="1.8" marker-end="url(#arrow-teal)" />
+      <rect x="826" y="325" width="16" height="16" fill="#ffffff" rx="2" />
+      <text x="830" y="337" font-size="11" font-weight="bold" fill="#215865">1</text>
+      <rect x="206" y="702" width="16" height="16" fill="#ffffff" rx="2" />
+      <text x="210" y="714" font-size="11" font-weight="bold" fill="#215865">M</text>
+    </svg>
+
+    <!-- Table 1: biro -->
+    <div class="absolute left-[80px] top-[90px] w-[220px] rounded-lg border border-[#94A3B8] bg-white shadow-xs overflow-hidden" style="z-index: 20;">
+      <div class="bg-[#215865] text-white text-center py-1.5 font-bold text-xs tracking-wider">
+        biro
+      </div>
+      <div class="p-2.5 text-[11px] leading-relaxed text-slate-800 space-y-0.5">
+        <div class="font-bold text-[#B7791F]">biro_id [PK]</div>
+        <div>code</div>
+        <div>name</div>
+        <div>shortName</div>
+        <div>description</div>
+        <div>isActive</div>
+        <div>createdAt</div>
+        <div>updatedAt</div>
+      </div>
+    </div>
+
+    <!-- Table 2: biro_meeting_sequence -->
+    <div class="absolute left-[440px] top-[90px] w-[230px] rounded-lg border border-[#94A3B8] bg-white shadow-xs overflow-hidden" style="z-index: 20;">
+      <div class="bg-[#215865] text-white text-center py-1.5 font-bold text-xs tracking-wider">
+        biro_meeting_sequence
+      </div>
+      <div class="p-2.5 text-[11px] leading-relaxed text-slate-800 space-y-0.5">
+        <div class="font-bold text-[#B7791F]">sequence_id [PK]</div>
+        <div class="font-bold text-[#0284C7]">biro_id [FK]</div>
+        <div>currentNumber</div>
+        <div>createdAt</div>
+        <div>updatedAt</div>
+      </div>
+    </div>
+
+    <!-- Table 3: user -->
+    <div class="absolute left-[800px] top-[90px] w-[220px] rounded-lg border border-[#94A3B8] bg-white shadow-xs overflow-hidden" style="z-index: 20;">
+      <div class="bg-[#215865] text-white text-center py-1.5 font-bold text-xs tracking-wider">
+        user
+      </div>
+      <div class="p-2.5 text-[11px] leading-relaxed text-slate-800 space-y-0.5">
+        <div class="font-bold text-[#B7791F]">user_id [PK]</div>
+        <div class="font-bold text-[#0284C7]">biro_id [FK]</div>
+        <div>name</div>
+        <div>email</div>
+        <div>password</div>
+        <div>role</div>
+        <div>isActive</div>
+        <div>createdAt</div>
+        <div>updatedAt</div>
+      </div>
+    </div>
+
+    <!-- Table 4: meeting_biro -->
+    <div class="absolute left-[80px] top-[400px] w-[220px] rounded-lg border border-[#94A3B8] bg-white shadow-xs overflow-hidden" style="z-index: 20;">
+      <div class="bg-[#215865] text-white text-center py-1.5 font-bold text-xs tracking-wider">
+        meeting_biro
+      </div>
+      <div class="p-2.5 text-[11px] leading-relaxed text-slate-800 space-y-0.5">
+        <div class="font-bold text-[#D97706]">meeting_id [PK, FK]</div>
+        <div class="font-bold text-[#D97706]">biro_id [PK, FK]</div>
+      </div>
+    </div>
+
+    <!-- Table 5: meeting -->
+    <div class="absolute left-[440px] top-[360px] w-[230px] rounded-lg border border-[#94A3B8] bg-white shadow-xs overflow-hidden" style="z-index: 20;">
+      <div class="bg-[#215865] text-white text-center py-1.5 font-bold text-xs tracking-wider">
+        meeting
+      </div>
+      <div class="p-2.5 text-[11px] leading-relaxed text-slate-800 space-y-0.5">
+        <div class="font-bold text-[#B7791F]">meeting_id [PK]</div>
+        <div>meeting_number</div>
+        <div>title</div>
+        <div class="font-bold text-[#0284C7]">primary_biro_id [FK]</div>
+        <div class="font-bold text-[#0284C7]">chairperson_id [FK]</div>
+        <div class="font-bold text-[#0284C7]">secretary_id [FK]</div>
+        <div class="font-bold text-[#0284C7]">previous_meeting_id [FK]</div>
+        <div>date</div>
+        <div>startTime</div>
+        <div>endTime</div>
+        <div>location</div>
+        <div>status</div>
+        <div>createdAt</div>
+        <div>updatedAt</div>
+      </div>
+    </div>
+
+    <!-- Table 6: meeting_participant -->
+    <div class="absolute left-[800px] top-[380px] w-[220px] rounded-lg border border-[#94A3B8] bg-white shadow-xs overflow-hidden" style="z-index: 20;">
+      <div class="bg-[#215865] text-white text-center py-1.5 font-bold text-xs tracking-wider">
+        meeting_participant
+      </div>
+      <div class="p-2.5 text-[11px] leading-relaxed text-slate-800 space-y-0.5">
+        <div class="font-bold text-[#B7791F]">participant_id [PK]</div>
+        <div class="font-bold text-[#0284C7]">meeting_id [FK]</div>
+        <div class="font-bold text-[#0284C7]">user_id [FK]</div>
+        <div>attendanceStatus</div>
+        <div>createdAt</div>
+      </div>
+    </div>
+
+    <!-- Table 7: action_item -->
+    <div class="absolute left-[80px] top-[720px] w-[220px] rounded-lg border border-[#94A3B8] bg-white shadow-xs overflow-hidden" style="z-index: 20;">
+      <div class="bg-[#215865] text-white text-center py-1.5 font-bold text-xs tracking-wider">
+        action_item
+      </div>
+      <div class="p-2.5 text-[11px] leading-relaxed text-slate-800 space-y-0.5">
+        <div class="font-bold text-[#B7791F]">action_item_id [PK]</div>
+        <div class="font-bold text-[#0284C7]">meeting_id [FK]</div>
+        <div class="font-bold text-[#0284C7]">pic_biro_id [FK]</div>
+        <div class="font-bold text-[#0284C7]">pic_user_id [FK]</div>
+        <div>title</div>
+        <div>description</div>
+        <div>dueDate</div>
+        <div>status</div>
+        <div>priority</div>
+        <div>completedAt</div>
+        <div>createdAt</div>
+        <div>updatedAt</div>
+      </div>
+    </div>
+
+    <!-- Table 8: meeting_minutes -->
+    <div class="absolute left-[440px] top-[720px] w-[230px] rounded-lg border border-[#94A3B8] bg-white shadow-xs overflow-hidden" style="z-index: 20;">
+      <div class="bg-[#215865] text-white text-center py-1.5 font-bold text-xs tracking-wider">
+        meeting_minutes
+      </div>
+      <div class="p-2.5 text-[11px] leading-relaxed text-slate-800 space-y-0.5">
+        <div class="font-bold text-[#B7791F]">minutes_id [PK]</div>
+        <div class="font-bold text-[#0284C7]">meeting_id [FK]</div>
+        <div>agenda</div>
+        <div>discussion</div>
+        <div>decisions</div>
+        <div>conclusion</div>
+        <div>createdAt</div>
+        <div>updatedAt</div>
+      </div>
+    </div>
+
+    <!-- Legend: Petunjuk Notasi LRS -->
+    <div class="absolute left-[800px] top-[720px] w-[220px] rounded-lg border border-slate-700 bg-white shadow-xs overflow-hidden" style="z-index: 20;">
+      <div class="bg-slate-800 text-white text-center py-1.5 font-bold text-xs tracking-wider">
+        Petunjuk Notasi LRS
+      </div>
+      <div class="p-2.5 text-[11px] leading-relaxed text-slate-800 space-y-1">
+        <div><span class="font-bold text-[#B7791F]">[PK]</span> : Primary Key (Kuning)</div>
+        <div><span class="font-bold text-[#0284C7]">[FK]</span> : Foreign Key (Biru)</div>
+        <div><span class="font-bold text-[#215865]">1</span> &nbsp;&nbsp;&nbsp;: Relasi Derajat 1</div>
+        <div><span class="font-bold text-[#215865]">M</span> &nbsp;&nbsp;&nbsp;: Relasi Derajat Banyak</div>
+        <div><span class="font-bold text-[#215865]">1 &rarr; M</span> : Satu ke Banyak</div>
+        <div><span class="font-bold text-[#215865]">1 &rarr; 1</span> : Satu ke Satu Unik</div>
+        <div><span class="font-bold text-[#215865]">Panah</span> : Menunjuk Kunci Tamu</div>
+      </div>
+    </div>
+
+  </div>
+</body>
+</html>

@@ -61,6 +61,7 @@ model Biro {
   actionItems     ActionItem[]         @relation("BiroActionItems")
 
   @@index([code])
+  @@map("biro")
 }
 
 model User {
@@ -85,11 +86,12 @@ model User {
   @@index([email])
   @@index([biroId])
   @@index([isActive])
+  @@map("user")
 }
 
 model Meeting {
   id                String        @id @default(uuid()) @map("meeting_id")
-  meetingNumber     String        @unique
+  meetingNumber     String        @unique @map("meeting_number")
   title             String
   primaryBiroId     String        @map("primary_biro_id")
   date              DateTime
@@ -119,6 +121,7 @@ model Meeting {
   @@index([date])
   @@index([status])
   @@index([createdAt])
+  @@map("meeting")
 }
 
 model MeetingBiro {
@@ -131,6 +134,7 @@ model MeetingBiro {
   @@id([meetingId, biroId])
   @@index([meetingId])
   @@index([biroId])
+  @@map("meeting_biro")
 }
 
 model MeetingParticipant {
@@ -146,6 +150,7 @@ model MeetingParticipant {
   @@unique([meetingId, userId])
   @@index([meetingId])
   @@index([userId])
+  @@map("meeting_participant")
 }
 
 model BiroMeetingSequence {
@@ -158,6 +163,7 @@ model BiroMeetingSequence {
   biro Biro @relation(fields: [biroId], references: [id], onDelete: Cascade)
 
   @@index([biroId])
+  @@map("biro_meeting_sequence")
 }
 
 model MeetingMinutes {
@@ -173,6 +179,7 @@ model MeetingMinutes {
   meeting Meeting @relation(fields: [meetingId], references: [id], onDelete: Cascade)
 
   @@index([meetingId])
+  @@map("meeting_minutes")
 }
 
 model ActionItem {
@@ -198,6 +205,7 @@ model ActionItem {
   @@index([picUserId])
   @@index([status])
   @@index([dueDate])
+  @@map("action_item")
 }
 
 model Account {
@@ -221,6 +229,7 @@ model Account {
 
   @@unique([provider, providerAccountId])
   @@index([userId])
+  @@map("account")
 }
 
 model Session {
@@ -234,6 +243,7 @@ model Session {
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
+  @@map("session")
 }
 
 model VerificationToken {
@@ -242,4 +252,5 @@ model VerificationToken {
   expires    DateTime
 
   @@unique([identifier, token])
+  @@map("verification_token")
 }

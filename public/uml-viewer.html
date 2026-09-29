@@ -62,16 +62,19 @@
     <div class="max-w-7xl mx-auto px-4 sm:px-6">
       <nav class="flex space-x-6 overflow-x-auto" aria-label="Tabs">
         <button onclick="switchTab('kamus-data')" id="tab-kamus-data" class="tab-btn py-3.5 px-1 border-b-2 border-[#31889C] font-bold text-sm text-[#31889C] whitespace-nowrap">
-          1. Kamus Data ID (PK &amp; FK)
+          1. Kamus Data ID
         </button>
         <button onclick="switchTab('class-diagram')" id="tab-class-diagram" class="tab-btn py-3.5 px-1 border-b-2 border-transparent font-medium text-sm text-slate-500 hover:text-slate-700 whitespace-nowrap">
           2. UML Class Diagram
         </button>
         <button onclick="switchTab('erd')" id="tab-erd" class="tab-btn py-3.5 px-1 border-b-2 border-transparent font-medium text-sm text-slate-500 hover:text-slate-700 whitespace-nowrap">
-          3. Entity Relationship Diagram (ERD)
+          3. ERD (Draw.io)
+        </button>
+        <button onclick="switchTab('lrs')" id="tab-lrs" class="tab-btn py-3.5 px-1 border-b-2 border-transparent font-medium text-sm text-slate-500 hover:text-slate-700 whitespace-nowrap">
+          4. LRS (Draw.io)
         </button>
         <button onclick="switchTab('plantuml')" id="tab-plantuml" class="tab-btn py-3.5 px-1 border-b-2 border-transparent font-medium text-sm text-slate-500 hover:text-slate-700 whitespace-nowrap">
-          4. PlantUML Source (.puml)
+          5. PlantUML Source (.puml)
         </button>
       </nav>
     </div>
@@ -506,7 +509,401 @@ erDiagram
       </div>
     </div>
 
-    <!-- TAB 4: PLANTUML RAW -->
+    <!-- TAB 4: LRS DIAGRAM -->
+    <div id="content-lrs" class="tab-content hidden space-y-6">
+      <!-- Roadmap Banner -->
+      <div class="bg-gradient-to-r from-[#215865] to-[#31889C] rounded-2xl p-5 text-white shadow-xs">
+        <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <div>
+            <span class="px-2.5 py-0.5 bg-white/20 rounded-full text-[11px] font-bold tracking-wide uppercase">Tahap 2 dari 6 UML &amp; Database</span>
+            <h3 class="text-base font-bold mt-1">Logical Record Structure (LRS) - Siap Buka di Draw.io</h3>
+            <p class="text-xs text-white/80 mt-0.5">Hasil transformasi formal dari ERD setelah normalisasi relasi 1:1, 1:N, dan M:N.</p>
+          </div>
+          <div class="flex items-center gap-2">
+            <a href="/LRS_SIM_RAPAT.drawio" download="LRS_SIM_RAPAT.drawio" class="px-4 py-2 rounded-xl text-xs font-bold bg-white text-[#215865] hover:bg-slate-100 shadow-sm transition-all flex items-center gap-1.5">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+              Unduh File LRS (.drawio)
+            </a>
+          </div>
+        </div>
+      </div>
+
+      
+      <!-- Visual LRS Diagram (Scribd Standard Academic Style) -->
+      <div class="bg-white rounded-2xl border border-slate-200 shadow-xs p-6 overflow-hidden">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-4">
+          <div>
+            <h2 class="text-[17px] font-bold text-slate-900">Diagram Visual LRS (Standar Akademik / Buku Teks)</h2>
+            <p class="text-xs text-slate-500 mt-0.5">
+              Format kartu entitas dengan header resmi KEK (<span class="font-bold text-[#215865]">#215865</span>), penanda <span class="font-bold text-amber-700">[PK]</span> &amp; <span class="font-bold text-sky-700">[FK]</span>, alur garis relasi orthogonal 1 ke M &amp; 1 ke 1 berpanah, serta jalur bebas tabrakan (Zero-Collision).
+            </p>
+          </div>
+          <div class="flex items-center gap-2">
+            <span class="px-2.5 py-1 bg-emerald-50 border border-emerald-200 text-emerald-800 rounded-lg text-xs font-semibold">
+              Format Bersih &amp; Rapi
+            </span>
+          </div>
+        </div>
+
+        <!-- Scrollable Diagram Canvas Container -->
+        <div class="w-full overflow-x-auto bg-slate-100/70 p-4 rounded-xl border border-slate-200 flex justify-center">
+          <div class="relative bg-white shadow-md border border-slate-300 rounded-lg" style="width: 1110px; height: 1020px; min-width: 1110px;">
+            
+            <!-- Title Bar inside canvas -->
+            <div class="absolute left-[80px] top-[20px] w-[940px] h-[42px] bg-[#215865] rounded-lg shadow-sm border border-[#183E47] flex flex-col items-center justify-center text-center text-white">
+              <span class="text-xs font-bold tracking-wide uppercase">LOGICAL RECORD STRUCTURE (LRS)</span>
+              <span class="text-[11px] text-white/90 font-medium">SIM-RAPAT KEK RI (SEKRETARIAT JENDERAL DEWAN NASIONAL KAWASAN EKONOMI KHUSUS)</span>
+            </div>
+
+            <!-- SVG Overlay for Lines & Arrowheads -->
+            <svg class="absolute inset-0 w-full h-full pointer-events-none" style="z-index: 10;">
+              <defs>
+                <marker id="arrow-teal" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+                  <path d="M 0 1.5 L 9 5 L 0 8.5 z" fill="#215865" />
+                </marker>
+              </defs>
+
+              <!-- 1. Biro -> Sequence (1:1) -->
+              <path d="M 300 135 L 440 135" fill="none" stroke="#215865" stroke-width="1.8" marker-end="url(#arrow-teal)" />
+              <rect x="306" y="118" width="16" height="16" fill="#ffffff" rx="2" />
+              <text x="310" y="130" font-size="11" font-weight="bold" fill="#215865">1</text>
+              <rect x="420" y="118" width="16" height="16" fill="#ffffff" rx="2" />
+              <text x="424" y="130" font-size="11" font-weight="bold" fill="#215865">1</text>
+
+              <!-- 2. Biro -> User (1:M) through corridor below sequence -->
+              <path d="M 300 245 L 370 245 L 370 235 L 735 235 L 735 245 L 800 245" fill="none" stroke="#215865" stroke-width="1.8" marker-end="url(#arrow-teal)" />
+              <rect x="306" y="235" width="16" height="16" fill="#ffffff" rx="2" />
+              <text x="310" y="247" font-size="11" font-weight="bold" fill="#215865">1</text>
+              <rect x="780" y="235" width="16" height="16" fill="#ffffff" rx="2" />
+              <text x="784" y="247" font-size="11" font-weight="bold" fill="#215865">M</text>
+
+              <!-- 3. Biro -> Meeting_biro (1:M via biro_id) -->
+              <path d="M 140 295 L 140 400" fill="none" stroke="#215865" stroke-width="1.8" marker-end="url(#arrow-teal)" />
+              <rect x="146" y="305" width="16" height="16" fill="#ffffff" rx="2" />
+              <text x="150" y="317" font-size="11" font-weight="bold" fill="#215865">1</text>
+              <rect x="146" y="380" width="16" height="16" fill="#ffffff" rx="2" />
+              <text x="150" y="392" font-size="11" font-weight="bold" fill="#215865">M</text>
+
+              <!-- 4. Meeting -> Meeting_biro (1:M via meeting_id) -->
+              <path d="M 440 435 L 300 435" fill="none" stroke="#215865" stroke-width="1.8" marker-end="url(#arrow-teal)" />
+              <rect x="420" y="423" width="16" height="16" fill="#ffffff" rx="2" />
+              <text x="424" y="435" font-size="11" font-weight="bold" fill="#215865">1</text>
+              <rect x="312" y="423" width="16" height="16" fill="#ffffff" rx="2" />
+              <text x="316" y="435" font-size="11" font-weight="bold" fill="#215865">M</text>
+
+              <!-- 5. Biro -> Meeting (1:M via primary_biro_id) entering TOP at x=500 -->
+              <path d="M 250 295 L 250 330 L 500 330 L 500 360" fill="none" stroke="#215865" stroke-width="1.8" marker-end="url(#arrow-teal)" />
+              <rect x="256" y="305" width="16" height="16" fill="#ffffff" rx="2" />
+              <text x="260" y="317" font-size="11" font-weight="bold" fill="#215865">1</text>
+              <rect x="506" y="340" width="16" height="16" fill="#ffffff" rx="2" />
+              <text x="510" y="352" font-size="11" font-weight="bold" fill="#215865">M</text>
+
+              <!-- 6. User -> Meeting (1:M via chairperson/secretary) entering TOP at x=600 -->
+              <path d="M 850 315 L 850 330 L 600 330 L 600 360" fill="none" stroke="#215865" stroke-width="1.8" marker-end="url(#arrow-teal)" />
+              <rect x="856" y="305" width="16" height="16" fill="#ffffff" rx="2" />
+              <text x="860" y="317" font-size="11" font-weight="bold" fill="#215865">1</text>
+              <rect x="606" y="340" width="16" height="16" fill="#ffffff" rx="2" />
+              <text x="610" y="352" font-size="11" font-weight="bold" fill="#215865">M</text>
+
+              <!-- 7. User -> Meeting_participant (1:M via user_id) -->
+              <path d="M 910 315 L 910 380" fill="none" stroke="#215865" stroke-width="1.8" marker-end="url(#arrow-teal)" />
+              <rect x="916" y="325" width="16" height="16" fill="#ffffff" rx="2" />
+              <text x="920" y="337" font-size="11" font-weight="bold" fill="#215865">1</text>
+              <rect x="916" y="360" width="16" height="16" fill="#ffffff" rx="2" />
+              <text x="920" y="372" font-size="11" font-weight="bold" fill="#215865">M</text>
+
+              <!-- 8. Meeting -> Meeting_participant (1:M via meeting_id) -->
+              <path d="M 670 435 L 800 435" fill="none" stroke="#215865" stroke-width="1.8" marker-end="url(#arrow-teal)" />
+              <rect x="680" y="423" width="16" height="16" fill="#ffffff" rx="2" />
+              <text x="684" y="435" font-size="11" font-weight="bold" fill="#215865">1</text>
+              <rect x="780" y="423" width="16" height="16" fill="#ffffff" rx="2" />
+              <text x="784" y="435" font-size="11" font-weight="bold" fill="#215865">M</text>
+
+              <!-- 9. Meeting -> Meeting (Recursive via previous_meeting_id) right side loop -->
+              <path d="M 670 530 L 735 530 L 735 590 L 670 590" fill="none" stroke="#215865" stroke-width="1.8" marker-end="url(#arrow-teal)" />
+              <rect x="680" y="518" width="16" height="16" fill="#ffffff" rx="2" />
+              <text x="684" y="530" font-size="11" font-weight="bold" fill="#215865">1</text>
+              <rect x="680" y="578" width="16" height="16" fill="#ffffff" rx="2" />
+              <text x="684" y="590" font-size="11" font-weight="bold" fill="#215865">M</text>
+
+              <!-- 10. Meeting -> Meeting_minutes (1:1 via meeting_id) -->
+              <path d="M 555 675 L 555 720" fill="none" stroke="#215865" stroke-width="1.8" marker-end="url(#arrow-teal)" />
+              <rect x="562" y="682" width="16" height="16" fill="#ffffff" rx="2" />
+              <text x="566" y="694" font-size="11" font-weight="bold" fill="#215865">1</text>
+              <rect x="562" y="702" width="16" height="16" fill="#ffffff" rx="2" />
+              <text x="566" y="714" font-size="11" font-weight="bold" fill="#215865">1</text>
+
+              <!-- 11. Meeting -> Action_item (1:M via meeting_id) -->
+              <path d="M 470 675 L 470 695 L 260 695 L 260 720" fill="none" stroke="#215865" stroke-width="1.8" marker-end="url(#arrow-teal)" />
+              <rect x="476" y="675" width="16" height="16" fill="#ffffff" rx="2" />
+              <text x="480" y="687" font-size="11" font-weight="bold" fill="#215865">1</text>
+              <rect x="266" y="702" width="16" height="16" fill="#ffffff" rx="2" />
+              <text x="270" y="714" font-size="11" font-weight="bold" fill="#215865">M</text>
+
+              <!-- 12. Biro -> Action_item (1:M via pic_biro_id) left corridor -->
+              <path d="M 80 180 L 40 180 L 40 810 L 80 810" fill="none" stroke="#215865" stroke-width="1.8" marker-end="url(#arrow-teal)" />
+              <rect x="55" y="168" width="16" height="16" fill="#ffffff" rx="2" />
+              <text x="59" y="180" font-size="11" font-weight="bold" fill="#215865">1</text>
+              <rect x="55" y="798" width="16" height="16" fill="#ffffff" rx="2" />
+              <text x="59" y="810" font-size="11" font-weight="bold" fill="#215865">M</text>
+
+              <!-- 13. User -> Action_item (1:M via pic_user_id) internal corridor -->
+              <path d="M 820 315 L 820 350 L 755 350 L 755 680 L 200 680 L 200 720" fill="none" stroke="#215865" stroke-width="1.8" marker-end="url(#arrow-teal)" />
+              <rect x="826" y="325" width="16" height="16" fill="#ffffff" rx="2" />
+              <text x="830" y="337" font-size="11" font-weight="bold" fill="#215865">1</text>
+              <rect x="206" y="702" width="16" height="16" fill="#ffffff" rx="2" />
+              <text x="210" y="714" font-size="11" font-weight="bold" fill="#215865">M</text>
+            </svg>
+
+            <!-- Table 1: Biro -->
+            <div class="absolute left-[80px] top-[90px] w-[220px] rounded-lg border border-[#94A3B8] bg-white shadow-xs overflow-hidden" style="z-index: 20;">
+              <div class="bg-[#215865] text-white text-center py-1.5 font-bold text-xs">
+                BIRO
+              </div>
+              <div class="p-2.5 text-[11px] leading-relaxed text-slate-800 space-y-0.5">
+                <div class="font-bold text-[#B7791F]">biro_id [PK]</div>
+                <div>code</div>
+                <div>name</div>
+                <div>shortName</div>
+                <div>description</div>
+                <div>isActive</div>
+                <div>createdAt</div>
+                <div>updatedAt</div>
+              </div>
+            </div>
+
+            <!-- Table 2: Biro_meeting_sequence -->
+            <div class="absolute left-[440px] top-[90px] w-[230px] rounded-lg border border-[#94A3B8] bg-white shadow-xs overflow-hidden" style="z-index: 20;">
+              <div class="bg-[#215865] text-white text-center py-1.5 font-bold text-xs">
+                BIRO_MEETING_SEQUENCE
+              </div>
+              <div class="p-2.5 text-[11px] leading-relaxed text-slate-800 space-y-0.5">
+                <div class="font-bold text-[#B7791F]">sequence_id [PK]</div>
+                <div class="font-bold text-[#0284C7]">biro_id [FK]</div>
+                <div>currentNumber</div>
+                <div>createdAt</div>
+                <div>updatedAt</div>
+              </div>
+            </div>
+
+            <!-- Table 3: User -->
+            <div class="absolute left-[800px] top-[90px] w-[220px] rounded-lg border border-[#94A3B8] bg-white shadow-xs overflow-hidden" style="z-index: 20;">
+              <div class="bg-[#215865] text-white text-center py-1.5 font-bold text-xs">
+                USER
+              </div>
+              <div class="p-2.5 text-[11px] leading-relaxed text-slate-800 space-y-0.5">
+                <div class="font-bold text-[#B7791F]">user_id [PK]</div>
+                <div class="font-bold text-[#0284C7]">biro_id [FK]</div>
+                <div>name</div>
+                <div>email</div>
+                <div>password</div>
+                <div>role</div>
+                <div>isActive</div>
+                <div>createdAt</div>
+                <div>updatedAt</div>
+              </div>
+            </div>
+
+            <!-- Table 4: Meeting_biro -->
+            <div class="absolute left-[80px] top-[400px] w-[220px] rounded-lg border border-[#94A3B8] bg-white shadow-xs overflow-hidden" style="z-index: 20;">
+              <div class="bg-[#215865] text-white text-center py-1.5 font-bold text-xs">
+                MEETING_BIRO (Junction)
+              </div>
+              <div class="p-2.5 text-[11px] leading-relaxed text-slate-800 space-y-0.5">
+                <div class="font-bold text-[#D97706]">meeting_id [PK, FK]</div>
+                <div class="font-bold text-[#D97706]">biro_id [PK, FK]</div>
+              </div>
+            </div>
+
+            <!-- Table 5: Meeting -->
+            <div class="absolute left-[440px] top-[360px] w-[230px] rounded-lg border border-[#94A3B8] bg-white shadow-xs overflow-hidden" style="z-index: 20;">
+              <div class="bg-[#215865] text-white text-center py-1.5 font-bold text-xs">
+                MEETING
+              </div>
+              <div class="p-2.5 text-[11px] leading-relaxed text-slate-800 space-y-0.5">
+                <div class="font-bold text-[#B7791F]">meeting_id [PK]</div>
+                <div>meeting_number</div>
+                <div>title</div>
+                <div class="font-bold text-[#0284C7]">primary_biro_id [FK]</div>
+                <div class="font-bold text-[#0284C7]">chairperson_id [FK]</div>
+                <div class="font-bold text-[#0284C7]">secretary_id [FK]</div>
+                <div class="font-bold text-[#0284C7]">previous_meeting_id [FK]</div>
+                <div>date</div>
+                <div>startTime</div>
+                <div>endTime</div>
+                <div>location</div>
+                <div>status</div>
+                <div>createdAt</div>
+                <div>updatedAt</div>
+              </div>
+            </div>
+
+            <!-- Table 6: Meeting_participant -->
+            <div class="absolute left-[800px] top-[380px] w-[220px] rounded-lg border border-[#94A3B8] bg-white shadow-xs overflow-hidden" style="z-index: 20;">
+              <div class="bg-[#215865] text-white text-center py-1.5 font-bold text-xs">
+                MEETING_PARTICIPANT
+              </div>
+              <div class="p-2.5 text-[11px] leading-relaxed text-slate-800 space-y-0.5">
+                <div class="font-bold text-[#B7791F]">participant_id [PK]</div>
+                <div class="font-bold text-[#0284C7]">meeting_id [FK]</div>
+                <div class="font-bold text-[#0284C7]">user_id [FK]</div>
+                <div>attendanceStatus</div>
+                <div>createdAt</div>
+              </div>
+            </div>
+
+            <!-- Table 7: Action_item -->
+            <div class="absolute left-[80px] top-[720px] w-[220px] rounded-lg border border-[#94A3B8] bg-white shadow-xs overflow-hidden" style="z-index: 20;">
+              <div class="bg-[#215865] text-white text-center py-1.5 font-bold text-xs">
+                ACTION_ITEM
+              </div>
+              <div class="p-2.5 text-[11px] leading-relaxed text-slate-800 space-y-0.5">
+                <div class="font-bold text-[#B7791F]">action_item_id [PK]</div>
+                <div class="font-bold text-[#0284C7]">meeting_id [FK]</div>
+                <div class="font-bold text-[#0284C7]">pic_biro_id [FK]</div>
+                <div class="font-bold text-[#0284C7]">pic_user_id [FK]</div>
+                <div>title</div>
+                <div>description</div>
+                <div>dueDate</div>
+                <div>status</div>
+                <div>priority</div>
+                <div>completedAt</div>
+                <div>createdAt</div>
+                <div>updatedAt</div>
+              </div>
+            </div>
+
+            <!-- Table 8: Meeting_minutes -->
+            <div class="absolute left-[440px] top-[720px] w-[230px] rounded-lg border border-[#94A3B8] bg-white shadow-xs overflow-hidden" style="z-index: 20;">
+              <div class="bg-[#215865] text-white text-center py-1.5 font-bold text-xs">
+                MEETING_MINUTES
+              </div>
+              <div class="p-2.5 text-[11px] leading-relaxed text-slate-800 space-y-0.5">
+                <div class="font-bold text-[#B7791F]">minutes_id [PK]</div>
+                <div class="font-bold text-[#0284C7]">meeting_id [FK]</div>
+                <div>agenda</div>
+                <div>discussion</div>
+                <div>decisions</div>
+                <div>conclusion</div>
+                <div>createdAt</div>
+                <div>updatedAt</div>
+              </div>
+            </div>
+
+            <!-- Legend: Petunjuk Notasi LRS -->
+            <div class="absolute left-[800px] top-[720px] w-[220px] rounded-lg border border-slate-700 bg-white shadow-xs overflow-hidden" style="z-index: 20;">
+              <div class="bg-slate-800 text-white text-center py-1.5 font-bold text-xs">
+                PETUNJUK NOTASI LRS
+              </div>
+              <div class="p-2.5 text-[11px] leading-relaxed text-slate-800 space-y-1">
+                <div><span class="font-bold text-[#B7791F]">[PK]</span> : Primary Key (Kuning)</div>
+                <div><span class="font-bold text-[#0284C7]">[FK]</span> : Foreign Key (Biru)</div>
+                <div><span class="font-bold text-[#215865]">1</span> &nbsp;&nbsp;&nbsp;: Relasi Derajat 1</div>
+                <div><span class="font-bold text-[#215865]">M</span> &nbsp;&nbsp;&nbsp;: Relasi Derajat Banyak</div>
+                <div><span class="font-bold text-[#215865]">1 &rarr; M</span> : Satu ke Banyak</div>
+                <div><span class="font-bold text-[#215865]">1 &rarr; 1</span> : Satu ke Satu Unik</div>
+                <div><span class="font-bold text-[#215865]">Panah</span> : Menunjuk Kunci Tamu</div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </div>
+
+      <div class="bg-white rounded-2xl border border-slate-200 shadow-xs p-6 overflow-hidden">
+        <div class="flex items-center justify-between mb-4">
+          <div>
+            <h2 class="text-[17px] font-bold text-slate-900">Daftar Atribut Lengkap Setiap Rekod LRS</h2>
+            <p class="text-xs text-slate-500 mt-1">
+              Setiap kotak merepresentasikan rekod tabel logis lengkap dengan alur Primary Key (*PK) menuju Foreign Key (**FK).
+            </p>
+          </div>
+        </div>
+
+        <div class="bg-slate-900 rounded-xl p-5 border border-slate-800 text-xs font-mono text-slate-200 overflow-x-auto leading-relaxed">
+<pre class="text-[#7CC563]">1. BIRO
+   ├── *biro_id : VARCHAR(50) &lt;PK&gt;
+   ├── code : VARCHAR(20) &lt;UK&gt;
+   ├── name : VARCHAR(255)
+   ├── shortName : VARCHAR(100)
+   ├── description : TEXT
+   ├── isActive : BOOLEAN
+   ├── createdAt : TIMESTAMP
+   └── updatedAt : TIMESTAMP
+
+2. BIRO_MEETING_SEQUENCE
+   ├── *sequence_id : VARCHAR(50) &lt;PK&gt;
+   ├── **biro_id : VARCHAR(50) &lt;FK, UK&gt; ─── (Relasi 1:1 dari BIRO)
+   ├── currentNumber : INTEGER
+   ├── createdAt : TIMESTAMP
+   └── updatedAt : TIMESTAMP
+
+3. USER
+   ├── *user_id : VARCHAR(50) &lt;PK&gt;
+   ├── **biro_id : VARCHAR(50) &lt;FK&gt; ───────── (Relasi 1:N dari BIRO)
+   ├── email : VARCHAR(150) &lt;UK&gt;
+   ├── name : VARCHAR(150)
+   ├── password : VARCHAR(255)
+   ├── role : ENUM('SUPER_ADMIN', 'ADMIN', 'NOTULIS', 'STAFF', 'VIEWER')
+   ├── isActive : BOOLEAN
+   ├── createdAt : TIMESTAMP
+   └── updatedAt : TIMESTAMP
+
+4. MEETING
+   ├── *meeting_id : VARCHAR(50) &lt;PK&gt;
+   ├── meeting_number : VARCHAR(50) &lt;UK&gt;
+   ├── **primary_biro_id : VARCHAR(50) &lt;FK&gt; ── (Relasi 1:N dari BIRO)
+   ├── **chairperson_id : VARCHAR(50) &lt;FK&gt; ─── (Relasi 1:N dari USER)
+   ├── **secretary_id : VARCHAR(50) &lt;FK&gt; ───── (Relasi 1:N dari USER)
+   ├── **previous_meeting_id : VARCHAR(50) &lt;FK&gt; (Relasi 1:N Rekursif dari MEETING)
+   ├── title : VARCHAR(255)
+   ├── date : DATE
+   ├── startTime : VARCHAR(10)
+   ├── endTime : VARCHAR(10)
+   ├── location : VARCHAR(255)
+   ├── status : ENUM('DRAFT', 'REVIEW', 'APPROVED', 'FINAL')
+   ├── createdAt : TIMESTAMP
+   └── updatedAt : TIMESTAMP
+
+5. MEETING_BIRO (Junction Table)
+   ├── *meeting_id : VARCHAR(50) &lt;PK, FK&gt; ──── (Relasi 1:N dari MEETING)
+   └── *biro_id : VARCHAR(50) &lt;PK, FK&gt; ─────── (Relasi 1:N dari BIRO)
+
+6. MEETING_PARTICIPANT
+   ├── *participant_id : VARCHAR(50) &lt;PK&gt;
+   ├── **meeting_id : VARCHAR(50) &lt;FK&gt; ─────── (Relasi 1:N dari MEETING)
+   ├── **user_id : VARCHAR(50) &lt;FK&gt; ────────── (Relasi 1:N dari USER)
+   ├── attendanceStatus : ENUM('INVITED', 'PRESENT', 'ABSENT', 'EXCUSED')
+   └── createdAt : TIMESTAMP
+
+7. MEETING_MINUTES
+   ├── *minutes_id : VARCHAR(50) &lt;PK&gt;
+   ├── **meeting_id : VARCHAR(50) &lt;FK, UK&gt; ─── (Relasi 1:1 dari MEETING)
+   ├── agenda : JSON
+   ├── discussion : JSON
+   ├── decisions : JSON
+   ├── conclusion : JSON
+   ├── createdAt : TIMESTAMP
+   └── updatedAt : TIMESTAMP
+
+8. ACTION_ITEM
+   ├── *action_item_id : VARCHAR(50) &lt;PK&gt;
+   ├── **meeting_id : VARCHAR(50) &lt;FK&gt; ─────── (Relasi 1:N dari MEETING)
+   ├── **pic_biro_id : VARCHAR(50) &lt;FK&gt; ────── (Relasi 1:N dari BIRO)
+   ├── **pic_user_id : VARCHAR(50) &lt;FK&gt; ────── (Relasi 1:N dari USER, Opsional)
+   ├── title : VARCHAR(255)
+   ├── description : TEXT
+   ├── dueDate : TIMESTAMP
+   ├── status : ENUM('PENDING', 'IN_PROGRESS', 'COMPLETED', 'OVERDUE')
+   ├── priority : ENUM('LOW', 'MEDIUM', 'HIGH', 'URGENT')
+   ├── completedAt : TIMESTAMP
+   ├── createdAt : TIMESTAMP
+   └── updatedAt : TIMESTAMP</pre>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB 5: PLANTUML RAW -->
     <div id="content-plantuml" class="tab-content hidden space-y-6">
       <div class="bg-white rounded-2xl border border-slate-200 shadow-xs p-6">
         <div class="flex items-center justify-between mb-4">

@@ -1,0 +1,399 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Preview ERD Notasi Chen - SIM-RAPAT KEK RI</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    body { font-family: 'Inter', sans-serif; background-color: #f8fafc; }
+  </style>
+</head>
+<body class="p-6 flex flex-col items-center min-h-screen">
+  
+  <div class="mb-4 flex items-center justify-between w-[1500px]">
+    <div>
+      <h1 class="text-xl font-bold text-slate-900">Entity Relationship Diagram (ERD) - Notasi Chen</h1>
+      <p class="text-xs text-slate-500">Standar Chen Klasik Akademik (Entitas Persegi Panjang, Relasi Belah Ketupat, Atribut Elips, PK Garis Bawah)</p>
+    </div>
+    <div class="flex gap-2">
+      <a href="/ERD_SIM_RAPAT.drawio" download="ERD_SIM_RAPAT.drawio" class="px-3.5 py-1.5 bg-[#215865] hover:bg-[#183E47] text-white text-xs font-bold rounded-lg shadow-xs transition-colors flex items-center gap-1.5">
+        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+        Unduh .drawio (Notasi Chen)
+      </a>
+      <a href="/uml-viewer.html" class="px-3.5 py-1.5 bg-slate-200 hover:bg-slate-300 text-slate-700 text-xs font-bold rounded-lg transition-colors">
+        Buka UML Viewer
+      </a>
+    </div>
+  </div>
+
+  <!-- Canvas Container -->
+  <div class="relative bg-white shadow-xl border border-slate-300 rounded-2xl overflow-hidden" style="width: 1500px; height: 1100px; min-width: 1500px;">
+    
+    <!-- Title Bar -->
+    <div class="absolute left-[225px] top-[20px] w-[1050px] h-[46px] bg-[#215865] rounded-xl shadow-sm border border-[#183E47] flex flex-col items-center justify-center text-center text-white">
+      <span class="text-xs font-bold tracking-wide uppercase">ENTITY RELATIONSHIP DIAGRAM (ERD) - NOTASI CHEN</span>
+      <span class="text-[11px] text-white/90 font-medium">SIM-RAPAT KEK RI (SEKRETARIAT JENDERAL DEWAN NASIONAL KAWASAN EKONOMI KHUSUS)</span>
+    </div>
+
+    <!-- SVG Overlay for Connectors -->
+    <svg class="absolute inset-0 w-full h-full pointer-events-none" style="z-index: 5;">
+      <!-- Biro to its Attributes -->
+      <line x1="430" y1="220" x2="250" y2="141" stroke="#94a3b8" stroke-width="1.3" />
+      <line x1="430" y1="220" x2="362" y2="130" stroke="#94a3b8" stroke-width="1.3" />
+      <line x1="430" y1="220" x2="462" y2="130" stroke="#94a3b8" stroke-width="1.3" />
+      <line x1="430" y1="220" x2="565" y2="140" stroke="#94a3b8" stroke-width="1.3" />
+      <line x1="350" y1="250" x2="237" y2="220" stroke="#94a3b8" stroke-width="1.3" />
+      <line x1="350" y1="250" x2="232" y2="280" stroke="#94a3b8" stroke-width="1.3" />
+
+      <!-- User to its Attributes -->
+      <line x1="1130" y1="220" x2="1310" y2="141" stroke="#94a3b8" stroke-width="1.3" />
+      <line x1="1130" y1="220" x2="1192" y2="130" stroke="#94a3b8" stroke-width="1.3" />
+      <line x1="1130" y1="220" x2="1092" y2="130" stroke="#94a3b8" stroke-width="1.3" />
+      <line x1="1130" y1="220" x2="995" y2="140" stroke="#94a3b8" stroke-width="1.3" />
+      <line x1="1210" y1="250" x2="1302" y2="220" stroke="#94a3b8" stroke-width="1.3" />
+      <line x1="1210" y1="250" x2="1302" y2="280" stroke="#94a3b8" stroke-width="1.3" />
+
+      <!-- Sequence to its Attributes -->
+      <line x1="170" y1="500" x2="102" y2="571" stroke="#94a3b8" stroke-width="1.3" />
+      <line x1="170" y1="500" x2="227" y2="570" stroke="#94a3b8" stroke-width="1.3" />
+
+      <!-- Meeting to its Attributes -->
+      <line x1="780" y1="580" x2="630" y2="511" stroke="#94a3b8" stroke-width="1.3" />
+      <line x1="780" y1="580" x2="777" y2="490" stroke="#94a3b8" stroke-width="1.3" />
+      <line x1="780" y1="580" x2="925" y2="510" stroke="#94a3b8" stroke-width="1.3" />
+      <line x1="780" y1="645" x2="627" y2="700" stroke="#94a3b8" stroke-width="1.3" />
+      <line x1="780" y1="645" x2="742" y2="720" stroke="#94a3b8" stroke-width="1.3" />
+      <line x1="780" y1="645" x2="842" y2="720" stroke="#94a3b8" stroke-width="1.3" />
+      <line x1="780" y1="645" x2="935" y2="700" stroke="#94a3b8" stroke-width="1.3" />
+
+      <!-- ActionItem to its Attributes -->
+      <line x1="350" y1="950" x2="255" y2="941" stroke="#94a3b8" stroke-width="1.3" />
+      <line x1="430" y1="980" x2="272" y2="1030" stroke="#94a3b8" stroke-width="1.3" />
+      <line x1="430" y1="980" x2="377" y2="1045" stroke="#94a3b8" stroke-width="1.3" />
+      <line x1="430" y1="980" x2="482" y2="1045" stroke="#94a3b8" stroke-width="1.3" />
+      <line x1="430" y1="980" x2="577" y2="1030" stroke="#94a3b8" stroke-width="1.3" />
+      <line x1="350" y1="950" x2="232" y2="860" stroke="#94a3b8" stroke-width="1.3" />
+
+      <!-- Minutes to its Attributes -->
+      <line x1="1220" y1="950" x2="1310" y2="941" stroke="#94a3b8" stroke-width="1.3" />
+      <line x1="1135" y1="980" x2="1032" y2="1045" stroke="#94a3b8" stroke-width="1.3" />
+      <line x1="1135" y1="980" x2="1135" y2="1050" stroke="#94a3b8" stroke-width="1.3" />
+      <line x1="1135" y1="980" x2="1237" y2="1050" stroke="#94a3b8" stroke-width="1.3" />
+      <line x1="1135" y1="980" x2="1335" y2="1030" stroke="#94a3b8" stroke-width="1.3" />
+
+      <!-- Relasi: biro <-> memiliki <-> user -->
+      <line x1="510" y1="250" x2="700" y2="250" stroke="#215865" stroke-width="2" />
+      <line x1="860" y1="250" x2="1050" y2="250" stroke="#215865" stroke-width="2" />
+      <rect x="525" y="238" width="16" height="16" fill="#ffffff" rx="2" />
+      <text x="529" y="250" font-size="12" font-weight="bold" fill="#215865">1</text>
+      <rect x="1025" y="238" width="16" height="16" fill="#ffffff" rx="2" />
+      <text x="1029" y="250" font-size="12" font-weight="bold" fill="#215865">N</text>
+
+      <!-- Relasi: biro <-> mengatur <-> biro_meeting_sequence -->
+      <line x1="350" y1="270" x2="245" y2="335" stroke="#215865" stroke-width="2" />
+      <line x1="245" y1="390" x2="170" y2="440" stroke="#215865" stroke-width="2" />
+      <rect x="330" y="280" width="16" height="16" fill="#ffffff" rx="2" />
+      <text x="334" y="292" font-size="12" font-weight="bold" fill="#215865">1</text>
+      <rect x="180" y="420" width="16" height="16" fill="#ffffff" rx="2" />
+      <text x="184" y="432" font-size="12" font-weight="bold" fill="#215865">1</text>
+
+      <!-- Relasi: biro <-> menyelenggarakan <-> meeting -->
+      <line x1="460" y1="280" x2="522" y2="420" stroke="#215865" stroke-width="2" />
+      <line x1="522" y1="480" x2="700" y2="590" stroke="#215865" stroke-width="2" />
+      <rect x="470" y="295" width="16" height="16" fill="#ffffff" rx="2" />
+      <text x="474" y="307" font-size="12" font-weight="bold" fill="#215865">1</text>
+      <rect x="680" y="570" width="16" height="16" fill="#ffffff" rx="2" />
+      <text x="684" y="582" font-size="12" font-weight="bold" fill="#215865">N</text>
+
+      <!-- Relasi: meeting <-> melibatkan (lintas biro) <-> biro -->
+      <line x1="700" y1="610" x2="465" y2="592" stroke="#215865" stroke-width="2" />
+      <line x1="320" y1="592" x2="380" y2="280" stroke="#215865" stroke-width="2" />
+      <rect x="675" y="600" width="16" height="16" fill="#ffffff" rx="2" />
+      <text x="679" y="612" font-size="12" font-weight="bold" fill="#215865">M</text>
+      <rect x="365" y="295" width="16" height="16" fill="#ffffff" rx="2" />
+      <text x="369" y="307" font-size="12" font-weight="bold" fill="#215865">N</text>
+
+      <!-- Relasi: user <-> memimpin & notulis <-> meeting -->
+      <line x1="1100" y1="280" x2="1027" y2="420" stroke="#215865" stroke-width="2" />
+      <line x1="1027" y1="480" x2="860" y2="590" stroke="#215865" stroke-width="2" />
+      <rect x="1080" y="295" width="16" height="16" fill="#ffffff" rx="2" />
+      <text x="1084" y="307" font-size="12" font-weight="bold" fill="#215865">1</text>
+      <rect x="865" y="570" width="16" height="16" fill="#ffffff" rx="2" />
+      <text x="869" y="582" font-size="12" font-weight="bold" fill="#215865">N</text>
+
+      <!-- Relasi: user <-> menghadiri <-> meeting -->
+      <line x1="1180" y1="280" x2="1162" y2="560" stroke="#215865" stroke-width="2" />
+      <line x1="1090" y1="590" x2="860" y2="610" stroke="#215865" stroke-width="2" />
+      <rect x="1175" y="295" width="16" height="16" fill="#ffffff" rx="2" />
+      <text x="1179" y="307" font-size="12" font-weight="bold" fill="#215865">M</text>
+      <rect x="870" y="600" width="16" height="16" fill="#ffffff" rx="2" />
+      <text x="874" y="612" font-size="12" font-weight="bold" fill="#215865">N</text>
+      <!-- attendanceStatus on menghadiri -->
+      <line x1="1235" y1="590" x2="1270" y2="590" stroke="#64748b" stroke-width="1.3" stroke-dasharray="3,3" />
+
+      <!-- Relasi: meeting <-> menghasilkan <-> meeting_minutes -->
+      <line x1="840" y1="645" x2="1015" y2="770" stroke="#215865" stroke-width="2" />
+      <line x1="1015" y1="830" x2="1100" y2="920" stroke="#215865" stroke-width="2" />
+      <rect x="850" y="655" width="16" height="16" fill="#ffffff" rx="2" />
+      <text x="854" y="667" font-size="12" font-weight="bold" fill="#215865">1</text>
+      <rect x="1080" y="895" width="16" height="16" fill="#ffffff" rx="2" />
+      <text x="1084" y="907" font-size="12" font-weight="bold" fill="#215865">1</text>
+
+      <!-- Relasi: meeting <-> menetapkan <-> action_item -->
+      <line x1="720" y1="645" x2="545" y2="770" stroke="#215865" stroke-width="2" />
+      <line x1="545" y1="830" x2="450" y2="920" stroke="#215865" stroke-width="2" />
+      <rect x="710" y="655" width="16" height="16" fill="#ffffff" rx="2" />
+      <text x="714" y="667" font-size="12" font-weight="bold" fill="#215865">1</text>
+      <rect x="460" y="895" width="16" height="16" fill="#ffffff" rx="2" />
+      <text x="464" y="907" font-size="12" font-weight="bold" fill="#215865">N</text>
+
+      <!-- Relasi: biro <-> pic_biro <-> action_item -->
+      <line x1="370" y1="280" x2="290" y2="730" stroke="#215865" stroke-width="2" />
+      <line x1="290" y1="785" x2="380" y2="920" stroke="#215865" stroke-width="2" />
+      <rect x="360" y="300" width="16" height="16" fill="#ffffff" rx="2" />
+      <text x="364" y="312" font-size="12" font-weight="bold" fill="#215865">1</text>
+      <rect x="360" y="895" width="16" height="16" fill="#ffffff" rx="2" />
+      <text x="364" y="907" font-size="12" font-weight="bold" fill="#215865">N</text>
+
+      <!-- Relasi: user <-> pic_user <-> action_item -->
+      <line x1="1100" y1="280" x2="780" y2="922" stroke="#215865" stroke-width="2" />
+      <line x1="780" y1="977" x2="510" y2="950" stroke="#215865" stroke-width="2" />
+      <rect x="1070" y="310" width="16" height="16" fill="#ffffff" rx="2" />
+      <text x="1074" y="322" font-size="12" font-weight="bold" fill="#215865">1</text>
+      <rect x="520" y="940" width="16" height="16" fill="#ffffff" rx="2" />
+      <text x="524" y="952" font-size="12" font-weight="bold" fill="#215865">N</text>
+    </svg>
+
+    <!-- 1. Entities (Rectangles) -->
+    <!-- biro -->
+    <div class="absolute left-[350px] top-[220px] w-[160px] h-[60px] bg-white border-2 border-[#183E47] shadow-md flex items-center justify-center font-bold text-sm text-[#183E47] z-20">
+      biro
+    </div>
+
+    <!-- user -->
+    <div class="absolute left-[1050px] top-[220px] w-[160px] h-[60px] bg-white border-2 border-[#183E47] shadow-md flex items-center justify-center font-bold text-sm text-[#183E47] z-20">
+      user
+    </div>
+
+    <!-- biro_meeting_sequence -->
+    <div class="absolute left-[80px] top-[440px] w-[180px] h-[60px] bg-white border-2 border-[#183E47] shadow-md flex items-center justify-center font-bold text-xs text-[#183E47] text-center px-2 z-20">
+      biro_meeting_sequence
+    </div>
+
+    <!-- meeting -->
+    <div class="absolute left-[700px] top-[580px] w-[160px] h-[65px] bg-white border-2 border-[#183E47] shadow-md flex items-center justify-center font-bold text-base text-[#183E47] z-20">
+      meeting
+    </div>
+
+    <!-- action_item -->
+    <div class="absolute left-[350px] top-[920px] w-[160px] h-[60px] bg-white border-2 border-[#183E47] shadow-md flex items-center justify-center font-bold text-sm text-[#183E47] z-20">
+      action_item
+    </div>
+
+    <!-- meeting_minutes -->
+    <div class="absolute left-[1050px] top-[920px] w-[170px] h-[60px] bg-white border-2 border-[#183E47] shadow-md flex items-center justify-center font-bold text-sm text-[#183E47] z-20">
+      meeting_minutes
+    </div>
+
+    <!-- 2. Relationships (Rhombus / Diamonds) -->
+    <!-- memiliki -->
+    <div class="absolute left-[700px] top-[220px] w-[160px] h-[60px] flex items-center justify-center z-10">
+      <div class="w-[110px] h-[110px] bg-[#E8F5F7] border-2 border-[#215865] rotate-45 flex items-center justify-center shadow-xs">
+        <span class="-rotate-45 font-bold text-xs text-[#215865]">memiliki</span>
+      </div>
+    </div>
+
+    <!-- mengatur -->
+    <div class="absolute left-[180px] top-[335px] w-[130px] h-[55px] flex items-center justify-center z-10">
+      <div class="w-[85px] h-[85px] bg-[#E8F5F7] border-2 border-[#215865] rotate-45 flex items-center justify-center shadow-xs">
+        <span class="-rotate-45 font-bold text-[11px] text-[#215865]">mengatur</span>
+      </div>
+    </div>
+
+    <!-- menyelenggarakan -->
+    <div class="absolute left-[440px] top-[420px] w-[165px] h-[60px] flex items-center justify-center z-10">
+      <div class="w-[110px] h-[110px] bg-[#E8F5F7] border-2 border-[#215865] rotate-45 flex items-center justify-center shadow-xs">
+        <span class="-rotate-45 font-bold text-[11px] text-center text-[#215865] px-1">menyelenggarakan</span>
+      </div>
+    </div>
+
+    <!-- melibatkan -->
+    <div class="absolute left-[320px] top-[560px] w-[145px] h-[65px] flex items-center justify-center z-10">
+      <div class="w-[100px] h-[100px] bg-[#E8F5F7] border-2 border-[#215865] rotate-45 flex items-center justify-center shadow-xs">
+        <span class="-rotate-45 font-bold text-[10px] text-center text-[#215865]">melibatkan<br>(lintas biro)</span>
+      </div>
+    </div>
+
+    <!-- memimpin -->
+    <div class="absolute left-[955px] top-[420px] w-[145px] h-[60px] flex items-center justify-center z-10">
+      <div class="w-[105px] h-[105px] bg-[#E8F5F7] border-2 border-[#215865] rotate-45 flex items-center justify-center shadow-xs">
+        <span class="-rotate-45 font-bold text-[11px] text-center text-[#215865]">memimpin<br>&amp; notulis</span>
+      </div>
+    </div>
+
+    <!-- menghadiri -->
+    <div class="absolute left-[1090px] top-[560px] w-[145px] h-[60px] flex items-center justify-center z-10">
+      <div class="w-[100px] h-[100px] bg-[#E8F5F7] border-2 border-[#215865] rotate-45 flex items-center justify-center shadow-xs">
+        <span class="-rotate-45 font-bold text-[11px] text-center text-[#215865]">menghadiri</span>
+      </div>
+    </div>
+
+    <!-- menghasilkan -->
+    <div class="absolute left-[940px] top-[770px] w-[150px] h-[60px] flex items-center justify-center z-10">
+      <div class="w-[105px] h-[105px] bg-[#E8F5F7] border-2 border-[#215865] rotate-45 flex items-center justify-center shadow-xs">
+        <span class="-rotate-45 font-bold text-[11px] text-[#215865]">menghasilkan</span>
+      </div>
+    </div>
+
+    <!-- menetapkan -->
+    <div class="absolute left-[470px] top-[770px] w-[150px] h-[60px] flex items-center justify-center z-10">
+      <div class="w-[105px] h-[105px] bg-[#E8F5F7] border-2 border-[#215865] rotate-45 flex items-center justify-center shadow-xs">
+        <span class="-rotate-45 font-bold text-[11px] text-[#215865]">menetapkan</span>
+      </div>
+    </div>
+
+    <!-- pic_biro -->
+    <div class="absolute left-[230px] top-[730px] w-[120px] h-[55px] flex items-center justify-center z-10">
+      <div class="w-[85px] h-[85px] bg-[#E8F5F7] border-2 border-[#215865] rotate-45 flex items-center justify-center shadow-xs">
+        <span class="-rotate-45 font-bold text-[11px] text-[#215865]">pic_biro</span>
+      </div>
+    </div>
+
+    <!-- pic_user -->
+    <div class="absolute left-[715px] top-[922px] w-[130px] h-[55px] flex items-center justify-center z-10">
+      <div class="w-[85px] h-[85px] bg-[#E8F5F7] border-2 border-[#215865] rotate-45 flex items-center justify-center shadow-xs">
+        <span class="-rotate-45 font-bold text-[11px] text-[#215865]">pic_user</span>
+      </div>
+    </div>
+
+    <!-- 3. Attributes (Ellipses) -->
+    <!-- biro attributes -->
+    <div class="absolute left-[200px] top-[120px] w-[100px] h-[42px] rounded-full bg-amber-50 border-2 border-amber-600 flex items-center justify-center text-xs font-bold text-amber-700 underline shadow-2xs z-20">
+      biro_id
+    </div>
+    <div class="absolute left-[320px] top-[110px] w-[85px] h-[40px] rounded-full bg-white border border-slate-500 flex items-center justify-center text-xs text-slate-800 shadow-2xs z-20">
+      code
+    </div>
+    <div class="absolute left-[420px] top-[110px] w-[85px] h-[40px] rounded-full bg-white border border-slate-500 flex items-center justify-center text-xs text-slate-800 shadow-2xs z-20">
+      name
+    </div>
+    <div class="absolute left-[520px] top-[120px] w-[90px] h-[40px] rounded-full bg-white border border-slate-500 flex items-center justify-center text-xs text-slate-800 shadow-2xs z-20">
+      shortName
+    </div>
+    <div class="absolute left-[190px] top-[200px] w-[95px] h-[40px] rounded-full bg-white border border-slate-500 flex items-center justify-center text-xs text-slate-800 shadow-2xs z-20">
+      description
+    </div>
+    <div class="absolute left-[190px] top-[260px] w-[85px] h-[40px] rounded-full bg-white border border-slate-500 flex items-center justify-center text-xs text-slate-800 shadow-2xs z-20">
+      isActive
+    </div>
+
+    <!-- user attributes -->
+    <div class="absolute left-[1260px] top-[120px] w-[100px] h-[42px] rounded-full bg-amber-50 border-2 border-amber-600 flex items-center justify-center text-xs font-bold text-amber-700 underline shadow-2xs z-20">
+      user_id
+    </div>
+    <div class="absolute left-[1150px] top-[110px] w-[85px] h-[40px] rounded-full bg-white border border-slate-500 flex items-center justify-center text-xs text-slate-800 shadow-2xs z-20">
+      name
+    </div>
+    <div class="absolute left-[1050px] top-[110px] w-[85px] h-[40px] rounded-full bg-white border border-slate-500 flex items-center justify-center text-xs text-slate-800 shadow-2xs z-20">
+      email
+    </div>
+    <div class="absolute left-[950px] top-[120px] w-[90px] h-[40px] rounded-full bg-white border border-slate-500 flex items-center justify-center text-xs text-slate-800 shadow-2xs z-20">
+      password
+    </div>
+    <div class="absolute left-[1260px] top-[200px] w-[85px] h-[40px] rounded-full bg-white border border-slate-500 flex items-center justify-center text-xs text-slate-800 shadow-2xs z-20">
+      role
+    </div>
+    <div class="absolute left-[1260px] top-[260px] w-[85px] h-[40px] rounded-full bg-white border border-slate-500 flex items-center justify-center text-xs text-slate-800 shadow-2xs z-20">
+      isActive
+    </div>
+
+    <!-- sequence attributes -->
+    <div class="absolute left-[50px] top-[550px] w-[105px] h-[42px] rounded-full bg-amber-50 border-2 border-amber-600 flex items-center justify-center text-xs font-bold text-amber-700 underline shadow-2xs z-20">
+      sequence_id
+    </div>
+    <div class="absolute left-[175px] top-[550px] w-[105px] h-[40px] rounded-full bg-white border border-slate-500 flex items-center justify-center text-xs text-slate-800 shadow-2xs z-20">
+      currentNumber
+    </div>
+
+    <!-- meeting attributes -->
+    <div class="absolute left-[730px] top-[470px] w-[100px] h-[42px] rounded-full bg-amber-50 border-2 border-amber-600 flex items-center justify-center text-xs font-bold text-amber-700 underline shadow-2xs z-20">
+      meeting_id
+    </div>
+    <div class="absolute left-[570px] top-[680px] w-[115px] h-[40px] rounded-full bg-white border border-slate-500 flex items-center justify-center text-xs text-slate-800 shadow-2xs z-20">
+      meeting_number
+    </div>
+    <div class="absolute left-[700px] top-[700px] w-[85px] h-[40px] rounded-full bg-white border border-slate-500 flex items-center justify-center text-xs text-slate-800 shadow-2xs z-20">
+      title
+    </div>
+    <div class="absolute left-[800px] top-[700px] w-[85px] h-[40px] rounded-full bg-white border border-slate-500 flex items-center justify-center text-xs text-slate-800 shadow-2xs z-20">
+      date
+    </div>
+    <div class="absolute left-[890px] top-[680px] w-[90px] h-[40px] rounded-full bg-white border border-slate-500 flex items-center justify-center text-xs text-slate-800 shadow-2xs z-20">
+      startTime
+    </div>
+    <div class="absolute left-[880px] top-[490px] w-[90px] h-[40px] rounded-full bg-white border border-slate-500 flex items-center justify-center text-xs text-slate-800 shadow-2xs z-20">
+      location
+    </div>
+    <div class="absolute left-[620px] top-[490px] w-[85px] h-[40px] rounded-full bg-white border border-slate-500 flex items-center justify-center text-xs text-slate-800 shadow-2xs z-20">
+      status
+    </div>
+
+    <!-- action_item attributes -->
+    <div class="absolute left-[200px] top-[920px] w-[110px] h-[42px] rounded-full bg-amber-50 border-2 border-amber-600 flex items-center justify-center text-xs font-bold text-amber-700 underline shadow-2xs z-20">
+      action_item_id
+    </div>
+    <div class="absolute left-[230px] top-[1010px] w-[85px] h-[40px] rounded-full bg-white border border-slate-500 flex items-center justify-center text-xs text-slate-800 shadow-2xs z-20">
+      title
+    </div>
+    <div class="absolute left-[330px] top-[1025px] w-[95px] h-[40px] rounded-full bg-white border border-slate-500 flex items-center justify-center text-xs text-slate-800 shadow-2xs z-20">
+      description
+    </div>
+    <div class="absolute left-[440px] top-[1025px] w-[85px] h-[40px] rounded-full bg-white border border-slate-500 flex items-center justify-center text-xs text-slate-800 shadow-2xs z-20">
+      dueDate
+    </div>
+    <div class="absolute left-[535px] top-[1010px] w-[85px] h-[40px] rounded-full bg-white border border-slate-500 flex items-center justify-center text-xs text-slate-800 shadow-2xs z-20">
+      status
+    </div>
+    <div class="absolute left-[190px] top-[840px] w-[85px] h-[40px] rounded-full bg-white border border-slate-500 flex items-center justify-center text-xs text-slate-800 shadow-2xs z-20">
+      priority
+    </div>
+
+    <!-- meeting_minutes attributes -->
+    <div class="absolute left-[1260px] top-[920px] w-[100px] h-[42px] rounded-full bg-amber-50 border-2 border-amber-600 flex items-center justify-center text-xs font-bold text-amber-700 underline shadow-2xs z-20">
+      minutes_id
+    </div>
+    <div class="absolute left-[990px] top-[1025px] w-[85px] h-[40px] rounded-full bg-white border border-slate-500 flex items-center justify-center text-xs text-slate-800 shadow-2xs z-20">
+      agenda
+    </div>
+    <div class="absolute left-[1090px] top-[1030px] w-[90px] h-[40px] rounded-full bg-white border border-slate-500 flex items-center justify-center text-xs text-slate-800 shadow-2xs z-20">
+      discussion
+    </div>
+    <div class="absolute left-[1195px] top-[1030px] w-[85px] h-[40px] rounded-full bg-white border border-slate-500 flex items-center justify-center text-xs text-slate-800 shadow-2xs z-20">
+      decisions
+    </div>
+    <div class="absolute left-[1290px] top-[1010px] w-[90px] h-[40px] rounded-full bg-white border border-slate-500 flex items-center justify-center text-xs text-slate-800 shadow-2xs z-20">
+      conclusion
+    </div>
+
+    <!-- attendanceStatus on menghadiri -->
+    <div class="absolute left-[1270px] top-[570px] w-[115px] h-[40px] rounded-full bg-slate-50 border border-dashed border-slate-500 flex items-center justify-center text-[11px] text-slate-800 shadow-2xs z-20">
+      attendanceStatus
+    </div>
+
+    <!-- Legend Box -->
+    <div class="absolute left-[60px] top-[660px] w-[220px] rounded-xl bg-slate-50/90 border border-slate-400 p-3 text-xs leading-relaxed text-slate-800 shadow-sm z-20">
+      <div class="font-bold text-slate-900 border-b border-slate-300 pb-1 mb-1.5 uppercase text-[11px] tracking-wide">
+        Standar Notasi Chen (ERD)
+      </div>
+      <div>&bull; <span class="font-bold">Persegi Panjang</span> : Entitas</div>
+      <div>&bull; <span class="font-bold">Belah Ketupat</span> : Relasi</div>
+      <div>&bull; <span class="font-bold">Elips</span> : Atribut Data</div>
+      <div>&bull; <span class="font-bold text-amber-800 underline">Teks Garis Bawah</span> : Primary Key</div>
+      <div>&bull; <span class="font-bold text-[#215865]">1 / N / M</span> : Kardinalitas Relasi</div>
+    </div>
+
+  </div>
+</body>
+</html>

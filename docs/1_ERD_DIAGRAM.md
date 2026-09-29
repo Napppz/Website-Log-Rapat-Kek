@@ -1,8 +1,8 @@
-# DOKUMEN PERANCANGAN TAHAP 1: ENTITY RELATIONSHIP DIAGRAM (ERD)
+# DOKUMEN PERANCANGAN TAHAP 1: ENTITY RELATIONSHIP DIAGRAM (ERD) - NOTASI CHEN
 ## Sistem Informasi Manajemen Rapat & Tindak Lanjut (SIM-RAPAT KEK RI)
 **Sekretariat Jenderal Dewan Nasional Kawasan Ekonomi Khusus Republik Indonesia**
 
-Dokumen ini memuat spesifikasi lengkap **Entity Relationship Diagram (ERD)** yang dirancang khusus untuk kompatibilitas penuh dengan **Draw.io (diagrams.net)**, PlantUML, dan Mermaid, lengkap dengan kamus data dan kardinalitas relasi.
+Dokumen ini memuat spesifikasi lengkap **Entity Relationship Diagram (ERD)** dengan **Standar Notasi Chen Klasik** (Entitas Persegi Panjang, Relasi Belah Ketupat/Diamond, Atribut Elips dengan Primary Key Bergaris Bawah), siap dibuka di **Draw.io (diagrams.net)**, serta sesuai kaidah buku teks akademik untuk laporan skripsi/tugas akhir.
 
 ---
 
@@ -11,20 +11,23 @@ Dokumen ini memuat spesifikasi lengkap **Entity Relationship Diagram (ERD)** yan
 File diagram Draw.io resmi telah disediakan di repository:
 * **Lokasi File Lokal:** [`docs/ERD_SIM_RAPAT.drawio`](file:///c:/Users/nappz/Documents/Project%20Website/Projek%20Log%20Rapat/docs/ERD_SIM_RAPAT.drawio)
 * **Tautan Unduh Web:** [http://localhost:3000/ERD_SIM_RAPAT.drawio](http://localhost:3000/ERD_SIM_RAPAT.drawio)
+* **Pratinjau Visual Notasi Chen:** [http://localhost:3000/erd-chen-preview.html](http://localhost:3000/erd-chen-preview.html)
 * **Viewer Interaktif Web:** [http://localhost:3000/uml-viewer.html](http://localhost:3000/uml-viewer.html)
 
-### Cara Membuka di Draw.io (diagrams.net):
-1. Buka browser dan kunjungi **[app.diagrams.net](https://app.diagrams.net)** (atau buka aplikasi desktop Draw.io).
-2. Pilih menu **File** &rarr; **Open From** &rarr; **Device...** (atau seret (*drag & drop*) file `ERD_SIM_RAPAT.drawio` langsung ke kanvas).
-3. Diagram akan terbuka dengan tata letak rapi, warna resmi SIM-RAPAT KEK (`#215865`), tabel entitas ber-header, serta konektor Crow's Foot.
+### Kaidah Visual Notasi Chen:
+1. **Persegi Panjang (Rectangle):** Merepresentasikan Entitas (`biro`, `user`, `meeting`, `meeting_minutes`, `action_item`, `biro_meeting_sequence`).
+2. **Belah Ketupat (Rhombus/Diamond):** Merepresentasikan Relasi antar-entitas (`memiliki`, `mengatur`, `menyelenggarakan`, `melibatkan`, `memimpin & notulis`, `menghadiri`, `menghasilkan`, `menetapkan`, `pic_biro`, `pic_user`).
+3. **Elips (Ellipse):** Merepresentasikan Atribut data.
+4. **Teks Bergaris Bawah (Underline):** Menandakan **Primary Key (PK)** entitas (misal: `<u>biro_id</u>`, `<u>user_id</u>`, `<u>meeting_id</u>`).
+5. **Derajat Kardinalitas (1 / N / M):** Dituliskan pada garis penghubung antara entitas dan belah ketupat relasi.
 
 ---
 
-## 2. Kamus Entitas & Atribut ERD
+## 2. Kamus Entitas & Atribut ERD (Tabel Basis Data Resmi: `snake_case`)
 
-Terdapat **8 entitas utama** yang memodelkan seluruh proses bisnis tata kelola rapat dan tindak lanjut:
+Terdapat **8 tabel utama** dalam basis data PostgreSQL (Neon DB) yang memodelkan seluruh proses bisnis tata kelola rapat dan tindak lanjut:
 
-### A. Tabel `BIRO` (Master 5 Biro KEK)
+### A. Tabel `biro` (Master 5 Biro KEK)
 Entitas master unit kerja di lingkungan Sekretariat Jenderal Dewan Nasional KEK.
 * **`biro_id` (PK, String)** : Format bersih `BIRO-BPPK`, `BIRO-PKKEK`, `BIRO-IKK`, `BIRO-HSDMO`, `BIRO-UK`.
 * **`code` (UK, String)** : Kode singkatan biro (`BPPK`, `PKKEK`, `IKK`, `HSDMO`, `UK`).
