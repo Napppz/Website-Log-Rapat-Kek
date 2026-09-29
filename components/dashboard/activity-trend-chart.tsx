@@ -2,10 +2,16 @@
 
 import React, { useState, useEffect } from 'react';
 import { MOCK_MONTHLY_ACTIVITY } from '@/lib/mock-data';
+import { MonthlyActivity } from '@/lib/types';
 import { cn } from '@/lib/utils';
-import { RotateCcw, TrendingUp, Sparkles } from 'lucide-react';
+import { RotateCcw, TrendingUp } from 'lucide-react';
 
-export function ActivityTrendChart() {
+interface ActivityTrendChartProps {
+  data?: MonthlyActivity[];
+}
+
+export function ActivityTrendChart({ data }: ActivityTrendChartProps) {
+  const chartData = data && data.length > 0 ? data : MOCK_MONTHLY_ACTIVITY;
   const [hoveredMonth, setHoveredMonth] = useState<string | null>(null);
   const [isAnimated, setIsAnimated] = useState(false);
 
@@ -25,15 +31,25 @@ export function ActivityTrendChart() {
     }, 80);
   };
 
-  // Height percentages relative to maximum value 28
-  const maxCount = 28;
+  // Dynamic maximum value from real database counts
+  const maxCount = Math.max(...chartData.map((m) => m.count), 1);
   const getHeightPercent = (count: number) => {
-    return Math.round((count / maxCount) * 100);
+    if (count === 0) return 0;
+    return Math.max(Math.round((count / maxCount) * 100), 6);
   };
 
   const activeItem = hoveredMonth
-    ? MOCK_MONTHLY_ACTIVITY.find((m) => m.month === hoveredMonth)
+    ? chartData.find((m) => m.month === hoveredMonth)
     : null;
+
+  const peakItem =
+    chartData.find((m) => m.isPeak) ||
+    chartData.reduce((prev, curr) => (curr.count > prev.count ? curr : prev), chartData[0]);
+
+  const dateRangeLabel =
+    chartData.length > 0
+      ? `${chartData[0].month} - ${chartData[chartData.length - 1].month}`
+      : 'Jan - Sep';
 
   return (
     <div className="lg:col-span-5 rounded-2xl bg-white p-6 shadow-sm border border-slate-200 flex flex-col justify-between transition-all">
@@ -59,7 +75,7 @@ export function ActivityTrendChart() {
             className="group inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-[#F0F9FA] hover:bg-[#E8F5F7] border border-[#BCE3EB] text-[#215865] text-[11px] font-bold transition-all cursor-pointer shadow-2xs"
             title="Klik untuk memutar ulang animasi tren"
           >
-            <span>Jan - Sep</span>
+            <span>{dateRangeLabel}</span>
             <RotateCcw className="w-3 h-3 text-[#31889C] group-hover:rotate-180 transition-transform duration-500" />
           </button>
         </div>
@@ -76,10 +92,11 @@ export function ActivityTrendChart() {
 
           {/* Bar Columns Container with fixed height so percentages render properly */}
           <div className="h-48 w-full flex items-end justify-between gap-1.5 sm:gap-2 pt-2 px-1 relative z-10">
-            {MOCK_MONTHLY_ACTIVITY.map((item, idx) => {
+            {chartData.map((item, idx) => {
               const heightPercent = getHeightPercent(item.count);
-              const isPeak = item.isPeak;
+              const isPeak = item.isPeak && item.count > 0;
               const isHovered = hoveredMonth === item.month;
+              const ratio = maxCount > 0 ? item.count / maxCount : 0;
 
               return (
                 <div
@@ -96,7 +113,9 @@ export function ActivityTrendChart() {
                         ? "text-[#31889C] scale-110 -translate-y-1 opacity-100"
                         : isPeak
                         ? "text-[#215865] opacity-100"
-                        : "text-slate-400 opacity-0 group-hover:opacity-100"
+                        : item.count > 0
+                        ? "text-slate-400 opacity-0 group-hover:opacity-100"
+                        : "text-slate-300 opacity-0 group-hover:opacity-100"
                     )}
                   >
                     {item.count}
@@ -106,18 +125,20 @@ export function ActivityTrendChart() {
                   <div className="w-full h-32 flex items-end justify-center px-0.5">
                     <div
                       style={{
-                        height: isAnimated ? `${heightPercent}%` : '4px',
-                        transitionDelay: `${idx * 60}ms`,
+                        height: isAnimated ? `${heightPercent}%` : item.count > 0 ? '4px' : '2px',
+                        transitionDelay: `${idx * 50}ms`,
                       }}
                       className={cn(
                         "w-full max-w-[26px] sm:max-w-[30px] rounded-t-md transition-all duration-700 ease-out relative group-hover:scale-y-105 origin-bottom",
-                        isPeak
+                        item.count === 0
+                          ? "bg-slate-100 hover:bg-slate-200"
+                          : isPeak
                           ? "bg-gradient-to-t from-[#215865] via-[#31889C] to-[#51ADC2] shadow-md shadow-[#31889C]/25 ring-1 ring-[#31889C]/50"
                           : isHovered
                           ? "bg-gradient-to-t from-[#266F80] to-[#51ADC2] shadow-xs"
-                          : item.count >= 20
+                          : ratio >= 0.7
                           ? "bg-gradient-to-t from-[#31889C] to-[#80C3D1]"
-                          : item.count >= 16
+                          : ratio >= 0.4
                           ? "bg-gradient-to-t from-[#51ADC2] to-[#BCE3EB]"
                           : "bg-gradient-to-t from-[#BCE3EB] to-[#E8F5F7]"
                       )}
@@ -159,11 +180,11 @@ export function ActivityTrendChart() {
           <span className="text-[12.5px] text-slate-700 font-medium truncate">
             {activeItem
               ? `Bulan ${activeItem.month} 2026: Aktivitas Rapat Dewan`
-              : 'Puncak Realisasi Investasi (September)'}
+              : `Puncak Aktivitas Sidang (${peakItem?.month || 'Bulan Terpadat'})`}
           </span>
         </div>
         <span className="text-[12.5px] text-[#215865] font-extrabold shrink-0 ml-2">
-          {activeItem ? `${activeItem.count} Sesi Rapat` : '28 Sesi Rapat'}
+          {activeItem ? `${activeItem.count} Sesi Rapat` : `${peakItem?.count || 0} Sesi Rapat`}
         </span>
       </div>
     </div>

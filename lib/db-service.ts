@@ -1,5 +1,5 @@
 import { prisma } from './prisma';
-import { Biro, Meeting, BiroCode, MeetingStatus, BureauWorkload, DashboardMetric } from './types';
+import { Biro, Meeting, BiroCode, MeetingStatus, BureauWorkload, DashboardMetric, MonthlyActivity } from './types';
 
 /**
  * Service to fetch official data directly from Neon PostgreSQL database.
@@ -291,7 +291,8 @@ export async function getMeetingsFromDb(filters?: {
           biroCode: m.primaryBiro.code as BiroCode,
           biroName: m.primaryBiro.shortName,
           status: m.status as MeetingStatus,
-          isNew: m.date.toISOString().slice(0, 10) >= '2026-09-24',
+          // Rapat dianggap 'BARU' jika baru dibuat dalam 3 hari terakhir (72 jam)
+          isNew: m.createdAt ? (Date.now() - new Date(m.createdAt).getTime()) <= 3 * 24 * 60 * 60 * 1000 : false,
           involvedBiros: involvedBiroNames,
           actionItems: {
             total: fallbackTotal,
@@ -532,6 +533,56 @@ export async function getDashboardStats() {
       },
     ];
 
+    // -------------------------------------------------------------------------
+    // Real Monthly Activity Trend directly from Database
+    // -------------------------------------------------------------------------
+    const monthLabels = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
+
+    const allDbMeetingsForTrend = await prisma.meeting.findMany({
+      select: { date: true },
+      orderBy: { date: 'asc' },
+    });
+
+    const monthCountMap: Record<number, number> = {};
+    for (let i = 0; i < 12; i++) {
+      monthCountMap[i] = 0;
+    }
+
+    allDbMeetingsForTrend.forEach((m) => {
+      const d = new Date(m.date);
+      const mIdx = d.getMonth();
+      if (mIdx >= 0 && mIdx < 12) {
+        monthCountMap[mIdx]++;
+      }
+    });
+
+    // Tampilkan hingga bulan aktif terakhir yang memiliki rapat (minimal Sep)
+    const currentMonthIdx = now.getMonth();
+    let maxMonthIdx = Math.max(currentMonthIdx, 8);
+    for (let i = 0; i < 12; i++) {
+      if (monthCountMap[i] > 0 && i > maxMonthIdx) {
+        maxMonthIdx = i;
+      }
+    }
+
+    // Cari bulan dengan frekuensi tertinggi sebagai titik puncak (isPeak)
+    let peakCount = 0;
+    for (let i = 0; i <= maxMonthIdx; i++) {
+      if (monthCountMap[i] > peakCount) {
+        peakCount = monthCountMap[i];
+      }
+    }
+
+    const monthlyActivity: MonthlyActivity[] = [];
+    for (let i = 0; i <= maxMonthIdx; i++) {
+      const count = monthCountMap[i];
+      monthlyActivity.push({
+        month: monthLabels[i],
+        count: count,
+        isPeak: peakCount > 0 && count === peakCount,
+      });
+    }
+
     return {
       totalMeetings,
       totalUsers,
@@ -542,6 +593,7 @@ export async function getDashboardStats() {
       finalMeetings,
       bureauWorkload,
       metrics,
+      monthlyActivity,
       actionItemStats: {
         total: totalActionItems,
         completed: completedActionItems,
