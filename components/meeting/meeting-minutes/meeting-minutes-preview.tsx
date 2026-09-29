@@ -98,7 +98,12 @@ export function MeetingMinutesPreview({
   const [iframeKey, setIframeKey] = useState(0);
 
   const meetingId = meeting?.id;
-  const meetingNumber = meeting?.meetingNumber || meeting?.code || 'KEK/ND/2026';
+  const meetingNumber =
+    (conclusion as any)?.documentNumber ||
+    (decisions as any)?.documentNumber ||
+    meeting?.meetingNumber ||
+    meeting?.code ||
+    'KEK/ND/2026';
   const meetingTitle = meeting?.title || '-';
   const meetingDate = formatIndonesianDate(meeting?.date);
   const meetingTime = normalizeTime(meeting?.startTime, meeting?.endTime);
@@ -118,6 +123,20 @@ export function MeetingMinutesPreview({
     agendaRaw.trim() ||
     `1. ${meetingTitle || 'Pembahasan Koordinasi dan Pelaksanaan Tugas'}`;
   const agendaLines = agendaText.split('\n').filter(Boolean);
+
+  // Nomor Surat Undangan dinamis / '-' jika rapat tanpa surat undangan
+  const rawInvitationNumber =
+    (conclusion as any)?.invitationNumber ||
+    (decisions as any)?.invitationNumber ||
+    (conclusion as any)?.nomorSuratUndangan ||
+    (decisions as any)?.nomorSuratUndangan ||
+    (meeting?.meetingNumber && (meeting.meetingNumber.toUpperCase().startsWith('UND') || meeting.meetingNumber.includes('/'))
+      ? meeting.meetingNumber
+      : '');
+  const invitationNumberDisplay =
+    rawInvitationNumber && rawInvitationNumber.trim() !== '' && rawInvitationNumber.trim() !== '-'
+      ? rawInvitationNumber.trim()
+      : '-';
 
   // Participants resolution
   const participants = meeting?.participants || [];
@@ -227,42 +246,55 @@ export function MeetingMinutesPreview({
             }}
           >
             {/* 1. KOP SURAT RESMI */}
-            <div className="relative pb-1">
-              {/* Logo Dewan KEK di Kiri */}
-              <div className="absolute left-0 top-1/2 -translate-y-1/2 flex items-center">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                  src="/lambang-kek.png"
-                  alt="Lambang Dewan Nasional KEK"
-                  className="w-16 h-16 sm:w-[68px] sm:h-[68px] object-contain"
-                  onError={(e) => {
-                    (e.target as HTMLImageElement).src = '/logo-kek.png';
-                  }}
-                />
-              </div>
-
-              {/* Teks Kop Rata Tengah: Tahoma-Bold 12pt & Tahoma 8pt */}
+            <div className="pb-1">
+              {/* Header Row: Logo di Kiri, Teks di Tengah, Spacer di Kanan */}
               <div
-                className="text-center px-16 sm:px-20"
-                style={{ fontFamily: 'Tahoma, Arial, sans-serif' }}
+                className="w-full"
+                style={{
+                  display: 'grid',
+                  gridTemplateColumns: '72px 1fr 72px',
+                  alignItems: 'center',
+                }}
               >
-                <div className="font-bold text-[12pt] sm:text-[12pt] tracking-wide text-black leading-tight">
-                  DEWAN NASIONAL KAWASAN EKONOMI KHUSUS
+                {/* Logo Dewan KEK di Kiri */}
+                <div className="flex items-center justify-start">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src="/lambang-kek.png"
+                    alt="Lambang Dewan Nasional KEK"
+                    className="w-[64px] h-[64px] sm:w-[68px] sm:h-[68px] object-contain drop-shadow-2xs"
+                    onError={(e) => {
+                      (e.target as HTMLImageElement).src = '/logo-kek.png';
+                    }}
+                  />
                 </div>
-                <div className="font-bold text-[12pt] sm:text-[12pt] tracking-wide text-black leading-tight">
-                  SEKRETARIAT JENDERAL
+
+                {/* Teks Kop Rata Tengah: Tahoma-Bold 12pt & Tahoma 8pt */}
+                <div
+                  className="text-center px-1"
+                  style={{ fontFamily: 'Tahoma, Arial, sans-serif' }}
+                >
+                  <div className="font-bold text-[11pt] sm:text-[12pt] text-black leading-tight tracking-normal whitespace-nowrap">
+                    DEWAN NASIONAL KAWASAN EKONOMI KHUSUS
+                  </div>
+                  <div className="font-bold text-[11pt] sm:text-[12pt] text-black leading-tight tracking-normal mt-0.5 whitespace-nowrap">
+                    SEKRETARIAT JENDERAL
+                  </div>
+                  <div className="text-[7.5pt] sm:text-[8pt] text-black mt-1 leading-snug">
+                    Gedung MNC Tower Lantai 3, Jl. Kebon Sirih No.17 – 19, Jakarta Pusat 10340
+                  </div>
+                  <div className="text-[7.5pt] sm:text-[8pt] text-black leading-snug">
+                    Telp: (021) 3912491, email:{' '}
+                    <span className="text-blue-700 underline">info@kek.go.id</span>
+                  </div>
                 </div>
-                <div className="text-[8pt] text-black mt-1 leading-snug">
-                  Gedung MNC Tower Lantai 3, Jl. Kebon Sirih No.17 – 19, Jakarta Pusat 10340
-                </div>
-                <div className="text-[8pt] text-black leading-snug">
-                  Telp: (021) 3912491, email:{' '}
-                  <span className="text-blue-700 underline">info@kek.go.id</span>
-                </div>
+
+                {/* Penyeimbang Kolom Kanan agar Teks Pas di Tengah Kertas */}
+                <div className="w-[72px]" aria-hidden="true" />
               </div>
 
               {/* Garis Pemisah Tunggal 1.5pt */}
-              <div className="w-full h-[1.5px] bg-black mt-3 mb-4"></div>
+              <div className="w-full h-[1.5px] bg-black mt-2.5 mb-4"></div>
             </div>
 
             {/* 2. JUDUL DOKUMEN: NOTULA & NOMOR */}
@@ -278,37 +310,35 @@ export function MeetingMinutesPreview({
             {/* 3. IDENTITAS & METADATA RAPAT */}
             <div className="space-y-1.5 text-[11pt] mb-5">
               {/* Judul Rapat */}
-              <div className="grid grid-cols-[140px_16px_1fr] sm:grid-cols-[160px_20px_1fr] items-start">
+              <div className="grid grid-cols-[165px_16px_1fr] sm:grid-cols-[185px_20px_1fr] items-start">
                 <span className="text-black">Judul Rapat</span>
                 <span className="text-black">:</span>
                 <span className="text-black leading-relaxed">{meetingTitle}</span>
               </div>
 
               {/* Hari/Tanggal */}
-              <div className="grid grid-cols-[140px_16px_1fr] sm:grid-cols-[160px_20px_1fr] items-start">
+              <div className="grid grid-cols-[165px_16px_1fr] sm:grid-cols-[185px_20px_1fr] items-start">
                 <span className="text-black">Hari/Tanggal</span>
                 <span className="text-black">:</span>
                 <span className="text-black">{meetingDate}</span>
               </div>
 
               {/* Nomor Surat Undangan */}
-              <div className="grid grid-cols-[140px_16px_1fr] sm:grid-cols-[160px_20px_1fr] items-start">
-                <span className="text-black leading-tight">
-                  Nomor Surat<br />Undangan
-                </span>
+              <div className="grid grid-cols-[165px_16px_1fr] sm:grid-cols-[185px_20px_1fr] items-start">
+                <span className="text-black whitespace-nowrap">Nomor Surat Undangan</span>
                 <span className="text-black">:</span>
-                <span className="text-black">-</span>
+                <span className="text-black font-normal">{invitationNumberDisplay}</span>
               </div>
 
               {/* Pukul */}
-              <div className="grid grid-cols-[140px_16px_1fr] sm:grid-cols-[160px_20px_1fr] items-start">
+              <div className="grid grid-cols-[165px_16px_1fr] sm:grid-cols-[185px_20px_1fr] items-start">
                 <span className="text-black">Pukul</span>
                 <span className="text-black">:</span>
                 <span className="text-black">{meetingTime}</span>
               </div>
 
               {/* Agenda */}
-              <div className="grid grid-cols-[140px_16px_1fr] sm:grid-cols-[160px_20px_1fr] items-start">
+              <div className="grid grid-cols-[165px_16px_1fr] sm:grid-cols-[185px_20px_1fr] items-start">
                 <span className="text-black">Agenda</span>
                 <span className="text-black">:</span>
                 <div className="text-black space-y-0.5">
@@ -329,21 +359,21 @@ export function MeetingMinutesPreview({
 
               <div className="space-y-1.5">
                 {/* Ketua/Pimpinan Rapat */}
-                <div className="grid grid-cols-[140px_16px_1fr] sm:grid-cols-[160px_20px_1fr] items-start">
+                <div className="grid grid-cols-[165px_16px_1fr] sm:grid-cols-[185px_20px_1fr] items-start">
                   <span className="text-black">Ketua/Pimpinan Rapat</span>
                   <span className="text-black">:</span>
                   <span className="text-black leading-relaxed">{chairpersonName}</span>
                 </div>
 
                 {/* Pencatat */}
-                <div className="grid grid-cols-[140px_16px_1fr] sm:grid-cols-[160px_20px_1fr] items-start">
+                <div className="grid grid-cols-[165px_16px_1fr] sm:grid-cols-[185px_20px_1fr] items-start">
                   <span className="text-black">Pencatat</span>
                   <span className="text-black">:</span>
                   <span className="text-black leading-relaxed">{secretaryMetaText}</span>
                 </div>
 
                 {/* Peserta Rapat */}
-                <div className="grid grid-cols-[140px_16px_1fr] sm:grid-cols-[160px_20px_1fr] items-start">
+                <div className="grid grid-cols-[165px_16px_1fr] sm:grid-cols-[185px_20px_1fr] items-start">
                   <span className="text-black">Peserta Rapat</span>
                   <span className="text-black">:</span>
                   <div className="text-black space-y-1">
@@ -369,7 +399,7 @@ export function MeetingMinutesPreview({
 
             {/* 5. SUBSTANSI INTI PEMBAHASAN RAPAT */}
             <div className="text-[11pt] mb-5">
-              <div className="grid grid-cols-[140px_16px_1fr] sm:grid-cols-[160px_20px_1fr] items-start font-bold text-black mb-1">
+              <div className="grid grid-cols-[165px_16px_1fr] sm:grid-cols-[185px_20px_1fr] items-start font-bold text-black mb-1">
                 <div className="leading-tight">
                   <div>Substansi Inti</div>
                   <div>Pembahasan Rapat</div>

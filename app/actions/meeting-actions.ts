@@ -19,6 +19,7 @@ export interface CreateMeetingInput {
   participantUserIds?: string[];
   previousMeetingId?: string | null;
   chairpersonId?: string | null;
+  meetingNumber?: string | null;
 }
 
 function safeRevalidate(paths: string[]) {
@@ -71,8 +72,21 @@ export async function createMeetingAction(input: CreateMeetingInput) {
     await requirePermission('create:meeting');
 
     const result = await prisma.$transaction(async (tx) => {
-      // 1. Generate sequence atomically
-      const seq = await getNextMeetingNumber(input.biroCode, tx);
+      // 1. Generate sequence atomically or use custom meetingNumber if provided
+      let finalMeetingNumber = input.meetingNumber?.trim();
+      if (finalMeetingNumber) {
+        const existing = await tx.meeting.findUnique({
+          where: { meetingNumber: finalMeetingNumber },
+        });
+        if (existing) {
+          throw new Error(
+            `Nomor surat / undangan "${finalMeetingNumber}" sudah digunakan oleh rapat lain. Silakan gunakan nomor lain atau kosongkan untuk penomoran otomatis.`
+          );
+        }
+      } else {
+        const seq = await getNextMeetingNumber(input.biroCode, tx);
+        finalMeetingNumber = seq.meetingNumber;
+      }
 
       // 2. Find primary biro
       const primaryBiro = await tx.biro.findUnique({
@@ -86,7 +100,7 @@ export async function createMeetingAction(input: CreateMeetingInput) {
       // 3. Create meeting record
       const meeting = await tx.meeting.create({
         data: {
-          meetingNumber: seq.meetingNumber,
+          meetingNumber: finalMeetingNumber,
           title: input.title,
           primaryBiroId: primaryBiro.id,
           date: new Date(input.date),
@@ -198,7 +212,7 @@ export async function createMeetingAction(input: CreateMeetingInput) {
       }
 
       return {
-        meetingNumber: seq.meetingNumber,
+        meetingNumber: finalMeetingNumber,
         id: meeting.id,
         title: meeting.title,
         participantCount: targetUserIds.size,
@@ -244,6 +258,55 @@ export async function updateMeetingStatusAction(meetingId: string, status: Meeti
   } catch (error: any) {
     console.error('Error updating meeting status:', error);
     return { success: false, error: error?.message || 'Gagal memperbarui status rapat' };
+  }
+}
+
+/**
+ * Server action to update meeting number / invitation letter number
+ */
+export async function updateMeetingNumberAction(meetingId: string, newMeetingNumber: string) {
+  try {
+    // Authorization Check: Must have 'edit:meeting' permission (SUPER_ADMIN, ADMIN, NOTULIS)
+    await requirePermission('edit:meeting');
+
+    const trimmed = newMeetingNumber.trim();
+    if (!trimmed) {
+      return { success: false, error: 'Nomor surat / undangan tidak boleh kosong.' };
+    }
+
+    // Check if newMeetingNumber is already used by another meeting
+    const existing = await prisma.meeting.findFirst({
+      where: {
+        meetingNumber: trimmed,
+        id: { not: meetingId },
+      },
+    });
+
+    if (existing) {
+      return {
+        success: false,
+        error: `Nomor surat/undangan "${trimmed}" sudah digunakan oleh rapat lain.`,
+      };
+    }
+
+    const updated = await prisma.meeting.update({
+      where: { id: meetingId },
+      data: { meetingNumber: trimmed },
+      include: { primaryBiro: true },
+    });
+
+    safeRevalidate([
+      '/',
+      '/semua-rapat',
+      `/semua-rapat/${meetingId}`,
+      `/rapat/${meetingId}`,
+      `/biro/${updated.primaryBiro.code.toLowerCase()}`,
+    ]);
+
+    return { success: true, data: updated };
+  } catch (error: any) {
+    console.error('Failed to update meeting number:', error);
+    return { success: false, error: error?.message || 'Gagal mengubah nomor surat/undangan' };
   }
 }
 

@@ -31,6 +31,7 @@ import {
   Link2,
   Eye,
   ExternalLink,
+  Edit3,
 } from 'lucide-react';
 import { MeetingStatusBadge } from '@/components/meeting/meeting-status-badge';
 import { MeetingMinutesSection } from '@/components/meeting/meeting-minutes/meeting-minutes-section';
@@ -45,6 +46,7 @@ import {
   updateParticipantAttendanceAction,
   addParticipantToMeetingAction,
   removeParticipantFromMeetingAction,
+  updateMeetingNumberAction,
 } from '@/app/actions/meeting-actions';
 import { useSession } from 'next-auth/react';
 import { toast, confirmModal } from '@/components/providers/toast-provider';
@@ -116,6 +118,12 @@ export function MeetingDetailView({
   const [isExporting, setIsExporting] = useState(false);
   const [status, setStatus] = useState<MeetingStatus>(meeting.status);
 
+  // Custom Meeting Number state
+  const [currentMeetingNumber, setCurrentMeetingNumber] = useState<string>(meeting.meetingNumber);
+  const [isEditingMeetingNumber, setIsEditingMeetingNumber] = useState(false);
+  const [editNumberValue, setEditNumberValue] = useState<string>(meeting.meetingNumber);
+  const [isSavingNumber, setIsSavingNumber] = useState(false);
+
   // Rapat Lanjutan / Rujukan states
   const [previousMeeting, setPreviousMeeting] = useState<any>(meeting.previousMeeting || null);
   const [showPreviousMeetingModal, setShowPreviousMeetingModal] = useState<boolean>(false);
@@ -169,6 +177,30 @@ export function MeetingDetailView({
     month: 'long',
     year: 'numeric',
   });
+
+  const handleSaveMeetingNumber = async () => {
+    const trimmed = editNumberValue.trim();
+    if (!trimmed) {
+      toast.warning('Nomor surat / undangan tidak boleh kosong.');
+      return;
+    }
+    setIsSavingNumber(true);
+    try {
+      const res = await updateMeetingNumberAction(meeting.id, trimmed);
+      if (res.success) {
+        setCurrentMeetingNumber(trimmed);
+        setIsEditingMeetingNumber(false);
+        toast.success(`Nomor surat rapat berhasil diubah menjadi "${trimmed}".`);
+        router.refresh();
+      } else {
+        toast.error(res.error || 'Gagal mengubah nomor surat');
+      }
+    } catch (err: any) {
+      toast.error(err?.message || 'Terjadi kesalahan sistem.');
+    } finally {
+      setIsSavingNumber(false);
+    }
+  };
 
   const handleStatusChange = async (newStatus: MeetingStatus) => {
     try {
@@ -422,9 +454,57 @@ export function MeetingDetailView({
       <div className="bg-white rounded-2xl border border-slate-200 shadow-xs p-6 space-y-4">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div className="flex items-center gap-3">
-            <span className="font-bold text-[18px] text-[#215865] bg-[#F0F9FA] px-3 py-1 rounded-lg border border-[#BCE3EB]">
-              {meeting.meetingNumber}
-            </span>
+            {isEditingMeetingNumber ? (
+              <div className="flex items-center gap-1.5 bg-[#F0F9FA] p-1 rounded-xl border border-[#BCE3EB]">
+                <input
+                  type="text"
+                  value={editNumberValue}
+                  onChange={(e) => setEditNumberValue(e.target.value)}
+                  placeholder="Nomor Surat Undangan"
+                  className="px-2.5 py-1 text-[13px] font-bold text-[#215865] bg-white border border-[#31889C] rounded-lg focus:outline-none focus:ring-1 focus:ring-[#31889C]"
+                />
+                <button
+                  type="button"
+                  disabled={isSavingNumber}
+                  onClick={handleSaveMeetingNumber}
+                  className="p-1.5 rounded-lg bg-[#31889C] text-white hover:bg-[#266F80] transition-colors cursor-pointer disabled:opacity-50"
+                  title="Simpan nomor surat"
+                >
+                  <Check className="w-3.5 h-3.5" />
+                </button>
+                <button
+                  type="button"
+                  disabled={isSavingNumber}
+                  onClick={() => {
+                    setIsEditingMeetingNumber(false);
+                    setEditNumberValue(currentMeetingNumber);
+                  }}
+                  className="p-1.5 rounded-lg bg-white border border-slate-200 text-slate-600 hover:bg-slate-100 transition-colors cursor-pointer"
+                  title="Batal"
+                >
+                  <X className="w-3.5 h-3.5" />
+                </button>
+              </div>
+            ) : (
+              <div className="flex items-center gap-2">
+                <span className="font-bold text-[18px] text-[#215865] bg-[#F0F9FA] px-3 py-1 rounded-lg border border-[#BCE3EB]">
+                  {currentMeetingNumber}
+                </span>
+                {canEditMeeting && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setEditNumberValue(currentMeetingNumber);
+                      setIsEditingMeetingNumber(true);
+                    }}
+                    className="p-1.5 rounded-lg text-slate-400 hover:text-[#31889C] hover:bg-[#F0F9FA] transition-colors cursor-pointer"
+                    title="Ubah Nomor Surat / Undangan Resmi"
+                  >
+                    <Edit3 className="w-3.5 h-3.5" />
+                  </button>
+                )}
+              </div>
+            )}
             <MeetingStatusBadge status={status} />
           </div>
 

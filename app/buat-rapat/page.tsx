@@ -19,6 +19,7 @@ import {
   Check,
   UserCheck,
   Link2,
+  FileText,
 } from 'lucide-react';
 import { BIRO_LIST } from '@/lib/mock-data';
 import { BiroCode } from '@/lib/types';
@@ -61,6 +62,7 @@ export default function BuatRapatPage() {
   const [attendees, setAttendees] = useState(
     'Dr. Hendra Suprayitno, Maya Puspita, S.Sos, Tim Sekretariat Jenderal'
   );
+  const [customMeetingNumber, setCustomMeetingNumber] = useState('');
   const [availableUsers, setAvailableUsers] = useState<AvailableUser[]>([]);
   const [availableMeetings, setAvailableMeetings] = useState<any[]>([]);
   const [previousMeetingId, setPreviousMeetingId] = useState<string>('');
@@ -199,6 +201,7 @@ export default function BuatRapatPage() {
         participantUserIds: selectedUserIds,
         previousMeetingId: previousMeetingId || undefined,
         chairpersonId: chairpersonId || undefined,
+        meetingNumber: customMeetingNumber.trim() || undefined,
       });
 
       if (res.success && res.data) {
@@ -312,6 +315,30 @@ export default function BuatRapatPage() {
                 ))}
               </select>
             </div>
+          </div>
+
+          {/* Nomor Undangan Surat (Opsional) */}
+          <div className="p-3.5 bg-slate-50/80 rounded-xl border border-slate-200 space-y-1.5">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1">
+              <label className="font-semibold text-slate-800 flex items-center gap-1.5">
+                <FileText className="w-4 h-4 text-[#31889C]" />
+                <span>Nomor Surat Undangan Rapat</span>
+                <span className="text-slate-400 font-normal">(Opsional)</span>
+              </label>
+              <span className="text-[11px] text-[#31889C]">
+                Kosongkan jika rapat internal tanpa surat undangan (akan bertanda &apos;-&apos;)
+              </span>
+            </div>
+            <input
+              type="text"
+              value={customMeetingNumber}
+              onChange={(e) => setCustomMeetingNumber(e.target.value)}
+              placeholder="Contoh: UND-014/SET.KEK/IX/2026 atau biarkan kosong (tanda '-')"
+              className="w-full px-3 py-2 rounded-lg border border-slate-300 bg-white text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-[#31889C]/25 focus:border-[#31889C]"
+            />
+            <p className="text-[11px] text-slate-500">
+              Jika diisi, nomor ini akan dicantumkan pada baris <strong>Nomor Surat Undangan</strong> di notula &amp; PDF resmi. Jika dikosongkan, sistem otomatis memberikan tanda <strong>&apos;-&apos;</strong> sesuai kaidah tata naskah dinas jika rapat tidak memakai surat undangan tersendiri.
+            </p>
           </div>
 
           {/* Rapat Rujukan / Lanjutan (Opsional) */}

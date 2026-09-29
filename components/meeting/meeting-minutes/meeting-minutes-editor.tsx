@@ -24,8 +24,10 @@ import {
   Upload,
   Trash2,
   Check,
+  FileText,
 } from 'lucide-react';
 import { SignatureDialog } from './signature-dialog';
+import { updateMeetingNumberAction } from '@/app/actions/meeting-actions';
 
 interface MeetingMinutesEditorProps {
   meetingId: string;
@@ -94,9 +96,26 @@ export function MeetingMinutesEditor({
     (initialMinutes?.agenda as any)?.signatureImage ||
     null;
 
+  const initialDocumentNumber =
+    (initialMinutes?.conclusion as any)?.documentNumber ||
+    (initialMinutes?.decisions as any)?.documentNumber ||
+    meeting?.meetingNumber ||
+    '';
+
+  const initialInvitationNumber =
+    (initialMinutes?.conclusion as any)?.invitationNumber ||
+    (initialMinutes?.decisions as any)?.invitationNumber ||
+    (initialMinutes?.conclusion as any)?.nomorSuratUndangan ||
+    (initialMinutes?.decisions as any)?.nomorSuratUndangan ||
+    (meeting?.meetingNumber && (meeting.meetingNumber.toUpperCase().startsWith('UND') || meeting.meetingNumber.includes('/'))
+      ? meeting.meetingNumber
+      : '');
+
   const [signerName, setSignerName] = useState<string>(initialSignerName);
   const [signerRole, setSignerRole] = useState<string>(initialSignerRole);
   const [signatureImage, setSignatureImage] = useState<string | null>(initialSignatureImage);
+  const [documentNumber, setDocumentNumber] = useState<string>(initialDocumentNumber);
+  const [invitationNumber, setInvitationNumber] = useState<string>(initialInvitationNumber);
   const [isSignatureModalOpen, setIsSignatureModalOpen] = useState(false);
 
   const [activeTab, setActiveTab] = useState<'all' | 'agenda' | 'discussion' | 'conclusion' | 'decisions' | 'closer'>('all');
@@ -114,13 +133,27 @@ export function MeetingMinutesEditor({
       setStatusMessage('Menyimpan...');
 
       try {
-        // Sematkan signerName, signerRole, chairpersonName, dan signatureImage ke dalam payload conclusion & decisions agar selalu tersimpan
+        // Sematkan signerName, signerRole, chairpersonName, signatureImage, documentNumber, dan invitationNumber
+        const finalDocNum = documentNumber.trim() || undefined;
+        const finalInvitationNum = invitationNumber.trim() || undefined;
+
+        // Jika nomor surat diubah dan berbeda dari nomor rapat asli di DB, sinkronkan ke tabel Meeting
+        if (finalDocNum && meeting?.meetingNumber && finalDocNum !== meeting.meetingNumber) {
+          try {
+            await updateMeetingNumberAction(meetingId, finalDocNum);
+          } catch (numErr) {
+            console.warn('Could not sync meeting number to meeting table:', numErr);
+          }
+        }
+
         const conclusionPayload = {
           ...(conclusion || { type: 'doc', content: [] }),
           signerName: signerName.trim(),
           signerRole: signerRole.trim(),
           chairpersonName: chairpersonName.trim(),
           signatureImage: signatureImage || null,
+          documentNumber: finalDocNum || meeting?.meetingNumber,
+          invitationNumber: finalInvitationNum,
         };
 
         const decisionsPayload = decisions
@@ -130,6 +163,8 @@ export function MeetingMinutesEditor({
               signerRole: signerRole.trim(),
               chairpersonName: chairpersonName.trim(),
               signatureImage: signatureImage || null,
+              documentNumber: finalDocNum || meeting?.meetingNumber,
+              invitationNumber: finalInvitationNum,
             }
           : undefined;
 
@@ -158,7 +193,7 @@ export function MeetingMinutesEditor({
         setStatusMessage('Gagal menyimpan');
       }
     },
-    [meetingId, agenda, discussion, decisions, conclusion, signerName, signerRole, chairpersonName, signatureImage, onSaved]
+    [meetingId, agenda, discussion, decisions, conclusion, signerName, signerRole, chairpersonName, signatureImage, documentNumber, invitationNumber, meeting?.meetingNumber, onSaved]
   );
 
   // Autosave trigger with 2.5s debounce
@@ -181,7 +216,7 @@ export function MeetingMinutesEditor({
         clearTimeout(debounceTimerRef.current);
       }
     };
-  }, [agenda, discussion, decisions, conclusion, signerName, signerRole, signatureImage, executeSave]);
+  }, [agenda, discussion, decisions, conclusion, signerName, signerRole, signatureImage, documentNumber, invitationNumber, executeSave]);
 
   const handleFieldChange = (setter: React.Dispatch<React.SetStateAction<JSONContent | null>>) => {
     return (json: JSONContent) => {
@@ -363,7 +398,7 @@ export function MeetingMinutesEditor({
               FORMAT NOTULA RESMI
             </span>
             <span className="text-[12px] font-semibold text-slate-700">
-              NOMOR: {meeting?.meetingNumber || (meeting as any)?.code || 'KEK/ND/2026'}
+              NOMOR: {documentNumber || meeting?.meetingNumber || (meeting as any)?.code || 'KEK/ND/2026'}
             </span>
           </div>
           <h3 className="font-bold text-[16px] text-slate-900 mt-1">
@@ -599,6 +634,92 @@ export function MeetingMinutesEditor({
               <BadgeCheck className="w-3.5 h-3.5 text-[#31889C]" />
               <span>Dapat Diisi Sendiri</span>
             </span>
+          </div>
+
+          {/* Input 1: Nomor Surat Undangan Rapat (Opsional) */}
+          <div className="space-y-2 p-4 bg-[#F8FAFC] rounded-xl border border-slate-200">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1.5">
+              <label className="text-[12.5px] font-bold text-slate-800 flex items-center gap-1.5">
+                <FileText className="w-4 h-4 text-[#31889C]" />
+                <span>Nomor Surat Undangan Rapat (Opsional)</span>
+              </label>
+              <div className="flex items-center gap-2">
+                {invitationNumber && invitationNumber.trim() !== '' && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setInvitationNumber('');
+                      hasChangesRef.current = true;
+                    }}
+                    className="text-[11px] font-semibold text-slate-500 hover:text-red-600 hover:underline cursor-pointer"
+                  >
+                    Kosongkan / Tanda &apos;-&apos;
+                  </button>
+                )}
+                {meeting?.meetingNumber && invitationNumber !== meeting.meetingNumber && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setInvitationNumber(meeting.meetingNumber || '');
+                      hasChangesRef.current = true;
+                    }}
+                    className="text-[11px] font-semibold text-[#31889C] hover:underline cursor-pointer"
+                  >
+                    Salin dari {meeting.meetingNumber}
+                  </button>
+                )}
+              </div>
+            </div>
+            <input
+              type="text"
+              value={invitationNumber}
+              onChange={(e) => {
+                setInvitationNumber(e.target.value);
+                hasChangesRef.current = true;
+              }}
+              placeholder="Contoh: UND-014/SET.KEK/IX/2026 atau biarkan kosong (otomatis bertanda '-')"
+              className="w-full px-4 py-2.5 text-[13.5px] bg-white border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#31889C]/20 focus:border-[#31889C] transition-all text-slate-900 font-medium placeholder:text-slate-400"
+            />
+            <p className="text-[11px] text-slate-500">
+              Dicantumkan pada baris <strong>Nomor Surat Undangan : ...</strong> di tabel identitas notula &amp; PDF. Jika dikosongkan, otomatis menampilkan tanda <strong>&apos;-&apos;</strong> sesuai kaidah tata naskah dinas untuk rapat yang tidak memakai surat undangan tersendiri.
+            </p>
+          </div>
+
+          {/* Input 2: Nomor Naskah Notula Dinas (NOMOR: ...) */}
+          <div className="space-y-2 p-4 bg-[#F8FAFC] rounded-xl border border-slate-200">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1.5">
+              <label className="text-[12.5px] font-bold text-slate-800 flex items-center gap-1.5">
+                <FileText className="w-4 h-4 text-[#31889C]" />
+                <span>Nomor Registrasi Notula (NOMOR: ...)</span>
+              </label>
+              <div className="flex items-center gap-2">
+                {meeting?.meetingNumber && documentNumber !== meeting.meetingNumber && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setDocumentNumber(meeting.meetingNumber || '');
+                      hasChangesRef.current = true;
+                    }}
+                    className="text-[11px] font-semibold text-[#31889C] hover:underline cursor-pointer"
+                  >
+                    Kembalikan ke {meeting.meetingNumber}
+                  </button>
+                )}
+              </div>
+            </div>
+            <input
+              type="text"
+              value={documentNumber}
+              onChange={(e) => {
+                setDocumentNumber(e.target.value);
+                hasChangesRef.current = true;
+              }}
+              placeholder={`Contoh: ${meeting?.meetingNumber || 'IKK-015'}`}
+              className="w-full px-4 py-2.5 text-[13.5px] bg-white border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#31889C]/20 focus:border-[#31889C] transition-all text-slate-900 font-medium placeholder:text-slate-400"
+            />
+            <p className="text-[11px] text-slate-500">
+              Dicetak tebal pada judul naskah notula dinas (<strong>NOMOR: {documentNumber || meeting?.meetingNumber}</strong>).
+            </p>
           </div>
 
           {/* Input Ketua / Pimpinan Rapat */}

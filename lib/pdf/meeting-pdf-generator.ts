@@ -244,7 +244,10 @@ export async function generateMeetingPdf(meeting: MeetingPdfData): Promise<Buffe
           align: 'center',
         });
 
-      const nomorNaskah = meeting.meetingNumber || (meeting as any).code || 'KEK/ND/2026';
+      const customDocNumber =
+        (meeting.minutes?.conclusion as any)?.documentNumber ||
+        (meeting.minutes?.decisions as any)?.documentNumber;
+      const nomorNaskah = customDocNumber || meeting.meetingNumber || (meeting as any).code || 'KEK/ND/2026';
       doc
         .font(fonts.arial)
         .fontSize(11)
@@ -259,7 +262,7 @@ export async function generateMeetingPdf(meeting: MeetingPdfData): Promise<Buffe
       // -------------------------------------------------------------
       // 3. IDENTITAS & METADATA RAPAT
       // -------------------------------------------------------------
-      const colLabelW = 120;
+      const colLabelW = 150;
       const colSepW = 15;
       const colValW = printableWidth - colLabelW - colSepW;
 
@@ -284,8 +287,21 @@ export async function generateMeetingPdf(meeting: MeetingPdfData): Promise<Buffe
       // 2. Hari/Tanggal
       renderMetaRow('Hari/Tanggal', formatIndonesianDate(meeting.date));
 
-      // 3. Nomor Surat Undangan
-      renderMetaRow('Nomor Surat\nUndangan', '-');
+      // 3. Nomor Surat Undangan (Dinamis / '-' jika rapat tanpa surat undangan)
+      const rawInvitationNum =
+        (meeting.minutes?.conclusion as any)?.invitationNumber ||
+        (meeting.minutes?.decisions as any)?.invitationNumber ||
+        (meeting.minutes?.conclusion as any)?.nomorSuratUndangan ||
+        (meeting.minutes?.decisions as any)?.nomorSuratUndangan ||
+        (meeting.meetingNumber && (meeting.meetingNumber.toUpperCase().startsWith('UND') || meeting.meetingNumber.includes('/'))
+          ? meeting.meetingNumber
+          : '');
+      const invitationNumberDisplay =
+        rawInvitationNum && rawInvitationNum.trim() !== '' && rawInvitationNum.trim() !== '-'
+          ? rawInvitationNum.trim()
+          : '-';
+
+      renderMetaRow('Nomor Surat Undangan', invitationNumberDisplay);
 
       // 4. Pukul
       renderMetaRow('Pukul', normalizeTime(meeting.startTime, meeting.endTime));
