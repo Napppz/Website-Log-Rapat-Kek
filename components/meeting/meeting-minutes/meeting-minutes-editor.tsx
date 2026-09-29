@@ -99,7 +99,7 @@ export function MeetingMinutesEditor({
   const [signatureImage, setSignatureImage] = useState<string | null>(initialSignatureImage);
   const [isSignatureModalOpen, setIsSignatureModalOpen] = useState(false);
 
-  const [activeTab, setActiveTab] = useState<'all' | 'agenda' | 'discussion' | 'conclusion' | 'decisions'>('all');
+  const [activeTab, setActiveTab] = useState<'all' | 'agenda' | 'discussion' | 'conclusion' | 'decisions' | 'closer'>('all');
   const [saveStatus, setSaveStatus] = useState<'saved' | 'saving' | 'error' | 'idle'>('idle');
   const [statusMessage, setStatusMessage] = useState<string>('');
   const [isManualSaving, setIsManualSaving] = useState(false);
@@ -389,26 +389,27 @@ export function MeetingMinutesEditor({
             <button
               type="button"
               onClick={onPreviewClick}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-900 hover:bg-slate-800 text-white font-semibold text-[12px] transition-colors cursor-pointer shadow-xs"
+              className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg border border-slate-300 bg-white hover:bg-slate-50 text-slate-800 font-semibold text-[12px] transition-colors cursor-pointer shadow-xs"
             >
-              <Eye className="w-3.5 h-3.5 text-teal-300" />
-              <span>Lihat Lembar Notula</span>
+              <Eye className="w-3.5 h-3.5 text-[#31889C]" />
+              <span>Lihat Pratinjau Naskah</span>
             </button>
           )}
         </div>
       </div>
 
       {/* Action Bar & Section Navigation */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 p-4 bg-white rounded-xl border border-slate-200 shadow-xs">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 p-3 bg-white rounded-xl border border-slate-200 shadow-xs">
         {/* Left: Section Tabs (Sesuai Urutan Tata Naskah Dinas) */}
         <div className="flex flex-wrap items-center gap-1.5 text-[12px]">
           <span className="font-bold text-slate-700 mr-1 hidden sm:inline">Navigasi:</span>
           {[
             { id: 'all', label: 'Semua Bagian' },
             { id: 'agenda', label: '1. Agenda' },
-            { id: 'discussion', label: '2. Substansi Pembahasan' },
+            { id: 'discussion', label: '2. Pembahasan' },
             { id: 'conclusion', label: '3. Kesimpulan' },
             { id: 'decisions', label: '4. Tindak Lanjut' },
+            { id: 'closer', label: '5. Penutup & TTD' },
           ].map((tab) => (
             <button
               key={tab.id}
@@ -425,50 +426,29 @@ export function MeetingMinutesEditor({
           ))}
         </div>
 
-        {/* Right: Autosave Status & Manual Actions */}
-        <div className="flex items-center gap-3 self-end sm:self-center">
-          {/* Status Indicator */}
-          <div className="flex items-center gap-1.5 text-[12px] font-medium">
-            {saveStatus === 'saving' && (
-              <>
-                <Clock className="w-3.5 h-3.5 text-[#31889C] animate-spin" />
-                <span className="text-[#31889C]">{statusMessage}</span>
-              </>
-            )}
-            {saveStatus === 'saved' && (
-              <>
-                <CheckCircle2 className="w-3.5 h-3.5 text-[#4D8F3D]" />
-                <span className="text-[#4D8F3D] font-semibold">{statusMessage}</span>
-              </>
-            )}
-            {saveStatus === 'error' && (
-              <>
-                <AlertCircle className="w-3.5 h-3.5 text-red-600" />
-                <span className="text-red-700 font-semibold">{statusMessage}</span>
-              </>
-            )}
-          </div>
-
-          {/* Simpan Draft */}
-          <button
-            type="button"
-            disabled={isManualSaving}
-            onClick={() => handleManualSave(true)}
-            className="px-3 py-1.5 rounded-lg border border-slate-300 bg-white hover:bg-slate-50 text-slate-700 font-semibold text-[12px] transition-colors cursor-pointer shadow-xs disabled:opacity-50"
-          >
-            Simpan Draft
-          </button>
-
-          {/* Simpan Final */}
-          <button
-            type="button"
-            disabled={isManualSaving}
-            onClick={() => handleManualSave(false)}
-            className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg bg-[#31889C] hover:bg-[#266F80] text-white font-semibold text-[12px] transition-all shadow-xs cursor-pointer disabled:opacity-50"
-          >
-            <Save className="w-3.5 h-3.5" />
-            <span>Simpan</span>
-          </button>
+        {/* Right: Autosave Status Indicator */}
+        <div className="flex items-center gap-2 text-[12px] font-medium self-end sm:self-center pr-1">
+          {saveStatus === 'saving' && (
+            <>
+              <Clock className="w-3.5 h-3.5 text-[#31889C] animate-spin" />
+              <span className="text-[#31889C]">{statusMessage}</span>
+            </>
+          )}
+          {saveStatus === 'saved' && (
+            <>
+              <CheckCircle2 className="w-3.5 h-3.5 text-[#4D8F3D]" />
+              <span className="text-[#4D8F3D] font-semibold">{statusMessage}</span>
+            </>
+          )}
+          {saveStatus === 'error' && (
+            <>
+              <AlertCircle className="w-3.5 h-3.5 text-red-600" />
+              <span className="text-red-700 font-semibold">{statusMessage}</span>
+            </>
+          )}
+          {saveStatus === 'idle' && (
+            <span className="text-slate-400 text-[11.5px]">Autosave aktif</span>
+          )}
         </div>
       </div>
 
@@ -599,7 +579,8 @@ export function MeetingMinutesEditor({
         )}
 
         {/* BAGIAN 5: PELAKSANA RAPAT & PENANDATANGAN (KETUA & NOTULIS) */}
-        <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-xs space-y-6">
+        {(activeTab === 'all' || activeTab === 'closer') && (
+          <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-xs space-y-6">
           <div className="flex items-center justify-between pb-3 border-b border-slate-100">
             <div className="flex items-center gap-2.5">
               <div className="w-8 h-8 rounded-xl bg-[#F0F9FA] text-[#31889C] flex items-center justify-center">
@@ -832,7 +813,8 @@ export function MeetingMinutesEditor({
             </div>
           </div>
         </div>
-      </div>
+      )}
+    </div>
 
       {/* Signature Modal */}
       <SignatureDialog

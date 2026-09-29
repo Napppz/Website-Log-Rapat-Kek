@@ -134,27 +134,6 @@ export function MeetingMinutesSection({
   if (mode === 'edit' && canEditMinutes) {
     return (
       <div className="space-y-4">
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 p-3.5 bg-[#F0F9FA] rounded-xl border border-[#BCE3EB]">
-          <div>
-            <h3 className="text-[16px] font-bold text-slate-900 flex items-center gap-2">
-              <FileEdit className="w-4 h-4 text-[#31889C]" />
-              <span>Penyusunan Notula Rapat (Format Tata Naskah Dinas)</span>
-            </h3>
-            <p className="text-[12px] text-slate-600 mt-0.5">
-              Tuliskan substansi inti pembahasan, kesimpulan, dan tindak lanjut. Hasil ketikan akan langsung tercermin pada lembar naskah dinas dan PDF.
-            </p>
-          </div>
-
-          <button
-            type="button"
-            onClick={() => setMode('preview')}
-            className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg border border-[#BCE3EB] bg-white hover:bg-[#F0F9FA] text-[#215865] font-semibold text-[12px] transition-colors cursor-pointer shadow-xs shrink-0 self-start sm:self-auto"
-          >
-            <Eye className="w-3.5 h-3.5 text-[#31889C]" />
-            <span>Lihat Pratinjau Naskah</span>
-          </button>
-        </div>
-
         <MeetingMinutesEditor
           meetingId={meetingId}
           meeting={currentMeeting}

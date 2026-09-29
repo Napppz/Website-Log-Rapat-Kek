@@ -1004,24 +1004,6 @@ export function MeetingDetailView({
       {/* Tab 3: Notulen & Hasil Rapat */}
       {activeTab === 'minutes' && (
         <div className="space-y-4">
-          {previousMeeting && (
-            <div className="p-3.5 bg-[#F0F9FA] rounded-xl border border-[#BCE3EB] flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-[12px]">
-              <div className="flex items-center gap-2.5 text-slate-700">
-                <Sparkles className="w-4 h-4 text-[#31889C] shrink-0" />
-                <span>
-                  <strong>Referensi Rapat Sebelumnya:</strong> Notula &amp; butir tindak lanjut dari rapat <strong>{previousMeeting.meetingNumber} ({previousMeeting.title})</strong> dapat Anda tinjau atau salin langsung ke risalah rapat ini.
-                </span>
-              </div>
-              <button
-                type="button"
-                onClick={() => setShowPreviousMeetingModal(true)}
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#31889C] hover:bg-[#266F80] text-white font-semibold text-[11px] shrink-0 transition-all shadow-xs cursor-pointer self-start sm:self-auto"
-              >
-                <FileText className="w-3.5 h-3.5" />
-                <span>Tinjau Risalah {previousMeeting.meetingNumber}</span>
-              </button>
-            </div>
-          )}
           <MeetingMinutesSection
             meetingId={meeting.id}
             meeting={meeting}
