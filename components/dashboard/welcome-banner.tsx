@@ -13,7 +13,7 @@ interface WelcomeBannerProps {
 const ROLE_LABELS: Record<string, { label: string; badgeClass: string }> = {
   SUPER_ADMIN: {
     label: 'Super Admin',
-    badgeClass: 'bg-amber-100 text-amber-900 border-amber-300',
+    badgeClass: 'bg-[#E8F5F7] text-[#31889C] border-[#BCE3EB]',
   },
   ADMIN: {
     label: 'Administrator',
@@ -21,7 +21,7 @@ const ROLE_LABELS: Record<string, { label: string; badgeClass: string }> = {
   },
   NOTULIS: {
     label: 'Notulis Sidang',
-    badgeClass: 'bg-emerald-100 text-emerald-900 border-emerald-300',
+    badgeClass: 'bg-[#ECF8E9] text-[#4D8F3D] border-[#D2EFCA]',
   },
   STAFF: {
     label: 'Staf Biro',
@@ -100,11 +100,11 @@ export function WelcomeBanner({
         opacity: isMounted ? 1 : 0,
         transform: isMounted ? 'translateY(0)' : 'translateY(-6px)',
       }}
-      className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-amber-50 via-white to-amber-100/60 text-slate-800 shadow-sm border border-amber-200/80 p-6 md:p-8"
+      className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-teal-50/70 via-white to-slate-50 text-slate-800 shadow-xs border border-slate-200 p-6 md:p-8"
     >
       {/* Decorative Blur Backgrounds */}
-      <div className="absolute -right-16 -top-16 w-80 h-80 rounded-full bg-amber-400/10 blur-3xl pointer-events-none" />
-      <div className="absolute right-48 -bottom-20 w-64 h-64 rounded-full bg-amber-200/20 blur-2xl pointer-events-none" />
+      <div className="absolute -right-16 -top-16 w-80 h-80 rounded-full bg-[#31889C]/5 blur-3xl pointer-events-none" />
+      <div className="absolute right-48 -bottom-20 w-64 h-64 rounded-full bg-[#7CC563]/10 blur-2xl pointer-events-none" />
 
       <div className="relative z-10 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
         <div className="space-y-2 max-w-3xl">
@@ -117,14 +117,14 @@ export function WelcomeBanner({
               {roleConfig.label}
             </span>
 
-            <span className="text-amber-400 font-semibold">•</span>
+            <span className="text-slate-300 font-semibold">•</span>
 
-            <span className="inline-flex items-center gap-1.5 text-amber-900 font-semibold text-[12.5px]">
-              <CalendarDays className="w-3.5 h-3.5 text-amber-600" />
+            <span className="inline-flex items-center gap-1.5 text-[#31889C] font-semibold text-[12.5px]">
+              <CalendarDays className="w-3.5 h-3.5 text-[#31889C]" />
               {todayFormatted}
             </span>
 
-            <span className="text-amber-400 font-semibold">•</span>
+            <span className="text-slate-300 font-semibold">•</span>
 
             <span className="inline-flex items-center gap-1 text-slate-600 font-medium text-[12.5px]">
               <Building2 className="w-3.5 h-3.5 text-slate-400" />
@@ -149,13 +149,13 @@ export function WelcomeBanner({
             type="button"
             disabled={isDownloading}
             onClick={handleDownload}
-            className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-white border border-amber-300 text-amber-900 hover:bg-amber-50 hover:border-amber-400 transition-all duration-150 shadow-xs font-semibold text-[12.5px] cursor-pointer disabled:opacity-50"
+            className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-white border border-slate-300 text-slate-700 hover:bg-slate-50 hover:border-slate-400 transition-all duration-150 shadow-xs font-semibold text-[12.5px] cursor-pointer disabled:opacity-50"
             title="Unduh laporan eksekutif berkala dalam format PDF resmi"
           >
             {isDownloading ? (
-              <Loader2 className="w-4 h-4 animate-spin text-amber-700" />
+              <Loader2 className="w-4 h-4 animate-spin text-slate-600" />
             ) : (
-              <Download className="w-4 h-4 text-amber-700" />
+              <Download className="w-4 h-4 text-slate-600" />
             )}
             <span>{isDownloading ? 'Membuat PDF...' : 'Unduh Laporan Eksekutif'}</span>
           </button>
@@ -164,7 +164,7 @@ export function WelcomeBanner({
             <button
               type="button"
               onClick={onScheduleMeeting}
-              className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-amber-600 text-white hover:bg-amber-700 transition-all duration-150 shadow-sm shadow-amber-600/25 font-semibold text-[12.5px] cursor-pointer"
+              className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#31889C] text-white hover:bg-[#266F80] transition-all duration-150 shadow-xs font-semibold text-[12.5px] cursor-pointer"
             >
               <PlusCircle className="w-4 h-4" />
               <span>+ Jadwalkan Rapat Baru</span>

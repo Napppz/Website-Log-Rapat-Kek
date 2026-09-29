@@ -38,9 +38,9 @@ export default function NotifikasiPage() {
 
   return (
     <div className="flex flex-col gap-6">
-      <div className="p-6 bg-white rounded-xl border border-amber-200 shadow-sm flex items-center justify-between">
+      <div className="p-6 bg-white rounded-xl border border-slate-200 shadow-xs flex items-center justify-between">
         <div>
-          <span className="font-semibold text-[12px] text-amber-700 uppercase tracking-wider">
+          <span className="font-semibold text-[12px] text-[#215865] uppercase tracking-wider">
             Pusat Pemberitahuan
           </span>
           <h1 className="text-[24px] font-bold text-slate-900 mt-0.5">Notifikasi Sistem</h1>
@@ -52,24 +52,24 @@ export default function NotifikasiPage() {
         <button
           type="button"
           onClick={() => toast.success('Semua notifikasi telah ditandai dibaca.')}
-          className="px-3.5 py-1.5 rounded-lg border border-amber-200 bg-white hover:bg-amber-50 text-slate-700 text-[12px] font-semibold transition-colors cursor-pointer"
+          className="px-3.5 py-1.5 rounded-lg border border-slate-200 bg-white hover:bg-[#F0F9FA] text-slate-700 hover:text-[#31889C] text-[12px] font-semibold transition-colors cursor-pointer"
         >
           Tandai Semua Dibaca
         </button>
       </div>
 
-      <div className="bg-white rounded-xl border border-amber-200 shadow-sm divide-y divide-amber-100 overflow-hidden">
+      <div className="bg-white rounded-xl border border-slate-200 shadow-xs divide-y divide-slate-100 overflow-hidden">
         {notifs.map((n) => (
-          <div key={n.id} className="p-5 hover:bg-amber-50/30 transition-colors flex items-start gap-4">
+          <div key={n.id} className="p-5 hover:bg-[#F0F9FA] transition-colors flex items-start gap-4">
             <div
               className={`w-10 h-10 rounded-lg flex items-center justify-center shrink-0 ${
                 n.type === 'danger'
-                  ? 'bg-red-100 text-red-600'
+                  ? 'bg-[#FEF2F2] text-[#DC2626]'
                   : n.type === 'success'
-                  ? 'bg-emerald-100 text-emerald-600'
+                  ? 'bg-[#ECF8E9] text-[#4D8F3D]'
                   : n.type === 'warning'
-                  ? 'bg-amber-100 text-amber-700'
-                  : 'bg-blue-100 text-blue-600'
+                  ? 'bg-[#FFF8CC] text-[#8A7200]'
+                  : 'bg-[#E8F5F7] text-[#31889C]'
               }`}
             >
               {n.type === 'danger' && <AlertTriangle className="w-5 h-5" />}

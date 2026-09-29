@@ -33,7 +33,7 @@ export default function Error({
         <button
           type="button"
           onClick={() => reset()}
-          className="inline-flex items-center gap-2 px-4 py-2.5 rounded-lg bg-amber-600 text-white font-semibold text-[13px] hover:bg-amber-700 shadow-sm transition-all cursor-pointer"
+          className="inline-flex items-center gap-2 px-4 py-2.5 rounded-lg bg-[#31889C] text-white font-semibold text-[13px] hover:bg-[#266F80] shadow-xs shadow-[#31889C]/20 transition-all cursor-pointer"
         >
           <RotateCcw className="w-4 h-4" />
           <span>Coba Muat Ulang</span>
@@ -41,9 +41,9 @@ export default function Error({
 
         <Link
           href="/"
-          className="inline-flex items-center gap-2 px-4 py-2.5 rounded-lg bg-white border border-amber-300 text-amber-900 font-semibold text-[13px] hover:bg-amber-50 shadow-sm transition-all"
+          className="inline-flex items-center gap-2 px-4 py-2.5 rounded-lg bg-white border border-slate-200 text-slate-700 hover:bg-[#F0F9FA] hover:text-[#31889C] font-semibold text-[13px] shadow-xs transition-all"
         >
-          <Home className="w-4 h-4 text-amber-700" />
+          <Home className="w-4 h-4 text-[#31889C]" />
           <span>Kembali ke Dashboard</span>
         </Link>
       </div>

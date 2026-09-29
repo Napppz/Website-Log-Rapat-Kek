@@ -246,7 +246,7 @@ export function UserManagementView({
         );
       case 'ADMIN':
         return (
-          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full bg-amber-100 text-amber-900 border border-amber-300 text-[11px] font-bold">
+          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full bg-[#E8F5F7] text-[#31889C] border border-[#BCE3EB] text-[11px] font-bold">
             Administrator
           </span>
         );
@@ -275,9 +275,9 @@ export function UserManagementView({
   return (
     <div className="flex flex-col gap-6 max-w-7xl mx-auto">
       {/* Header */}
-      <div className="p-6 bg-white rounded-2xl border border-amber-200 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4">
+      <div className="p-6 bg-white rounded-2xl border border-slate-200 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <span className="font-semibold text-[12px] text-amber-700 uppercase tracking-wider block">
+          <span className="font-semibold text-[12px] text-[#31889C] uppercase tracking-wider block">
             Administrasi &amp; Akses Sistem
           </span>
           <h1 className="text-[24px] font-bold text-slate-900 mt-0.5">
@@ -291,7 +291,7 @@ export function UserManagementView({
         <button
           type="button"
           onClick={handleOpenCreate}
-          className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-amber-600 hover:bg-amber-700 text-white font-semibold text-[13px] shadow-sm transition-all cursor-pointer shrink-0"
+          className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-[#31889C] hover:bg-[#266F80] text-white font-semibold text-[13px] shadow-xs transition-all cursor-pointer shrink-0"
         >
           <UserPlus className="w-4 h-4" />
           <span>Tambah Pengguna Baru</span>
@@ -302,7 +302,7 @@ export function UserManagementView({
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div className="flex flex-wrap items-center gap-2">
           <span className="text-[12px] font-semibold text-slate-500 flex items-center gap-1">
-            <Filter className="w-3.5 h-3.5 text-amber-600" />
+            <Filter className="w-3.5 h-3.5 text-[#31889C]" />
             Filter:
           </span>
 
@@ -310,7 +310,7 @@ export function UserManagementView({
           <select
             value={selectedRole}
             onChange={(e) => setSelectedRole(e.target.value)}
-            className="px-3 py-1.5 rounded-lg bg-white border border-amber-200 text-slate-800 text-[12px] font-medium focus:outline-none focus:ring-2 focus:ring-amber-500 shadow-xs cursor-pointer"
+            className="px-3 py-1.5 rounded-lg bg-white border border-slate-200 text-slate-800 text-[12px] font-medium focus:outline-none focus:ring-2 focus:ring-[#31889C]/30 focus:border-[#31889C] shadow-xs cursor-pointer"
           >
             <option value="ALL">Semua Peran (Role)</option>
             <option value="SUPER_ADMIN">Super Admin</option>
@@ -324,7 +324,7 @@ export function UserManagementView({
           <select
             value={selectedBiro}
             onChange={(e) => setSelectedBiro(e.target.value)}
-            className="px-3 py-1.5 rounded-lg bg-white border border-amber-200 text-slate-800 text-[12px] font-medium focus:outline-none focus:ring-2 focus:ring-amber-500 shadow-xs cursor-pointer"
+            className="px-3 py-1.5 rounded-lg bg-white border border-slate-200 text-slate-800 text-[12px] font-medium focus:outline-none focus:ring-2 focus:ring-[#31889C]/30 focus:border-[#31889C] shadow-xs cursor-pointer"
           >
             <option value="ALL">Semua Biro KEK</option>
             {availableBiros.map((b) => (
@@ -342,17 +342,18 @@ export function UserManagementView({
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Cari nama, email, biro..."
-            className="w-full pl-8 pr-3 py-1.5 rounded-lg bg-white border border-amber-200 text-slate-800 text-[12px] focus:outline-none focus:ring-2 focus:ring-amber-500 shadow-xs"
-          />
-          <Search className="w-3.5 h-3.5 absolute left-2.5 top-2.5 text-amber-600 pointer-events-none" />
+            className="w-full pl-8 pr-3 py-1.5 rounded-lg bg-white border border-slate-200 text-slate-800 text-[12px] focus:outline-none focus:ring-2 focus:ring-[#31889C]/30 focus:border-[#31889C] shadow-xs"
+          >
+          </input>
+          <Search className="w-3.5 h-3.5 absolute left-2.5 top-2.5 text-[#31889C] pointer-events-none" />
         </div>
       </div>
 
       {/* Users Table */}
-      <div className="bg-white rounded-2xl border border-amber-200 shadow-sm overflow-hidden">
+      <div className="bg-white rounded-2xl border border-slate-200 shadow-xs overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-left text-slate-800 text-[13px]">
-            <thead className="bg-amber-50/60 border-b border-amber-200/80 text-[11px] font-bold text-amber-900 uppercase tracking-wider">
+            <thead className="bg-[#F8FAFC] border-b border-slate-200 text-[11px] font-bold text-slate-700 uppercase tracking-wider">
               <tr>
                 <th className="py-3.5 px-4">Nama Lengkap &amp; Email</th>
                 <th className="py-3.5 px-4">Peran (Role)</th>
@@ -361,7 +362,7 @@ export function UserManagementView({
                 <th className="py-3.5 px-4 text-right">Aksi</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-amber-100/80">
+            <tbody className="divide-y divide-slate-100">
               {filteredUsers.length === 0 ? (
                 <tr>
                   <td colSpan={5} className="py-12 text-center text-slate-500">
@@ -374,7 +375,7 @@ export function UserManagementView({
                           setSelectedRole('ALL');
                           setSelectedBiro('ALL');
                         }}
-                        className="inline-flex items-center gap-1 text-[12px] text-amber-800 font-semibold hover:underline cursor-pointer"
+                        className="inline-flex items-center gap-1 text-[12px] text-[#31889C] font-semibold hover:underline cursor-pointer"
                       >
                         <RotateCcw className="w-3.5 h-3.5" />
                         <span>Reset Filter</span>
@@ -386,14 +387,14 @@ export function UserManagementView({
                 filteredUsers.map((user) => (
                   <tr
                     key={user.id}
-                    className={`hover:bg-amber-50/30 transition-colors ${
+                    className={`hover:bg-[#F0F9FA] transition-colors ${
                       !user.isActive ? 'opacity-60 bg-slate-50/50' : ''
                     }`}
                   >
                     {/* User Info */}
                     <td className="py-3.5 px-4">
                       <div className="flex items-center gap-3">
-                        <div className="w-9 h-9 rounded-full bg-amber-100 border border-amber-300 text-amber-800 font-bold flex items-center justify-center text-[12px] shrink-0">
+                        <div className="w-9 h-9 rounded-full bg-[#F0F9FA] border border-[#BCE3EB] text-[#31889C] font-bold flex items-center justify-center text-[12px] shrink-0">
                           {user.name.split(' ').map((n) => n[0]).slice(0, 2).join('')}
                         </div>
                         <div>
@@ -410,7 +411,7 @@ export function UserManagementView({
                     <td className="py-3.5 px-4">
                       {user.biro ? (
                         <div className="flex flex-col">
-                          <span className="font-bold text-amber-900 text-[12px]">
+                          <span className="font-bold text-[#215865] text-[12px]">
                             {user.biro.code}
                           </span>
                           <span className="text-[11px] text-slate-500">
@@ -425,8 +426,8 @@ export function UserManagementView({
                     {/* Status */}
                     <td className="py-3.5 px-4">
                       {user.isActive ? (
-                        <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-emerald-50 text-emerald-800 border border-emerald-200 text-[11px] font-bold">
-                          <CheckCircle2 className="w-3 h-3 text-emerald-600" />
+                        <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-[#ECF8E9] text-[#4D8F3D] border border-[#D2EFCA] text-[11px] font-bold">
+                          <CheckCircle2 className="w-3 h-3 text-[#7CC563]" />
                           Aktif
                         </span>
                       ) : (
@@ -443,7 +444,7 @@ export function UserManagementView({
                         <button
                           type="button"
                           onClick={() => handleOpenEdit(user)}
-                          className="p-1.5 text-slate-500 hover:text-amber-800 hover:bg-amber-100 rounded-lg transition-colors cursor-pointer"
+                          className="p-1.5 text-slate-500 hover:text-[#31889C] hover:bg-[#F0F9FA] rounded-lg transition-colors cursor-pointer"
                           title="Edit Pengguna"
                         >
                           <Edit2 className="w-4 h-4" />
@@ -455,8 +456,8 @@ export function UserManagementView({
                           disabled={user.id === currentUserId}
                           className={`p-1.5 rounded-lg transition-colors cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed ${
                             user.isActive
-                              ? 'text-slate-400 hover:text-amber-600 hover:bg-amber-50'
-                              : 'text-slate-400 hover:text-emerald-600 hover:bg-emerald-50'
+                              ? 'text-slate-400 hover:text-[#B96800] hover:bg-[#FFF0DC]'
+                              : 'text-slate-400 hover:text-[#4D8F3D] hover:bg-[#ECF8E9]'
                           }`}
                           title={
                             user.id === currentUserId
@@ -503,13 +504,13 @@ export function UserManagementView({
           onClick={() => setIsDialogOpen(false)}
         >
           <div
-            className="relative w-full max-w-lg bg-white rounded-2xl shadow-2xl border border-amber-200 overflow-hidden animate-in zoom-in-95 duration-150"
+            className="relative w-full max-w-lg bg-white rounded-2xl shadow-2xl border border-slate-200 overflow-hidden animate-in zoom-in-95 duration-150"
             onClick={(e) => e.stopPropagation()}
           >
             {/* Modal Header */}
-            <div className="flex items-center justify-between px-6 py-4 bg-gradient-to-r from-amber-50 to-amber-100/60 border-b border-amber-200">
+            <div className="flex items-center justify-between px-6 py-4 bg-[#F8FAFC] border-b border-slate-200">
               <div>
-                <span className="text-[11px] font-bold text-amber-700 uppercase tracking-wider">
+                <span className="text-[11px] font-bold text-[#31889C] uppercase tracking-wider">
                   {editingUser ? 'Perbarui Data Akun' : 'Akun Kedinasan Baru'}
                 </span>
                 <h3 className="text-[18px] font-bold text-slate-900">
@@ -519,7 +520,7 @@ export function UserManagementView({
               <button
                 type="button"
                 onClick={() => setIsDialogOpen(false)}
-                className="p-1 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-amber-200/50 cursor-pointer"
+                className="p-1 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100 cursor-pointer"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -545,7 +546,7 @@ export function UserManagementView({
                   placeholder="Contoh: Dr. Ir. Bambang Pranoto, M.T."
                   value={formName}
                   onChange={(e) => setFormName(e.target.value)}
-                  className="w-full px-3.5 py-2 rounded-lg border border-amber-200 focus:outline-none focus:ring-2 focus:ring-amber-500 font-medium text-slate-900 text-[13px]"
+                  className="w-full px-3.5 py-2 rounded-lg border border-slate-200 focus:outline-none focus:ring-2 focus:ring-[#31889C]/30 focus:border-[#31889C] font-medium text-slate-900 text-[13px]"
                 />
               </div>
 
@@ -560,7 +561,7 @@ export function UserManagementView({
                   placeholder="nama@simrapat.local atau nama@kek.go.id"
                   value={formEmail}
                   onChange={(e) => setFormEmail(e.target.value)}
-                  className="w-full px-3.5 py-2 rounded-lg border border-amber-200 focus:outline-none focus:ring-2 focus:ring-amber-500 text-slate-900 text-[13px]"
+                  className="w-full px-3.5 py-2 rounded-lg border border-slate-200 focus:outline-none focus:ring-2 focus:ring-[#31889C]/30 focus:border-[#31889C] text-slate-900 text-[13px]"
                 />
               </div>
 
@@ -575,7 +576,7 @@ export function UserManagementView({
                   placeholder={editingUser ? '•••••••• (Biarkan kosong untuk mempertahankan kata sandi lama)' : 'Minimal 6 karakter'}
                   value={formPassword}
                   onChange={(e) => setFormPassword(e.target.value)}
-                  className="w-full px-3.5 py-2 rounded-lg border border-amber-200 focus:outline-none focus:ring-2 focus:ring-amber-500 text-slate-900 text-[13px]"
+                  className="w-full px-3.5 py-2 rounded-lg border border-slate-200 focus:outline-none focus:ring-2 focus:ring-[#31889C]/30 focus:border-[#31889C] text-slate-900 text-[13px]"
                 />
               </div>
 
@@ -589,7 +590,7 @@ export function UserManagementView({
                   <select
                     value={formRole}
                     onChange={(e) => setFormRole(e.target.value as UserRole)}
-                    className="w-full px-3 py-2 rounded-lg border border-amber-200 focus:outline-none focus:ring-2 focus:ring-amber-500 bg-white font-medium text-slate-800 text-[13px] cursor-pointer"
+                    className="w-full px-3 py-2 rounded-lg border border-slate-200 focus:outline-none focus:ring-2 focus:ring-[#31889C]/30 focus:border-[#31889C] bg-white font-medium text-slate-800 text-[13px] cursor-pointer"
                   >
                     <option value="SUPER_ADMIN">SUPER_ADMIN (Penuh)</option>
                     <option value="ADMIN">ADMIN (Operasional)</option>
@@ -607,7 +608,7 @@ export function UserManagementView({
                   <select
                     value={formBiroId}
                     onChange={(e) => setFormBiroId(e.target.value)}
-                    className="w-full px-3 py-2 rounded-lg border border-amber-200 focus:outline-none focus:ring-2 focus:ring-amber-500 bg-white font-medium text-slate-800 text-[13px] cursor-pointer"
+                    className="w-full px-3 py-2 rounded-lg border border-slate-200 focus:outline-none focus:ring-2 focus:ring-[#31889C]/30 focus:border-[#31889C] bg-white font-medium text-slate-800 text-[13px] cursor-pointer"
                   >
                     {availableBiros.map((b) => (
                       <option key={b.id} value={b.id}>
@@ -625,7 +626,7 @@ export function UserManagementView({
                   id="isActiveCheck"
                   checked={formIsActive}
                   onChange={(e) => setFormIsActive(e.target.checked)}
-                  className="w-4 h-4 rounded text-amber-600 focus:ring-amber-500 cursor-pointer"
+                  className="w-4 h-4 rounded text-[#31889C] focus:ring-[#31889C] cursor-pointer"
                 />
                 <label htmlFor="isActiveCheck" className="text-slate-800 font-semibold cursor-pointer select-none">
                   Akun aktif dan dapat masuk ke sistem
@@ -645,7 +646,7 @@ export function UserManagementView({
                 <button
                   type="submit"
                   disabled={isSubmitting}
-                  className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg bg-amber-600 hover:bg-amber-700 text-white font-semibold text-[13px] shadow-sm transition-all cursor-pointer disabled:opacity-60"
+                  className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg bg-[#31889C] hover:bg-[#266F80] text-white font-semibold text-[13px] shadow-sm transition-all cursor-pointer disabled:opacity-60"
                 >
                   <Save className="w-4 h-4" />
                   <span>{isSubmitting ? 'Menyimpan...' : editingUser ? 'Simpan Perubahan' : 'Buat Pengguna'}</span>

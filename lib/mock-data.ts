@@ -110,7 +110,7 @@ export const MOCK_FOLLOW_UP_STATUS: FollowUpStatusMetric[] = [
     label: 'Selesai',
     percentage: 45,
     count: 64,
-    color: '#D97706', // Amber-600
+    color: '#7CC563', // Green (Secondary)
     dasharray: '107.4 238.7',
     dashoffset: '0',
   },
@@ -118,7 +118,7 @@ export const MOCK_FOLLOW_UP_STATUS: FollowUpStatusMetric[] = [
     label: 'Sedang Berjalan',
     percentage: 35,
     count: 50,
-    color: '#F59E0B', // Amber-500
+    color: '#31889C', // Teal (Primary)
     dasharray: '83.5 238.7',
     dashoffset: '-107.4',
   },
@@ -126,8 +126,8 @@ export const MOCK_FOLLOW_UP_STATUS: FollowUpStatusMetric[] = [
     label: 'Belum Dimulai',
     percentage: 15,
     count: 21,
-    color: '#FDE68A', // Amber-200
-    borderColor: '#FCD34D',
+    color: '#FFD300', // Yellow (Accent)
+    borderColor: '#FFEE99',
     dasharray: '35.8 238.7',
     dashoffset: '-190.9',
   },
@@ -135,7 +135,7 @@ export const MOCK_FOLLOW_UP_STATUS: FollowUpStatusMetric[] = [
     label: 'Terlambat',
     percentage: 5,
     count: 7,
-    color: '#DC2626', // Red-600
+    color: '#DC2626', // Red (Danger)
     dasharray: '12 238.7',
     dashoffset: '-226.7',
   },
@@ -147,35 +147,35 @@ export const MOCK_BUREAU_WORKLOAD: BureauWorkload[] = [
     name: 'IKK — Biro Investasi, Kerja Sama & Komunikasi',
     count: 48,
     percentage: 100,
-    barColor: 'bg-amber-600',
+    barColor: 'bg-[#31889C]',
   },
   {
     code: 'PKKEK',
     name: 'PKKEK — Biro Pengendalian',
     count: 38,
     percentage: 79,
-    barColor: 'bg-amber-500',
+    barColor: 'bg-[#7CC563]',
   },
   {
     code: 'UK',
     name: 'UK — Biro Umum & Keuangan',
     count: 24,
     percentage: 50,
-    barColor: 'bg-amber-400',
+    barColor: 'bg-[#31889C]/80',
   },
   {
     code: 'BPPK',
     name: 'BPPK — Biro Perencanaan & Pembentukan',
     count: 19,
     percentage: 40,
-    barColor: 'bg-amber-300',
+    barColor: 'bg-[#F99D1C]',
   },
   {
     code: 'HSDMO',
     name: 'HSDMO — Biro Hukum, SDM & Organisasi',
     count: 19,
     percentage: 40,
-    barColor: 'bg-amber-300',
+    barColor: 'bg-[#FFD300]',
   },
 ];
 

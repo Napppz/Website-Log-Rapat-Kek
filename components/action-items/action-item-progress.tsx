@@ -18,12 +18,12 @@ export function ActionItemProgress({ data }: ActionItemProgressProps) {
       <div className="flex flex-col gap-1.5 min-w-[130px]">
         <div className="flex items-center justify-between text-[12px]">
           <span className="font-semibold text-slate-800">{total} Action Items</span>
-          <span className="text-emerald-700 font-bold">100%</span>
+          <span className="text-[#4D8F3D] font-bold">100%</span>
         </div>
-        <div className="h-2 w-32 bg-amber-100 rounded-full overflow-hidden">
-          <div className="bg-emerald-600 h-full w-full" />
+        <div className="h-2 w-32 bg-slate-100 rounded-full overflow-hidden">
+          <div className="bg-[#7CC563] h-full w-full" />
         </div>
-        <span className="text-[11px] text-emerald-700 font-semibold">{summaryText}</span>
+        <span className="text-[11px] text-[#4D8F3D] font-semibold">{summaryText}</span>
       </div>
     );
   }
@@ -34,11 +34,11 @@ export function ActionItemProgress({ data }: ActionItemProgressProps) {
       <div className="flex flex-col gap-1.5 min-w-[130px]">
         <div className="flex items-center justify-between text-[12px]">
           <span className="font-semibold text-slate-800">{total} Action Items</span>
-          <span className="text-red-600 font-bold">{overdue} Terlambat</span>
+          <span className="text-[#DC2626] font-bold">{overdue} Terlambat</span>
         </div>
-        <div className="h-2 w-32 bg-amber-100 rounded-full overflow-hidden flex">
-          <div className="bg-amber-600 h-full" style={{ width: `${completedPct}%` }} />
-          <div className="bg-red-500 h-full" style={{ width: `${overduePct}%` }} />
+        <div className="h-2 w-32 bg-slate-100 rounded-full overflow-hidden flex">
+          <div className="bg-[#7CC563] h-full" style={{ width: `${completedPct}%` }} />
+          <div className="bg-[#DC2626] h-full" style={{ width: `${overduePct}%` }} />
         </div>
         <span className="text-[11px] text-slate-500 font-medium">{summaryText}</span>
       </div>
@@ -51,11 +51,11 @@ export function ActionItemProgress({ data }: ActionItemProgressProps) {
       <div className="flex flex-col gap-1.5 min-w-[130px]">
         <div className="flex items-center justify-between text-[12px]">
           <span className="font-semibold text-slate-800">{total} Action Items</span>
-          <span className="text-amber-800 font-bold">{completed} Selesai</span>
+          <span className="text-[#31889C] font-bold">{completed} Selesai</span>
         </div>
-        <div className="h-2 w-32 bg-amber-100 rounded-full overflow-hidden flex">
-          <div className="bg-amber-600 h-full" style={{ width: `${completedPct}%` }} />
-          <div className="bg-amber-300 h-full" style={{ width: `${inProgressPct}%` }} />
+        <div className="h-2 w-32 bg-slate-100 rounded-full overflow-hidden flex">
+          <div className="bg-[#7CC563] h-full" style={{ width: `${completedPct}%` }} />
+          <div className="bg-[#31889C] h-full" style={{ width: `${inProgressPct}%` }} />
         </div>
         <span className="text-[11px] text-slate-500 font-medium">{summaryText}</span>
       </div>
@@ -67,11 +67,11 @@ export function ActionItemProgress({ data }: ActionItemProgressProps) {
     <div className="flex flex-col gap-1.5 min-w-[130px]">
       <div className="flex items-center justify-between text-[12px]">
         <span className="font-semibold text-slate-800">{total} Action Items</span>
-        <span className="text-amber-700 font-medium">{completed > 0 ? `${completed} Selesai` : 'Dalam Proses'}</span>
+        <span className="text-[#31889C] font-medium">{completed > 0 ? `${completed} Selesai` : 'Dalam Proses'}</span>
       </div>
-      <div className="h-2 w-32 bg-amber-100 rounded-full overflow-hidden">
+      <div className="h-2 w-32 bg-slate-100 rounded-full overflow-hidden">
         <div
-          className="bg-amber-500 h-full"
+          className="bg-[#31889C] h-full"
           style={{ width: `${completedPct > 0 ? completedPct : 30}%` }}
         />
       </div>

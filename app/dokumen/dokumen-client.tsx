@@ -28,19 +28,19 @@ interface DokumenClientProps {
 const STATUS_BADGES: Record<string, { label: string; class: string }> = {
   FINAL: {
     label: 'Disahkan (Final)',
-    class: 'bg-emerald-100 text-emerald-800 border-emerald-300',
+    class: 'bg-[#ECF8E9] text-[#4D8F3D] border-[#D2EFCA]',
   },
   APPROVED: {
     label: 'Disetujui',
-    class: 'bg-blue-100 text-blue-800 border-blue-300',
+    class: 'bg-[#E8F5F7] text-[#31889C] border-[#BCE3EB]',
   },
   REVIEW: {
     label: 'Menunggu Review',
-    class: 'bg-amber-100 text-amber-800 border-amber-300',
+    class: 'bg-[#FFF8CC] text-[#8A7200] border-[#FFEE99]',
   },
   DRAFT: {
     label: 'Draf Risalah',
-    class: 'bg-slate-100 text-slate-700 border-slate-300',
+    class: 'bg-[#F1F5F9] text-[#64748B] border-[#E2E8F0]',
   },
 };
 
@@ -136,10 +136,10 @@ export function DokumenClient({ initialMeetings, biros }: DokumenClientProps) {
   return (
     <div className="flex flex-col gap-6">
       {/* 1. Header Banner */}
-      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-amber-50 via-white to-amber-100/60 p-6 md:p-8 border border-amber-200 shadow-sm flex flex-col md:flex-row md:items-center md:justify-between gap-6">
+      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-[#F0F9FA] via-white to-[#E8F5F7] p-6 md:p-8 border border-slate-200 shadow-xs flex flex-col md:flex-row md:items-center md:justify-between gap-6">
         <div className="space-y-1.5 max-w-2xl">
-          <span className="font-semibold text-[11px] text-amber-800 uppercase tracking-wider flex items-center gap-1.5">
-            <FileCheck className="w-3.5 h-3.5 text-amber-600" />
+          <span className="font-semibold text-[11px] text-[#215865] uppercase tracking-wider flex items-center gap-1.5">
+            <FileCheck className="w-3.5 h-3.5 text-[#31889C]" />
             <span>Arsip Resmi Dewan Nasional KEK RI</span>
           </span>
           <h1 className="text-[24px] md:text-[28px] font-bold text-slate-900 tracking-tight">
@@ -155,7 +155,7 @@ export function DokumenClient({ initialMeetings, biros }: DokumenClientProps) {
             type="button"
             disabled={isDownloadingSummary}
             onClick={handleDownloadExecutiveSummary}
-            className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-amber-600 text-white font-semibold text-[13px] hover:bg-amber-700 shadow-sm shadow-amber-600/25 transition-all cursor-pointer disabled:opacity-50"
+            className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#31889C] text-white font-semibold text-[13px] hover:bg-[#266F80] shadow-sm shadow-[#31889C]/20 transition-all cursor-pointer disabled:opacity-50"
           >
             {isDownloadingSummary ? (
               <Loader2 className="w-4 h-4 animate-spin" />
@@ -169,7 +169,7 @@ export function DokumenClient({ initialMeetings, biros }: DokumenClientProps) {
 
       {/* 2. Repository Overview Cards */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <div className="bg-white p-4 rounded-xl border border-amber-200 shadow-xs flex flex-col">
+        <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-xs flex flex-col">
           <span className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">
             Total Dokumen Risalah
           </span>
@@ -177,29 +177,29 @@ export function DokumenClient({ initialMeetings, biros }: DokumenClientProps) {
             <span className="text-[26px] font-extrabold text-slate-900">{stats.total}</span>
             <span className="text-[12px] font-semibold text-slate-500">Berkas</span>
           </div>
-          <span className="text-[11px] text-amber-700 mt-2 font-medium">Tersimpan di Cloud Database</span>
+          <span className="text-[11px] text-[#31889C] mt-2 font-medium">Tersimpan di Cloud Database</span>
         </div>
 
-        <div className="bg-white p-4 rounded-xl border border-emerald-200 shadow-xs flex flex-col">
-          <span className="text-[11px] font-semibold text-emerald-700 uppercase tracking-wider">
+        <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-xs flex flex-col">
+          <span className="text-[11px] font-semibold text-[#4D8F3D] uppercase tracking-wider">
             Dokumen Telah Disahkan
           </span>
           <div className="mt-1 flex items-baseline gap-1.5">
-            <span className="text-[26px] font-extrabold text-emerald-700">{stats.approvedOrFinal}</span>
-            <span className="text-[12px] font-semibold text-emerald-600">Final / Approved</span>
+            <span className="text-[26px] font-extrabold text-[#4D8F3D]">{stats.approvedOrFinal}</span>
+            <span className="text-[12px] font-semibold text-[#4D8F3D]">Final / Approved</span>
           </div>
-          <span className="text-[11px] text-emerald-600 mt-2 font-medium">Siap dijadikan acuan hukum</span>
+          <span className="text-[11px] text-[#4D8F3D] mt-2 font-medium">Siap dijadikan acuan hukum</span>
         </div>
 
-        <div className="bg-white p-4 rounded-xl border border-amber-200 shadow-xs flex flex-col">
-          <span className="text-[11px] font-semibold text-amber-800 uppercase tracking-wider">
+        <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-xs flex flex-col">
+          <span className="text-[11px] font-semibold text-[#8A7200] uppercase tracking-wider">
             Menunggu Review
           </span>
           <div className="mt-1 flex items-baseline gap-1.5">
-            <span className="text-[26px] font-extrabold text-amber-700">{stats.inReview}</span>
-            <span className="text-[12px] font-semibold text-amber-600">Dalam Verifikasi</span>
+            <span className="text-[26px] font-extrabold text-[#8A7200]">{stats.inReview}</span>
+            <span className="text-[12px] font-semibold text-[#8A7200]">Dalam Verifikasi</span>
           </div>
-          <span className="text-[11px] text-amber-700 mt-2 font-medium">Proses paraf pimpinan biro</span>
+          <span className="text-[11px] text-[#8A7200] mt-2 font-medium">Proses paraf pimpinan biro</span>
         </div>
 
         <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-xs flex flex-col">
@@ -215,7 +215,7 @@ export function DokumenClient({ initialMeetings, biros }: DokumenClientProps) {
       </div>
 
       {/* 3. Filter & Search Controls */}
-      <div className="bg-white rounded-2xl border border-amber-200 shadow-sm p-4 flex flex-col md:flex-row md:items-center justify-between gap-4">
+      <div className="bg-white rounded-2xl border border-slate-200 shadow-xs p-4 flex flex-col md:flex-row md:items-center justify-between gap-4">
         {/* Search */}
         <div className="relative w-full md:max-w-md">
           <input
@@ -223,9 +223,9 @@ export function DokumenClient({ initialMeetings, biros }: DokumenClientProps) {
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             placeholder="Cari risalah rapat, nomor dokumen, atau topik pembahasan..."
-            className="w-full pl-9 pr-4 py-2 rounded-xl border border-amber-200 text-[13px] bg-amber-50/20 focus:bg-white focus:outline-none focus:ring-2 focus:ring-amber-500 transition-all placeholder:text-slate-400"
+            className="w-full pl-9 pr-4 py-2 rounded-xl border border-slate-200 text-[13px] bg-slate-50/50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#31889C]/25 focus:border-[#31889C] transition-all placeholder:text-slate-400"
           />
-          <Search className="w-4 h-4 text-amber-600 absolute left-3 top-2.5 pointer-events-none" />
+          <Search className="w-4 h-4 text-[#31889C] absolute left-3 top-2.5 pointer-events-none" />
           {searchTerm && (
             <button
               onClick={() => setSearchTerm('')}
@@ -242,7 +242,7 @@ export function DokumenClient({ initialMeetings, biros }: DokumenClientProps) {
           <select
             value={selectedBiro}
             onChange={(e) => setSelectedBiro(e.target.value)}
-            className="px-3 py-2 rounded-xl border border-amber-200 bg-white text-[12.5px] font-semibold text-slate-700 focus:outline-none focus:ring-2 focus:ring-amber-500 cursor-pointer"
+            className="px-3 py-2 rounded-xl border border-slate-200 bg-white text-[12.5px] font-semibold text-slate-700 focus:outline-none focus:ring-2 focus:ring-[#31889C]/25 focus:border-[#31889C] cursor-pointer"
           >
             <option value="ALL">Semua Biro Penyelenggara</option>
             {biros.map((b) => (
@@ -256,7 +256,7 @@ export function DokumenClient({ initialMeetings, biros }: DokumenClientProps) {
           <select
             value={selectedStatus}
             onChange={(e) => setSelectedStatus(e.target.value)}
-            className="px-3 py-2 rounded-xl border border-amber-200 bg-white text-[12.5px] font-semibold text-slate-700 focus:outline-none focus:ring-2 focus:ring-amber-500 cursor-pointer"
+            className="px-3 py-2 rounded-xl border border-slate-200 bg-white text-[12.5px] font-semibold text-slate-700 focus:outline-none focus:ring-2 focus:ring-[#31889C]/25 focus:border-[#31889C] cursor-pointer"
           >
             <option value="ALL">Semua Status Dokumen</option>
             <option value="FINAL">Disahkan (Final)</option>
@@ -273,7 +273,7 @@ export function DokumenClient({ initialMeetings, biros }: DokumenClientProps) {
                 setSelectedBiro('ALL');
                 setSelectedStatus('ALL');
               }}
-              className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-amber-100/60 hover:bg-amber-100 text-amber-800 text-[12px] font-semibold transition-colors cursor-pointer"
+              className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-[#F0F9FA] hover:bg-[#E8F5F7] text-[#215865] text-[12px] font-semibold transition-colors cursor-pointer"
               title="Reset semua filter"
             >
               <RotateCcw className="w-3.5 h-3.5" />
@@ -284,13 +284,13 @@ export function DokumenClient({ initialMeetings, biros }: DokumenClientProps) {
       </div>
 
       {/* 4. Document List Table */}
-      <div className="bg-white rounded-2xl border border-amber-200 shadow-sm overflow-hidden">
-        <div className="px-6 py-4 border-b border-amber-100 flex items-center justify-between">
+      <div className="bg-white rounded-2xl border border-slate-200 shadow-xs overflow-hidden">
+        <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between">
           <div className="flex items-center gap-2">
             <span className="font-bold text-[15px] text-slate-900">
               Daftar Dokumen Risalah
             </span>
-            <span className="px-2 py-0.5 rounded-full bg-amber-100 text-amber-800 font-bold text-[11px]">
+            <span className="px-2.5 py-0.5 rounded-full bg-[#F0F9FA] text-[#215865] border border-[#BCE3EB] font-bold text-[11px]">
               {filteredMeetings.length} Berkas Tersedia
             </span>
           </div>
@@ -301,7 +301,7 @@ export function DokumenClient({ initialMeetings, biros }: DokumenClientProps) {
 
         {filteredMeetings.length === 0 ? (
           <div className="py-16 text-center flex flex-col items-center justify-center">
-            <div className="w-14 h-14 rounded-2xl bg-amber-50 border border-amber-200 text-amber-600 flex items-center justify-center mb-3">
+            <div className="w-14 h-14 rounded-2xl bg-[#F0F9FA] border border-[#BCE3EB] text-[#31889C] flex items-center justify-center mb-3">
               <FileText className="w-7 h-7" />
             </div>
             <h3 className="font-bold text-[16px] text-slate-800">
@@ -312,7 +312,7 @@ export function DokumenClient({ initialMeetings, biros }: DokumenClientProps) {
             </p>
           </div>
         ) : (
-          <div className="divide-y divide-amber-100/80">
+          <div className="divide-y divide-slate-100">
             {filteredMeetings.map((m) => {
               const statusCfg = STATUS_BADGES[m.status] || STATUS_BADGES.DRAFT;
               const isDownloadingThis = downloadingId === m.id;
@@ -320,17 +320,17 @@ export function DokumenClient({ initialMeetings, biros }: DokumenClientProps) {
               return (
                 <div
                   key={m.id}
-                  className="p-5 hover:bg-amber-50/30 transition-all flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 group"
+                  className="p-5 hover:bg-[#F0F9FA] transition-all flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 group"
                 >
                   {/* Left: Icon & Meta */}
                   <div className="flex items-start gap-4">
-                    <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-amber-100 to-amber-200/80 border border-amber-300 text-amber-800 flex items-center justify-center shrink-0 shadow-xs group-hover:scale-105 transition-transform">
-                      <FileText className="w-5 h-5 text-amber-700" />
+                    <div className="w-11 h-11 rounded-xl bg-[#F0F9FA] border border-[#BCE3EB] text-[#31889C] flex items-center justify-center shrink-0 shadow-xs group-hover:scale-105 transition-transform">
+                      <FileText className="w-5 h-5 text-[#31889C]" />
                     </div>
 
                     <div className="space-y-1">
                       <div className="flex flex-wrap items-center gap-2">
-                        <span className="font-bold text-[12px] text-amber-800 bg-amber-100 px-2.5 py-0.5 rounded-lg border border-amber-300">
+                        <span className="font-bold text-[12px] text-[#215865] bg-[#F0F9FA] px-2.5 py-0.5 rounded-lg border border-[#BCE3EB]">
                           {m.code}
                         </span>
                         <span
@@ -347,13 +347,13 @@ export function DokumenClient({ initialMeetings, biros }: DokumenClientProps) {
                         </span>
                       </div>
 
-                      <h3 className="font-bold text-[15px] text-slate-900 group-hover:text-amber-800 transition-colors">
+                      <h3 className="font-bold text-[15px] text-slate-900 group-hover:text-[#31889C] transition-colors">
                         {m.title}
                       </h3>
 
                       <div className="flex flex-wrap items-center gap-3 text-[12px] text-slate-500">
-                        <span className="flex items-center gap-1 font-semibold text-amber-900">
-                          <Building2 className="w-3.5 h-3.5 text-amber-600" />
+                        <span className="flex items-center gap-1 font-semibold text-slate-700">
+                          <Building2 className="w-3.5 h-3.5 text-[#31889C]" />
                           <span>{m.biroName}</span>
                         </span>
                         <span>•</span>
@@ -371,7 +371,7 @@ export function DokumenClient({ initialMeetings, biros }: DokumenClientProps) {
                   <div className="flex items-center gap-2.5 self-end lg:self-center shrink-0 pt-2 lg:pt-0">
                     <Link
                       href={`/semua-rapat/${m.id}`}
-                      className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-white hover:bg-slate-50 text-slate-700 border border-slate-300 font-semibold text-[12.5px] transition-all hover:border-slate-400"
+                      className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 font-semibold text-[12.5px] transition-all hover:border-slate-300"
                     >
                       <Eye className="w-3.5 h-3.5 text-slate-600" />
                       <span>Buka Risalah</span>
@@ -381,7 +381,7 @@ export function DokumenClient({ initialMeetings, biros }: DokumenClientProps) {
                       type="button"
                       disabled={isDownloadingThis}
                       onClick={() => handleDownloadPdf(m)}
-                      className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-amber-600 hover:bg-amber-700 text-white font-semibold text-[12.5px] transition-all shadow-xs shadow-amber-600/20 cursor-pointer disabled:opacity-50"
+                      className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-[#31889C] hover:bg-[#266F80] text-white font-semibold text-[12.5px] transition-all shadow-xs shadow-[#31889C]/20 cursor-pointer disabled:opacity-50"
                       title={`Unduh Dokumen PDF Resmi Rapat ${m.code}`}
                     >
                       {isDownloadingThis ? (

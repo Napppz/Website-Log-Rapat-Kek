@@ -180,11 +180,19 @@ export function resolveMeetingSignerInfo(meeting?: any, minutes?: any) {
   const roleClean = finalSignerRole.replace(/[\r\n]+/g, ' ').replace(/,\s*$/, '').trim();
   const secretaryMetaText = `${roleClean}, ${finalSignerName}`;
 
+  const signatureImage: string | null =
+    (minutes?.conclusion as any)?.signatureImage ||
+    (minutes?.decisions as any)?.signatureImage ||
+    (minutes?.discussion as any)?.signatureImage ||
+    (minutes?.agenda as any)?.signatureImage ||
+    null;
+
   return {
     chairpersonName,
     finalSignerName,
     finalSignerRole,
     roleClean,
     secretaryMetaText,
+    signatureImage,
   };
 }

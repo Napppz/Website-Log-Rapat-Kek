@@ -63,13 +63,13 @@ export function BureauDistribution({
   }, [initialWorkload]);
 
   return (
-    <div className="lg:col-span-3 rounded-2xl bg-white p-6 shadow-sm border border-amber-200/80 flex flex-col justify-between transition-all duration-300 hover:shadow-md">
+    <div className="lg:col-span-3 rounded-2xl bg-white p-6 shadow-sm border border-slate-200 flex flex-col justify-between transition-all duration-300 hover:shadow-md">
       <div>
         {/* Card Header with Replay Action */}
         <div className="flex items-start justify-between">
           <div>
-            <span className="font-semibold text-[11px] text-amber-700 uppercase tracking-wider flex items-center gap-1.5">
-              <Building2 className="w-3.5 h-3.5 text-amber-600" />
+            <span className="font-semibold text-[11px] text-[#31889C] uppercase tracking-wider flex items-center gap-1.5">
+              <Building2 className="w-3.5 h-3.5 text-[#31889C]" />
               <span>Unit Kerja</span>
             </span>
             <h2 className="font-bold text-[18px] text-slate-900 mt-0.5">
@@ -83,7 +83,7 @@ export function BureauDistribution({
           <button
             type="button"
             onClick={handleReplay}
-            className="text-slate-400 hover:text-amber-800 p-1.5 rounded-lg hover:bg-amber-50 cursor-pointer transition-all duration-200 hover:rotate-180"
+            className="text-slate-400 hover:text-[#31889C] p-1.5 rounded-lg hover:bg-[#F0F9FA] cursor-pointer transition-all duration-200 hover:rotate-180"
             title="Putar ulang animasi progres biro"
           >
             <RotateCcw className="w-4 h-4" />
@@ -103,21 +103,21 @@ export function BureauDistribution({
                 transform: isAnimated ? 'translateY(0)' : 'translateY(12px)',
                 opacity: isAnimated ? 1 : 0,
               }}
-              className="p-2 -mx-2 rounded-xl hover:bg-amber-50/80 border border-transparent hover:border-amber-200 transition-all cursor-pointer group"
+              className="p-2 -mx-2 rounded-xl hover:bg-[#F0F9FA] border border-transparent hover:border-[#BCE3EB] transition-all cursor-pointer group"
               onClick={() => onBiroClick?.(biro.code)}
               title={`Klik untuk membuka seluruh agenda Biro ${biro.name}`}
             >
               {/* Row Header: Biro Name (truncated cleanly) + Count (guaranteed no overlap) */}
               <div className="flex items-center justify-between text-[12px] mb-1.5 gap-2">
                 <span
-                  className="font-bold text-slate-800 group-hover:text-amber-900 transition-colors truncate flex-1 min-w-0"
+                  className="font-bold text-slate-800 group-hover:text-[#215865] transition-colors truncate flex-1 min-w-0"
                   title={biro.name}
                 >
                   {biro.name}
                 </span>
 
                 <div className="flex items-center gap-1.5 shrink-0 whitespace-nowrap">
-                  <span className="font-extrabold text-amber-800 text-[12px] tabular-nums">
+                  <span className="font-extrabold text-[#31889C] text-[12px] tabular-nums">
                     {isAnimated ? (
                       <AnimatedCounter value={biro.count} duration={800 + idx * 80} />
                     ) : (
@@ -125,12 +125,12 @@ export function BureauDistribution({
                     )}{' '}
                     Rapat
                   </span>
-                  <ChevronRight className="w-3.5 h-3.5 text-slate-400 group-hover:text-amber-700 group-hover:translate-x-0.5 transition-all" />
+                  <ChevronRight className="w-3.5 h-3.5 text-slate-400 group-hover:text-[#31889C] group-hover:translate-x-0.5 transition-all" />
                 </div>
               </div>
 
               {/* Animated Progress Bar Track with Shimmer Shine */}
-              <div className="h-2.5 w-full bg-amber-100/70 rounded-full overflow-hidden relative">
+              <div className="h-2.5 w-full bg-slate-100 rounded-full overflow-hidden relative">
                 <div
                   className={`h-full ${biro.barColor} rounded-full transition-all duration-900 ease-out relative ${
                     isAnimated ? 'animate-shimmer' : ''
@@ -146,7 +146,7 @@ export function BureauDistribution({
         </div>
       </div>
 
-      <div className="mt-4 pt-2.5 text-center border-t border-amber-100">
+      <div className="mt-4 pt-2.5 text-center border-t border-slate-100">
         <span className="text-[11px] text-slate-500 font-medium flex items-center justify-center gap-1">
           <span>💡</span>
           <span>Klik biro untuk melihat rekapitulasi lengkap</span>

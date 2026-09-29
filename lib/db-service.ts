@@ -344,11 +344,11 @@ export async function getDashboardStats() {
     });
 
     const colors: Record<string, string> = {
-      BPPK: 'bg-amber-600',
-      PKKEK: 'bg-amber-700',
-      IKK: 'bg-amber-500',
-      HSDMO: 'bg-amber-800',
-      UK: 'bg-amber-900',
+      BPPK: 'bg-[#31889C]',
+      PKKEK: 'bg-[#7CC563]',
+      IKK: 'bg-[#F99D1C]',
+      HSDMO: 'bg-[#266F80]',
+      UK: 'bg-[#3D9BAE]',
     };
 
     const bureauWorkload: BureauWorkload[] = biros.map((b) => {
@@ -359,7 +359,7 @@ export async function getDashboardStats() {
         name: b.shortName,
         count,
         percentage,
-        barColor: colors[b.code] || 'bg-amber-600',
+        barColor: colors[b.code] || 'bg-[#31889C]',
       };
     });
 
@@ -399,7 +399,7 @@ export async function getDashboardStats() {
         label: 'Selesai',
         percentage: 45,
         count: 64,
-        color: '#D97706',
+        color: '#7CC563',
         dasharray: '107.4 238.7',
         dashoffset: '0',
       },
@@ -407,7 +407,7 @@ export async function getDashboardStats() {
         label: 'Sedang Berjalan',
         percentage: 35,
         count: 50,
-        color: '#F59E0B',
+        color: '#31889C',
         dasharray: '83.5 238.7',
         dashoffset: '-107.4',
       },
@@ -415,8 +415,8 @@ export async function getDashboardStats() {
         label: 'Belum Dimulai',
         percentage: 15,
         count: 21,
-        color: '#FDE68A',
-        borderColor: '#F59E0B',
+        color: '#FFD300',
+        borderColor: '#FFD300',
         dasharray: '35.8 238.7',
         dashoffset: '-190.9',
       },
@@ -447,7 +447,7 @@ export async function getDashboardStats() {
           label: 'Selesai',
           percentage: pCompleted,
           count: completedActionItems,
-          color: '#D97706',
+          color: '#7CC563',
           dasharray: `${lenComp.toFixed(1)} ${circ}`,
           dashoffset: '0',
         },
@@ -455,7 +455,7 @@ export async function getDashboardStats() {
           label: 'Sedang Berjalan',
           percentage: pInProgress,
           count: inProgressActionItems,
-          color: '#F59E0B',
+          color: '#31889C',
           dasharray: `${lenInProg.toFixed(1)} ${circ}`,
           dashoffset: `-${lenComp.toFixed(1)}`,
         },
@@ -463,8 +463,8 @@ export async function getDashboardStats() {
           label: 'Belum Dimulai',
           percentage: pPending,
           count: pendingActionItems,
-          color: '#FDE68A',
-          borderColor: '#F59E0B',
+          color: '#FFD300',
+          borderColor: '#FFD300',
           dasharray: `${lenPend.toFixed(1)} ${circ}`,
           dashoffset: `-${(lenComp + lenInProg).toFixed(1)}`,
         },

@@ -131,9 +131,9 @@ export function ActionItemList({
   return (
     <div className="space-y-6">
       {/* Top Summary Banner */}
-      <div className="p-5 bg-white rounded-xl border border-amber-200/80 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-4">
+      <div className="p-5 bg-white rounded-xl border border-slate-200 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <span className="text-[11px] font-bold text-amber-700 uppercase tracking-wider block">
+          <span className="text-[11px] font-bold text-[#31889C] uppercase tracking-wider block">
             Matriks &amp; Komitmen Tindak Lanjut
           </span>
           <h3 className="text-[17px] font-bold text-slate-900 mt-0.5">
@@ -147,25 +147,25 @@ export function ActionItemList({
         <div className="flex flex-wrap items-center gap-3">
           {/* Quick Metrics */}
           <div className="flex items-center gap-2">
-            <div className="px-3 py-1.5 rounded-lg border bg-amber-50/60 border-amber-200 text-center">
+            <div className="px-3 py-1.5 rounded-lg border bg-slate-50 border-slate-200 text-center">
               <span className="text-[10px] text-slate-500 font-semibold uppercase block">Total</span>
-              <span className="text-[14px] font-bold text-amber-900">{total}</span>
+              <span className="text-[14px] font-bold text-slate-900">{total}</span>
             </div>
 
-            <div className="px-3 py-1.5 rounded-lg border bg-emerald-50 border-emerald-200 text-center">
-              <span className="text-[10px] text-emerald-700 font-semibold uppercase block">Selesai</span>
-              <span className="text-[14px] font-bold text-emerald-800">{completed}</span>
+            <div className="px-3 py-1.5 rounded-lg border bg-[#ECF8E9] border-[#D2EFCA] text-center">
+              <span className="text-[10px] text-[#4D8F3D] font-semibold uppercase block">Selesai</span>
+              <span className="text-[14px] font-bold text-[#4D8F3D]">{completed}</span>
             </div>
 
-            <div className="px-3 py-1.5 rounded-lg border bg-amber-50 border-amber-300 text-center">
-              <span className="text-[10px] text-amber-800 font-semibold uppercase block">Berjalan</span>
-              <span className="text-[14px] font-bold text-amber-900">{inProgress}</span>
+            <div className="px-3 py-1.5 rounded-lg border bg-[#E8F5F7] border-[#BCE3EB] text-center">
+              <span className="text-[10px] text-[#31889C] font-semibold uppercase block">Berjalan</span>
+              <span className="text-[14px] font-bold text-[#31889C]">{inProgress}</span>
             </div>
 
             {overdue > 0 && (
-              <div className="px-3 py-1.5 rounded-lg border bg-red-50 border-red-200 text-center">
-                <span className="text-[10px] text-red-700 font-semibold uppercase block">Terlambat</span>
-                <span className="text-[14px] font-bold text-red-800">{overdue}</span>
+              <div className="px-3 py-1.5 rounded-lg border bg-[#FEF2F2] border-red-200 text-center">
+                <span className="text-[10px] text-[#DC2626] font-semibold uppercase block">Terlambat</span>
+                <span className="text-[14px] font-bold text-[#DC2626]">{overdue}</span>
               </div>
             )}
           </div>
@@ -177,7 +177,7 @@ export function ActionItemList({
                 setEditingItem(null);
                 setIsFormOpen(true);
               }}
-              className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg bg-amber-600 hover:bg-amber-700 text-white font-semibold text-[13px] shadow-sm transition-all shrink-0 cursor-pointer"
+              className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg bg-[#31889C] hover:bg-[#266F80] text-white font-semibold text-[13px] shadow-sm transition-all shrink-0 cursor-pointer"
             >
               <Plus className="w-4 h-4" />
               <span>Tambah Tindak Lanjut</span>
@@ -188,9 +188,9 @@ export function ActionItemList({
 
       {/* Action Items List */}
       {items.length === 0 ? (
-        <div className="bg-white rounded-xl border border-amber-200/80 p-12 text-center shadow-xs">
+        <div className="bg-white rounded-xl border border-slate-200 p-12 text-center shadow-xs">
           <div className="max-w-md mx-auto space-y-3">
-            <div className="w-12 h-12 rounded-full bg-amber-100 text-amber-800 flex items-center justify-center mx-auto">
+            <div className="w-12 h-12 rounded-full bg-[#F0F9FA] border border-[#BCE3EB] text-[#31889C] flex items-center justify-center mx-auto">
               <CheckCircle2 className="w-6 h-6" />
             </div>
             <h4 className="text-[16px] font-bold text-slate-800">
@@ -206,7 +206,7 @@ export function ActionItemList({
                   setEditingItem(null);
                   setIsFormOpen(true);
                 }}
-                className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg bg-amber-600 hover:bg-amber-700 text-white font-semibold text-[13px] shadow-sm transition-all cursor-pointer mt-2"
+                className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg bg-[#31889C] hover:bg-[#266F80] text-white font-semibold text-[13px] shadow-sm transition-all cursor-pointer mt-2"
               >
                 <Plus className="w-4 h-4" />
                 <span>+ Buat Tindak Lanjut Pertama</span>
@@ -224,13 +224,13 @@ export function ActionItemList({
             return (
               <div
                 key={item.id}
-                className="bg-white rounded-xl border border-amber-200/80 p-5 shadow-xs hover:border-amber-300 transition-all space-y-3"
+                className="bg-white rounded-xl border border-slate-200 p-5 shadow-xs hover:border-[#BCE3EB] transition-all space-y-3"
               >
                 {/* Header row */}
                 <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3">
                   <div className="space-y-1 flex-1">
                     <div className="flex flex-wrap items-center gap-2">
-                      <span className="text-[11px] font-bold text-amber-800 bg-amber-100/80 px-2 py-0.5 rounded border border-amber-300">
+                      <span className="text-[11px] font-bold text-[#215865] bg-[#E8F5F7] px-2 py-0.5 rounded border border-[#BCE3EB]">
                         Item #{idx + 1}
                       </span>
                       <ActionItemStatusBadge status={item.status} isOverdue={isItemOverdue} />
@@ -256,7 +256,7 @@ export function ActionItemList({
                             setEditingItem(item);
                             setIsFormOpen(true);
                           }}
-                          className="p-1.5 text-slate-500 hover:text-amber-800 hover:bg-amber-50 rounded-lg transition-colors cursor-pointer"
+                          className="p-1.5 text-slate-500 hover:text-[#31889C] hover:bg-[#F0F9FA] rounded-lg transition-colors cursor-pointer"
                           title="Ubah Tindak Lanjut"
                         >
                           <Edit2 className="w-4 h-4" />
@@ -277,11 +277,11 @@ export function ActionItemList({
                 </div>
 
                 {/* Details Footer Row */}
-                <div className="flex flex-wrap items-center justify-between gap-3 pt-3 border-t border-amber-100 text-[12px]">
+                <div className="flex flex-wrap items-center justify-between gap-3 pt-3 border-t border-slate-100 text-[12px]">
                   <div className="flex flex-wrap items-center gap-4 text-slate-600">
                     {/* Biro PIC */}
                     <div className="flex items-center gap-1.5">
-                      <Building2 className="w-3.5 h-3.5 text-amber-600" />
+                      <Building2 className="w-3.5 h-3.5 text-[#31889C]" />
                       <span className="font-semibold text-slate-800">
                         {item.picBiro ? `${item.picBiro.code} - ${item.picBiro.shortName}` : 'Biro KEK'}
                       </span>
@@ -290,14 +290,14 @@ export function ActionItemList({
                     {/* User PIC */}
                     {item.picUser && (
                       <div className="flex items-center gap-1.5">
-                        <User className="w-3.5 h-3.5 text-amber-600" />
+                        <User className="w-3.5 h-3.5 text-[#31889C]" />
                         <span className="text-slate-700">{item.picUser.name}</span>
                       </div>
                     )}
 
                     {/* Deadline */}
                     <div className="flex items-center gap-1.5">
-                      <Calendar className="w-3.5 h-3.5 text-amber-600" />
+                      <Calendar className="w-3.5 h-3.5 text-[#31889C]" />
                       <span>
                         Deadline: <strong className={isItemOverdue ? 'text-red-600' : 'text-slate-800'}>
                           {formatIndonesianDate(item.dueDate)}
@@ -307,7 +307,7 @@ export function ActionItemList({
 
                     {/* Completed At */}
                     {item.completedAt && (
-                      <div className="flex items-center gap-1 text-emerald-700 font-medium">
+                      <div className="flex items-center gap-1 text-[#4D8F3D] font-medium">
                         <Check className="w-3.5 h-3.5" />
                         <span>Selesai: {formatIndonesianDate(item.completedAt)}</span>
                       </div>
@@ -338,8 +338,8 @@ export function ActionItemList({
                         onClick={() => handleStatusChange(item.id, 'IN_PROGRESS')}
                         className={`px-2 py-0.5 rounded text-[11px] font-bold transition-all cursor-pointer ${
                           item.status === 'IN_PROGRESS'
-                            ? 'bg-amber-600 text-white shadow-xs'
-                            : 'text-slate-600 hover:bg-amber-100'
+                            ? 'bg-[#31889C] text-white shadow-xs'
+                            : 'text-slate-600 hover:bg-[#F0F9FA]'
                         }`}
                       >
                         In Progress
@@ -350,8 +350,8 @@ export function ActionItemList({
                         onClick={() => handleStatusChange(item.id, 'COMPLETED')}
                         className={`px-2 py-0.5 rounded text-[11px] font-bold transition-all cursor-pointer ${
                           item.status === 'COMPLETED'
-                            ? 'bg-emerald-600 text-white shadow-xs'
-                            : 'text-slate-600 hover:bg-emerald-100'
+                            ? 'bg-[#7CC563] text-white shadow-xs'
+                            : 'text-slate-600 hover:bg-[#ECF8E9]'
                         }`}
                       >
                         Completed

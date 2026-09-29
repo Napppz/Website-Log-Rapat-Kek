@@ -167,7 +167,7 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
       {/* 2. Animated Custom Confirmation Modal */}
       {confirmState?.isOpen && (
         <div className="fixed inset-0 z-[10000] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs animate-in fade-in duration-200">
-          <div className="bg-white rounded-2xl border border-amber-200/80 shadow-2xl max-w-md w-full p-6 animate-in zoom-in-95 duration-200 relative overflow-hidden">
+          <div className="bg-white rounded-2xl border border-slate-200 shadow-2xl max-w-md w-full p-6 animate-in zoom-in-95 duration-200 relative overflow-hidden">
             {/* Top accent line */}
             <div
               className={cn(
@@ -175,8 +175,8 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
                 confirmState.options.variant === 'danger'
                   ? 'bg-red-600'
                   : confirmState.options.variant === 'warning'
-                  ? 'bg-amber-500'
-                  : 'bg-blue-600'
+                  ? 'bg-[#FFD300]'
+                  : 'bg-[#31889C]'
               )}
             />
 
@@ -187,8 +187,8 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
                   confirmState.options.variant === 'danger'
                     ? 'bg-red-50 border-red-200 text-red-600'
                     : confirmState.options.variant === 'warning'
-                    ? 'bg-amber-50 border-amber-200 text-amber-700'
-                    : 'bg-blue-50 border-blue-200 text-blue-700'
+                    ? 'bg-[#FFF8CC] border-[#FFEE99] text-[#8A7200]'
+                    : 'bg-[#F0F9FA] border-[#BCE3EB] text-[#31889C]'
                 )}
               >
                 {confirmState.options.variant === 'danger' ? (
@@ -225,12 +225,12 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
                 disabled={isConfirmLoading}
                 onClick={handleConfirmAction}
                 className={cn(
-                  'inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-white font-semibold text-[13px] transition-all shadow-xs cursor-pointer disabled:opacity-50',
+                  'inline-flex items-center gap-1.5 px-4 py-2 rounded-xl font-semibold text-[13px] transition-all shadow-xs cursor-pointer disabled:opacity-50',
                   confirmState.options.variant === 'danger'
-                    ? 'bg-red-600 hover:bg-red-700 shadow-red-600/20'
+                    ? 'bg-red-600 hover:bg-red-700 text-white shadow-red-600/20'
                     : confirmState.options.variant === 'warning'
-                    ? 'bg-amber-600 hover:bg-amber-700 shadow-amber-600/20'
-                    : 'bg-blue-600 hover:bg-blue-700 shadow-blue-600/20'
+                    ? 'bg-[#FFD300] hover:bg-[#E5BD00] text-slate-900 shadow-xs'
+                    : 'bg-[#31889C] hover:bg-[#266F80] text-white shadow-xs'
                 )}
               >
                 {isConfirmLoading && <Loader2 className="w-4 h-4 animate-spin" />}
@@ -273,10 +273,10 @@ function ToastCard({ toast: item, onClose }: { toast: ToastItem; onClose: () => 
 
   const config = {
     success: {
-      border: 'border-emerald-500/40 bg-slate-900/95 text-white',
-      iconContainer: 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30',
-      progressBar: 'bg-emerald-500',
-      badge: 'text-emerald-400',
+      border: 'border-[#7CC563]/40 bg-slate-900/95 text-white',
+      iconContainer: 'bg-[#7CC563]/20 text-[#7CC563] border border-[#7CC563]/30',
+      progressBar: 'bg-[#7CC563]',
+      badge: 'text-[#7CC563]',
       icon: <CheckCircle2 className="w-5 h-5" />,
     },
     error: {
@@ -287,17 +287,17 @@ function ToastCard({ toast: item, onClose }: { toast: ToastItem; onClose: () => 
       icon: <XCircle className="w-5 h-5" />,
     },
     warning: {
-      border: 'border-amber-500/40 bg-slate-900/95 text-white',
-      iconContainer: 'bg-amber-500/20 text-amber-400 border border-amber-500/30',
-      progressBar: 'bg-amber-500',
-      badge: 'text-amber-400',
+      border: 'border-[#FFD300]/40 bg-slate-900/95 text-white',
+      iconContainer: 'bg-[#FFD300]/20 text-[#FFD300] border border-[#FFD300]/30',
+      progressBar: 'bg-[#FFD300]',
+      badge: 'text-[#FFD300]',
       icon: <AlertTriangle className="w-5 h-5" />,
     },
     info: {
-      border: 'border-blue-500/40 bg-slate-900/95 text-white',
-      iconContainer: 'bg-blue-500/20 text-blue-400 border border-blue-500/30',
-      progressBar: 'bg-blue-500',
-      badge: 'text-blue-400',
+      border: 'border-[#31889C]/40 bg-slate-900/95 text-white',
+      iconContainer: 'bg-[#31889C]/20 text-[#31889C] border border-[#31889C]/30',
+      progressBar: 'bg-[#31889C]',
+      badge: 'text-[#31889C]',
       icon: <Info className="w-5 h-5" />,
     },
   }[item.type];

@@ -220,9 +220,9 @@ export function ActionItemMatrixView({
   return (
     <div className="flex flex-col gap-6">
       {/* Header Card */}
-      <div className="p-6 bg-white rounded-xl border border-amber-200 shadow-sm flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+      <div className="p-6 bg-white rounded-xl border border-slate-200 shadow-xs flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div>
-          <span className="font-semibold text-[12px] text-amber-700 uppercase tracking-wider">
+          <span className="font-semibold text-[12px] text-[#31889C] uppercase tracking-wider">
             Matriks Disposisi &amp; Pemantauan
           </span>
           <h1 className="text-[24px] font-bold text-slate-900 mt-0.5">
@@ -235,27 +235,27 @@ export function ActionItemMatrixView({
 
         {/* Live summary chips */}
         <div className="flex flex-wrap items-center gap-2">
-          <div className="px-3 py-1.5 rounded-lg border bg-amber-50/50 border-amber-200 text-center min-w-[70px]">
+          <div className="px-3 py-1.5 rounded-lg border bg-[#F0F9FA] border-[#BCE3EB] text-center min-w-[70px]">
             <div className="text-[10px] text-slate-500 font-semibold uppercase">Total</div>
-            <div className="text-[14px] font-bold text-amber-900">{totalCount}</div>
+            <div className="text-[14px] font-bold text-[#31889C]">{totalCount}</div>
           </div>
 
-          <div className="px-3 py-1.5 rounded-lg border bg-emerald-50 border-emerald-200 text-center min-w-[70px]">
-            <div className="text-[10px] text-emerald-700 font-semibold uppercase">Selesai</div>
-            <div className="text-[14px] font-bold text-emerald-800">{completedCount}</div>
+          <div className="px-3 py-1.5 rounded-lg border bg-[#ECF8E9] border-[#D2EFCA] text-center min-w-[70px]">
+            <div className="text-[10px] text-[#4D8F3D] font-semibold uppercase">Selesai</div>
+            <div className="text-[14px] font-bold text-[#2E6B20]">{completedCount}</div>
           </div>
 
-          <div className="px-3 py-1.5 rounded-lg border bg-amber-50 border-amber-300 text-center min-w-[70px]">
-            <div className="text-[10px] text-amber-800 font-semibold uppercase">Berjalan</div>
-            <div className="text-[14px] font-bold text-amber-900">{inProgressCount}</div>
+          <div className="px-3 py-1.5 rounded-lg border bg-[#E8F5F7] border-[#BCE3EB] text-center min-w-[70px]">
+            <div className="text-[10px] text-[#31889C] font-semibold uppercase">Berjalan</div>
+            <div className="text-[14px] font-bold text-[#215865]">{inProgressCount}</div>
           </div>
 
-          <div className="px-3 py-1.5 rounded-lg border bg-slate-50 border-slate-300 text-center min-w-[70px]">
-            <div className="text-[10px] text-slate-600 font-semibold uppercase">Menunggu</div>
-            <div className="text-[14px] font-bold text-slate-800">{pendingCount}</div>
+          <div className="px-3 py-1.5 rounded-lg border bg-[#FFF8CC] border-[#FFEE99] text-center min-w-[70px]">
+            <div className="text-[10px] text-[#8A7200] font-semibold uppercase">Menunggu</div>
+            <div className="text-[14px] font-bold text-[#6B5800]">{pendingCount}</div>
           </div>
 
-          <div className="px-3 py-1.5 rounded-lg border bg-red-50 border-red-200 text-center min-w-[70px]">
+          <div className="px-3 py-1.5 rounded-lg border bg-[#FEF2F2] border-[#FCA5A5] text-center min-w-[70px]">
             <div className="text-[10px] text-red-700 font-semibold uppercase">Terlambat</div>
             <div className="text-[14px] font-bold text-red-800">{overdueCount}</div>
           </div>
@@ -267,7 +267,7 @@ export function ActionItemMatrixView({
         {/* Status Filter Tabs */}
         <div className="flex flex-wrap items-center gap-2">
           <span className="text-[12px] font-semibold text-slate-500 mr-1 flex items-center gap-1">
-            <Filter className="w-3.5 h-3.5 text-amber-600" />
+            <Filter className="w-3.5 h-3.5 text-[#31889C]" />
             Status:
           </span>
           {filterTabs.map((tab) => {
@@ -282,8 +282,8 @@ export function ActionItemMatrixView({
                 onClick={() => handleSelectStatus(tab.value)}
                 className={`px-3 py-1.5 rounded-lg text-[12px] font-semibold transition-all cursor-pointer ${
                   isActive
-                    ? 'bg-amber-600 text-white shadow-xs'
-                    : 'bg-white border border-amber-200 text-slate-700 hover:bg-amber-50'
+                    ? 'bg-[#31889C] text-white shadow-xs'
+                    : 'bg-white border border-slate-200 text-slate-700 hover:bg-[#F0F9FA] hover:text-[#31889C]'
                 }`}
               >
                 {tab.label}
@@ -298,7 +298,7 @@ export function ActionItemMatrixView({
           <select
             value={selectedBiro}
             onChange={(e) => handleBiroFilter(e.target.value)}
-            className="px-3 py-1.5 rounded-lg bg-white border border-amber-200 text-slate-800 text-[12px] font-semibold focus:outline-none focus:ring-2 focus:ring-amber-500 shadow-xs cursor-pointer"
+            className="px-3 py-1.5 rounded-lg bg-white border border-slate-200 text-slate-800 text-[12px] font-semibold focus:outline-none focus:ring-2 focus:ring-[#31889C]/30 focus:border-[#31889C] shadow-xs cursor-pointer"
           >
             <option value="ALL">Semua 5 Biro KEK</option>
             {availableBiros.map((b) => (
@@ -315,9 +315,9 @@ export function ActionItemMatrixView({
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder="Cari butir tugas, biro, PIC..."
-              className="w-full pl-8 pr-3 py-1.5 rounded-lg bg-white border border-amber-200 text-slate-800 text-[12px] focus:outline-none focus:ring-2 focus:ring-amber-500 shadow-xs"
+              className="w-full pl-8 pr-3 py-1.5 rounded-lg bg-white border border-slate-200 text-slate-800 text-[12px] focus:outline-none focus:ring-2 focus:ring-[#31889C]/30 focus:border-[#31889C] shadow-xs"
             />
-            <Search className="w-3.5 h-3.5 absolute left-2.5 top-2.5 text-amber-600 pointer-events-none" />
+            <Search className="w-3.5 h-3.5 absolute left-2.5 top-2.5 text-[#31889C] pointer-events-none" />
           </div>
 
           {/* Export Excel button */}
@@ -326,7 +326,7 @@ export function ActionItemMatrixView({
             id="export-excel-btn"
             onClick={handleExportExcel}
             disabled={isExporting}
-            className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 disabled:bg-emerald-400 text-white font-semibold text-[12px] shadow-sm transition-all cursor-pointer shrink-0"
+            className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg bg-[#7CC563] hover:bg-[#68ab50] disabled:opacity-50 text-white font-semibold text-[12px] shadow-xs transition-all cursor-pointer shrink-0"
             title="Export data tindak lanjut sesuai filter aktif ke Excel"
           >
             {isExporting ? (
@@ -345,7 +345,7 @@ export function ActionItemMatrixView({
                 setEditingItem(null);
                 setIsFormOpen(true);
               }}
-              className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg bg-amber-600 hover:bg-amber-700 text-white font-semibold text-[12px] shadow-sm transition-all cursor-pointer shrink-0"
+              className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg bg-[#31889C] hover:bg-[#266F80] text-white font-semibold text-[12px] shadow-xs transition-all cursor-pointer shrink-0"
             >
               <Plus className="w-3.5 h-3.5" />
               <span>Tambah Tindak Lanjut</span>
@@ -355,10 +355,10 @@ export function ActionItemMatrixView({
       </div>
 
       {/* Tasks Table */}
-      <div className="bg-white rounded-xl border border-amber-200 shadow-sm overflow-hidden">
+      <div className="bg-white rounded-xl border border-slate-200 shadow-xs overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-left text-slate-800 text-[13px]">
-            <thead className="bg-amber-50/60 border-b border-amber-200/80 text-[11px] font-bold text-amber-900 uppercase tracking-wider">
+            <thead className="bg-[#F8FAFC] border-b border-slate-200 text-[11px] font-bold text-slate-700 uppercase tracking-wider">
               <tr>
                 <th className="py-3.5 px-4">Ref. Rapat</th>
                 <th className="py-3.5 px-4 min-w-[280px]">Butir Tindak Lanjut</th>
@@ -369,7 +369,7 @@ export function ActionItemMatrixView({
                 <th className="py-3.5 px-4 text-right">Aksi</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-amber-100/80">
+            <tbody className="divide-y divide-slate-100">
               {filteredTasks.length === 0 ? (
                 <tr>
                   <td colSpan={7} className="py-12 text-center text-slate-500">
@@ -384,7 +384,7 @@ export function ActionItemMatrixView({
                           setSelectedBiro('ALL');
                           router.push('/tindak-lanjut');
                         }}
-                        className="inline-flex items-center gap-1 text-[12px] text-amber-800 font-semibold hover:underline cursor-pointer"
+                        className="inline-flex items-center gap-1 text-[12px] text-[#31889C] font-semibold hover:underline cursor-pointer"
                       >
                         <RotateCcw className="w-3.5 h-3.5" />
                         <span>Reset Semua Filter</span>
@@ -402,14 +402,14 @@ export function ActionItemMatrixView({
                   return (
                     <tr
                       key={task.id}
-                      className="hover:bg-amber-50/40 transition-colors group"
+                      className="hover:bg-[#F0F9FA] transition-colors group"
                     >
                       {/* Ref. Rapat */}
                       <td className="py-3.5 px-4 align-top">
                         {task.meeting ? (
                           <Link
                             href={`/semua-rapat/${task.meeting.id}`}
-                            className="inline-flex items-center gap-1 font-bold text-amber-800 hover:text-amber-950 hover:underline"
+                            className="inline-flex items-center gap-1 font-bold text-[#31889C] hover:text-[#215865] hover:underline"
                             title={task.meeting.title}
                           >
                             <span>{task.meeting.meetingNumber}</span>
@@ -429,7 +429,7 @@ export function ActionItemMatrixView({
                           </p>
                         )}
                         {task.completedAt && (
-                          <span className="inline-flex items-center gap-1 text-[11px] text-emerald-700 font-medium mt-1">
+                          <span className="inline-flex items-center gap-1 text-[11px] text-[#4D8F3D] font-medium mt-1">
                             <Check className="w-3 h-3" />
                             Diselesaikan: {formatIndonesianDate(task.completedAt)}
                           </span>
@@ -439,7 +439,7 @@ export function ActionItemMatrixView({
                       {/* Biro & PIC */}
                       <td className="py-3.5 px-4 align-top">
                         <div className="space-y-0.5">
-                          <span className="inline-block font-semibold text-slate-800 bg-amber-50 px-2 py-0.5 rounded border border-amber-200 text-[11px]">
+                          <span className="inline-block font-semibold text-[#215865] bg-[#F0F9FA] px-2 py-0.5 rounded border border-[#BCE3EB] text-[11px]">
                             {task.picBiro?.code || 'Biro KEK'}
                           </span>
                           {task.picUser && (
@@ -483,7 +483,7 @@ export function ActionItemMatrixView({
                               type="button"
                               disabled={isUpdatingThis}
                               onClick={() => handleStatusChange(task.id, 'COMPLETED')}
-                              className="p-1 rounded text-emerald-700 hover:bg-emerald-50 transition-colors cursor-pointer"
+                              className="p-1 rounded text-[#4D8F3D] hover:bg-[#ECF8E9] transition-colors cursor-pointer"
                               title="Tandai Selesai"
                             >
                               <CheckCircle2 className="w-4 h-4" />
@@ -493,7 +493,7 @@ export function ActionItemMatrixView({
                               type="button"
                               disabled={isUpdatingThis}
                               onClick={() => handleStatusChange(task.id, 'IN_PROGRESS')}
-                              className="p-1 rounded text-amber-700 hover:bg-amber-50 transition-colors cursor-pointer"
+                              className="p-1 rounded text-[#31889C] hover:bg-[#F0F9FA] transition-colors cursor-pointer"
                               title="Kembalikan ke Dalam Proses"
                             >
                               <RotateCcw className="w-4 h-4" />
@@ -508,7 +508,7 @@ export function ActionItemMatrixView({
                               setSelectedMeetingIdForCreate(task.meetingId);
                               setIsFormOpen(true);
                             }}
-                            className="p-1 text-slate-400 hover:text-amber-800 hover:bg-amber-50 rounded transition-colors cursor-pointer"
+                            className="p-1 text-slate-400 hover:text-[#31889C] hover:bg-[#F0F9FA] rounded transition-colors cursor-pointer"
                             title="Ubah Tindak Lanjut"
                           >
                             <Edit2 className="w-4 h-4" />

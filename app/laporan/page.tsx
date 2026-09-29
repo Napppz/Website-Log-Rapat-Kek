@@ -14,7 +14,7 @@ export default function LaporanPage() {
     <Suspense
       fallback={
         <div className="flex h-64 items-center justify-center">
-          <Loader2 className="w-8 h-8 animate-spin text-amber-600" />
+          <Loader2 className="w-8 h-8 animate-spin text-[#31889C]" />
         </div>
       }
     >

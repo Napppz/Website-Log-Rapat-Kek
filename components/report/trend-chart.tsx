@@ -64,13 +64,13 @@ export function TrendChart({ data }: TrendChartProps) {
             onClick={() => setActiveSeries(activeSeries === 'MEETINGS' ? 'ALL' : 'MEETINGS')}
             className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
               activeSeries === 'MEETINGS' || activeSeries === 'ALL'
-                ? 'bg-blue-50 text-blue-700 border border-blue-200/80 shadow-2xs'
+                ? 'bg-[#F0F9FA] text-[#215865] border border-[#BCE3EB] shadow-2xs'
                 : 'text-slate-400 bg-slate-50 border border-slate-100 opacity-60'
             }`}
           >
-            <span className="w-2.5 h-2.5 rounded-full bg-blue-600" />
+            <span className="w-2.5 h-2.5 rounded-full bg-[#31889C]" />
             <span>Rapat</span>
-            <span className="font-bold ml-0.5 px-1 py-0.2 bg-white rounded text-[10px] text-blue-800 border border-blue-100">
+            <span className="font-bold ml-0.5 px-1 py-0.2 bg-white rounded text-[10px] text-[#215865] border border-[#BCE3EB]">
               {totalMeetings}
             </span>
           </button>
@@ -81,13 +81,13 @@ export function TrendChart({ data }: TrendChartProps) {
             onClick={() => setActiveSeries(activeSeries === 'COMPLETED' ? 'ALL' : 'COMPLETED')}
             className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
               activeSeries === 'COMPLETED' || activeSeries === 'ALL'
-                ? 'bg-emerald-50 text-emerald-700 border border-emerald-200/80 shadow-2xs'
+                ? 'bg-[#ECF8E9] text-[#4D8F3D] border border-[#D2EFCA] shadow-2xs'
                 : 'text-slate-400 bg-slate-50 border border-slate-100 opacity-60'
             }`}
           >
-            <span className="w-2.5 h-2.5 rounded-full bg-emerald-500" />
+            <span className="w-2.5 h-2.5 rounded-full bg-[#7CC563]" />
             <span>Selesai</span>
-            <span className="font-bold ml-0.5 px-1 py-0.2 bg-white rounded text-[10px] text-emerald-800 border border-emerald-100">
+            <span className="font-bold ml-0.5 px-1 py-0.2 bg-white rounded text-[10px] text-[#4D8F3D] border border-[#D2EFCA]">
               {totalCompleted}
             </span>
           </button>
@@ -113,10 +113,10 @@ export function TrendChart({ data }: TrendChartProps) {
         {/* Hovered Details Callout */}
         {hoveredPoint ? (
           <div className="flex items-center gap-2 text-xs font-semibold text-slate-800 animate-in fade-in duration-200 bg-slate-100/80 px-2.5 py-1 rounded-lg border border-slate-200">
-            <span className="text-amber-800">{hoveredPoint.label}:</span>
-            <span className="text-blue-700">{hoveredPoint.totalMeetings} Rapat</span>
+            <span className="text-[#31889C] font-bold">{hoveredPoint.label}:</span>
+            <span className="text-[#215865]">{hoveredPoint.totalMeetings} Rapat</span>
             <span className="text-slate-300">•</span>
-            <span className="text-emerald-700">{hoveredPoint.completed} Selesai</span>
+            <span className="text-[#4D8F3D]">{hoveredPoint.completed} Selesai</span>
             <span className="text-slate-300">•</span>
             <span className="text-rose-700">{hoveredPoint.overdue} Terlambat</span>
           </div>
@@ -137,12 +137,12 @@ export function TrendChart({ data }: TrendChartProps) {
           {/* Gradients */}
           <defs>
             <linearGradient id="trend-rapat-grad" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stopColor="#3B82F6" />
-              <stop offset="100%" stopColor="#1D4ED8" />
+              <stop offset="0%" stopColor="#31889C" />
+              <stop offset="100%" stopColor="#266F80" />
             </linearGradient>
             <linearGradient id="trend-selesai-grad" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stopColor="#10B981" />
-              <stop offset="100%" stopColor="#047857" />
+              <stop offset="0%" stopColor="#7CC563" />
+              <stop offset="100%" stopColor="#5aa542" />
             </linearGradient>
             <linearGradient id="trend-terlambat-grad" x1="0" y1="0" x2="0" y2="1">
               <stop offset="0%" stopColor="#F43F5E" />
@@ -291,7 +291,7 @@ export function TrendChart({ data }: TrendChartProps) {
                         x={xMeetings + barW / 2}
                         y={Math.max(14, yMeetings - 4)}
                         textAnchor="middle"
-                        className="text-[9.5px] font-bold fill-blue-700"
+                        className="text-[9.5px] font-bold fill-[#31889C]"
                       >
                         {pt.totalMeetings}
                       </text>
@@ -301,7 +301,7 @@ export function TrendChart({ data }: TrendChartProps) {
                         x={xCompleted + barW / 2}
                         y={Math.max(14, yCompleted - 4)}
                         textAnchor="middle"
-                        className="text-[9.5px] font-bold fill-emerald-700"
+                        className="text-[9.5px] font-bold fill-[#4D8F3D]"
                       >
                         {pt.completed}
                       </text>
@@ -325,7 +325,7 @@ export function TrendChart({ data }: TrendChartProps) {
                   y={chartHeight + 16}
                   textAnchor="middle"
                   className={`text-[11px] font-semibold transition-colors font-sans ${
-                    isHovered ? 'fill-amber-800 font-bold' : 'fill-slate-700'
+                    isHovered ? 'fill-[#31889C] font-bold' : 'fill-slate-700'
                   }`}
                 >
                   {pt.label}

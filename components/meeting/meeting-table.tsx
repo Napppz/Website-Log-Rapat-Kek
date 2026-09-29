@@ -143,26 +143,26 @@ export function MeetingTable({
     switch (code) {
       case 'IKK':
       case 'INV':
-        return <TrendingUp className="w-3.5 h-3.5 text-amber-600" />;
+        return <TrendingUp className="w-3.5 h-3.5 text-[#7CC563]" />;
       case 'PKKEK':
       case 'DAL':
       case 'OPS':
-        return <Ship className="w-3.5 h-3.5 text-amber-600" />;
+        return <Ship className="w-3.5 h-3.5 text-[#31889C]" />;
       case 'UK':
       case 'BUK':
       case 'ADM':
-        return <FileText className="w-3.5 h-3.5 text-amber-600" />;
+        return <FileText className="w-3.5 h-3.5 text-[#31889C]" />;
       case 'BPPK':
       case 'PPK':
       case 'REN':
       case 'IT':
-        return <Cpu className="w-3.5 h-3.5 text-amber-600" />;
+        return <Cpu className="w-3.5 h-3.5 text-[#31889C]" />;
       case 'HSDMO':
       case 'HUK':
       case 'LEG':
-        return <Scale className="w-3.5 h-3.5 text-amber-600" />;
+        return <Scale className="w-3.5 h-3.5 text-[#31889C]" />;
       default:
-        return <TrendingUp className="w-3.5 h-3.5 text-amber-600" />;
+        return <TrendingUp className="w-3.5 h-3.5 text-[#31889C]" />;
     }
   };
 
@@ -221,12 +221,12 @@ export function MeetingTable({
   };
 
   return (
-    <div className="rounded-xl bg-white shadow-sm border border-amber-200/70 overflow-hidden flex flex-col">
+    <div className="rounded-xl bg-white shadow-sm border border-slate-200 overflow-hidden flex flex-col">
       {/* Table Card Header */}
-      <div className="p-6 flex flex-col md:flex-row md:items-center md:justify-between gap-3 bg-gradient-to-r from-amber-50/70 to-white border-b border-amber-100">
+      <div className="p-6 flex flex-col md:flex-row md:items-center md:justify-between gap-3 bg-[#F8FAFC] border-b border-slate-200">
         <div>
           <div className="flex items-center gap-2">
-            <span className="w-2.5 h-2.5 rounded-full bg-amber-500"></span>
+            <span className="w-2.5 h-2.5 rounded-full bg-[#31889C]"></span>
             <h2 className="font-bold text-[18px] text-slate-900">
               {onViewAllMeetings ? 'Agenda & Risalah Rapat Terkini' : 'Semua Risalah Rapat KEK'}
             </h2>
@@ -246,9 +246,9 @@ export function MeetingTable({
               value={searchFilter}
               onChange={(e) => setSearchFilter(e.target.value)}
               placeholder="Cari nomor/agenda..."
-              className="pl-8 pr-3 py-1.5 rounded-xl bg-white border border-amber-200 text-slate-800 text-[12.5px] focus:outline-none focus:ring-2 focus:ring-amber-500 shadow-2xs"
+              className="pl-8 pr-3 py-1.5 rounded-xl bg-white border border-slate-200 text-slate-800 text-[12.5px] focus:outline-none focus:ring-2 focus:ring-[#31889C]/25 focus:border-[#31889C] shadow-2xs"
             />
-            <Filter className="w-3.5 h-3.5 absolute left-2.5 top-2.5 text-amber-600 pointer-events-none" />
+            <Filter className="w-3.5 h-3.5 absolute left-2.5 top-2.5 text-[#31889C] pointer-events-none" />
           </div>
 
           {/* View All Meetings Link */}
@@ -256,7 +256,7 @@ export function MeetingTable({
             <button
               type="button"
               onClick={onViewAllMeetings}
-              className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-amber-600 text-white hover:bg-amber-700 transition-all text-[12.5px] font-semibold shadow-xs cursor-pointer shrink-0"
+              className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-[#31889C] text-white hover:bg-[#266F80] transition-all text-[12.5px] font-semibold shadow-xs cursor-pointer shrink-0"
             >
               <span>Buka Semua Arsip Rapat</span>
               <ArrowRight className="w-4 h-4" />
@@ -268,7 +268,7 @@ export function MeetingTable({
       {/* Table Content */}
       <div className="overflow-x-auto">
         <table className="w-full text-left text-slate-800">
-          <thead className="bg-amber-50/50 border-b border-amber-200/70 text-[11px] font-bold text-amber-900 uppercase tracking-wider">
+          <thead className="bg-[#F8FAFC] border-b border-slate-200 text-[11px] font-bold text-slate-700 uppercase tracking-wider">
             <tr>
               <th className="py-3 px-4">Nomor &amp; Tanggal</th>
               <th className="py-3 px-4">Agenda Rapat</th>
@@ -278,31 +278,31 @@ export function MeetingTable({
               <th className="py-3 px-4 text-right">Aksi</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-amber-100/80 text-[13px]">
+          <tbody className="divide-y divide-slate-200 text-[13px]">
             {isLoading ? (
               // Loading Skeleton State
               Array.from({ length: 4 }).map((_, i) => (
                 <tr key={i} className="animate-pulse">
                   <td className="py-4 px-4">
-                    <div className="h-4 bg-amber-100 rounded w-20 mb-2"></div>
+                    <div className="h-4 bg-slate-100 rounded w-20 mb-2"></div>
                     <div className="h-3 bg-slate-100 rounded w-16"></div>
                   </td>
                   <td className="py-4 px-4">
-                    <div className="h-4 bg-amber-100 rounded w-3/4 mb-2"></div>
+                    <div className="h-4 bg-slate-100 rounded w-3/4 mb-2"></div>
                     <div className="h-3 bg-slate-100 rounded w-1/2"></div>
                   </td>
                   <td className="py-4 px-4">
-                    <div className="h-6 bg-amber-50 rounded-md w-28"></div>
+                    <div className="h-6 bg-slate-100 rounded-md w-28"></div>
                   </td>
                   <td className="py-4 px-4">
-                    <div className="h-5 bg-emerald-100 rounded-full w-20"></div>
+                    <div className="h-5 bg-slate-100 rounded-full w-20"></div>
                   </td>
                   <td className="py-4 px-4">
-                    <div className="h-3 bg-amber-100 rounded w-28 mb-1.5"></div>
-                    <div className="h-2 bg-amber-100 rounded-full w-32"></div>
+                    <div className="h-3 bg-slate-100 rounded w-28 mb-1.5"></div>
+                    <div className="h-2 bg-slate-100 rounded-full w-32"></div>
                   </td>
                   <td className="py-4 px-4 text-right">
-                    <div className="h-7 bg-amber-100 rounded-lg w-16 ml-auto"></div>
+                    <div className="h-7 bg-slate-100 rounded-lg w-16 ml-auto"></div>
                   </td>
                 </tr>
               ))
@@ -311,7 +311,7 @@ export function MeetingTable({
               <tr>
                 <td colSpan={6} className="py-12 px-4 text-center">
                   <div className="flex flex-col items-center justify-center max-w-sm mx-auto space-y-3">
-                    <div className="w-12 h-12 rounded-full bg-amber-100 border border-amber-200 flex items-center justify-center text-amber-700">
+                    <div className="w-12 h-12 rounded-full bg-[#F0F9FA] border border-[#BCE3EB] flex items-center justify-center text-[#31889C]">
                       <SearchX className="w-6 h-6" />
                     </div>
                     <div>
@@ -326,7 +326,7 @@ export function MeetingTable({
                       <button
                         type="button"
                         onClick={handleResetFilter}
-                        className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg bg-amber-50 text-amber-800 hover:bg-amber-100 border border-amber-200 font-semibold text-[12px] transition-colors cursor-pointer"
+                        className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg bg-[#F0F9FA] text-[#215865] hover:bg-[#E8F5F7] border border-[#BCE3EB] font-semibold text-[12px] transition-colors cursor-pointer"
                       >
                         <RotateCcw className="w-3.5 h-3.5" />
                         <span>Bersihkan Filter Pencarian</span>
@@ -337,20 +337,16 @@ export function MeetingTable({
               </tr>
             ) : (
               // Meeting Rows (Paginated)
-              paginatedMeetings.map((meeting, index) => {
-                const isEven = index % 2 === 1;
-
+              paginatedMeetings.map((meeting) => {
                 return (
                   <tr
                     key={meeting.id}
-                    className={`hover:bg-amber-50/30 transition-colors group ${
-                      isEven ? 'bg-amber-50/20' : ''
-                    }`}
+                    className="hover:bg-[#F0F9FA] transition-colors group"
                   >
                     {/* Nomor & Tanggal */}
                     <td className="py-3.5 px-4 align-top whitespace-nowrap">
                       <div className="flex flex-col">
-                        <span className="font-bold text-[13px] text-amber-800">
+                        <span className="font-bold text-[13px] text-[#31889C]">
                           {meeting.code}
                         </span>
                         <span className="text-slate-500 text-[12px] font-medium">
@@ -368,12 +364,12 @@ export function MeetingTable({
                         <button
                           type="button"
                           onClick={() => setSelectedMeeting(meeting)}
-                          className="text-left font-bold text-[14px] text-slate-900 hover:text-amber-700 transition-colors line-clamp-2 cursor-pointer"
+                          className="text-left font-bold text-[14px] text-slate-900 hover:text-[#31889C] transition-colors line-clamp-2 cursor-pointer"
                         >
                           {meeting.title}
                         </button>
                         <div className="flex items-center gap-1.5 text-slate-500">
-                          <MapPin className="w-3.5 h-3.5 text-amber-600 shrink-0" />
+                          <MapPin className="w-3.5 h-3.5 text-[#31889C] shrink-0" />
                           <span className="text-[12px] line-clamp-1">{meeting.location}</span>
                         </div>
                       </div>
@@ -381,7 +377,7 @@ export function MeetingTable({
 
                     {/* Biro Pelaksana */}
                     <td className="py-3.5 px-4 align-top whitespace-nowrap">
-                      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-amber-50 border border-amber-200 text-[12px] font-bold text-amber-800">
+                      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-[#F0F9FA] border border-[#BCE3EB] text-[12px] font-bold text-[#215865]">
                         {getBiroIcon(meeting.biroCode)}
                         {meeting.biroName}
                       </span>
@@ -406,7 +402,7 @@ export function MeetingTable({
                         <button
                           type="button"
                           onClick={() => setSelectedMeeting(meeting)}
-                          className="p-1.5 rounded-lg text-amber-700 hover:bg-amber-100 transition-colors cursor-pointer"
+                          className="p-1.5 rounded-lg text-[#31889C] hover:bg-[#F0F9FA] transition-colors cursor-pointer"
                           title="Lihat Detail"
                         >
                           <Eye className="w-4 h-4" />
@@ -415,7 +411,7 @@ export function MeetingTable({
                           type="button"
                           disabled={downloadingId === meeting.id}
                           onClick={() => handleDownloadPdf(meeting.id, meeting.code)}
-                          className="p-1.5 rounded-lg text-amber-700 hover:bg-amber-100 transition-colors cursor-pointer disabled:opacity-50"
+                          className="p-1.5 rounded-lg text-[#31889C] hover:bg-[#F0F9FA] transition-colors cursor-pointer disabled:opacity-50"
                           title="Unduh Risalah Rapat (PDF)"
                         >
                           <FileDown className="w-4 h-4" />
@@ -447,7 +443,7 @@ export function MeetingTable({
 
       {/* Pagination Footer */}
       {!isLoading && filteredMeetings.length > 0 && (
-        <div className="p-4 bg-amber-50/40 border-t border-amber-100 flex flex-col sm:flex-row items-center justify-between gap-3 text-[13px] text-slate-600 font-medium">
+        <div className="p-4 bg-[#F8FAFC] border-t border-slate-200 flex flex-col sm:flex-row items-center justify-between gap-3 text-[13px] text-slate-600 font-medium">
           <span>
             Menampilkan{' '}
             <strong className="text-slate-800">
@@ -464,8 +460,8 @@ export function MeetingTable({
               onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
               className={`px-3 py-1.5 rounded-lg border text-[12px] font-medium shadow-xs transition-all ${
                 safePage <= 1
-                  ? 'bg-white border-amber-200 text-slate-400 opacity-50 cursor-not-allowed'
-                  : 'bg-white border-amber-300 text-slate-700 hover:bg-amber-50 cursor-pointer'
+                  ? 'bg-white border-slate-200 text-slate-400 opacity-50 cursor-not-allowed'
+                  : 'bg-white border-slate-300 text-slate-700 hover:bg-[#F0F9FA] cursor-pointer'
               }`}
             >
               Sebelumnya
@@ -489,8 +485,8 @@ export function MeetingTable({
                   onClick={() => setCurrentPage(pageNum)}
                   className={`px-3 py-1.5 rounded-lg text-[12px] font-bold shadow-xs transition-all cursor-pointer ${
                     isActive
-                      ? 'bg-amber-600 text-white border border-amber-600'
-                      : 'bg-white border border-amber-200 text-slate-700 hover:bg-amber-50'
+                      ? 'bg-[#31889C] text-white border border-[#31889C]'
+                      : 'bg-white border border-slate-200 text-slate-700 hover:bg-[#F0F9FA]'
                   }`}
                 >
                   {pageNum}
@@ -505,8 +501,8 @@ export function MeetingTable({
               onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
               className={`px-3 py-1.5 rounded-lg border text-[12px] font-medium shadow-xs transition-all ${
                 safePage >= totalPages
-                  ? 'bg-white border-amber-200 text-slate-400 opacity-50 cursor-not-allowed'
-                  : 'bg-white border-amber-300 text-slate-700 hover:bg-amber-50 cursor-pointer'
+                  ? 'bg-white border-slate-200 text-slate-400 opacity-50 cursor-not-allowed'
+                  : 'bg-white border-slate-300 text-slate-700 hover:bg-[#F0F9FA] cursor-pointer'
               }`}
             >
               Berikutnya

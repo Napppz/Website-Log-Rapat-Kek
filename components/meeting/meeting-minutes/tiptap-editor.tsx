@@ -46,7 +46,7 @@ export function TiptapEditor({
       Link.configure({
         openOnClick: false,
         HTMLAttributes: {
-          class: 'text-amber-700 underline font-medium hover:text-amber-900',
+          class: 'text-[#31889C] underline font-medium hover:text-[#266F80]',
         },
       }),
     ],
@@ -56,14 +56,14 @@ export function TiptapEditor({
     editorProps: {
       attributes: {
         class: cn(
-          'prose prose-sm prose-amber max-w-none focus:outline-none p-3.5 text-slate-800 leading-relaxed font-[\'Arial\',sans-serif] text-[11pt]',
+          'prose prose-sm prose-slate max-w-none focus:outline-none p-3.5 text-slate-800 leading-relaxed font-[\'Arial\',sans-serif] text-[11pt]',
           'prose-headings:font-bold prose-headings:text-slate-900',
           'prose-h2:text-[13pt] prose-h2:mb-1.5 prose-h2:mt-3',
           'prose-h3:text-[11pt] prose-h3:mb-1 prose-h3:mt-2',
           'prose-p:my-1',
           'prose-ul:my-1.5 prose-ul:list-disc prose-ul:pl-5',
           'prose-ol:my-1.5 prose-ol:list-decimal prose-ol:pl-5',
-          'prose-blockquote:border-l-4 prose-blockquote:border-amber-400 prose-blockquote:pl-3 prose-blockquote:italic prose-blockquote:text-slate-600'
+          'prose-blockquote:border-l-4 prose-blockquote:border-[#31889C] prose-blockquote:pl-3 prose-blockquote:italic prose-blockquote:text-slate-600'
         ),
         style: `min-height: ${minHeight};`,
       },
@@ -96,7 +96,7 @@ export function TiptapEditor({
   if (!editor) {
     return (
       <div
-        className="rounded-lg border border-amber-200/80 bg-slate-50/50 p-4 animate-pulse flex items-center justify-center text-slate-400 text-[12px]"
+        className="rounded-lg border border-slate-200 bg-slate-50/50 p-4 animate-pulse flex items-center justify-center text-slate-400 text-[12px]"
         style={{ minHeight }}
       >
         Memuat editor notulen...
@@ -107,7 +107,7 @@ export function TiptapEditor({
   // If read-only preview mode without toolbar
   if (!editable) {
     return (
-      <div className="rounded-lg border border-amber-100 bg-amber-50/20 p-2">
+      <div className="rounded-lg border border-slate-200 bg-slate-50 p-2">
         <EditorContent editor={editor} />
       </div>
     );
@@ -130,9 +130,9 @@ export function TiptapEditor({
   };
 
   return (
-    <div className="rounded-xl border border-amber-200 bg-white overflow-hidden shadow-xs focus-within:ring-2 focus-within:ring-amber-500/30 focus-within:border-amber-500 transition-all">
+    <div className="rounded-xl border border-slate-200 bg-white overflow-hidden shadow-xs focus-within:ring-2 focus-within:ring-[#31889C]/25 focus-within:border-[#31889C] transition-all">
       {/* Toolbar */}
-      <div className="flex flex-wrap items-center gap-1 p-1.5 bg-amber-50/60 border-b border-amber-200/80 text-slate-600 select-none">
+      <div className="flex flex-wrap items-center gap-1 p-1.5 bg-[#F8FAFC] border-b border-slate-200 text-slate-600 select-none">
         {/* Bold */}
         <button
           type="button"
@@ -140,8 +140,8 @@ export function TiptapEditor({
           className={cn(
             'p-1.5 rounded-md text-[12px] transition-colors',
             editor.isActive('bold')
-              ? 'bg-amber-600 text-white font-bold'
-              : 'hover:bg-amber-200/60 text-slate-700'
+              ? 'bg-[#31889C] text-white font-bold'
+              : 'hover:bg-slate-200 text-slate-700'
           )}
           title="Tebal (Ctrl+B)"
         >
@@ -155,8 +155,8 @@ export function TiptapEditor({
           className={cn(
             'p-1.5 rounded-md text-[12px] transition-colors',
             editor.isActive('italic')
-              ? 'bg-amber-600 text-white font-bold'
-              : 'hover:bg-amber-200/60 text-slate-700'
+              ? 'bg-[#31889C] text-white font-bold'
+              : 'hover:bg-slate-200 text-slate-700'
           )}
           title="Miring (Ctrl+I)"
         >
@@ -170,15 +170,15 @@ export function TiptapEditor({
           className={cn(
             'p-1.5 rounded-md text-[12px] transition-colors',
             editor.isActive('underline')
-              ? 'bg-amber-600 text-white font-bold'
-              : 'hover:bg-amber-200/60 text-slate-700'
+              ? 'bg-[#31889C] text-white font-bold'
+              : 'hover:bg-slate-200 text-slate-700'
           )}
           title="Garis Bawah (Ctrl+U)"
         >
           <UnderlineIcon className="w-3.5 h-3.5" />
         </button>
 
-        <div className="w-px h-4 bg-amber-200 mx-1" />
+        <div className="w-px h-4 bg-slate-200 mx-1" />
 
         {/* Heading 2 */}
         <button
@@ -187,8 +187,8 @@ export function TiptapEditor({
           className={cn(
             'p-1.5 rounded-md text-[12px] transition-colors',
             editor.isActive('heading', { level: 2 })
-              ? 'bg-amber-600 text-white font-bold'
-              : 'hover:bg-amber-200/60 text-slate-700'
+              ? 'bg-[#31889C] text-white font-bold'
+              : 'hover:bg-slate-200 text-slate-700'
           )}
           title="Subjudul Utama (H2)"
         >
@@ -202,15 +202,15 @@ export function TiptapEditor({
           className={cn(
             'p-1.5 rounded-md text-[12px] transition-colors',
             editor.isActive('heading', { level: 3 })
-              ? 'bg-amber-600 text-white font-bold'
-              : 'hover:bg-amber-200/60 text-slate-700'
+              ? 'bg-[#31889C] text-white font-bold'
+              : 'hover:bg-slate-200 text-slate-700'
           )}
           title="Subjudul Poin (H3)"
         >
           <Heading3 className="w-3.5 h-3.5" />
         </button>
 
-        <div className="w-px h-4 bg-amber-200 mx-1" />
+        <div className="w-px h-4 bg-slate-200 mx-1" />
 
         {/* Bullet List */}
         <button
@@ -219,8 +219,8 @@ export function TiptapEditor({
           className={cn(
             'p-1.5 rounded-md text-[12px] transition-colors',
             editor.isActive('bulletList')
-              ? 'bg-amber-600 text-white font-bold'
-              : 'hover:bg-amber-200/60 text-slate-700'
+              ? 'bg-[#31889C] text-white font-bold'
+              : 'hover:bg-slate-200 text-slate-700'
           )}
           title="Daftar Poin (Bullet List)"
         >
@@ -234,8 +234,8 @@ export function TiptapEditor({
           className={cn(
             'p-1.5 rounded-md text-[12px] transition-colors',
             editor.isActive('orderedList')
-              ? 'bg-amber-600 text-white font-bold'
-              : 'hover:bg-amber-200/60 text-slate-700'
+              ? 'bg-[#31889C] text-white font-bold'
+              : 'hover:bg-slate-200 text-slate-700'
           )}
           title="Daftar Nomor (Numbered List)"
         >
@@ -249,8 +249,8 @@ export function TiptapEditor({
           className={cn(
             'p-1.5 rounded-md text-[12px] transition-colors',
             editor.isActive('blockquote')
-              ? 'bg-amber-600 text-white font-bold'
-              : 'hover:bg-amber-200/60 text-slate-700'
+              ? 'bg-[#31889C] text-white font-bold'
+              : 'hover:bg-slate-200 text-slate-700'
           )}
           title="Kutipan / Pernyataan Penting"
         >
@@ -264,22 +264,22 @@ export function TiptapEditor({
           className={cn(
             'p-1.5 rounded-md text-[12px] transition-colors',
             editor.isActive('link')
-              ? 'bg-amber-600 text-white font-bold'
-              : 'hover:bg-amber-200/60 text-slate-700'
+              ? 'bg-[#31889C] text-white font-bold'
+              : 'hover:bg-slate-200 text-slate-700'
           )}
           title="Sisipkan Tautan"
         >
           <LinkIcon className="w-3.5 h-3.5" />
         </button>
 
-        <div className="w-px h-4 bg-amber-200 mx-1 ml-auto" />
+        <div className="w-px h-4 bg-slate-200 mx-1 ml-auto" />
 
         {/* Undo */}
         <button
           type="button"
           onClick={() => editor.chain().focus().undo().run()}
           disabled={!editor.can().undo()}
-          className="p-1.5 rounded-md text-[12px] hover:bg-amber-200/60 text-slate-700 disabled:opacity-30 disabled:cursor-not-allowed"
+          className="p-1.5 rounded-md text-[12px] hover:bg-slate-200 text-slate-700 disabled:opacity-30 disabled:cursor-not-allowed"
           title="Batal (Ctrl+Z)"
         >
           <Undo2 className="w-3.5 h-3.5" />
@@ -290,7 +290,7 @@ export function TiptapEditor({
           type="button"
           onClick={() => editor.chain().focus().redo().run()}
           disabled={!editor.can().redo()}
-          className="p-1.5 rounded-md text-[12px] hover:bg-amber-200/60 text-slate-700 disabled:opacity-30 disabled:cursor-not-allowed"
+          className="p-1.5 rounded-md text-[12px] hover:bg-slate-200 text-slate-700 disabled:opacity-30 disabled:cursor-not-allowed"
           title="Ulangi (Ctrl+Y)"
         >
           <Redo2 className="w-3.5 h-3.5" />

@@ -44,10 +44,10 @@ const MONTH_NAMES = [
 const DAY_NAMES = ['Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab', 'Min'];
 
 const STATUS_CONFIG: Record<string, { label: string; badge: string }> = {
-  FINAL: { label: 'Final', badge: 'bg-emerald-100 text-emerald-800 border-emerald-300' },
-  APPROVED: { label: 'Disetujui', badge: 'bg-blue-100 text-blue-800 border-blue-300' },
-  REVIEW: { label: 'Review', badge: 'bg-amber-100 text-amber-800 border-amber-300' },
-  DRAFT: { label: 'Draft', badge: 'bg-slate-100 text-slate-700 border-slate-300' },
+  FINAL: { label: 'Final', badge: 'bg-[#ECF8E9] text-[#4D8F3D] border-[#D2EFCA]' },
+  APPROVED: { label: 'Disetujui', badge: 'bg-[#E8F5F7] text-[#31889C] border-[#BCE3EB]' },
+  REVIEW: { label: 'Review', badge: 'bg-[#FFF8CC] text-[#8A7200] border-[#FFEE99]' },
+  DRAFT: { label: 'Draft', badge: 'bg-[#F1F5F9] text-[#64748B] border-[#E2E8F0]' },
 };
 
 export function KalenderClient({ initialMeetings, biros }: KalenderClientProps) {
@@ -236,10 +236,10 @@ export function KalenderClient({ initialMeetings, biros }: KalenderClientProps) 
   return (
     <div className="flex flex-col gap-6">
       {/* 1. Executive Banner */}
-      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-amber-50 via-white to-amber-100/60 p-6 md:p-8 border border-amber-200 shadow-sm flex flex-col md:flex-row md:items-center md:justify-between gap-6">
+      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-[#F0F9FA] via-white to-[#E8F5F7] p-6 md:p-8 border border-slate-200 shadow-xs flex flex-col md:flex-row md:items-center md:justify-between gap-6">
         <div className="space-y-1.5 max-w-2xl">
-          <span className="font-semibold text-[11px] text-amber-800 uppercase tracking-wider flex items-center gap-1.5">
-            <CalendarCheck2 className="w-3.5 h-3.5 text-amber-600" />
+          <span className="font-semibold text-[11px] text-[#215865] uppercase tracking-wider flex items-center gap-1.5">
+            <CalendarCheck2 className="w-3.5 h-3.5 text-[#31889C]" />
             <span>Manajemen Waktu &amp; Sinergi Dewan KEK</span>
           </span>
           <h1 className="text-[24px] md:text-[28px] font-bold text-slate-900 tracking-tight">
@@ -253,7 +253,7 @@ export function KalenderClient({ initialMeetings, biros }: KalenderClientProps) 
         <div className="flex flex-wrap items-center gap-3 shrink-0">
           <Link
             href="/buat-rapat"
-            className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-amber-600 text-white font-semibold text-[13px] hover:bg-amber-700 shadow-sm shadow-amber-600/25 transition-all"
+            className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#31889C] text-white font-semibold text-[13px] hover:bg-[#266F80] shadow-sm shadow-[#31889C]/20 transition-all"
           >
             <PlusCircle className="w-4 h-4" />
             <span>+ Jadwalkan Rapat Baru</span>
@@ -262,25 +262,25 @@ export function KalenderClient({ initialMeetings, biros }: KalenderClientProps) 
       </div>
 
       {/* 2. Controls Toolbar: Month Selector + View Mode + Filters */}
-      <div className="bg-white rounded-2xl border border-amber-200 shadow-sm p-4 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+      <div className="bg-white rounded-2xl border border-slate-200 shadow-xs p-4 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
         {/* Left: Navigation */}
         <div className="flex items-center gap-2">
-          <div className="flex items-center bg-amber-50/80 rounded-xl p-1 border border-amber-200">
+          <div className="flex items-center bg-[#F0F9FA] rounded-xl p-1 border border-[#BCE3EB]">
             <button
               type="button"
               onClick={handlePrevMonth}
-              className="p-1.5 rounded-lg hover:bg-white text-slate-700 hover:text-amber-900 transition-colors cursor-pointer"
+              className="p-1.5 rounded-lg hover:bg-white text-slate-700 hover:text-[#215865] transition-colors cursor-pointer"
               title="Bulan sebelumnya"
             >
               <ChevronLeft className="w-4 h-4" />
             </button>
-            <span className="font-bold text-[14.5px] text-amber-950 px-3 py-1 min-w-[160px] text-center">
+            <span className="font-bold text-[14.5px] text-[#215865] px-3 py-1 min-w-[160px] text-center">
               {MONTH_NAMES[currentMonth]} {currentYear}
             </span>
             <button
               type="button"
               onClick={handleNextMonth}
-              className="p-1.5 rounded-lg hover:bg-white text-slate-700 hover:text-amber-900 transition-colors cursor-pointer"
+              className="p-1.5 rounded-lg hover:bg-white text-slate-700 hover:text-[#215865] transition-colors cursor-pointer"
               title="Bulan berikutnya"
             >
               <ChevronRight className="w-4 h-4" />
@@ -290,7 +290,7 @@ export function KalenderClient({ initialMeetings, biros }: KalenderClientProps) 
           <button
             type="button"
             onClick={handleToday}
-            className="px-3 py-2 rounded-xl border border-amber-200 text-amber-900 font-semibold text-[12px] hover:bg-amber-50 transition-colors cursor-pointer"
+            className="px-3 py-2 rounded-xl border border-slate-200 text-[#215865] font-semibold text-[12px] hover:bg-[#F0F9FA] transition-colors cursor-pointer"
           >
             Hari Ini
           </button>
@@ -303,9 +303,9 @@ export function KalenderClient({ initialMeetings, biros }: KalenderClientProps) 
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="Cari agenda atau lokasi..."
-            className="w-full pl-8 pr-3 py-1.5 rounded-xl border border-amber-200 text-[12.5px] bg-amber-50/20 focus:bg-white focus:outline-none focus:ring-2 focus:ring-amber-500"
+            className="w-full pl-8 pr-3 py-1.5 rounded-xl border border-slate-200 text-[12.5px] bg-slate-50/50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#31889C]/25 focus:border-[#31889C]"
           />
-          <Search className="w-3.5 h-3.5 text-amber-600 absolute left-2.5 top-2.5 pointer-events-none" />
+          <Search className="w-3.5 h-3.5 text-[#31889C] absolute left-2.5 top-2.5 pointer-events-none" />
         </div>
 
         {/* Right: Filters & View Switch */}
@@ -313,7 +313,7 @@ export function KalenderClient({ initialMeetings, biros }: KalenderClientProps) 
           <select
             value={selectedBiro}
             onChange={(e) => setSelectedBiro(e.target.value)}
-            className="px-2.5 py-1.5 rounded-xl border border-amber-200 text-[12px] font-semibold text-slate-700 bg-white cursor-pointer"
+            className="px-2.5 py-1.5 rounded-xl border border-slate-200 text-[12px] font-semibold text-slate-700 bg-white cursor-pointer focus:outline-none focus:border-[#31889C]"
           >
             <option value="ALL">Semua Biro</option>
             {biros.map((b) => (
@@ -326,7 +326,7 @@ export function KalenderClient({ initialMeetings, biros }: KalenderClientProps) 
           <select
             value={selectedStatus}
             onChange={(e) => setSelectedStatus(e.target.value)}
-            className="px-2.5 py-1.5 rounded-xl border border-amber-200 text-[12px] font-semibold text-slate-700 bg-white cursor-pointer"
+            className="px-2.5 py-1.5 rounded-xl border border-slate-200 text-[12px] font-semibold text-slate-700 bg-white cursor-pointer focus:outline-none focus:border-[#31889C]"
           >
             <option value="ALL">Semua Status</option>
             <option value="FINAL">Final</option>
@@ -343,7 +343,7 @@ export function KalenderClient({ initialMeetings, biros }: KalenderClientProps) 
               className={cn(
                 'p-1.5 rounded-lg text-xs font-semibold flex items-center gap-1 transition-all cursor-pointer',
                 viewMode === 'GRID'
-                  ? 'bg-white text-amber-800 shadow-xs'
+                  ? 'bg-white text-[#31889C] shadow-xs'
                   : 'text-slate-600 hover:text-slate-900'
               )}
               title="Tampilan Kalender Grid"
@@ -357,7 +357,7 @@ export function KalenderClient({ initialMeetings, biros }: KalenderClientProps) 
               className={cn(
                 'p-1.5 rounded-lg text-xs font-semibold flex items-center gap-1 transition-all cursor-pointer',
                 viewMode === 'LIST'
-                  ? 'bg-white text-amber-800 shadow-xs'
+                  ? 'bg-white text-[#31889C] shadow-xs'
                   : 'text-slate-600 hover:text-slate-900'
               )}
               title="Tampilan Daftar Agenda"
@@ -373,7 +373,7 @@ export function KalenderClient({ initialMeetings, biros }: KalenderClientProps) 
       {viewMode === 'GRID' ? (
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
           {/* Calendar Grid (8 cols on large screens) */}
-          <div className="lg:col-span-8 bg-white rounded-2xl border border-amber-200 shadow-sm p-4 md:p-6 overflow-hidden">
+          <div className="lg:col-span-8 bg-white rounded-2xl border border-slate-200 shadow-xs p-4 md:p-6 overflow-hidden">
             {/* Weekday Headers */}
             <div className="grid grid-cols-7 gap-2 mb-2 text-center">
               {DAY_NAMES.map((day, idx) => (
@@ -381,7 +381,7 @@ export function KalenderClient({ initialMeetings, biros }: KalenderClientProps) 
                   key={day}
                   className={cn(
                     'py-2 text-[12px] font-bold uppercase tracking-wider',
-                    idx >= 5 ? 'text-amber-800' : 'text-slate-500'
+                    idx >= 5 ? 'text-[#31889C]' : 'text-slate-500'
                   )}
                 >
                   {day}
@@ -406,10 +406,10 @@ export function KalenderClient({ initialMeetings, biros }: KalenderClientProps) 
                       !cell.isCurrentMonth
                         ? 'bg-slate-50/50 border-slate-100 text-slate-300 opacity-60'
                         : isSelected
-                        ? 'border-amber-500 bg-amber-50/60 ring-2 ring-amber-500/20 shadow-xs'
+                        ? 'border-[#31889C] bg-[#F0F9FA] ring-2 ring-[#31889C]/20 shadow-xs'
                         : cell.isToday
-                        ? 'border-amber-300 bg-amber-50/30'
-                        : 'border-slate-100 bg-white hover:border-amber-200 hover:bg-amber-50/20'
+                        ? 'border-[#BCE3EB] bg-[#F0F9FA]/60'
+                        : 'border-slate-100 bg-white hover:border-[#BCE3EB] hover:bg-[#F0F9FA]/30'
                     )}
                   >
                     {/* Day number header */}
@@ -418,9 +418,9 @@ export function KalenderClient({ initialMeetings, biros }: KalenderClientProps) 
                         className={cn(
                           'text-[13px] font-bold rounded-lg w-6 h-6 flex items-center justify-center',
                           cell.isToday
-                            ? 'bg-amber-600 text-white font-extrabold'
+                            ? 'bg-[#31889C] text-white font-extrabold'
                             : isSelected
-                            ? 'bg-amber-200 text-amber-900 font-extrabold'
+                            ? 'bg-[#E8F5F7] text-[#215865] font-extrabold'
                             : 'text-slate-700'
                         )}
                       >
@@ -428,7 +428,7 @@ export function KalenderClient({ initialMeetings, biros }: KalenderClientProps) 
                       </span>
 
                       {hasMeetings && (
-                        <span className="text-[10px] font-bold px-1.5 py-0.2 rounded-full bg-amber-100 text-amber-800 border border-amber-300">
+                        <span className="text-[10px] font-bold px-1.5 py-0.2 rounded-full bg-[#F0F9FA] text-[#215865] border border-[#BCE3EB]">
                           {cell.meetings.length}
                         </span>
                       )}
@@ -439,14 +439,14 @@ export function KalenderClient({ initialMeetings, biros }: KalenderClientProps) 
                       {cell.meetings.slice(0, 2).map((m) => (
                         <div
                           key={m.id}
-                          className="px-1.5 py-0.5 rounded text-[10px] font-semibold truncate bg-amber-100/80 text-amber-950 border border-amber-200/60 group-hover:border-amber-300"
+                          className="px-1.5 py-0.5 rounded text-[10px] font-semibold truncate bg-[#F0F9FA] text-[#215865] border border-[#BCE3EB]/80 group-hover:border-[#31889C]"
                           title={`${m.code}: ${m.title} (${m.time})`}
                         >
                           <span className="font-bold">{m.code}</span> {m.title}
                         </div>
                       ))}
                       {cell.meetings.length > 2 && (
-                        <div className="text-[9.5px] font-bold text-amber-700 pl-1">
+                        <div className="text-[9.5px] font-bold text-[#31889C] pl-1">
                           +{cell.meetings.length - 2} rapat lainnya
                         </div>
                       )}
@@ -458,11 +458,11 @@ export function KalenderClient({ initialMeetings, biros }: KalenderClientProps) 
           </div>
 
           {/* Selected Date Inspector Panel (4 cols on large screens) */}
-          <div className="lg:col-span-4 bg-white rounded-2xl border border-amber-200 shadow-sm p-6 flex flex-col justify-between">
+          <div className="lg:col-span-4 bg-white rounded-2xl border border-slate-200 shadow-xs p-6 flex flex-col justify-between">
             <div>
-              <div className="flex items-center justify-between pb-3 border-b border-amber-100">
+              <div className="flex items-center justify-between pb-3 border-b border-slate-100">
                 <div>
-                  <span className="text-[11px] font-semibold text-amber-800 uppercase tracking-wider">
+                  <span className="text-[11px] font-semibold text-[#215865] uppercase tracking-wider">
                     Detail Jadwal Harian
                   </span>
                   <h3 className="font-bold text-[16px] text-slate-900 mt-0.5">
@@ -470,7 +470,7 @@ export function KalenderClient({ initialMeetings, biros }: KalenderClientProps) 
                   </h3>
                 </div>
 
-                <span className="px-2.5 py-1 rounded-full bg-amber-100 text-amber-900 text-[11px] font-bold">
+                <span className="px-2.5 py-1 rounded-full bg-[#F0F9FA] text-[#215865] border border-[#BCE3EB] text-[11px] font-bold">
                   {selectedMeetings.length} Rapat
                 </span>
               </div>
@@ -494,10 +494,10 @@ export function KalenderClient({ initialMeetings, biros }: KalenderClientProps) 
                     return (
                       <div
                         key={m.id}
-                        className="p-3.5 rounded-xl border border-amber-200/90 bg-amber-50/20 hover:bg-amber-50/60 transition-all space-y-2"
+                        className="p-3.5 rounded-xl border border-slate-200 bg-slate-50/40 hover:bg-[#F0F9FA] transition-all space-y-2"
                       >
                         <div className="flex items-center justify-between gap-1">
-                          <span className="font-bold text-[11.5px] text-amber-800 bg-amber-100 px-2 py-0.5 rounded border border-amber-300">
+                          <span className="font-bold text-[11.5px] text-[#215865] bg-[#F0F9FA] px-2 py-0.5 rounded border border-[#BCE3EB]">
                             {m.code}
                           </span>
                           <span
@@ -516,28 +516,28 @@ export function KalenderClient({ initialMeetings, biros }: KalenderClientProps) 
 
                         <div className="space-y-1 text-[11.5px] text-slate-600">
                           <div className="flex items-center gap-1.5">
-                            <Clock className="w-3.5 h-3.5 text-amber-600 shrink-0" />
+                            <Clock className="w-3.5 h-3.5 text-[#31889C] shrink-0" />
                             <span>{m.time}</span>
                           </div>
                           <div className="flex items-center gap-1.5">
-                            <MapPin className="w-3.5 h-3.5 text-amber-600 shrink-0" />
+                            <MapPin className="w-3.5 h-3.5 text-[#31889C] shrink-0" />
                             <span className="truncate">{m.location}</span>
                           </div>
                           <div className="flex items-center gap-1.5">
-                            <Building2 className="w-3.5 h-3.5 text-amber-600 shrink-0" />
-                            <span className="truncate font-semibold text-amber-900">
+                            <Building2 className="w-3.5 h-3.5 text-[#31889C] shrink-0" />
+                            <span className="truncate font-semibold text-slate-700">
                               {m.biroName}
                             </span>
                           </div>
                         </div>
 
-                        <div className="pt-2 border-t border-amber-100/80 flex items-center justify-between">
+                        <div className="pt-2 border-t border-slate-100 flex items-center justify-between">
                           <span className="text-[11px] text-slate-500">
                             {m.attendees?.length || 0} Undangan
                           </span>
                           <Link
                             href={`/semua-rapat/${m.id}`}
-                            className="inline-flex items-center gap-1 text-[11.5px] font-bold text-amber-800 hover:text-amber-950 transition-colors"
+                            className="inline-flex items-center gap-1 text-[11.5px] font-bold text-[#31889C] hover:text-[#266F80] transition-colors"
                           >
                             <span>Buka Risalah</span>
                             <Eye className="w-3 h-3" />
@@ -550,12 +550,12 @@ export function KalenderClient({ initialMeetings, biros }: KalenderClientProps) 
               </div>
             </div>
 
-            <div className="mt-4 pt-3 border-t border-amber-100">
+            <div className="mt-4 pt-3 border-t border-slate-100">
               <Link
                 href="/buat-rapat"
-                className="w-full inline-flex items-center justify-center gap-2 py-2 rounded-xl bg-amber-50 hover:bg-amber-100 border border-amber-200 text-amber-900 font-semibold text-[12px] transition-colors"
+                className="w-full inline-flex items-center justify-center gap-2 py-2 rounded-xl bg-[#F0F9FA] hover:bg-[#E8F5F7] border border-[#BCE3EB] text-[#215865] font-semibold text-[12px] transition-colors"
               >
-                <PlusCircle className="w-4 h-4 text-amber-700" />
+                <PlusCircle className="w-4 h-4 text-[#31889C]" />
                 <span>Tambah Agenda Sidang Baru</span>
               </Link>
             </div>
@@ -563,8 +563,8 @@ export function KalenderClient({ initialMeetings, biros }: KalenderClientProps) 
         </div>
       ) : (
         /* Agenda List View */
-        <div className="bg-white rounded-2xl border border-amber-200 shadow-sm overflow-hidden">
-          <div className="px-6 py-4 border-b border-amber-100 flex items-center justify-between">
+        <div className="bg-white rounded-2xl border border-slate-200 shadow-xs overflow-hidden">
+          <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between">
             <span className="font-bold text-[15px] text-slate-900">
               Semua Jadwal &amp; Agenda Sidang Terdaftar
             </span>
@@ -573,7 +573,7 @@ export function KalenderClient({ initialMeetings, biros }: KalenderClientProps) 
             </span>
           </div>
 
-          <div className="divide-y divide-amber-100/80">
+          <div className="divide-y divide-slate-100">
             {allFilteredMeetings.length === 0 ? (
               <div className="py-16 text-center text-slate-400">
                 <CalendarIcon className="w-10 h-10 mx-auto mb-2 text-slate-300" />
@@ -588,22 +588,22 @@ export function KalenderClient({ initialMeetings, biros }: KalenderClientProps) 
                 return (
                   <div
                     key={m.id}
-                    className="p-5 hover:bg-amber-50/30 transition-all flex flex-col md:flex-row md:items-center md:justify-between gap-4 group"
+                    className="p-5 hover:bg-[#F0F9FA] transition-all flex flex-col md:flex-row md:items-center md:justify-between gap-4 group"
                   >
                     <div className="flex items-start gap-4">
                       {/* Date Badge */}
-                      <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-amber-100 to-amber-200/80 border border-amber-300 text-amber-900 flex flex-col items-center justify-center shrink-0">
-                        <span className="text-[10px] font-bold uppercase tracking-wider">
+                      <div className="w-14 h-14 rounded-xl bg-[#F0F9FA] border border-[#BCE3EB] text-[#31889C] flex flex-col items-center justify-center shrink-0">
+                        <span className="text-[10px] font-bold uppercase tracking-wider text-[#215865]">
                           Rapat
                         </span>
-                        <span className="text-[16px] font-extrabold leading-none mt-0.5">
+                        <span className="text-[16px] font-extrabold leading-none mt-0.5 text-[#31889C]">
                           {m.code.split('-')[1] || m.code}
                         </span>
                       </div>
 
                       <div className="space-y-1">
                         <div className="flex flex-wrap items-center gap-2">
-                          <span className="font-bold text-[12px] text-amber-800 bg-amber-100 px-2 py-0.5 rounded border border-amber-300">
+                          <span className="font-bold text-[12px] text-[#215865] bg-[#F0F9FA] px-2 py-0.5 rounded border border-[#BCE3EB]">
                             {m.code}
                           </span>
                           <span
@@ -619,23 +619,23 @@ export function KalenderClient({ initialMeetings, biros }: KalenderClientProps) 
                           </span>
                         </div>
 
-                        <h3 className="font-bold text-[15px] text-slate-900 group-hover:text-amber-800 transition-colors">
+                        <h3 className="font-bold text-[15px] text-slate-900 group-hover:text-[#31889C] transition-colors">
                           {m.title}
                         </h3>
 
                         <div className="flex flex-wrap items-center gap-3 text-[12px] text-slate-500">
-                          <span className="flex items-center gap-1 font-semibold text-amber-900">
-                            <Building2 className="w-3.5 h-3.5 text-amber-600" />
+                          <span className="flex items-center gap-1 font-semibold text-slate-700">
+                            <Building2 className="w-3.5 h-3.5 text-[#31889C]" />
                             <span>{m.biroName}</span>
                           </span>
                           <span>•</span>
                           <span className="flex items-center gap-1">
-                            <Clock className="w-3.5 h-3.5 text-amber-600" />
+                            <Clock className="w-3.5 h-3.5 text-[#31889C]" />
                             <span>{m.time}</span>
                           </span>
                           <span>•</span>
                           <span className="flex items-center gap-1">
-                            <MapPin className="w-3.5 h-3.5 text-amber-600" />
+                            <MapPin className="w-3.5 h-3.5 text-[#31889C]" />
                             <span>{m.location}</span>
                           </span>
                         </div>
@@ -645,7 +645,7 @@ export function KalenderClient({ initialMeetings, biros }: KalenderClientProps) 
                     <div className="flex items-center gap-2 shrink-0 self-end md:self-center">
                       <Link
                         href={`/semua-rapat/${m.id}`}
-                        className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-amber-600 hover:bg-amber-700 text-white font-semibold text-[12.5px] transition-all shadow-xs"
+                        className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-[#31889C] hover:bg-[#266F80] text-white font-semibold text-[12.5px] transition-all shadow-xs"
                       >
                         <Eye className="w-3.5 h-3.5" />
                         <span>Buka Risalah</span>

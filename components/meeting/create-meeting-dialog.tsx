@@ -99,13 +99,13 @@ export function CreateMeetingDialog({ isOpen, onClose, onSuccess }: CreateMeetin
       onClick={onClose}
     >
       <div
-        className="relative w-full max-w-lg bg-white rounded-2xl shadow-2xl border border-amber-200 overflow-hidden flex flex-col animate-in zoom-in-95 duration-150"
+        className="relative w-full max-w-lg bg-white rounded-2xl shadow-2xl border border-slate-200 overflow-hidden flex flex-col animate-in zoom-in-95 duration-150"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 bg-gradient-to-r from-amber-50 to-amber-100/60 border-b border-amber-200">
+        <div className="flex items-center justify-between px-6 py-4 bg-[#F8FAFC] border-b border-slate-200">
           <div className="flex items-center gap-2">
-            <span className="w-2.5 h-2.5 rounded-full bg-amber-600"></span>
+            <span className="w-2.5 h-2.5 rounded-full bg-[#31889C]"></span>
             <h3 className="font-bold text-[16px] text-slate-900">
               Jadwalkan Rapat Baru KEK
             </h3>
@@ -113,7 +113,7 @@ export function CreateMeetingDialog({ isOpen, onClose, onSuccess }: CreateMeetin
           <button
             type="button"
             onClick={onClose}
-            className="p-1.5 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-amber-200/50 transition-colors cursor-pointer"
+            className="p-1.5 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors cursor-pointer"
             title="Tutup Dialog"
           >
             <X className="w-5 h-5" />
@@ -125,13 +125,13 @@ export function CreateMeetingDialog({ isOpen, onClose, onSuccess }: CreateMeetin
           {/* Biro Pelaksana */}
           <div>
             <label className="block font-semibold text-slate-700 mb-1 flex items-center gap-1.5">
-              <Building2 className="w-4 h-4 text-amber-600" />
+              <Building2 className="w-4 h-4 text-[#31889C]" />
               Biro Penyelenggara
             </label>
             <select
               value={selectedBiro}
               onChange={(e) => setSelectedBiro(e.target.value as BiroCode)}
-              className="w-full px-3 py-2 rounded-lg border border-amber-200 bg-white text-slate-800 focus:outline-none focus:ring-2 focus:ring-amber-500"
+              className="w-full px-3 py-2 rounded-lg border border-slate-200 bg-white text-slate-800 focus:outline-none focus:ring-2 focus:ring-[#31889C]/25 focus:border-[#31889C]"
             >
               {BIRO_LIST.map((biro) => (
                 <option key={biro.code} value={biro.code}>
@@ -142,15 +142,15 @@ export function CreateMeetingDialog({ isOpen, onClose, onSuccess }: CreateMeetin
           </div>
 
           {/* Rapat Sebelumnya (Opsional) */}
-          <div className="p-3 bg-amber-50/50 rounded-xl border border-amber-200/80 space-y-1">
+          <div className="p-3 bg-[#F0F9FA] rounded-xl border border-[#BCE3EB] space-y-1">
             <label className="block font-semibold text-slate-800 text-[12px] flex items-center gap-1.5">
-              <Link2 className="w-3.5 h-3.5 text-amber-600" />
+              <Link2 className="w-3.5 h-3.5 text-[#31889C]" />
               <span>Rapat Sebelumnya (Opsional — Rapat Lanjutan)</span>
             </label>
             <select
               value={previousMeetingId}
               onChange={(e) => setPreviousMeetingId(e.target.value)}
-              className="w-full px-3 py-1.5 rounded-lg border border-amber-200 bg-white text-slate-800 text-[12px] focus:outline-none focus:ring-2 focus:ring-amber-500"
+              className="w-full px-3 py-1.5 rounded-lg border border-slate-200 bg-white text-slate-800 text-[12px] focus:outline-none focus:ring-2 focus:ring-[#31889C]/25 focus:border-[#31889C]"
             >
               <option value="">-- Bukan Rapat Lanjutan (Rapat Baru) --</option>
               {availableMeetings.map((m) => (
@@ -172,7 +172,7 @@ export function CreateMeetingDialog({ isOpen, onClose, onSuccess }: CreateMeetin
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               placeholder="Contoh: Rapat Koordinasi Fasilitasi Investasi KEK Sorong & Kendal..."
-              className="w-full px-3 py-2 rounded-lg border border-amber-200 bg-white text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-amber-500"
+              className="w-full px-3 py-2 rounded-lg border border-slate-200 bg-white text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-[#31889C]/25 focus:border-[#31889C]"
             />
           </div>
 
@@ -180,7 +180,7 @@ export function CreateMeetingDialog({ isOpen, onClose, onSuccess }: CreateMeetin
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
               <label className="block font-semibold text-slate-700 mb-1 flex items-center gap-1.5">
-                <Calendar className="w-4 h-4 text-amber-600" />
+                <Calendar className="w-4 h-4 text-[#31889C]" />
                 Tanggal Pelaksanaan <span className="text-red-500">*</span>
               </label>
               <input
@@ -188,12 +188,12 @@ export function CreateMeetingDialog({ isOpen, onClose, onSuccess }: CreateMeetin
                 required
                 value={date}
                 onChange={(e) => setDate(e.target.value)}
-                className="w-full px-3 py-2 rounded-lg border border-amber-200 bg-white text-slate-800 focus:outline-none focus:ring-2 focus:ring-amber-500"
+                className="w-full px-3 py-2 rounded-lg border border-slate-200 bg-white text-slate-800 focus:outline-none focus:ring-2 focus:ring-[#31889C]/25 focus:border-[#31889C]"
               />
             </div>
             <div>
               <label className="block font-semibold text-slate-700 mb-1 flex items-center gap-1.5">
-                <Clock className="w-4 h-4 text-amber-600" />
+                <Clock className="w-4 h-4 text-[#31889C]" />
                 Waktu Pelaksanaan <span className="text-red-500">*</span>
               </label>
               <input
@@ -201,7 +201,7 @@ export function CreateMeetingDialog({ isOpen, onClose, onSuccess }: CreateMeetin
                 required
                 value={time}
                 onChange={(e) => setTime(e.target.value)}
-                className="w-full px-3 py-2 rounded-lg border border-amber-200 bg-white text-slate-800 focus:outline-none focus:ring-2 focus:ring-amber-500"
+                className="w-full px-3 py-2 rounded-lg border border-slate-200 bg-white text-slate-800 focus:outline-none focus:ring-2 focus:ring-[#31889C]/25 focus:border-[#31889C]"
               />
             </div>
           </div>
@@ -209,7 +209,7 @@ export function CreateMeetingDialog({ isOpen, onClose, onSuccess }: CreateMeetin
           {/* Lokasi */}
           <div>
             <label className="block font-semibold text-slate-700 mb-1 flex items-center gap-1.5">
-              <MapPin className="w-4 h-4 text-amber-600" />
+              <MapPin className="w-4 h-4 text-[#31889C]" />
               Lokasi / Media Pertemuan <span className="text-red-500">*</span>
             </label>
             <input
@@ -218,7 +218,7 @@ export function CreateMeetingDialog({ isOpen, onClose, onSuccess }: CreateMeetin
               value={location}
               onChange={(e) => setLocation(e.target.value)}
               placeholder="Ruang Rapat Utama & Zoom..."
-              className="w-full px-3 py-2 rounded-lg border border-amber-200 bg-white text-slate-800 focus:outline-none focus:ring-2 focus:ring-amber-500"
+              className="w-full px-3 py-2 rounded-lg border border-slate-200 bg-white text-slate-800 focus:outline-none focus:ring-2 focus:ring-[#31889C]/25 focus:border-[#31889C]"
             />
           </div>
 
@@ -233,7 +233,7 @@ export function CreateMeetingDialog({ isOpen, onClose, onSuccess }: CreateMeetin
             </button>
             <button
               type="submit"
-              className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg bg-amber-600 text-white font-semibold text-[13px] hover:bg-amber-700 shadow-sm transition-all cursor-pointer"
+              className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg bg-[#31889C] text-white font-semibold text-[13px] hover:bg-[#266F80] shadow-sm transition-all cursor-pointer"
             >
               <Plus className="w-4 h-4" />
               <span>Jadwalkan Rapat</span>

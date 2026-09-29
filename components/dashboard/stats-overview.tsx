@@ -65,7 +65,7 @@ export function StatsOverview({ metrics = MOCK_METRICS }: StatsOverviewProps) {
               'group relative rounded-2xl bg-white p-4 shadow-xs hover:-translate-y-1 hover:shadow-md transition-all duration-200 cursor-pointer block',
               isDanger
                 ? 'border border-red-200 hover:border-red-400 hover:bg-red-50/20'
-                : 'border border-amber-200/70 hover:border-amber-400 hover:bg-amber-50/20'
+                : 'border border-slate-200 hover:border-slate-300 hover:bg-slate-50/30'
             )}
             title={`Klik untuk membuka data: ${metric.label}`}
           >
@@ -84,9 +84,13 @@ export function StatsOverview({ metrics = MOCK_METRICS }: StatsOverviewProps) {
                   'w-8 h-8 rounded-xl flex items-center justify-center shrink-0 transition-transform group-hover:scale-110',
                   isDanger
                     ? 'bg-red-100 text-red-600'
-                    : isSuccess
-                    ? 'bg-emerald-100 text-emerald-700'
-                    : 'bg-amber-100 text-amber-700'
+                    : metric.id === 'total-rapat'
+                    ? 'bg-[#E8F5F7] text-[#31889C]'
+                    : metric.id === 'rapat-bulan-ini' || isSuccess
+                    ? 'bg-[#ECF8E9] text-[#4D8F3D]'
+                    : metric.id === 'tindak-lanjut-aktif'
+                    ? 'bg-[#FFF0DC] text-[#B96800]'
+                    : 'bg-[#E8F5F7] text-[#31889C]'
                 )}
               >
                 {metric.id === 'total-rapat' && <CalendarCheck className="w-4 h-4" />}
@@ -105,7 +109,9 @@ export function StatsOverview({ metrics = MOCK_METRICS }: StatsOverviewProps) {
                   isDanger
                     ? 'text-red-600'
                     : metric.id === 'tindak-lanjut-aktif'
-                    ? 'text-amber-600'
+                    ? 'text-[#B96800]'
+                    : metric.id === 'total-rapat'
+                    ? 'text-[#31889C]'
                     : 'text-slate-900'
                 )}
               >
@@ -130,23 +136,23 @@ export function StatsOverview({ metrics = MOCK_METRICS }: StatsOverviewProps) {
               <div className="flex items-center gap-1.5 min-w-0">
                 {metric.id === 'total-rapat' && (
                   <>
-                    <TrendingUp className="w-3.5 h-3.5 text-amber-700 shrink-0" />
-                    <span className="font-bold text-amber-700">{metric.changeValue}</span>
+                    <TrendingUp className="w-3.5 h-3.5 text-[#31889C] shrink-0" />
+                    <span className="font-bold text-[#31889C]">{metric.changeValue}</span>
                     <span className="text-slate-400 truncate">{metric.changeLabel}</span>
                   </>
                 )}
 
                 {metric.id === 'rapat-bulan-ini' && (
                   <>
-                    <span className="w-1.5 h-1.5 rounded-full bg-amber-500 shrink-0" />
-                    <span className="font-bold text-amber-800">{metric.badgeText}</span>
+                    <span className="w-1.5 h-1.5 rounded-full bg-[#7CC563] shrink-0" />
+                    <span className="font-bold text-[#4D8F3D]">{metric.badgeText}</span>
                   </>
                 )}
 
                 {metric.id === 'tindak-lanjut-aktif' && (
                   <>
-                    <Hourglass className="w-3.5 h-3.5 text-amber-600 shrink-0" />
-                    <span className="font-bold text-amber-800">{metric.badgeText}</span>
+                    <Hourglass className="w-3.5 h-3.5 text-[#F99D1C] shrink-0" />
+                    <span className="font-bold text-[#B96800]">{metric.badgeText}</span>
                   </>
                 )}
 
@@ -159,8 +165,8 @@ export function StatsOverview({ metrics = MOCK_METRICS }: StatsOverviewProps) {
 
                 {metric.id === 'tindak-lanjut-selesai' && (
                   <>
-                    <ShieldCheck className="w-3.5 h-3.5 text-emerald-700 shrink-0" />
-                    <span className="font-bold text-emerald-700">{metric.badgeText}</span>
+                    <ShieldCheck className="w-3.5 h-3.5 text-[#4D8F3D] shrink-0" />
+                    <span className="font-bold text-[#4D8F3D]">{metric.badgeText}</span>
                   </>
                 )}
               </div>
@@ -169,7 +175,7 @@ export function StatsOverview({ metrics = MOCK_METRICS }: StatsOverviewProps) {
               <span
                 className={cn(
                   'font-semibold text-[10.5px] flex items-center gap-0.5 shrink-0 transition-transform group-hover:translate-x-0.5',
-                  isDanger ? 'text-red-600' : 'text-amber-800'
+                  isDanger ? 'text-red-600' : 'text-[#31889C]'
                 )}
               >
                 <span>{linkInfo.actionLabel}</span>

@@ -54,7 +54,7 @@ export function Header({
   return (
     <header
       className={cn(
-        "fixed top-0 right-0 h-16 bg-white/95 backdrop-blur-md border-b border-amber-100 z-40 flex items-center justify-between px-4 sm:px-6 shadow-sm transition-all duration-300",
+        "fixed top-0 right-0 h-16 bg-white/95 backdrop-blur-md border-b border-slate-200 z-40 flex items-center justify-between px-4 sm:px-6 shadow-xs transition-all duration-300",
         collapsed ? "left-0 lg:left-20" : "left-0 lg:left-72"
       )}
     >
@@ -63,20 +63,20 @@ export function Header({
         <button
           type="button"
           onClick={onOpenMobile}
-          className="p-2 -ml-2 rounded-lg text-slate-600 hover:text-amber-800 hover:bg-amber-50 lg:hidden"
+          className="p-2 -ml-2 rounded-lg text-slate-600 hover:text-[#31889C] hover:bg-[#F0F9FA] lg:hidden"
           title="Buka Navigasi"
         >
           <Menu className="w-5 h-5" />
         </button>
 
         <div className="relative flex items-center w-full">
-          <Search className="w-4 h-4 absolute left-3.5 text-amber-500 pointer-events-none" />
+          <Search className="w-4 h-4 absolute left-3.5 text-[#31889C] pointer-events-none" />
           <input
             type="text"
             value={searchQuery}
             onChange={(e) => onSearchChange?.(e.target.value)}
             placeholder="Cari nomor rapat, agenda, tindak lanjut, atau Biro..."
-            className="w-full pl-10 pr-4 py-2 rounded-lg bg-slate-50 border border-amber-200/80 text-slate-800 placeholder:text-slate-400 text-[13px] shadow-inner focus:outline-none focus:ring-2 focus:ring-amber-500 focus:bg-white transition-all"
+            className="w-full pl-10 pr-4 py-2 rounded-lg bg-slate-50 border border-slate-200 text-slate-800 placeholder:text-slate-400 text-[13px] shadow-2xs focus:outline-none focus:ring-2 focus:ring-[#31889C]/25 focus:border-[#31889C] focus:bg-white transition-all"
           />
         </div>
       </div>
@@ -88,7 +88,7 @@ export function Header({
           <button
             type="button"
             onClick={onCreateMeetingClick}
-            className="flex items-center gap-1.5 px-3.5 py-2 rounded-lg bg-amber-600 hover:bg-amber-700 text-white transition-all shadow-sm shadow-amber-600/20 font-semibold text-[13px] cursor-pointer"
+            className="flex items-center gap-1.5 px-3.5 py-2 rounded-lg bg-[#31889C] hover:bg-[#266F80] text-white transition-all shadow-xs font-semibold text-[13px] cursor-pointer"
           >
             <Plus className="w-4 h-4" />
             <span className="hidden sm:inline">Buat Rapat</span>
@@ -100,22 +100,22 @@ export function Header({
           <button
             type="button"
             onClick={() => setNotifDropdownOpen(!notifDropdownOpen)}
-            className="p-2 text-slate-500 hover:text-amber-800 hover:bg-amber-50 rounded-lg relative transition-colors cursor-pointer"
+            className="p-2 text-slate-500 hover:text-[#31889C] hover:bg-[#F0F9FA] rounded-lg relative transition-colors cursor-pointer"
             title="Notifikasi"
           >
             <Bell className="w-5 h-5" />
-            <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-amber-500 ring-2 ring-white"></span>
+            <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-[#F99D1C] ring-2 ring-white"></span>
           </button>
 
           {notifDropdownOpen && (
-            <div className="absolute right-0 mt-2 w-80 bg-white rounded-xl shadow-lg border border-amber-200 p-3 z-50 text-[13px]">
-              <div className="flex items-center justify-between pb-2 border-b border-amber-100">
+            <div className="absolute right-0 mt-2 w-80 bg-white rounded-xl shadow-lg border border-slate-200 p-3 z-50 text-[13px]">
+              <div className="flex items-center justify-between pb-2 border-b border-slate-100">
                 <span className="font-bold text-slate-900">Notifikasi Rapat</span>
-                <span className="text-[11px] font-semibold text-amber-700 bg-amber-50 px-2 py-0.5 rounded-full">
+                <span className="text-[11px] font-semibold text-[#31889C] bg-[#E8F5F7] px-2 py-0.5 rounded-full">
                   6 Baru
                 </span>
               </div>
-              <div className="divide-y divide-amber-50 mt-2">
+              <div className="divide-y divide-slate-100 mt-2">
                 <div className="py-2">
                   <p className="font-semibold text-slate-800 text-[12px]">Rapat Koordinasi KEK Sei Mangkei</p>
                   <p className="text-slate-500 text-[11px]">Risalah disetujui • 10 menit lalu</p>
@@ -129,15 +129,15 @@ export function Header({
           )}
         </div>
 
-        <div className="h-6 w-px bg-amber-200 hidden sm:block"></div>
+        <div className="h-6 w-px bg-slate-200 hidden sm:block"></div>
 
         {/* Profile Avatar & Info */}
         <div className="relative">
           <div
             onClick={() => setProfileDropdownOpen(!profileDropdownOpen)}
-            className="flex items-center gap-2.5 cursor-pointer p-1.5 rounded-lg hover:bg-amber-50/80 transition-colors"
+            className="flex items-center gap-2.5 cursor-pointer p-1.5 rounded-lg hover:bg-[#F0F9FA] transition-colors"
           >
-            <div className="w-9 h-9 rounded-full bg-amber-600 text-white font-bold flex items-center justify-center text-[13px] ring-2 ring-amber-300 shrink-0">
+            <div className="w-9 h-9 rounded-full bg-[#31889C] text-white font-bold flex items-center justify-center text-[13px] ring-2 ring-[#BCE3EB] shrink-0">
               {getInitials(userName)}
             </div>
             <div className="hidden md:flex flex-col text-left">
@@ -145,7 +145,7 @@ export function Header({
                 {userName}
               </span>
               <div className="flex items-center gap-1.5 mt-0.5">
-                <span className="text-[10px] font-bold text-amber-800 bg-amber-100 px-1.5 py-0.5 rounded leading-none">
+                <span className="text-[10px] font-bold text-[#31889C] bg-[#E8F5F7] border border-[#BCE3EB] px-1.5 py-0.5 rounded leading-none">
                   {roleLabel}
                 </span>
                 {biroLabel && (
@@ -159,16 +159,16 @@ export function Header({
           </div>
 
           {profileDropdownOpen && (
-            <div className="absolute right-0 mt-2 w-64 bg-white rounded-xl shadow-lg border border-amber-200 p-2 z-50 text-[13px]">
-              <div className="px-3 py-2 border-b border-amber-100 mb-1">
+            <div className="absolute right-0 mt-2 w-64 bg-white rounded-xl shadow-lg border border-slate-200 p-2 z-50 text-[13px]">
+              <div className="px-3 py-2 border-b border-slate-100 mb-1">
                 <p className="font-bold text-slate-900 truncate">{userName}</p>
                 <p className="text-[11px] text-slate-500 truncate">{userEmail}</p>
                 <div className="flex flex-wrap items-center gap-1.5 mt-1.5">
-                  <span className="text-[10px] font-bold text-amber-800 bg-amber-100 px-1.5 py-0.5 rounded">
+                  <span className="text-[10px] font-bold text-[#31889C] bg-[#E8F5F7] border border-[#BCE3EB] px-1.5 py-0.5 rounded">
                     {roleLabel}
                   </span>
                   {biroLabel && (
-                    <span className="text-[10px] text-amber-700 bg-amber-50 px-1.5 py-0.5 rounded font-medium truncate max-w-[180px]">
+                    <span className="text-[10px] text-slate-600 bg-slate-100 px-1.5 py-0.5 rounded font-medium truncate max-w-[180px]">
                       {biroLabel}
                     </span>
                   )}
@@ -176,7 +176,7 @@ export function Header({
               </div>
               <button
                 type="button"
-                className="w-full flex items-center gap-2 text-left px-3 py-1.5 rounded-md hover:bg-amber-50 text-slate-700 hover:text-amber-800 transition-colors cursor-pointer"
+                className="w-full flex items-center gap-2 text-left px-3 py-1.5 rounded-md hover:bg-[#F0F9FA] text-slate-700 hover:text-[#31889C] transition-colors cursor-pointer"
                 onClick={() => setProfileDropdownOpen(false)}
               >
                 <UserIcon className="w-3.5 h-3.5 text-slate-500" />
@@ -185,7 +185,7 @@ export function Header({
               <button
                 type="button"
                 onClick={() => signOut({ callbackUrl: '/login' })}
-                className="w-full flex items-center gap-2 text-left px-3 py-1.5 rounded-md hover:bg-red-50 text-red-600 transition-colors mt-1 border-t border-amber-100 pt-1.5 cursor-pointer font-medium"
+                className="w-full flex items-center gap-2 text-left px-3 py-1.5 rounded-md hover:bg-red-50 text-red-600 transition-colors mt-1 border-t border-slate-100 pt-1.5 cursor-pointer font-medium"
               >
                 <LogOut className="w-3.5 h-3.5 text-red-600" />
                 <span>Keluar</span>

@@ -73,13 +73,13 @@ export function FollowUpStatusChart({
   const activeSegment = hoveredLabel ? data.find((d) => d.label === hoveredLabel) : null;
 
   return (
-    <div className="lg:col-span-4 rounded-2xl bg-white p-6 shadow-sm border border-amber-200/80 flex flex-col justify-between transition-all">
+    <div className="lg:col-span-4 rounded-2xl bg-white p-6 shadow-sm border border-slate-200 flex flex-col justify-between transition-all">
       <div>
         {/* Header */}
         <div className="flex items-start justify-between">
           <div>
-            <span className="font-semibold text-[11px] text-amber-700 uppercase tracking-wider flex items-center gap-1.5">
-              <CheckCircle2 className="w-3.5 h-3.5 text-amber-600" />
+            <span className="font-semibold text-[11px] text-[#31889C] uppercase tracking-wider flex items-center gap-1.5">
+              <CheckCircle2 className="w-3.5 h-3.5 text-[#31889C]" />
               <span>Matriks Monitoring</span>
             </span>
             <h2 className="font-bold text-[18px] text-slate-900 mt-0.5">
@@ -94,14 +94,14 @@ export function FollowUpStatusChart({
             <button
               type="button"
               onClick={handleReplay}
-              className="text-slate-400 hover:text-amber-800 p-1.5 rounded-lg hover:bg-amber-50 cursor-pointer transition-colors"
+              className="text-slate-400 hover:text-[#31889C] p-1.5 rounded-lg hover:bg-[#F0F9FA] cursor-pointer transition-colors"
               title="Putar ulang animasi donat"
             >
               <RotateCcw className="w-4 h-4" />
             </button>
             <button
               type="button"
-              className="text-slate-400 hover:text-amber-700 p-1.5 rounded-lg hover:bg-amber-50 cursor-pointer transition-colors"
+              className="text-slate-400 hover:text-[#31889C] p-1.5 rounded-lg hover:bg-[#F0F9FA] cursor-pointer transition-colors"
               title="Metrik dihitung otomatis berdasarkan laporan pemantauan PIC biro pelaksana."
               onClick={() => toast.info('Metrik dihitung otomatis berdasarkan laporan pemantauan PIC biro pelaksana.', 'Info Metrik')}
             >
@@ -124,7 +124,7 @@ export function FollowUpStatusChart({
                 cy="50"
                 r="38"
                 fill="transparent"
-                stroke="#FEF3C7"
+                stroke="#F1F5F9"
                 strokeWidth="11"
               />
 
@@ -204,7 +204,7 @@ export function FollowUpStatusChart({
                   className={cn(
                     'flex items-center justify-between gap-3 text-[12px] px-2.5 py-1.5 rounded-lg transition-all cursor-pointer',
                     isHovered
-                      ? 'bg-amber-50 scale-102 shadow-2xs font-bold'
+                      ? 'bg-[#F0F9FA] scale-102 shadow-2xs font-bold'
                       : isOtherHovered
                       ? 'opacity-50'
                       : 'hover:bg-slate-50'
@@ -232,8 +232,7 @@ export function FollowUpStatusChart({
                   </div>
 
                   <span
-                    className="font-bold text-[12px]"
-                    style={{ color: item.color === '#DC2626' ? '#DC2626' : '#92400E' }}
+                    className="font-bold text-[12px] text-slate-700"
                   >
                     {item.percentage}% ({item.count})
                   </span>
@@ -249,10 +248,10 @@ export function FollowUpStatusChart({
         <button
           type="button"
           onClick={onManageMatrixClick}
-          className="w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl bg-amber-50 hover:bg-amber-100/80 border border-amber-200 text-amber-900 font-semibold text-[12.5px] transition-all cursor-pointer shadow-2xs group"
+          className="w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl bg-[#F0F9FA] hover:bg-[#E8F5F7] border border-[#BCE3EB] text-[#215865] font-semibold text-[12.5px] transition-all cursor-pointer shadow-2xs group"
         >
           <span>Kelola Matriks &amp; Disposisi</span>
-          <ArrowRight className="w-4 h-4 text-amber-700 group-hover:translate-x-1 transition-transform" />
+          <ArrowRight className="w-4 h-4 text-[#31889C] group-hover:translate-x-1 transition-transform" />
         </button>
       </div>
     </div>

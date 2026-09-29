@@ -98,7 +98,7 @@ export default function BuatRapatPage() {
   if (status === 'loading') {
     return (
       <div className="flex flex-col items-center justify-center min-h-[300px] gap-3">
-        <Loader2 className="w-8 h-8 animate-spin text-amber-600" />
+        <Loader2 className="w-8 h-8 animate-spin text-[#31889C]" />
         <p className="text-xs text-slate-500 font-medium">Memeriksa hak akses...</p>
       </div>
     );
@@ -107,8 +107,8 @@ export default function BuatRapatPage() {
   // Unauthenticated user
   if (status === 'unauthenticated' || !session) {
     return (
-      <div className="max-w-md mx-auto my-16 bg-white p-8 rounded-2xl border border-amber-200 text-center shadow-sm space-y-4">
-        <div className="w-12 h-12 rounded-full bg-amber-100 text-amber-600 flex items-center justify-center mx-auto">
+      <div className="max-w-md mx-auto my-16 bg-white p-8 rounded-2xl border border-slate-200 text-center shadow-xs space-y-4">
+        <div className="w-12 h-12 rounded-full bg-[#E8F5F7] text-[#31889C] flex items-center justify-center mx-auto">
           <LogIn className="w-6 h-6" />
         </div>
         <h2 className="text-lg font-bold text-slate-800">
@@ -119,7 +119,7 @@ export default function BuatRapatPage() {
         </p>
         <Link
           href="/login?callbackUrl=/buat-rapat"
-          className="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-lg bg-amber-600 hover:bg-amber-700 text-white font-semibold text-xs transition-all shadow-sm"
+          className="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-lg bg-[#31889C] hover:bg-[#266F80] text-white font-semibold text-xs transition-all shadow-xs shadow-[#31889C]/20"
         >
           <LogIn className="w-4 h-4" />
           <span>Masuk ke Akun Anda</span>
@@ -131,7 +131,7 @@ export default function BuatRapatPage() {
   // Unauthorized role (STAFF or VIEWER)
   if (!canCreate) {
     return (
-      <div className="max-w-md mx-auto my-16 bg-white p-8 rounded-2xl border border-amber-200 text-center shadow-sm space-y-4">
+      <div className="max-w-md mx-auto my-16 bg-white p-8 rounded-2xl border border-slate-200 text-center shadow-xs space-y-4">
         <div className="w-12 h-12 rounded-full bg-red-100 text-red-600 flex items-center justify-center mx-auto">
           <ShieldAlert className="w-6 h-6" />
         </div>
@@ -145,7 +145,7 @@ export default function BuatRapatPage() {
         </p>
         <Link
           href="/"
-          className="inline-flex items-center justify-center px-4 py-2 rounded-lg bg-amber-600 hover:bg-amber-700 text-white font-semibold text-xs transition-all"
+          className="inline-flex items-center justify-center px-4 py-2 rounded-lg bg-[#31889C] hover:bg-[#266F80] text-white font-semibold text-xs transition-all shadow-xs"
         >
           Kembali ke Dashboard
         </Link>
@@ -226,21 +226,21 @@ export default function BuatRapatPage() {
       <div className="flex items-center justify-between">
         <Link
           href="/semua-rapat"
-          className="inline-flex items-center gap-1.5 text-slate-600 hover:text-amber-800 text-xs font-semibold transition-colors"
+          className="inline-flex items-center gap-1.5 text-slate-600 hover:text-[#31889C] text-xs font-semibold transition-colors"
         >
           <ArrowLeft className="w-4 h-4" />
           <span>Kembali ke Semua Rapat</span>
         </Link>
       </div>
 
-      <div className="bg-white rounded-xl border border-amber-200 shadow-sm overflow-hidden">
+      <div className="bg-white rounded-xl border border-slate-200 shadow-xs overflow-hidden">
         {/* Banner */}
-        <div className="p-6 bg-gradient-to-r from-amber-500 to-amber-600 text-white">
-          <span className="inline-block px-2.5 py-0.5 rounded-full bg-amber-700/60 text-amber-100 text-[11px] font-bold uppercase tracking-wider mb-1">
+        <div className="p-6 bg-gradient-to-r from-[#31889C] to-[#266F80] text-white">
+          <span className="inline-block px-2.5 py-0.5 rounded-full bg-white/20 text-white text-[11px] font-bold uppercase tracking-wider mb-1">
             Formulir Penjadwalan
           </span>
           <h1 className="text-xl font-bold">Jadwalkan Rapat Baru KEK RI</h1>
-          <p className="text-amber-100 text-xs mt-1">
+          <p className="text-white/80 text-xs mt-1">
             Inputkan rincian agenda, biro pelaksana, dan daftar pejabat peserta rapat koordinasi resmi.
           </p>
         </div>
@@ -262,13 +262,13 @@ export default function BuatRapatPage() {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div>
               <label className="block font-semibold text-slate-700 mb-1 flex items-center gap-1.5">
-                <Building2 className="w-4 h-4 text-amber-600" />
+                <Building2 className="w-4 h-4 text-[#31889C]" />
                 Biro Penyelenggara <span className="text-red-500">*</span>
               </label>
               <select
                 value={selectedBiro}
                 onChange={(e) => setSelectedBiro(e.target.value as BiroCode)}
-                className="w-full px-3 py-2 rounded-lg border border-amber-200 bg-white text-slate-800 focus:outline-none focus:ring-2 focus:ring-amber-500"
+                className="w-full px-3 py-2 rounded-lg border border-slate-200 bg-white text-slate-800 focus:outline-none focus:ring-2 focus:ring-[#31889C]/25 focus:border-[#31889C]"
               >
                 {BIRO_LIST.map((biro) => (
                   <option key={biro.code} value={biro.code}>
@@ -280,13 +280,13 @@ export default function BuatRapatPage() {
 
             <div>
               <label className="block font-semibold text-slate-700 mb-1 flex items-center gap-1.5">
-                <Shield className="w-4 h-4 text-amber-600" />
+                <Shield className="w-4 h-4 text-[#31889C]" />
                 Sifat Pertemuan
               </label>
               <select
                 value={classification}
                 onChange={(e) => setClassification(e.target.value)}
-                className="w-full px-3 py-2 rounded-lg border border-amber-200 bg-white text-slate-800 focus:outline-none focus:ring-2 focus:ring-amber-500"
+                className="w-full px-3 py-2 rounded-lg border border-slate-200 bg-white text-slate-800 focus:outline-none focus:ring-2 focus:ring-[#31889C]/25 focus:border-[#31889C]"
               >
                 <option value="STRATEGIS">Prioritas Strategis Nasional</option>
                 <option value="REGULER">Koordinasi Berkala (Reguler)</option>
@@ -296,13 +296,13 @@ export default function BuatRapatPage() {
 
             <div>
               <label className="block font-semibold text-slate-700 mb-1 flex items-center gap-1.5">
-                <UserCheck className="w-4 h-4 text-amber-600" />
+                <UserCheck className="w-4 h-4 text-[#31889C]" />
                 Ketua / Pimpinan Sidang
               </label>
               <select
                 value={chairpersonId}
                 onChange={(e) => setChairpersonId(e.target.value)}
-                className="w-full px-3 py-2 rounded-lg border border-amber-200 bg-white text-slate-800 focus:outline-none focus:ring-2 focus:ring-amber-500"
+                className="w-full px-3 py-2 rounded-lg border border-slate-200 bg-white text-slate-800 focus:outline-none focus:ring-2 focus:ring-[#31889C]/25 focus:border-[#31889C]"
               >
                 <option value="">-- Bebas / Diatur di Notula --</option>
                 {availableUsers.map((u) => (
@@ -315,9 +315,9 @@ export default function BuatRapatPage() {
           </div>
 
           {/* Rapat Rujukan / Lanjutan (Opsional) */}
-          <div className="p-4 bg-amber-50/60 rounded-xl border border-amber-200/90 space-y-1.5">
+          <div className="p-4 bg-[#F0F9FA] rounded-xl border border-[#BCE3EB] space-y-1.5">
             <label className="block font-semibold text-slate-800 flex items-center gap-1.5">
-              <Link2 className="w-4 h-4 text-amber-600" />
+              <Link2 className="w-4 h-4 text-[#31889C]" />
               <span>Tautkan ke Rapat Sebelumnya (Opsional — Jika Rapat Lanjutan)</span>
             </label>
             <p className="text-[11px] text-slate-500">
@@ -326,7 +326,7 @@ export default function BuatRapatPage() {
             <select
               value={previousMeetingId}
               onChange={(e) => setPreviousMeetingId(e.target.value)}
-              className="w-full px-3 py-2 rounded-lg border border-amber-200 bg-white text-slate-800 focus:outline-none focus:ring-2 focus:ring-amber-500"
+              className="w-full px-3 py-2 rounded-lg border border-slate-200 bg-white text-slate-800 focus:outline-none focus:ring-2 focus:ring-[#31889C]/25 focus:border-[#31889C]"
             >
               <option value="">-- Tidak Ada (Rapat Baru Mandiri / Bukan Rapat Lanjutan) --</option>
               {availableMeetings.map((m) => (
@@ -348,7 +348,7 @@ export default function BuatRapatPage() {
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               placeholder="Contoh: Rapat Koordinasi Fasilitasi Investasi Lintas Sektor Kawasan Industri KEK Sei Mangkei..."
-              className="w-full px-3 py-2 rounded-lg border border-amber-200 bg-white text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-amber-500"
+              className="w-full px-3 py-2 rounded-lg border border-slate-200 bg-white text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-[#31889C]/25 focus:border-[#31889C]"
             />
           </div>
 
@@ -356,7 +356,7 @@ export default function BuatRapatPage() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <label className="block font-semibold text-slate-700 mb-1 flex items-center gap-1.5">
-                <Calendar className="w-4 h-4 text-amber-600" />
+                <Calendar className="w-4 h-4 text-[#31889C]" />
                 Tanggal Pelaksanaan <span className="text-red-500">*</span>
               </label>
               <input
@@ -364,12 +364,12 @@ export default function BuatRapatPage() {
                 required
                 value={date}
                 onChange={(e) => setDate(e.target.value)}
-                className="w-full px-3 py-2 rounded-lg border border-amber-200 bg-white text-slate-800 focus:outline-none focus:ring-2 focus:ring-amber-500"
+                className="w-full px-3 py-2 rounded-lg border border-slate-200 bg-white text-slate-800 focus:outline-none focus:ring-2 focus:ring-[#31889C]/25 focus:border-[#31889C]"
               />
             </div>
             <div>
               <label className="block font-semibold text-slate-700 mb-1 flex items-center gap-1.5">
-                <Clock className="w-4 h-4 text-amber-600" />
+                <Clock className="w-4 h-4 text-[#31889C]" />
                 Waktu Pelaksanaan <span className="text-red-500">*</span>
               </label>
               <input
@@ -378,7 +378,7 @@ export default function BuatRapatPage() {
                 value={time}
                 onChange={(e) => setTime(e.target.value)}
                 placeholder="Contoh: 09:00 - 12:00 WIB"
-                className="w-full px-3 py-2 rounded-lg border border-amber-200 bg-white text-slate-800 focus:outline-none focus:ring-2 focus:ring-amber-500"
+                className="w-full px-3 py-2 rounded-lg border border-slate-200 bg-white text-slate-800 focus:outline-none focus:ring-2 focus:ring-[#31889C]/25 focus:border-[#31889C]"
               />
             </div>
           </div>
@@ -386,7 +386,7 @@ export default function BuatRapatPage() {
           {/* Lokasi */}
           <div>
             <label className="block font-semibold text-slate-700 mb-1 flex items-center gap-1.5">
-              <MapPin className="w-4 h-4 text-amber-600" />
+              <MapPin className="w-4 h-4 text-[#31889C]" />
               Lokasi / Media Pertemuan <span className="text-red-500">*</span>
             </label>
             <input
@@ -395,7 +395,7 @@ export default function BuatRapatPage() {
               value={location}
               onChange={(e) => setLocation(e.target.value)}
               placeholder="Ruang Rapat Utama Gedung Posko KEK & Zoom..."
-              className="w-full px-3 py-2 rounded-lg border border-amber-200 bg-white text-slate-800 focus:outline-none focus:ring-2 focus:ring-amber-500"
+              className="w-full px-3 py-2 rounded-lg border border-slate-200 bg-white text-slate-800 focus:outline-none focus:ring-2 focus:ring-[#31889C]/25 focus:border-[#31889C]"
             />
           </div>
 
@@ -403,7 +403,7 @@ export default function BuatRapatPage() {
           <div className="space-y-2">
             <div className="flex items-center justify-between">
               <label className="block font-semibold text-slate-700 flex items-center gap-1.5">
-                <Users className="w-4 h-4 text-amber-600" />
+                <Users className="w-4 h-4 text-[#31889C]" />
                 Daftar Peserta &amp; Pemangku Kepentingan <span className="text-red-500">*</span>
               </label>
               <span className="text-[11px] text-slate-400">
@@ -413,13 +413,13 @@ export default function BuatRapatPage() {
 
             {/* Quick Picker from Registered Users */}
             {availableUsers.length > 0 && (
-              <div className="p-3 bg-amber-50/60 rounded-xl border border-amber-200/60 space-y-2">
+              <div className="p-3 bg-[#F0F9FA] rounded-xl border border-[#BCE3EB] space-y-2">
                 <div className="flex items-center justify-between">
-                  <span className="text-[11px] font-bold text-amber-900 flex items-center gap-1">
-                    <UserCheck className="w-3.5 h-3.5 text-amber-700" />
+                  <span className="text-[11px] font-bold text-[#215865] flex items-center gap-1">
+                    <UserCheck className="w-3.5 h-3.5 text-[#31889C]" />
                     Pilih Cepat Pejabat / Staf Terdaftar:
                   </span>
-                  <span className="text-[10px] text-amber-700">
+                  <span className="text-[10px] text-[#31889C]">
                     Klik nama untuk menambahkan atau menghapus
                   </span>
                 </div>
@@ -434,8 +434,8 @@ export default function BuatRapatPage() {
                         onClick={() => handleToggleUser(u)}
                         className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-medium transition-all ${
                           isSelected
-                            ? 'bg-amber-600 text-white shadow-xs'
-                            : 'bg-white text-slate-700 border border-slate-200 hover:border-amber-400 hover:text-amber-800'
+                            ? 'bg-[#31889C] text-white shadow-xs'
+                            : 'bg-white text-slate-700 border border-slate-200 hover:border-[#31889C] hover:text-[#31889C]'
                         }`}
                       >
                         {isSelected && <Check className="w-3 h-3 stroke-[2.5]" />}
@@ -444,7 +444,7 @@ export default function BuatRapatPage() {
                           <span
                             className={`text-[9px] px-1 py-0.2 rounded font-bold ${
                               isSelected
-                                ? 'bg-amber-700 text-amber-100'
+                                ? 'bg-[#266F80] text-teal-100'
                                 : 'bg-slate-100 text-slate-500'
                             }`}
                           >
@@ -466,7 +466,7 @@ export default function BuatRapatPage() {
                 value={attendees}
                 onChange={(e) => setAttendees(e.target.value)}
                 placeholder="Pisahkan nama peserta dengan tanda koma..."
-                className="w-full px-3 py-2 rounded-lg border border-amber-200 bg-white text-slate-800 focus:outline-none focus:ring-2 focus:ring-amber-500 text-xs"
+                className="w-full px-3 py-2 rounded-lg border border-slate-200 bg-white text-slate-800 focus:outline-none focus:ring-2 focus:ring-[#31889C]/25 focus:border-[#31889C] text-xs"
               />
               <p className="text-[11px] text-slate-400 mt-0.5">
                 Anda juga dapat mengetikkan nama pemangku kepentingan atau instansi luar lainnya secara manual dipisahkan dengan tanda koma.
@@ -475,7 +475,7 @@ export default function BuatRapatPage() {
           </div>
 
           {/* Submit Actions */}
-          <div className="pt-4 border-t border-amber-100 flex items-center justify-end gap-3">
+          <div className="pt-4 border-t border-slate-100 flex items-center justify-end gap-3">
             <Link
               href="/semua-rapat"
               className="px-4 py-2 rounded-lg border border-slate-200 text-slate-700 hover:bg-slate-50 font-semibold transition-colors"
@@ -486,7 +486,7 @@ export default function BuatRapatPage() {
             <button
               type="submit"
               disabled={isSubmitted}
-              className="inline-flex items-center gap-2 px-5 py-2 rounded-lg bg-amber-600 hover:bg-amber-700 text-white font-semibold transition-all shadow-md shadow-amber-600/20 cursor-pointer disabled:opacity-50"
+              className="inline-flex items-center gap-2 px-5 py-2 rounded-lg bg-[#31889C] hover:bg-[#266F80] text-white font-semibold transition-all shadow-xs shadow-[#31889C]/20 cursor-pointer disabled:opacity-50"
             >
               {isSubmitted ? (
                 <>

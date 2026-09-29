@@ -31,7 +31,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="id" className={`${publicSans.variable} ${plusJakartaSans.variable}`}>
-      <body className="bg-[#FAFAFA] text-slate-800 antialiased selection:bg-amber-100 selection:text-amber-900">
+      <body className="bg-[#F8FAFC] text-slate-800 antialiased selection:bg-[#E8F5F7] selection:text-[#215865]">
         <AuthProvider>
           <ToastProvider>
             <DashboardShell>{children}</DashboardShell>

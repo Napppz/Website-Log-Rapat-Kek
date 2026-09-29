@@ -94,17 +94,17 @@ export function LinkMeetingDialog({
       onClick={onClose}
     >
       <div
-        className="relative w-full max-w-xl bg-white rounded-2xl shadow-2xl border border-amber-200 overflow-hidden flex flex-col max-h-[85vh] animate-in zoom-in-95 duration-150"
+        className="relative w-full max-w-xl bg-white rounded-2xl shadow-2xl border border-slate-200 overflow-hidden flex flex-col max-h-[85vh] animate-in zoom-in-95 duration-150"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="px-6 py-4 bg-gradient-to-r from-amber-50 to-amber-100/60 border-b border-amber-200 flex items-center justify-between">
+        <div className="px-6 py-4 bg-[#F8FAFC] border-b border-slate-200 flex items-center justify-between">
           <div className="flex items-center gap-2.5">
-            <div className="w-9 h-9 rounded-xl bg-amber-600 text-white flex items-center justify-center shadow-xs">
+            <div className="w-9 h-9 rounded-xl bg-[#31889C] text-white flex items-center justify-center shadow-xs">
               <Link2 className="w-5 h-5" />
             </div>
             <div>
-              <span className="text-[11px] font-bold text-amber-700 uppercase tracking-wider">
+              <span className="text-[11px] font-bold text-[#31889C] uppercase tracking-wider">
                 Alur Rapat Lanjutan
               </span>
               <h2 className="text-[17px] font-bold text-slate-900">
@@ -116,7 +116,7 @@ export function LinkMeetingDialog({
           <button
             type="button"
             onClick={onClose}
-            className="p-1.5 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-amber-200/50 transition-colors cursor-pointer"
+            className="p-1.5 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors cursor-pointer"
           >
             <X className="w-5 h-5" />
           </button>
@@ -137,7 +137,7 @@ export function LinkMeetingDialog({
               placeholder="Cari nomor naskah, judul rapat, atau biro..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="w-full pl-9 pr-3.5 py-2 rounded-xl border border-amber-200 focus:outline-none focus:ring-2 focus:ring-amber-500 text-[13px] bg-white text-slate-900"
+              className="w-full pl-9 pr-3.5 py-2 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-[#31889C]/25 focus:border-[#31889C] text-[13px] bg-white text-slate-900"
             />
           </div>
 
@@ -146,15 +146,15 @@ export function LinkMeetingDialog({
             onClick={() => setSelectedId(null)}
             className={`p-3.5 rounded-xl border transition-all cursor-pointer flex items-center justify-between ${
               selectedId === null
-                ? 'bg-amber-50/80 border-amber-500 shadow-xs'
-                : 'bg-white border-slate-200 hover:border-amber-300'
+                ? 'bg-[#F0F9FA] border-[#31889C] shadow-xs'
+                : 'bg-white border-slate-200 hover:border-[#BCE3EB]'
             }`}
           >
             <div className="flex items-center gap-2.5">
               <div
                 className={`w-4 h-4 rounded-full border-2 flex items-center justify-center ${
                   selectedId === null
-                    ? 'border-amber-600 bg-amber-600 text-white'
+                    ? 'border-[#31889C] bg-[#31889C] text-white'
                     : 'border-slate-300 bg-white'
                 }`}
               >
@@ -170,7 +170,7 @@ export function LinkMeetingDialog({
           {/* Meetings List */}
           {isLoading ? (
             <div className="p-8 text-center text-slate-400 flex flex-col items-center justify-center gap-2">
-              <Loader2 className="w-6 h-6 animate-spin text-amber-600" />
+              <Loader2 className="w-6 h-6 animate-spin text-[#31889C]" />
               <span>Memuat daftar rapat...</span>
             </div>
           ) : filteredMeetings.length === 0 ? (
@@ -193,15 +193,15 @@ export function LinkMeetingDialog({
                     onClick={() => setSelectedId(m.id)}
                     className={`p-3.5 rounded-xl border transition-all cursor-pointer flex items-start justify-between gap-3 ${
                       isSelected
-                        ? 'bg-amber-50 border-amber-500 shadow-xs ring-1 ring-amber-500/20'
-                        : 'bg-white border-slate-200 hover:border-amber-300'
+                        ? 'bg-[#F0F9FA] border-[#31889C] shadow-xs ring-1 ring-[#31889C]/20'
+                        : 'bg-white border-slate-200 hover:border-[#BCE3EB]'
                     }`}
                   >
                     <div className="flex items-start gap-3">
                       <div
                         className={`w-4 h-4 rounded-full border-2 mt-0.5 shrink-0 flex items-center justify-center ${
                           isSelected
-                            ? 'border-amber-600 bg-amber-600 text-white'
+                            ? 'border-[#31889C] bg-[#31889C] text-white'
                             : 'border-slate-300 bg-white'
                         }`}
                       >
@@ -210,7 +210,7 @@ export function LinkMeetingDialog({
 
                       <div className="space-y-1">
                         <div className="flex items-center gap-2">
-                          <span className="font-mono text-[11px] font-bold text-amber-800 bg-amber-100/70 px-2 py-0.5 rounded">
+                          <span className="font-mono text-[11px] font-bold text-[#215865] bg-[#E8F5F7] px-2 py-0.5 rounded">
                             {m.meetingNumber}
                           </span>
                           <span className="text-[11px] font-semibold text-slate-500">
@@ -230,7 +230,7 @@ export function LinkMeetingDialog({
                     </div>
 
                     {isSelected && (
-                      <CheckCircle2 className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
+                      <CheckCircle2 className="w-5 h-5 text-[#31889C] shrink-0 mt-0.5" />
                     )}
                   </div>
                 );
@@ -253,7 +253,7 @@ export function LinkMeetingDialog({
             type="button"
             disabled={isSaving}
             onClick={handleSave}
-            className="inline-flex items-center gap-2 px-5 py-2 rounded-xl bg-amber-600 hover:bg-amber-700 text-white font-semibold text-[13px] shadow-sm transition-all cursor-pointer disabled:opacity-50"
+            className="inline-flex items-center gap-2 px-5 py-2 rounded-xl bg-[#31889C] hover:bg-[#266F80] text-white font-semibold text-[13px] shadow-sm transition-all cursor-pointer disabled:opacity-50"
           >
             {isSaving ? (
               <>

@@ -31,7 +31,7 @@ export default async function PenggunaPage() {
           <div className="pt-2">
             <Link
               href="/"
-              className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-amber-600 hover:bg-amber-700 text-white font-semibold text-[13px] shadow-sm transition-all"
+              className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#31889C] hover:bg-[#266F80] text-white font-semibold text-[13px] shadow-xs shadow-[#31889C]/20 transition-all"
             >
               <ArrowLeft className="w-4 h-4" />
               <span>Kembali ke Dashboard</span>

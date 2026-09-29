@@ -5,11 +5,11 @@ import { FileQuestion, Home } from 'lucide-react';
 export default function NotFound() {
   return (
     <div className="flex flex-col items-center justify-center min-h-[60vh] text-center p-6">
-      <div className="w-16 h-16 rounded-full bg-amber-100 border border-amber-300 flex items-center justify-center text-amber-700 mb-4 shadow-sm">
+      <div className="w-16 h-16 rounded-full bg-[#F0F9FA] border border-[#BCE3EB] flex items-center justify-center text-[#31889C] mb-4 shadow-xs">
         <FileQuestion className="w-8 h-8" />
       </div>
 
-      <span className="font-bold text-[12px] text-amber-700 uppercase tracking-wider mb-1">
+      <span className="font-bold text-[12px] text-[#215865] uppercase tracking-wider mb-1">
         404 NOT FOUND
       </span>
 
@@ -23,7 +23,7 @@ export default function NotFound() {
 
       <Link
         href="/"
-        className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg bg-amber-600 text-white font-semibold text-[13px] hover:bg-amber-700 shadow-md shadow-amber-600/20 transition-all"
+        className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg bg-[#31889C] text-white font-semibold text-[13px] hover:bg-[#266F80] shadow-xs shadow-[#31889C]/20 transition-all"
       >
         <Home className="w-4 h-4" />
         <span>Kembali ke Beranda Dashboard</span>

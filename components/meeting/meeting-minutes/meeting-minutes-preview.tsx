@@ -104,8 +104,13 @@ export function MeetingMinutesPreview({
   const meetingTime = normalizeTime(meeting?.startTime, meeting?.endTime);
 
   // Signer & Chairperson resolution (matches lib/pdf/meeting-pdf-generator.ts exactly)
-  const { chairpersonName, finalSignerName, finalSignerRole, secretaryMetaText } =
-    resolveMeetingSignerInfo(meeting, { agenda, discussion, decisions, conclusion });
+  const {
+    chairpersonName,
+    finalSignerName,
+    finalSignerRole,
+    secretaryMetaText,
+    signatureImage,
+  } = resolveMeetingSignerInfo(meeting, { agenda, discussion, decisions, conclusion });
 
   // Agenda text resolution
   const agendaRaw = extractPlainText(agenda);
@@ -131,9 +136,9 @@ export function MeetingMinutesPreview({
   return (
     <div className="space-y-4">
       {/* Top Controls Toolbar */}
-      <div className="p-3.5 bg-white rounded-xl border border-amber-200/90 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-3">
+      <div className="p-3.5 bg-white rounded-xl border border-slate-200 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-3">
         <div className="flex items-center gap-2.5">
-          <div className="w-8 h-8 rounded-lg bg-amber-50 border border-amber-200 flex items-center justify-center text-amber-700 shrink-0">
+          <div className="w-8 h-8 rounded-lg bg-[#F0F9FA] border border-[#BCE3EB] flex items-center justify-center text-[#31889C] shrink-0">
             <FileText className="w-4 h-4" />
           </div>
           <div>
@@ -141,7 +146,7 @@ export function MeetingMinutesPreview({
               <h4 className="font-bold text-[14px] text-slate-900">
                 Pratinjau Lembar Notula Resmi
               </h4>
-              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
+              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-[#ECF8E9] text-[#4D8F3D] border border-[#D2EFCA]">
                 <CheckCircle2 className="w-3 h-3" />
                 Sesuai Format PDF
               </span>
@@ -165,7 +170,7 @@ export function MeetingMinutesPreview({
                   : 'text-slate-600 hover:text-slate-900'
               }`}
             >
-              <FileText className="w-3.5 h-3.5 text-amber-600" />
+              <FileText className="w-3.5 h-3.5 text-[#31889C]" />
               <span>Lembar Dokumen (A4)</span>
             </button>
             <button
@@ -177,7 +182,7 @@ export function MeetingMinutesPreview({
                   : 'text-slate-600 hover:text-slate-900'
               }`}
             >
-              <Eye className="w-3.5 h-3.5 text-blue-600" />
+              <Eye className="w-3.5 h-3.5 text-[#31889C]" />
               <span>Dokumen PDF Langsung</span>
             </button>
           </div>
@@ -187,7 +192,7 @@ export function MeetingMinutesPreview({
             <button
               type="button"
               onClick={onDownloadPdf}
-              className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg bg-amber-600 hover:bg-amber-700 text-white font-semibold text-[12px] transition-colors shadow-xs cursor-pointer"
+              className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg bg-[#31889C] hover:bg-[#266F80] text-white font-semibold text-[12px] transition-colors shadow-xs cursor-pointer"
               title="Unduh dokumen resmi dalam format PDF"
             >
               <Download className="w-3.5 h-3.5" />
@@ -199,10 +204,10 @@ export function MeetingMinutesPreview({
             <button
               type="button"
               onClick={onEditClick}
-              className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg border border-amber-300 bg-amber-50 hover:bg-amber-100 text-amber-900 font-semibold text-[12px] transition-colors cursor-pointer"
+              className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg border border-[#BCE3EB] bg-[#F0F9FA] hover:bg-[#E8F5F7] text-[#215865] font-semibold text-[12px] transition-colors cursor-pointer"
               title="Edit isi notula rapat"
             >
-              <FileEdit className="w-3.5 h-3.5 text-amber-700" />
+              <FileEdit className="w-3.5 h-3.5 text-[#31889C]" />
               <span>Edit Notula</span>
             </button>
           )}
@@ -444,9 +449,18 @@ export function MeetingMinutesPreview({
                   {finalSignerRole.endsWith(',') ? finalSignerRole : `${finalSignerRole},`}
                 </p>
 
-                <div className="py-6 font-['Arial',sans-serif] text-[11pt] text-black">
-                  ${'{ttd_pengirim}'}
-                </div>
+                {/* Ruang tanda tangan: gambar jika ada, atau ruang kosong jika belum ada */}
+                {signatureImage ? (
+                  <div className="py-1">
+                    <img
+                      src={signatureImage}
+                      alt={`Tanda Tangan ${finalSignerName}`}
+                      className="max-h-20 max-w-[180px] object-contain drop-shadow-2xs"
+                    />
+                  </div>
+                ) : (
+                  <div className="h-20" />
+                )}
 
                 <p className="font-normal leading-tight">
                   {finalSignerName}

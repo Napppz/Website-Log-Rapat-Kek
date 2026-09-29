@@ -186,6 +186,7 @@ async function testPdf() {
         type: 'doc',
         signerName: 'Dian Pratama, S.STP',
         signerRole: 'Analis Kebijakan Ahli Muda',
+        signatureImage: null,
         content: [
           {
             type: 'paragraph',

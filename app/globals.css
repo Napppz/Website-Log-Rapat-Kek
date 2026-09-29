@@ -1,21 +1,100 @@
 @import "tailwindcss";
 
 @theme {
-  --color-primary: #D97706;
-  --color-primary-hover: #B45309;
-  --color-primary-container: #FEF3C7;
-  --color-secondary: #F59E0B;
-  --color-secondary-container: #FFFBEB;
-  --color-accent-gold: #FBBF24;
+  /* Brand Primary — TEAL (#31889C) */
+  --color-primary: #31889C;
+  --color-primary-hover: #266F80;
+  --color-primary-active: #1D5663;
+  --color-primary-subtle: #F0F9FA;
+  --color-primary-light: #E8F5F7;
+  --color-primary-border: #BCE3EB;
+  --color-primary-text: #215865;
+
+  /* Brand Secondary — GREEN (#7CC563) */
+  --color-secondary: #7CC563;
+  --color-secondary-hover: #68AF51;
+  --color-secondary-subtle: #ECF8E9;
+  --color-secondary-border: #D2EFCA;
+  --color-secondary-text: #4D8F3D;
+
+  /* Brand Accent — YELLOW (#FFD300) */
+  --color-accent-yellow: #FFD300;
+  --color-accent-yellow-hover: #E6BE00;
+  --color-accent-yellow-subtle: #FFF8CC;
+  --color-accent-yellow-border: #FFEE99;
+  --color-accent-yellow-text: #8A7200;
+
+  /* Brand Accent — ORANGE (#F99D1C) */
+  --color-accent-orange: #F99D1C;
+  --color-accent-orange-hover: #E2880C;
+  --color-accent-orange-subtle: #FFF0DC;
+  --color-accent-orange-border: #FEDEBE;
+  --color-accent-orange-text: #B96800;
+
+  /* Neutrals */
+  --color-white: #FFFFFF;
+  --color-page-bg: #F8FAFC;
+  --color-card-bg: #FFFFFF;
   --color-surface: #FFFFFF;
-  --color-surface-container: #FFFDF5;
-  --color-surface-container-low: #FAFAFA;
-  --color-surface-container-high: #FEF3C7;
-  --color-surface-variant: #F3F4F6;
-  --color-on-surface: #1E293B;
-  --color-on-surface-variant: #64748B;
-  --color-outline-border: #FDE68A;
-  --color-background: #F9FAFB;
+  --color-surface-subtle: #F8FAFC;
+  --color-surface-variant: #F1F5F9;
+  --color-text-main: #1F2937;
+  --color-text-secondary: #64748B;
+  --color-text-muted: #94A3B8;
+  --color-border-main: #E2E8F0;
+  --color-border-light: #F1F5F9;
+  --color-dark-section: #0F172A;
+
+  /* Semantic Aliases */
+  --color-success: #7CC563;
+  --color-success-subtle: #ECF8E9;
+  --color-success-border: #D2EFCA;
+  --color-success-text: #4D8F3D;
+
+  --color-warning: #FFD300;
+  --color-warning-subtle: #FFF8CC;
+  --color-warning-border: #FFEE99;
+  --color-warning-text: #8A7200;
+
+  --color-action: #F99D1C;
+  --color-action-subtle: #FFF0DC;
+  --color-action-border: #FEDEBE;
+  --color-action-text: #B96800;
+
+  --color-danger: #DC2626;
+  --color-danger-subtle: #FEF2F2;
+  --color-danger-border: #FECACA;
+  --color-danger-text: #DC2626;
+
+  --color-info: #31889C;
+  --color-info-subtle: #E8F5F7;
+  --color-info-border: #BCE3EB;
+  --color-info-text: #31889C;
+
+  /* Brand Palette Scale — Teal */
+  --color-teal-50: #F0F9FA;
+  --color-teal-100: #E8F5F7;
+  --color-teal-200: #BCE3EB;
+  --color-teal-300: #8CCADA;
+  --color-teal-400: #57ADBF;
+  --color-teal-500: #399BB0;
+  --color-teal-600: #31889C;
+  --color-teal-700: #266F80;
+  --color-teal-800: #215865;
+  --color-teal-900: #1B4752;
+  --color-teal-950: #0E2830;
+
+  /* Brand Palette Scale — Green */
+  --color-emerald-50: #F2FAF0;
+  --color-emerald-100: #ECF8E9;
+  --color-emerald-200: #D2EFCA;
+  --color-emerald-300: #A8E196;
+  --color-emerald-400: #8ED477;
+  --color-emerald-500: #7CC563;
+  --color-emerald-600: #68AF51;
+  --color-emerald-700: #4D8F3D;
+  --color-emerald-800: #3D7231;
+  --color-emerald-900: #2E5525;
 
   --spacing-space-xs: 0.25rem;
   --spacing-space-sm: 0.5rem;
@@ -30,12 +109,36 @@
   --font-body: var(--font-public-sans), var(--font-plus-jakarta), system-ui, sans-serif;
 }
 
+:root {
+  --color-primary: #31889C;
+  --color-primary-hover: #266F80;
+  --color-primary-subtle: #F0F9FA;
+  --color-primary-light: #E8F5F7;
+  --color-primary-border: #BCE3EB;
+  --color-secondary: #7CC563;
+  --color-secondary-subtle: #ECF8E9;
+  --color-secondary-border: #D2EFCA;
+  --color-secondary-text: #4D8F3D;
+  --color-accent-yellow: #FFD300;
+  --color-accent-yellow-subtle: #FFF8CC;
+  --color-accent-orange: #F99D1C;
+  --color-accent-orange-subtle: #FFF0DC;
+  --color-background: #F8FAFC;
+  --color-surface: #FFFFFF;
+  --color-text: #1F2937;
+  --color-text-secondary: #64748B;
+  --color-text-muted: #94A3B8;
+  --color-border: #E2E8F0;
+  --color-border-light: #F1F5F9;
+  --color-dark-section: #0F172A;
+}
+
 @layer base {
   html, body {
     margin: 0;
     padding: 0;
-    background-color: #FAFAFA;
-    color: #1E293B;
+    background-color: #F8FAFC;
+    color: #1F2937;
     font-family: var(--font-public-sans), var(--font-plus-jakarta), system-ui, sans-serif;
   }
 }
@@ -49,11 +152,11 @@
   background: transparent;
 }
 ::-webkit-scrollbar-thumb {
-  background: #FDE68A;
+  background: #BCE3EB;
   border-radius: 4px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: #F59E0B;
+  background: #31889C;
 }
 
 @keyframes shimmer-sweep {

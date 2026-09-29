@@ -344,6 +344,13 @@ export async function generateMeetingPdf(meeting: MeetingPdfData): Promise<Buffe
         customSignerRole.trim() ||
         'Pranata Hubungan Masyarakat Terampil';
 
+      const signatureImage: string | null =
+        (meeting.minutes?.conclusion as any)?.signatureImage ||
+        (meeting.minutes?.decisions as any)?.signatureImage ||
+        (meeting.minutes?.discussion as any)?.signatureImage ||
+        (meeting.minutes?.agenda as any)?.signatureImage ||
+        null;
+
       // Pencatat
       const roleClean = finalSignerRole.replace(/[\r\n]+/g, ' ').replace(/,\s*$/, '').trim();
       const secretaryMetaText = `${roleClean}, ${finalSignerName}`;
@@ -504,11 +511,32 @@ export async function generateMeetingPdf(meeting: MeetingPdfData): Promise<Buffe
         lineGap: 2,
       });
 
-      doc.moveDown(1.8);
-      doc.font(fonts.arial).fontSize(11).fillColor('#000000');
-      doc.text('${ttd_pengirim}', sigX, doc.y, { width: sigColW, align: 'left' });
+      // Ruang tanda tangan: sematkan gambar jika ada, atau ruang kosong jika belum ada
+      let hasRenderedSignature = false;
+      if (
+        signatureImage &&
+        typeof signatureImage === 'string' &&
+        signatureImage.startsWith('data:image')
+      ) {
+        try {
+          const base64Data = signatureImage.replace(/^data:image\/\w+;base64,/, '');
+          const imageBuffer = Buffer.from(base64Data, 'base64');
+          const maxW = 140;
+          const maxH = 50;
+          doc.moveDown(0.4);
+          const sigY = doc.y;
+          doc.image(imageBuffer, sigX, sigY, { fit: [maxW, maxH] });
+          doc.y = sigY + maxH + 4;
+          hasRenderedSignature = true;
+        } catch (err) {
+          console.warn('Gagal memuat gambar tanda tangan ke dalam PDF:', err);
+        }
+      }
 
-      doc.moveDown(1.8);
+      if (!hasRenderedSignature) {
+        doc.moveDown(4.5);
+      }
+
       doc.font(fonts.arial).fontSize(11).fillColor('#000000');
       doc.text(finalSignerName, sigX, doc.y, {
         width: sigColW,

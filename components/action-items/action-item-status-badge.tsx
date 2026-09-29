@@ -13,8 +13,8 @@ export function ActionItemStatusBadge({ status, isOverdue }: ActionItemStatusBad
   // If overdue is indicated or status is OVERDUE
   if (status === 'OVERDUE' || (isOverdue && status !== 'COMPLETED')) {
     return (
-      <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-red-100 text-red-800 text-[11px] font-bold border border-red-300">
-        <AlertTriangle className="w-3.5 h-3.5 text-red-600" />
+      <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-[#FEF2F2] text-[#DC2626] text-[11px] font-bold border border-red-200">
+        <AlertTriangle className="w-3.5 h-3.5 text-[#DC2626]" />
         Terlambat
       </span>
     );
@@ -23,23 +23,23 @@ export function ActionItemStatusBadge({ status, isOverdue }: ActionItemStatusBad
   switch (status) {
     case 'COMPLETED':
       return (
-        <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800 text-[11px] font-bold border border-emerald-300">
-          <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
+        <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-[#ECF8E9] text-[#4D8F3D] text-[11px] font-bold border border-[#D2EFCA]">
+          <CheckCircle2 className="w-3.5 h-3.5 text-[#7CC563]" />
           Selesai
         </span>
       );
     case 'IN_PROGRESS':
       return (
-        <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-amber-100 text-amber-900 text-[11px] font-bold border border-amber-300">
-          <Clock className="w-3.5 h-3.5 text-amber-600" />
+        <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-[#E8F5F7] text-[#31889C] text-[11px] font-bold border border-[#BCE3EB]">
+          <Clock className="w-3.5 h-3.5 text-[#31889C]" />
           Sedang Berjalan
         </span>
       );
     case 'PENDING':
     default:
       return (
-        <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-slate-100 text-slate-700 text-[11px] font-bold border border-slate-300">
-          <PlayCircle className="w-3.5 h-3.5 text-slate-500" />
+        <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-[#FFF8CC] text-[#8A7200] text-[11px] font-bold border border-[#FFEE99]">
+          <PlayCircle className="w-3.5 h-3.5 text-[#8A7200]" />
           Belum Dimulai
         </span>
       );
@@ -54,19 +54,19 @@ export function ActionItemPriorityBadge({ priority }: ActionItemPriorityBadgePro
   switch (priority) {
     case 'URGENT':
       return (
-        <span className="inline-flex items-center px-2 py-0.5 rounded bg-red-100 text-red-900 text-[11px] font-bold border border-red-200">
+        <span className="inline-flex items-center px-2 py-0.5 rounded bg-[#FEF2F2] text-[#DC2626] text-[11px] font-bold border border-red-200">
           Sangat Mendesak
         </span>
       );
     case 'HIGH':
       return (
-        <span className="inline-flex items-center px-2 py-0.5 rounded bg-orange-100 text-orange-900 text-[11px] font-bold border border-orange-200">
+        <span className="inline-flex items-center px-2 py-0.5 rounded bg-[#FFF0DC] text-[#B96800] text-[11px] font-bold border border-[#FEDEBE]">
           Tinggi
         </span>
       );
     case 'MEDIUM':
       return (
-        <span className="inline-flex items-center px-2 py-0.5 rounded bg-amber-100 text-amber-900 text-[11px] font-bold border border-amber-200">
+        <span className="inline-flex items-center px-2 py-0.5 rounded bg-[#FFF8CC] text-[#8A7200] text-[11px] font-bold border border-[#FFEE99]">
           Sedang
         </span>
       );

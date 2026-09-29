@@ -21,7 +21,11 @@ import {
   User,
   BadgeCheck,
   UserCheck,
+  Upload,
+  Trash2,
+  Check,
 } from 'lucide-react';
+import { SignatureDialog } from './signature-dialog';
 
 interface MeetingMinutesEditorProps {
   meetingId: string;
@@ -83,8 +87,17 @@ export function MeetingMinutesEditor({
     (initialMinutes?.decisions as any)?.signerRole ||
     'Pranata Hubungan Masyarakat Terampil';
 
+  const initialSignatureImage =
+    (initialMinutes?.conclusion as any)?.signatureImage ||
+    (initialMinutes?.decisions as any)?.signatureImage ||
+    (initialMinutes?.discussion as any)?.signatureImage ||
+    (initialMinutes?.agenda as any)?.signatureImage ||
+    null;
+
   const [signerName, setSignerName] = useState<string>(initialSignerName);
   const [signerRole, setSignerRole] = useState<string>(initialSignerRole);
+  const [signatureImage, setSignatureImage] = useState<string | null>(initialSignatureImage);
+  const [isSignatureModalOpen, setIsSignatureModalOpen] = useState(false);
 
   const [activeTab, setActiveTab] = useState<'all' | 'agenda' | 'discussion' | 'conclusion' | 'decisions'>('all');
   const [saveStatus, setSaveStatus] = useState<'saved' | 'saving' | 'error' | 'idle'>('idle');
@@ -101,12 +114,13 @@ export function MeetingMinutesEditor({
       setStatusMessage('Menyimpan...');
 
       try {
-        // Sematkan signerName, signerRole, dan chairpersonName ke dalam payload conclusion & decisions agar selalu tersimpan
+        // Sematkan signerName, signerRole, chairpersonName, dan signatureImage ke dalam payload conclusion & decisions agar selalu tersimpan
         const conclusionPayload = {
           ...(conclusion || { type: 'doc', content: [] }),
           signerName: signerName.trim(),
           signerRole: signerRole.trim(),
           chairpersonName: chairpersonName.trim(),
+          signatureImage: signatureImage || null,
         };
 
         const decisionsPayload = decisions
@@ -115,6 +129,7 @@ export function MeetingMinutesEditor({
               signerName: signerName.trim(),
               signerRole: signerRole.trim(),
               chairpersonName: chairpersonName.trim(),
+              signatureImage: signatureImage || null,
             }
           : undefined;
 
@@ -143,7 +158,7 @@ export function MeetingMinutesEditor({
         setStatusMessage('Gagal menyimpan');
       }
     },
-    [meetingId, agenda, discussion, decisions, conclusion, signerName, signerRole, chairpersonName, onSaved]
+    [meetingId, agenda, discussion, decisions, conclusion, signerName, signerRole, chairpersonName, signatureImage, onSaved]
   );
 
   // Autosave trigger with 2.5s debounce
@@ -166,7 +181,7 @@ export function MeetingMinutesEditor({
         clearTimeout(debounceTimerRef.current);
       }
     };
-  }, [agenda, discussion, decisions, conclusion, signerName, signerRole, executeSave]);
+  }, [agenda, discussion, decisions, conclusion, signerName, signerRole, signatureImage, executeSave]);
 
   const handleFieldChange = (setter: React.Dispatch<React.SetStateAction<JSONContent | null>>) => {
     return (json: JSONContent) => {
@@ -341,10 +356,10 @@ export function MeetingMinutesEditor({
   return (
     <div className="flex flex-col gap-6">
       {/* Top Helper Header: Form Info Sesuai Naskah Dinas */}
-      <div className="bg-gradient-to-r from-amber-500/10 via-amber-500/5 to-transparent border border-amber-200/90 rounded-2xl p-4 sm:p-5 flex flex-col md:flex-row md:items-center justify-between gap-4">
+      <div className="bg-[#F8FAFC] border border-slate-200 rounded-2xl p-4 sm:p-5 flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <div className="flex items-center gap-2">
-            <span className="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-bold bg-amber-600 text-white">
+            <span className="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-bold bg-[#31889C] text-white">
               FORMAT NOTULA RESMI
             </span>
             <span className="text-[12px] font-semibold text-slate-700">
@@ -363,10 +378,10 @@ export function MeetingMinutesEditor({
           <button
             type="button"
             onClick={handleLoadOfficialTemplate}
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-amber-300 bg-amber-50 hover:bg-amber-100 text-amber-900 font-semibold text-[12px] transition-colors cursor-pointer shadow-xs"
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-[#BCE3EB] bg-[#F0F9FA] hover:bg-[#E8F5F7] text-[#215865] font-semibold text-[12px] transition-colors cursor-pointer shadow-xs"
             title="Muat struktur kalimat dan format baku naskah dinas"
           >
-            <Sparkles className="w-3.5 h-3.5 text-amber-600" />
+            <Sparkles className="w-3.5 h-3.5 text-[#31889C]" />
             <span>Gunakan Template Dinas</span>
           </button>
 
@@ -374,9 +389,9 @@ export function MeetingMinutesEditor({
             <button
               type="button"
               onClick={onPreviewClick}
-              className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg bg-slate-900 hover:bg-slate-800 text-white font-semibold text-[12px] transition-colors cursor-pointer shadow-xs"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-900 hover:bg-slate-800 text-white font-semibold text-[12px] transition-colors cursor-pointer shadow-xs"
             >
-              <Eye className="w-3.5 h-3.5 text-amber-400" />
+              <Eye className="w-3.5 h-3.5 text-teal-300" />
               <span>Lihat Lembar Notula</span>
             </button>
           )}
@@ -384,7 +399,7 @@ export function MeetingMinutesEditor({
       </div>
 
       {/* Action Bar & Section Navigation */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 p-4 bg-white rounded-xl border border-amber-200/80 shadow-xs">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 p-4 bg-white rounded-xl border border-slate-200 shadow-xs">
         {/* Left: Section Tabs (Sesuai Urutan Tata Naskah Dinas) */}
         <div className="flex flex-wrap items-center gap-1.5 text-[12px]">
           <span className="font-bold text-slate-700 mr-1 hidden sm:inline">Navigasi:</span>
@@ -401,8 +416,8 @@ export function MeetingMinutesEditor({
               onClick={() => setActiveTab(tab.id as any)}
               className={`px-3 py-1.5 rounded-md font-semibold transition-all cursor-pointer ${
                 activeTab === tab.id
-                  ? 'bg-amber-600 text-white shadow-xs'
-                  : 'bg-amber-50/70 hover:bg-amber-100 text-slate-700'
+                  ? 'bg-[#31889C] text-white shadow-xs'
+                  : 'bg-slate-100 hover:bg-[#F0F9FA] hover:text-[#31889C] text-slate-700'
               }`}
             >
               {tab.label}
@@ -416,14 +431,14 @@ export function MeetingMinutesEditor({
           <div className="flex items-center gap-1.5 text-[12px] font-medium">
             {saveStatus === 'saving' && (
               <>
-                <Clock className="w-3.5 h-3.5 text-amber-600 animate-spin" />
-                <span className="text-amber-700">{statusMessage}</span>
+                <Clock className="w-3.5 h-3.5 text-[#31889C] animate-spin" />
+                <span className="text-[#31889C]">{statusMessage}</span>
               </>
             )}
             {saveStatus === 'saved' && (
               <>
-                <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
-                <span className="text-emerald-700 font-semibold">{statusMessage}</span>
+                <CheckCircle2 className="w-3.5 h-3.5 text-[#4D8F3D]" />
+                <span className="text-[#4D8F3D] font-semibold">{statusMessage}</span>
               </>
             )}
             {saveStatus === 'error' && (
@@ -449,7 +464,7 @@ export function MeetingMinutesEditor({
             type="button"
             disabled={isManualSaving}
             onClick={() => handleManualSave(false)}
-            className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg bg-amber-600 hover:bg-amber-700 text-white font-semibold text-[12px] transition-all shadow-xs cursor-pointer disabled:opacity-50"
+            className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg bg-[#31889C] hover:bg-[#266F80] text-white font-semibold text-[12px] transition-all shadow-xs cursor-pointer disabled:opacity-50"
           >
             <Save className="w-3.5 h-3.5" />
             <span>Simpan</span>
@@ -461,10 +476,10 @@ export function MeetingMinutesEditor({
       <div className="space-y-6">
         {/* BAGIAN 1: AGENDA RAPAT */}
         {(activeTab === 'all' || activeTab === 'agenda') && (
-          <div className="bg-white rounded-xl border border-amber-200/90 p-5 shadow-xs space-y-3">
-            <div className="flex items-center justify-between pb-2 border-b border-amber-100">
+          <div className="bg-white rounded-xl border border-slate-200 p-5 shadow-xs space-y-3">
+            <div className="flex items-center justify-between pb-2 border-b border-slate-100">
               <div className="flex items-center gap-2">
-                <div className="w-7 h-7 rounded-lg bg-amber-100 text-amber-700 flex items-center justify-center">
+                <div className="w-7 h-7 rounded-lg bg-[#F0F9FA] text-[#31889C] flex items-center justify-center">
                   <ListChecks className="w-4 h-4" />
                 </div>
                 <div>
@@ -476,7 +491,7 @@ export function MeetingMinutesEditor({
                   </p>
                 </div>
               </div>
-              <span className="text-[11px] font-bold text-amber-700 bg-amber-50 px-2 py-0.5 rounded border border-amber-200">
+              <span className="text-[11px] font-bold text-[#31889C] bg-[#E8F5F7] px-2 py-0.5 rounded border border-[#BCE3EB]">
                 Identitas Notula
               </span>
             </div>
@@ -492,10 +507,10 @@ export function MeetingMinutesEditor({
 
         {/* BAGIAN 2: SUBSTANSI INTI PEMBAHASAN RAPAT */}
         {(activeTab === 'all' || activeTab === 'discussion') && (
-          <div className="bg-white rounded-xl border border-amber-200/90 p-5 shadow-xs space-y-3">
-            <div className="flex items-center justify-between pb-2 border-b border-amber-100">
+          <div className="bg-white rounded-xl border border-slate-200 p-5 shadow-xs space-y-3">
+            <div className="flex items-center justify-between pb-2 border-b border-slate-100">
               <div className="flex items-center gap-2">
-                <div className="w-7 h-7 rounded-lg bg-amber-100 text-amber-700 flex items-center justify-center">
+                <div className="w-7 h-7 rounded-lg bg-[#F0F9FA] text-[#31889C] flex items-center justify-center">
                   <MessageSquare className="w-4 h-4" />
                 </div>
                 <div>
@@ -507,7 +522,7 @@ export function MeetingMinutesEditor({
                   </p>
                 </div>
               </div>
-              <span className="text-[11px] font-bold text-amber-700 bg-amber-50 px-2 py-0.5 rounded border border-amber-200">
+              <span className="text-[11px] font-bold text-[#31889C] bg-[#E8F5F7] px-2 py-0.5 rounded border border-[#BCE3EB]">
                 Isi Pokok Notula
               </span>
             </div>
@@ -523,10 +538,10 @@ export function MeetingMinutesEditor({
 
         {/* BAGIAN 3: KESIMPULAN */}
         {(activeTab === 'all' || activeTab === 'conclusion') && (
-          <div className="bg-white rounded-xl border border-amber-200/90 p-5 shadow-xs space-y-3">
-            <div className="flex items-center justify-between pb-2 border-b border-amber-100">
+          <div className="bg-white rounded-xl border border-slate-200 p-5 shadow-xs space-y-3">
+            <div className="flex items-center justify-between pb-2 border-b border-slate-100">
               <div className="flex items-center gap-2">
-                <div className="w-7 h-7 rounded-lg bg-amber-100 text-amber-700 flex items-center justify-center">
+                <div className="w-7 h-7 rounded-lg bg-[#ECF8E9] text-[#4D8F3D] flex items-center justify-center">
                   <CheckCircle className="w-4 h-4" />
                 </div>
                 <div>
@@ -538,7 +553,7 @@ export function MeetingMinutesEditor({
                   </p>
                 </div>
               </div>
-              <span className="text-[11px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">
+              <span className="text-[11px] font-bold text-[#4D8F3D] bg-[#ECF8E9] px-2 py-0.5 rounded border border-[#D2EFCA]">
                 Poin Kesimpulan
               </span>
             </div>
@@ -554,10 +569,10 @@ export function MeetingMinutesEditor({
 
         {/* BAGIAN 4: TINDAK LANJUT */}
         {(activeTab === 'all' || activeTab === 'decisions') && (
-          <div className="bg-white rounded-xl border border-amber-200/90 p-5 shadow-xs space-y-3">
-            <div className="flex items-center justify-between pb-2 border-b border-amber-100">
+          <div className="bg-white rounded-xl border border-slate-200 p-5 shadow-xs space-y-3">
+            <div className="flex items-center justify-between pb-2 border-b border-slate-100">
               <div className="flex items-center gap-2">
-                <div className="w-7 h-7 rounded-lg bg-amber-100 text-amber-700 flex items-center justify-center">
+                <div className="w-7 h-7 rounded-lg bg-[#F0F9FA] text-[#31889C] flex items-center justify-center">
                   <ClipboardList className="w-4 h-4" />
                 </div>
                 <div>
@@ -569,7 +584,7 @@ export function MeetingMinutesEditor({
                   </p>
                 </div>
               </div>
-              <span className="text-[11px] font-bold text-blue-700 bg-blue-50 px-2 py-0.5 rounded border border-blue-200">
+              <span className="text-[11px] font-bold text-[#31889C] bg-[#E8F5F7] px-2 py-0.5 rounded border border-[#BCE3EB]">
                 Poin Tindak Lanjut
               </span>
             </div>
@@ -584,10 +599,10 @@ export function MeetingMinutesEditor({
         )}
 
         {/* BAGIAN 5: PELAKSANA RAPAT & PENANDATANGAN (KETUA & NOTULIS) */}
-        <div className="bg-white rounded-2xl border border-amber-200/90 p-6 shadow-xs space-y-6">
-          <div className="flex items-center justify-between pb-3 border-b border-amber-100">
+        <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-xs space-y-6">
+          <div className="flex items-center justify-between pb-3 border-b border-slate-100">
             <div className="flex items-center gap-2.5">
-              <div className="w-8 h-8 rounded-xl bg-amber-100 text-amber-700 flex items-center justify-center">
+              <div className="w-8 h-8 rounded-xl bg-[#F0F9FA] text-[#31889C] flex items-center justify-center">
                 <PenTool className="w-4 h-4" />
               </div>
               <div>
@@ -599,17 +614,17 @@ export function MeetingMinutesEditor({
                 </p>
               </div>
             </div>
-            <span className="text-[11px] font-bold text-amber-800 bg-amber-50 px-2.5 py-1 rounded-md border border-amber-200 flex items-center gap-1">
-              <BadgeCheck className="w-3.5 h-3.5 text-amber-600" />
+            <span className="text-[11px] font-bold text-[#215865] bg-[#E8F5F7] px-2.5 py-1 rounded-md border border-[#BCE3EB] flex items-center gap-1">
+              <BadgeCheck className="w-3.5 h-3.5 text-[#31889C]" />
               <span>Dapat Diisi Sendiri</span>
             </span>
           </div>
 
           {/* Input Ketua / Pimpinan Rapat */}
-          <div className="space-y-2 p-4 bg-amber-50/50 rounded-xl border border-amber-200/80">
+          <div className="space-y-2 p-4 bg-[#F0F9FA] rounded-xl border border-[#BCE3EB]">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1.5">
               <label className="text-[12.5px] font-bold text-slate-800 flex items-center gap-1.5">
-                <UserCheck className="w-4 h-4 text-amber-600" />
+                <UserCheck className="w-4 h-4 text-[#31889C]" />
                 <span>Ketua / Pimpinan Rapat (Pejabat yang Memimpin Sidang)</span>
               </label>
               <div className="flex flex-wrap items-center gap-2">
@@ -620,7 +635,7 @@ export function MeetingMinutesEditor({
                       setChairpersonName(meeting.chairperson!.name);
                       hasChangesRef.current = true;
                     }}
-                    className="text-[11px] font-semibold text-amber-700 hover:text-amber-800 hover:underline cursor-pointer"
+                    className="text-[11px] font-semibold text-[#31889C] hover:text-[#266F80] hover:underline cursor-pointer"
                   >
                     + Pimpinan Rapat ({meeting.chairperson.name})
                   </button>
@@ -645,7 +660,7 @@ export function MeetingMinutesEditor({
                 hasChangesRef.current = true;
               }}
               placeholder="Contoh: Wakil Ketua II, Tim Pelaksana Dewan Nasional KEK, Budi Santoso"
-              className="w-full px-4 py-2.5 text-[13.5px] bg-white border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-600 transition-all text-slate-900 font-medium placeholder:text-slate-400"
+              className="w-full px-4 py-2.5 text-[13.5px] bg-white border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#31889C]/20 focus:border-[#31889C] transition-all text-slate-900 font-medium placeholder:text-slate-400"
             />
             <p className="text-[11px] text-slate-500">
               Ketikkan jabatan kedinasan dan nama lengkap pejabat pimpinan rapat. Baris ini dicetak pada bagian <strong>Pelaksana Rapat &rarr; Ketua/Pimpinan Rapat</strong> di naskah dinas &amp; dokumen PDF.
@@ -667,7 +682,7 @@ export function MeetingMinutesEditor({
                       setSignerName(session.user.name || '');
                       hasChangesRef.current = true;
                     }}
-                    className="text-[11px] font-semibold text-amber-700 hover:text-amber-800 hover:underline cursor-pointer"
+                    className="text-[11px] font-semibold text-[#31889C] hover:text-[#266F80] hover:underline cursor-pointer"
                   >
                     + Gunakan Nama Saya ({session.user.name})
                   </button>
@@ -681,7 +696,7 @@ export function MeetingMinutesEditor({
                   hasChangesRef.current = true;
                 }}
                 placeholder="Contoh: Sri Aurelia Rosyana Hari Habyby"
-                className="w-full px-4 py-2.5 text-[13.5px] bg-slate-50/80 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-600 transition-all text-slate-900 font-medium placeholder:text-slate-400"
+                className="w-full px-4 py-2.5 text-[13.5px] bg-slate-50/80 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#31889C]/20 focus:border-[#31889C] transition-all text-slate-900 font-medium placeholder:text-slate-400"
               />
               <p className="text-[11px] text-slate-500">
                 Nama ini akan dicetak pada baris pencatat dan bagian bawah tanda tangan.
@@ -701,7 +716,7 @@ export function MeetingMinutesEditor({
                   hasChangesRef.current = true;
                 }}
                 placeholder="Contoh: Pranata Hubungan Masyarakat Terampil"
-                className="w-full px-4 py-2.5 text-[13.5px] bg-slate-50/80 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-600 transition-all text-slate-900 font-medium placeholder:text-slate-400"
+                className="w-full px-4 py-2.5 text-[13.5px] bg-slate-50/80 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#31889C]/20 focus:border-[#31889C] transition-all text-slate-900 font-medium placeholder:text-slate-400"
               />
               <p className="text-[11px] text-slate-500">
                 Contoh: <em>Pranata Hubungan Masyarakat Terampil</em> atau <em>Analis Kebijakan Ahli Muda</em>.
@@ -716,7 +731,7 @@ export function MeetingMinutesEditor({
               <div className="p-4 bg-slate-50 rounded-xl border border-slate-200 text-[12px] text-slate-900 space-y-2">
                 <p className="font-bold text-slate-800 border-b border-slate-200 pb-1.5 flex items-center justify-between">
                   <span>Baris Pelaksana Rapat:</span>
-                  <span className="text-[10.5px] text-amber-700 font-normal">Halaman Depan</span>
+                  <span className="text-[10.5px] text-[#31889C] font-normal">Halaman Depan</span>
                 </p>
                 <div className="space-y-1.5 text-[12px]">
                   <p className="font-semibold text-slate-800">Pelaksana Rapat:</p>
@@ -733,19 +748,84 @@ export function MeetingMinutesEditor({
                 </div>
               </div>
 
-              <div className="p-4 bg-slate-50 rounded-xl border border-slate-200 text-[12.5px] text-slate-900 space-y-1">
+              <div className="p-4 bg-slate-50 rounded-xl border border-slate-200 text-[12.5px] text-slate-900 space-y-2">
                 <p className="font-bold text-slate-800 border-b border-slate-200 pb-1.5 flex items-center justify-between">
                   <span>Kolom Tanda Tangan:</span>
-                  <span className="text-[10.5px] text-amber-700 font-normal">Halaman Penutup</span>
+                  <span className="text-[10.5px] text-[#31889C] font-normal">Halaman Penutup</span>
                 </p>
                 <p className="font-normal mt-1">Notulis,</p>
                 <p className="font-normal text-slate-800 leading-tight">
                   {signerRole || 'Pranata Hubungan Masyarakat Terampil,'}
                 </p>
-                <div className="py-2.5 text-slate-400 font-mono text-[11px]">
-                  ${'{ttd_pengirim}'}
-                </div>
-                <p className="font-semibold text-slate-950">
+
+                {/* Signature preview / upload area */}
+                {signatureImage ? (
+                  <div className="my-2 p-3 bg-white rounded-xl border border-[#BCE3EB] flex items-center justify-between gap-3 shadow-2xs">
+                    <div className="flex items-center gap-3">
+                      <div className="p-1 rounded-lg border border-slate-200 bg-[#F8FAFC]">
+                        <img
+                          src={signatureImage}
+                          alt="Tanda Tangan Notulis"
+                          className="max-h-14 max-w-[130px] object-contain drop-shadow-2xs"
+                        />
+                      </div>
+                      <div className="text-[11px] text-slate-600">
+                        <p className="font-semibold text-[#4D8F3D] flex items-center gap-1">
+                          <Check className="w-3.5 h-3.5" />
+                          <span>Tanda tangan terpasang</span>
+                        </p>
+                        <p className="text-[10px] text-slate-400 mt-0.5">
+                          Tampil di PDF dan pratinjau
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-1.5 shrink-0">
+                      <button
+                        type="button"
+                        onClick={() => setIsSignatureModalOpen(true)}
+                        className="px-2.5 py-1.5 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 text-[11px] font-semibold transition-colors cursor-pointer"
+                        title="Ubah tanda tangan"
+                      >
+                        Ubah
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setSignatureImage(null);
+                          hasChangesRef.current = true;
+                        }}
+                        className="p-1.5 rounded-lg border border-red-200 text-red-600 hover:bg-red-50 transition-colors cursor-pointer"
+                        title="Hapus tanda tangan"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="my-2 p-3.5 rounded-xl border border-dashed border-[#BCE3EB] bg-[#F0F9FA]/40 hover:bg-[#F0F9FA] transition-all flex flex-col sm:flex-row items-center justify-between gap-3">
+                    <div className="text-left space-y-0.5">
+                      <p className="font-semibold text-[11.5px] text-slate-700 flex items-center gap-1.5">
+                        <PenTool className="w-3.5 h-3.5 text-[#31889C]" />
+                        <span>Tanda Tangan Notulis (Opsional)</span>
+                      </p>
+                      <p className="text-[10.5px] text-slate-500">
+                        Unggah berkas (PNG/JPG) atau gores langsung di layar sentuh / mouse.
+                      </p>
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={() => setIsSignatureModalOpen(true)}
+                      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[#31889C] hover:bg-[#266F80] text-white font-semibold text-[11.5px] shadow-xs shadow-[#31889C]/20 transition-all cursor-pointer shrink-0"
+                    >
+                      <Upload className="w-3.5 h-3.5" />
+                      <span>+ Atur Tanda Tangan</span>
+                    </button>
+                  </div>
+                )}
+
+                <p className="font-semibold text-slate-950 pt-1">
                   {signerName || 'Sri Aurelia Rosyana Hari Habyby'}
                 </p>
               </div>
@@ -754,8 +834,19 @@ export function MeetingMinutesEditor({
         </div>
       </div>
 
+      {/* Signature Modal */}
+      <SignatureDialog
+        isOpen={isSignatureModalOpen}
+        onClose={() => setIsSignatureModalOpen(false)}
+        onSave={(dataUrl) => {
+          setSignatureImage(dataUrl);
+          hasChangesRef.current = true;
+        }}
+        currentSignature={signatureImage}
+      />
+
       {/* Bottom Save Bar */}
-      <div className="p-4 bg-amber-50/60 rounded-xl border border-amber-200 flex flex-col sm:flex-row items-center justify-between gap-3">
+      <div className="p-4 bg-[#F8FAFC] rounded-xl border border-slate-200 flex flex-col sm:flex-row items-center justify-between gap-3">
         <span className="text-[12px] text-slate-600">
           💡 Setiap ketikan otomatis disimpan (Autosave aktif). Klik tombol <strong>Simpan Notulen</strong> untuk konfirmasi data final.
         </span>
@@ -773,7 +864,7 @@ export function MeetingMinutesEditor({
             type="button"
             disabled={isManualSaving}
             onClick={() => handleManualSave(false)}
-            className="inline-flex items-center gap-1.5 px-5 py-2 rounded-lg bg-amber-600 hover:bg-amber-700 text-white font-semibold text-[13px] transition-all shadow-md shadow-amber-600/20 cursor-pointer disabled:opacity-50"
+            className="inline-flex items-center gap-1.5 px-5 py-2 rounded-lg bg-[#31889C] hover:bg-[#266F80] text-white font-semibold text-[13px] transition-all shadow-md shadow-[#31889C]/20 cursor-pointer disabled:opacity-50"
           >
             <FileCheck className="w-4 h-4" />
             <span>Simpan Notulen</span>

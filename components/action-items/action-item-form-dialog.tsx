@@ -184,13 +184,13 @@ export function ActionItemFormDialog({
       onClick={onClose}
     >
       <div
-        className="relative w-full max-w-2xl bg-white rounded-2xl shadow-2xl border border-amber-200 overflow-hidden flex flex-col max-h-[92vh] animate-in zoom-in-95 duration-150"
+        className="relative w-full max-w-2xl bg-white rounded-2xl shadow-2xl border border-slate-200 overflow-hidden flex flex-col max-h-[92vh] animate-in zoom-in-95 duration-150"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 bg-gradient-to-r from-amber-50 to-amber-100/60 border-b border-amber-200">
+        <div className="flex items-center justify-between px-6 py-4 bg-[#F8FAFC] border-b border-slate-200">
           <div>
-            <span className="text-[11px] font-bold text-amber-700 uppercase tracking-wider">
+            <span className="text-[11px] font-bold text-[#31889C] uppercase tracking-wider">
               {isEditing ? 'Perbarui Matriks' : 'Matriks Tindak Lanjut'}
             </span>
             <h2 className="text-[18px] font-bold text-slate-900">
@@ -201,7 +201,7 @@ export function ActionItemFormDialog({
           <button
             type="button"
             onClick={onClose}
-            className="p-1.5 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-amber-200/50 transition-colors cursor-pointer"
+            className="p-1.5 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors cursor-pointer"
           >
             <X className="w-5 h-5" />
           </button>
@@ -227,7 +227,7 @@ export function ActionItemFormDialog({
                 placeholder="Contoh: Menyusun laporan progres pembangunan infrastruktur KEK"
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
-                className="w-full px-3.5 py-2 rounded-lg border border-amber-200 focus:outline-none focus:ring-2 focus:ring-amber-500 font-medium text-slate-900 text-[13px]"
+                className="w-full px-3.5 py-2 rounded-lg border border-slate-200 focus:outline-none focus:ring-2 focus:ring-[#31889C]/30 focus:border-[#31889C] font-medium text-slate-900 text-[13px]"
               />
               {fieldErrors.title && (
                 <p className="mt-1 text-[11px] text-red-600 font-semibold">{fieldErrors.title}</p>
@@ -244,7 +244,7 @@ export function ActionItemFormDialog({
                 placeholder="Rincian ruang lingkup arahan, output dokumen yang diharapkan, atau koordinasi lintas instansi..."
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
-                className="w-full px-3.5 py-2 rounded-lg border border-amber-200 focus:outline-none focus:ring-2 focus:ring-amber-500 text-slate-800 text-[13px]"
+                className="w-full px-3.5 py-2 rounded-lg border border-slate-200 focus:outline-none focus:ring-2 focus:ring-[#31889C]/30 focus:border-[#31889C] text-slate-800 text-[13px]"
               />
             </div>
 
@@ -258,7 +258,7 @@ export function ActionItemFormDialog({
                 <select
                   value={picBiroId}
                   onChange={(e) => setPicBiroId(e.target.value)}
-                  className="w-full px-3 py-2 rounded-lg border border-amber-200 focus:outline-none focus:ring-2 focus:ring-amber-500 bg-white font-medium text-slate-800 text-[13px] cursor-pointer"
+                  className="w-full px-3 py-2 rounded-lg border border-slate-200 focus:outline-none focus:ring-2 focus:ring-[#31889C]/30 focus:border-[#31889C] bg-white font-medium text-slate-800 text-[13px] cursor-pointer"
                 >
                   <option value="">
                     {isLoadingOptions ? '-- Memuat Biro Resmi KEK... --' : '-- Pilih Biro Resmi KEK --'}
@@ -282,7 +282,7 @@ export function ActionItemFormDialog({
                 <select
                   value={picUserId}
                   onChange={(e) => setPicUserId(e.target.value)}
-                  className="w-full px-3 py-2 rounded-lg border border-amber-200 focus:outline-none focus:ring-2 focus:ring-amber-500 bg-white text-slate-800 text-[13px] cursor-pointer"
+                  className="w-full px-3 py-2 rounded-lg border border-slate-200 focus:outline-none focus:ring-2 focus:ring-[#31889C]/30 focus:border-[#31889C] bg-white text-slate-800 text-[13px] cursor-pointer"
                 >
                   <option value="">-- Belum Ditentukan (Semua Tim) --</option>
                   {usersList.map((u) => (
@@ -305,7 +305,7 @@ export function ActionItemFormDialog({
                   type="date"
                   value={dueDate}
                   onChange={(e) => setDueDate(e.target.value)}
-                  className="w-full px-3 py-2 rounded-lg border border-amber-200 focus:outline-none focus:ring-2 focus:ring-amber-500 bg-white text-slate-800 text-[13px]"
+                  className="w-full px-3 py-2 rounded-lg border border-slate-200 focus:outline-none focus:ring-2 focus:ring-[#31889C]/30 focus:border-[#31889C] bg-white text-slate-800 text-[13px]"
                 />
                 {fieldErrors.dueDate && (
                   <p className="mt-1 text-[11px] text-red-600 font-semibold">{fieldErrors.dueDate}</p>
@@ -320,7 +320,7 @@ export function ActionItemFormDialog({
                 <select
                   value={priority}
                   onChange={(e) => setPriority(e.target.value as ActionItemPriority)}
-                  className="w-full px-3 py-2 rounded-lg border border-amber-200 focus:outline-none focus:ring-2 focus:ring-amber-500 bg-white font-medium text-slate-800 text-[13px] cursor-pointer"
+                  className="w-full px-3 py-2 rounded-lg border border-slate-200 focus:outline-none focus:ring-2 focus:ring-[#31889C]/30 focus:border-[#31889C] bg-white font-medium text-slate-800 text-[13px] cursor-pointer"
                 >
                   <option value="LOW">Rendah (LOW)</option>
                   <option value="MEDIUM">Sedang (MEDIUM)</option>
@@ -337,7 +337,7 @@ export function ActionItemFormDialog({
                 <select
                   value={status}
                   onChange={(e) => setStatus(e.target.value as ActionItemStatus)}
-                  className="w-full px-3 py-2 rounded-lg border border-amber-200 focus:outline-none focus:ring-2 focus:ring-amber-500 bg-white font-medium text-slate-800 text-[13px] cursor-pointer"
+                  className="w-full px-3 py-2 rounded-lg border border-slate-200 focus:outline-none focus:ring-2 focus:ring-[#31889C]/30 focus:border-[#31889C] bg-white font-medium text-slate-800 text-[13px] cursor-pointer"
                 >
                   <option value="PENDING">Belum Dimulai (PENDING)</option>
                   <option value="IN_PROGRESS">Sedang Berjalan (IN_PROGRESS)</option>
@@ -362,7 +362,7 @@ export function ActionItemFormDialog({
             <button
               type="submit"
               disabled={isSubmitting}
-              className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg bg-amber-600 hover:bg-amber-700 text-white font-semibold text-[13px] shadow-sm transition-all cursor-pointer disabled:opacity-50"
+              className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg bg-[#31889C] hover:bg-[#266F80] text-white font-semibold text-[13px] shadow-sm transition-all cursor-pointer disabled:opacity-50"
             >
               <Save className="w-4 h-4" />
               <span>{isSubmitting ? 'Menyimpan...' : isEditing ? 'Simpan Perubahan' : 'Buat Tindak Lanjut'}</span>

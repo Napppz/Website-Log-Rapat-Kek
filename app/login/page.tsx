@@ -49,16 +49,16 @@ function LoginForm() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-amber-50/80 via-white to-amber-100/40 flex flex-col justify-center items-center p-4 sm:p-6">
+    <div className="min-h-screen bg-gradient-to-br from-[#F0F9FA] via-[#F8FAFC] to-[#E8F5F7] flex flex-col justify-center items-center p-4 sm:p-6">
       {/* Decorative background elements */}
-      <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-amber-600 via-amber-500 to-amber-700" />
+      <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-[#31889C] via-[#7CC563] to-[#266F80]" />
 
       <div className="w-full max-w-md">
         {/* Card Container */}
-        <div className="bg-white rounded-2xl border border-amber-200 shadow-xl overflow-hidden backdrop-blur-xs">
+        <div className="bg-white rounded-2xl border border-slate-200 shadow-xl overflow-hidden backdrop-blur-xs">
           {/* Card Header with Logo */}
-          <div className="p-8 text-center bg-gradient-to-b from-amber-50/60 to-transparent border-b border-amber-100/80">
-            <div className="inline-flex p-3 rounded-2xl bg-white shadow-xs border border-amber-200 mb-4">
+          <div className="p-8 text-center bg-gradient-to-b from-[#F0F9FA] to-transparent border-b border-slate-200/80">
+            <div className="inline-flex p-3 rounded-2xl bg-white shadow-xs border border-slate-200 mb-4">
               <Image
                 src="/logo-kek.png"
                 alt="Logo KEK RI"
@@ -68,7 +68,7 @@ function LoginForm() {
                 priority
               />
             </div>
-            <span className="text-[11px] font-bold tracking-widest text-amber-800 uppercase block">
+            <span className="text-[11px] font-bold tracking-widest text-[#31889C] uppercase block">
               Sekretariat Jenderal Dewan Nasional KEK RI
             </span>
             <h1 className="text-[22px] font-extrabold text-slate-900 mt-1">
@@ -109,9 +109,9 @@ function LoginForm() {
                   placeholder="nama@simrapat.local atau nama@kek.go.id"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="w-full pl-9 pr-3.5 py-2.5 rounded-xl border border-amber-200 focus:outline-none focus:ring-2 focus:ring-amber-500 bg-white text-slate-900 text-[13px] font-medium shadow-2xs"
+                  className="w-full pl-9 pr-3.5 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-[#31889C]/30 focus:border-[#31889C] bg-white text-slate-900 text-[13px] font-medium shadow-2xs"
                 />
-                <Mail className="w-4 h-4 text-amber-600 absolute left-3 top-3 pointer-events-none" />
+                <Mail className="w-4 h-4 text-[#31889C] absolute left-3 top-3 pointer-events-none" />
               </div>
             </div>
 
@@ -127,9 +127,9 @@ function LoginForm() {
                   placeholder="••••••••"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="w-full pl-9 pr-3.5 py-2.5 rounded-xl border border-amber-200 focus:outline-none focus:ring-2 focus:ring-amber-500 bg-white text-slate-900 text-[13px] font-medium shadow-2xs"
+                  className="w-full pl-9 pr-3.5 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-[#31889C]/30 focus:border-[#31889C] bg-white text-slate-900 text-[13px] font-medium shadow-2xs"
                 />
-                <Lock className="w-4 h-4 text-amber-600 absolute left-3 top-3 pointer-events-none" />
+                <Lock className="w-4 h-4 text-[#31889C] absolute left-3 top-3 pointer-events-none" />
               </div>
             </div>
 
@@ -137,7 +137,7 @@ function LoginForm() {
             <button
               type="submit"
               disabled={isLoading}
-              className="w-full mt-2 py-2.5 px-4 rounded-xl bg-amber-600 hover:bg-amber-700 text-white font-bold text-[13px] shadow-sm transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-60"
+              className="w-full mt-2 py-2.5 px-4 rounded-xl bg-[#31889C] hover:bg-[#266F80] text-white font-bold text-[13px] shadow-xs transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-60"
             >
               {isLoading ? (
                 <span>Memproses Masuk...</span>
@@ -153,7 +153,7 @@ function LoginForm() {
             <div className="pt-4 text-center border-t border-slate-100">
               <p className="text-[12px] text-slate-500">
                 Belum memiliki akses?{' '}
-                <span className="font-semibold text-amber-800">
+                <span className="font-semibold text-[#31889C]">
                   Hubungi administrator.
                 </span>
               </p>
@@ -172,35 +172,35 @@ function LoginForm() {
               <button
                 type="button"
                 onClick={() => handleFillDemo('superadmin@simrapat.local')}
-                className="p-1.5 text-left rounded-lg bg-white border border-slate-200 hover:border-amber-400 text-slate-700 font-semibold cursor-pointer truncate"
+                className="p-1.5 text-left rounded-lg bg-white border border-slate-200 hover:border-[#31889C] hover:bg-[#F0F9FA] text-slate-700 font-semibold cursor-pointer truncate"
               >
                 👑 Super Admin
               </button>
               <button
                 type="button"
                 onClick={() => handleFillDemo('admin@simrapat.local')}
-                className="p-1.5 text-left rounded-lg bg-white border border-slate-200 hover:border-amber-400 text-slate-700 font-semibold cursor-pointer truncate"
+                className="p-1.5 text-left rounded-lg bg-white border border-slate-200 hover:border-[#31889C] hover:bg-[#F0F9FA] text-slate-700 font-semibold cursor-pointer truncate"
               >
                 ⚙️ Administrator
               </button>
               <button
                 type="button"
                 onClick={() => handleFillDemo('notulis@simrapat.local')}
-                className="p-1.5 text-left rounded-lg bg-white border border-slate-200 hover:border-amber-400 text-slate-700 font-semibold cursor-pointer truncate"
+                className="p-1.5 text-left rounded-lg bg-white border border-slate-200 hover:border-[#31889C] hover:bg-[#F0F9FA] text-slate-700 font-semibold cursor-pointer truncate"
               >
                 📝 Notulis
               </button>
               <button
                 type="button"
                 onClick={() => handleFillDemo('staff@simrapat.local')}
-                className="p-1.5 text-left rounded-lg bg-white border border-slate-200 hover:border-amber-400 text-slate-700 font-semibold cursor-pointer truncate"
+                className="p-1.5 text-left rounded-lg bg-white border border-slate-200 hover:border-[#31889C] hover:bg-[#F0F9FA] text-slate-700 font-semibold cursor-pointer truncate"
               >
                 💼 Staf
               </button>
               <button
                 type="button"
                 onClick={() => handleFillDemo('viewer@simrapat.local')}
-                className="p-1.5 text-left rounded-lg bg-white border border-slate-200 hover:border-amber-400 text-slate-700 font-semibold cursor-pointer truncate col-span-2 text-center"
+                className="p-1.5 text-left rounded-lg bg-white border border-slate-200 hover:border-[#31889C] hover:bg-[#F0F9FA] text-slate-700 font-semibold cursor-pointer truncate col-span-2 text-center"
               >
                 👁️ Viewer (Read Only)
               </button>

@@ -175,10 +175,10 @@ export function LaporanClient() {
   return (
     <div className="flex flex-col gap-6">
       {/* ── HEADER BANNER ─────────────────────────────────────────────────── */}
-      <div className="p-6 bg-white rounded-xl border border-amber-200/80 shadow-sm flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+      <div className="p-6 bg-white rounded-xl border border-slate-200 shadow-xs flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div>
           <div className="flex items-center gap-2">
-            <span className="font-semibold text-xs text-amber-700 uppercase tracking-wider bg-amber-50 px-2 py-0.5 rounded border border-amber-200">
+            <span className="font-semibold text-xs text-[#31889C] uppercase tracking-wider bg-[#F0F9FA] px-2 py-0.5 rounded border border-[#BCE3EB]">
               Laporan Berkala
             </span>
             <span className="text-xs text-slate-400">•</span>
@@ -200,7 +200,7 @@ export function LaporanClient() {
             type="button"
             onClick={handleExportPdf}
             disabled={pdfLoading || loading}
-            className="inline-flex items-center gap-2 px-3.5 py-2 rounded-lg bg-red-600 text-white font-semibold text-xs hover:bg-red-700 shadow-sm disabled:opacity-50 transition-colors"
+            className="inline-flex items-center gap-2 px-3.5 py-2 rounded-lg bg-red-600 text-white font-semibold text-xs hover:bg-red-700 shadow-xs disabled:opacity-50 transition-colors"
           >
             {pdfLoading ? (
               <Loader2 className="w-4 h-4 animate-spin" />
@@ -214,7 +214,7 @@ export function LaporanClient() {
             type="button"
             onClick={handleExportExcel}
             disabled={excelLoading || loading}
-            className="inline-flex items-center gap-2 px-3.5 py-2 rounded-lg bg-emerald-600 text-white font-semibold text-xs hover:bg-emerald-700 shadow-sm disabled:opacity-50 transition-colors"
+            className="inline-flex items-center gap-2 px-3.5 py-2 rounded-lg bg-[#7CC563] text-white font-semibold text-xs hover:bg-[#68ab50] shadow-xs disabled:opacity-50 transition-colors"
           >
             {excelLoading ? (
               <Loader2 className="w-4 h-4 animate-spin" />
@@ -227,7 +227,7 @@ export function LaporanClient() {
       </div>
 
       {/* ── FILTER TOOLBAR ────────────────────────────────────────────────── */}
-      <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+      <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-xs flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
         {/* Left: Period Tabs & Biro Dropdown */}
         <div className="flex flex-wrap items-center gap-3">
           {/* Period Tabs */}
@@ -237,7 +237,7 @@ export function LaporanClient() {
               onClick={() => setPeriod('WEEK')}
               className={`px-3 py-1.5 rounded-md text-xs font-semibold transition-all ${
                 period === 'WEEK'
-                  ? 'bg-white text-amber-700 shadow-sm'
+                  ? 'bg-white text-[#31889C] shadow-xs'
                   : 'text-slate-600 hover:text-slate-900'
               }`}
             >
@@ -248,7 +248,7 @@ export function LaporanClient() {
               onClick={() => setPeriod('MONTH')}
               className={`px-3 py-1.5 rounded-md text-xs font-semibold transition-all ${
                 period === 'MONTH'
-                  ? 'bg-white text-amber-700 shadow-sm'
+                  ? 'bg-white text-[#31889C] shadow-xs'
                   : 'text-slate-600 hover:text-slate-900'
               }`}
             >
@@ -259,7 +259,7 @@ export function LaporanClient() {
               onClick={() => setPeriod('QUARTER')}
               className={`px-3 py-1.5 rounded-md text-xs font-semibold transition-all ${
                 period === 'QUARTER'
-                  ? 'bg-white text-amber-700 shadow-sm'
+                  ? 'bg-white text-[#31889C] shadow-xs'
                   : 'text-slate-600 hover:text-slate-900'
               }`}
             >
@@ -270,7 +270,7 @@ export function LaporanClient() {
               onClick={() => setPeriod('CUSTOM')}
               className={`px-3 py-1.5 rounded-md text-xs font-semibold transition-all ${
                 period === 'CUSTOM'
-                  ? 'bg-white text-amber-700 shadow-sm'
+                  ? 'bg-white text-[#31889C] shadow-xs'
                   : 'text-slate-600 hover:text-slate-900'
               }`}
             >
@@ -284,7 +284,7 @@ export function LaporanClient() {
             <select
               value={biro}
               onChange={(e) => setBiro(e.target.value as ReportBiro)}
-              className="text-xs font-semibold bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-slate-700 focus:outline-none focus:ring-2 focus:ring-amber-500"
+              className="text-xs font-semibold bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-slate-700 focus:outline-none focus:ring-2 focus:ring-[#31889C]/30 focus:border-[#31889C]"
             >
               <option value="ALL">Semua Biro</option>
               <option value="BPPK">BPPK — Perencanaan &amp; Pembentukan</option>
@@ -316,7 +316,7 @@ export function LaporanClient() {
               <button
                 type="button"
                 onClick={fetchReport}
-                className="px-2.5 py-1 text-xs font-semibold bg-amber-600 text-white rounded hover:bg-amber-700"
+                className="px-2.5 py-1 text-xs font-semibold bg-[#31889C] text-white rounded hover:bg-[#266F80] cursor-pointer"
               >
                 Terapkan
               </button>
@@ -326,7 +326,7 @@ export function LaporanClient() {
           <button
             type="button"
             onClick={handleResetFilter}
-            className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg border border-slate-200 bg-white text-slate-600 hover:bg-slate-50 text-xs font-semibold shadow-sm transition-colors"
+            className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg border border-slate-200 bg-white text-slate-600 hover:bg-slate-50 text-xs font-semibold shadow-xs transition-colors cursor-pointer"
           >
             <RotateCcw className="w-3.5 h-3.5" />
             <span>Reset</span>
@@ -336,11 +336,11 @@ export function LaporanClient() {
 
       {/* ── ACTIVE FILTER SUMMARY LABEL ───────────────────────────────────── */}
       {summary && (
-        <div className="flex items-center justify-between px-4 py-2 bg-amber-50/70 border border-amber-200/60 rounded-lg text-xs text-amber-900">
+        <div className="flex items-center justify-between px-4 py-2 bg-[#F0F9FA] border border-[#BCE3EB] rounded-lg text-xs text-[#215865]">
           <div className="flex items-center gap-2">
             <span className="font-bold">Periode Aktif:</span>
             <span>{summary.period.label}</span>
-            <span className="text-amber-400">•</span>
+            <span className="text-[#31889C]">•</span>
             <span className="font-bold">Filter Biro:</span>
             <span>
               {summary.biro === 'ALL'
@@ -349,7 +349,7 @@ export function LaporanClient() {
             </span>
           </div>
           {summary.kpi.totalMeetings === 0 && (
-            <span className="text-amber-700 font-semibold italic">
+            <span className="text-[#31889C] font-semibold italic">
               Tidak ada data rapat pada periode yang dipilih.
             </span>
           )}
@@ -382,7 +382,7 @@ export function LaporanClient() {
         <div className="space-y-6 animate-in fade-in duration-300">
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {/* KPI 1: Total Rapat */}
-            <div className="p-4 bg-white rounded-xl border border-slate-200/90 shadow-xs hover:-translate-y-1 hover:shadow-md hover:border-amber-300 transition-all duration-300 flex items-start justify-between">
+            <div className="p-4 bg-white rounded-xl border border-slate-200/90 shadow-xs hover:-translate-y-1 hover:shadow-md hover:border-[#BCE3EB] transition-all duration-300 flex items-start justify-between">
               <div>
                 <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
                   Total Rapat
@@ -400,7 +400,7 @@ export function LaporanClient() {
             </div>
 
             {/* KPI 2: Total Action Items */}
-            <div className="p-4 bg-white rounded-xl border border-slate-200/90 shadow-xs hover:-translate-y-1 hover:shadow-md hover:border-amber-300 transition-all duration-300 flex items-start justify-between">
+            <div className="p-4 bg-white rounded-xl border border-slate-200/90 shadow-xs hover:-translate-y-1 hover:shadow-md hover:border-[#BCE3EB] transition-all duration-300 flex items-start justify-between">
               <div>
                 <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
                   Total Tindak Lanjut
@@ -457,19 +457,19 @@ export function LaporanClient() {
             </div>
 
             {/* KPI 4: Tindak Lanjut Berjalan */}
-            <div className="p-4 bg-white rounded-xl border border-slate-200/90 shadow-xs hover:-translate-y-1 hover:shadow-md hover:border-amber-300 transition-all duration-300 flex items-start justify-between">
+            <div className="p-4 bg-white rounded-xl border border-slate-200/90 shadow-xs hover:-translate-y-1 hover:shadow-md hover:border-[#BCE3EB] transition-all duration-300 flex items-start justify-between">
               <div>
                 <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
                   Tindak Lanjut Berjalan
                 </span>
-                <div className="text-2xl font-black text-amber-600 mt-1">
+                <div className="text-2xl font-black text-[#31889C] mt-1">
                   {summary.kpi.inProgressActionItems}
                 </div>
                 <div className="text-[11px] text-slate-400 mt-0.5">
                   Status IN_PROGRESS
                 </div>
               </div>
-              <div className="w-10 h-10 rounded-xl bg-amber-50 border border-amber-200 flex items-center justify-center text-amber-600 shadow-2xs">
+              <div className="w-10 h-10 rounded-xl bg-[#E8F5F7] border border-[#BCE3EB] flex items-center justify-center text-[#31889C] shadow-2xs">
                 <Clock className="w-5 h-5" />
               </div>
             </div>
@@ -556,7 +556,7 @@ export function LaporanClient() {
                   <h2 className="font-bold text-slate-900 text-base">
                     Tren Aktivitas Rapat &amp; Tindak Lanjut
                   </h2>
-                  <span className="text-xs font-semibold text-amber-700 bg-amber-50 px-2.5 py-0.5 rounded-full border border-amber-200">
+                  <span className="text-xs font-semibold text-[#215865] bg-[#F0F9FA] px-2.5 py-0.5 rounded-full border border-[#BCE3EB]">
                     {summary.period.period}
                   </span>
                 </div>
@@ -597,14 +597,14 @@ export function LaporanClient() {
                   Statistik 5 Biro resmi Sekretariat Dewan Nasional KEK RI.
                 </p>
               </div>
-              <span className="text-xs font-semibold text-amber-800 bg-amber-50 px-2.5 py-1 rounded-full border border-amber-200">
+              <span className="text-xs font-semibold text-[#215865] bg-[#F0F9FA] px-2.5 py-1 rounded-full border border-[#BCE3EB]">
                 5 Biro Resmi
               </span>
             </div>
 
             <div className="overflow-x-auto">
               <table className="w-full text-left text-xs">
-                <thead className="bg-slate-50/80 border-b border-slate-200 text-slate-600 font-semibold">
+                <thead className="bg-[#F8FAFC] border-b border-slate-200 text-slate-700 font-semibold">
                   <tr>
                     <th className="py-3.5 px-4">Biro</th>
                     <th className="py-3.5 px-3 text-center">Rapat</th>
@@ -620,7 +620,7 @@ export function LaporanClient() {
                   {summary.biroSummary.map((b) => (
                     <tr
                       key={b.code}
-                      className="hover:bg-amber-50/30 transition-colors"
+                      className="hover:bg-[#F0F9FA] transition-colors"
                     >
                       <td className="py-3 px-4 font-semibold text-slate-900">
                         <div className="flex flex-col">
@@ -636,10 +636,10 @@ export function LaporanClient() {
                       <td className="py-3 px-3 text-center font-medium">
                         {b.totalActionItems}
                       </td>
-                      <td className="py-3 px-3 text-center text-emerald-600 font-semibold">
+                      <td className="py-3 px-3 text-center text-[#4D8F3D] font-semibold">
                         {b.completed}
                       </td>
-                      <td className="py-3 px-3 text-center text-amber-600 font-semibold">
+                      <td className="py-3 px-3 text-center text-[#31889C] font-semibold">
                         {b.inProgress}
                       </td>
                       <td className="py-3 px-3 text-center text-slate-500">
@@ -660,9 +660,9 @@ export function LaporanClient() {
                             <div
                               className={`h-full rounded-full transition-all duration-700 ${
                                 b.completionRate >= 75
-                                  ? 'bg-emerald-500'
+                                  ? 'bg-[#7CC563]'
                                   : b.completionRate >= 40
-                                  ? 'bg-amber-500'
+                                  ? 'bg-[#31889C]'
                                   : 'bg-slate-400'
                               }`}
                               style={{ width: `${b.completionRate}%` }}
@@ -674,7 +674,7 @@ export function LaporanClient() {
                     </tr>
                   ))}
                 </tbody>
-                <tfoot className="bg-amber-50/80 border-t-2 border-amber-200 text-amber-900 font-bold">
+                <tfoot className="bg-[#F8FAFC] border-t-2 border-slate-200 text-slate-800 font-bold">
                   <tr>
                     <td className="py-3 px-4">TOTAL</td>
                     <td className="py-3 px-3 text-center">
@@ -683,10 +683,10 @@ export function LaporanClient() {
                     <td className="py-3 px-3 text-center">
                       {summary.biroTotalRow.totalActionItems}
                     </td>
-                    <td className="py-3 px-3 text-center text-emerald-700">
+                    <td className="py-3 px-3 text-center text-[#4D8F3D]">
                       {summary.biroTotalRow.completed}
                     </td>
-                    <td className="py-3 px-3 text-center text-amber-700">
+                    <td className="py-3 px-3 text-center text-[#31889C]">
                       {summary.biroTotalRow.inProgress}
                     </td>
                     <td className="py-3 px-3 text-center">
@@ -695,7 +695,7 @@ export function LaporanClient() {
                     <td className="py-3 px-3 text-center text-red-700">
                       {summary.biroTotalRow.overdue}
                     </td>
-                    <td className="py-3 px-4 text-center text-emerald-800">
+                    <td className="py-3 px-4 text-center text-[#4D8F3D]">
                       {summary.biroTotalRow.completionRate}%
                     </td>
                   </tr>
@@ -705,7 +705,7 @@ export function LaporanClient() {
           </div>
 
           {/* ── DAFTAR RAPAT & STATUS NOTULEN ─────────────────────────────────── */}
-          <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+          <div className="bg-white rounded-xl border border-slate-200 shadow-xs overflow-hidden">
             <div className="p-5 border-b border-slate-100 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
               <div>
                 <h2 className="font-bold text-slate-900 text-base">
@@ -727,7 +727,7 @@ export function LaporanClient() {
             ) : (
               <div className="overflow-x-auto">
                 <table className="w-full text-left text-xs">
-                  <thead className="bg-slate-50 border-b border-slate-200 text-slate-600 font-semibold">
+                  <thead className="bg-[#F8FAFC] border-b border-slate-200 text-slate-700 font-semibold">
                     <tr>
                       <th className="py-3 px-4 w-12 text-center">No</th>
                       <th className="py-3 px-4">Nomor Rapat</th>
@@ -742,7 +742,7 @@ export function LaporanClient() {
                     {summary.meetings.map((m, idx) => (
                       <tr
                         key={m.id}
-                        className="hover:bg-slate-50/70 transition-colors"
+                        className="hover:bg-[#F0F9FA] transition-colors"
                       >
                         <td className="py-3 px-4 text-center text-slate-400">
                           {idx + 1}
@@ -756,12 +756,12 @@ export function LaporanClient() {
                         <td className="py-3 px-4 text-slate-600 whitespace-nowrap">
                           {m.formattedDate}
                         </td>
-                        <td className="py-3 px-3 text-center font-bold text-amber-700">
+                        <td className="py-3 px-3 text-center font-bold text-[#215865]">
                           {m.biroCode}
                         </td>
                         <td className="py-3 px-3 text-center">
                           {m.hasMinutes ? (
-                            <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                            <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-[#ECF8E9] text-[#4D8F3D] border border-[#D2EFCA]">
                               <CheckCircle2 className="w-3 h-3" />
                               Tersedia
                             </span>

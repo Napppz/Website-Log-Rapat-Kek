@@ -36,13 +36,13 @@ export function ActivityTrendChart() {
     : null;
 
   return (
-    <div className="lg:col-span-5 rounded-2xl bg-white p-6 shadow-sm border border-amber-200/80 flex flex-col justify-between transition-all">
+    <div className="lg:col-span-5 rounded-2xl bg-white p-6 shadow-sm border border-slate-200 flex flex-col justify-between transition-all">
       <div>
         {/* Header with Title and Interactive Replay Pill */}
         <div className="flex items-start justify-between">
           <div>
-            <span className="font-semibold text-[11px] text-amber-700 uppercase tracking-wider flex items-center gap-1.5">
-              <TrendingUp className="w-3.5 h-3.5 text-amber-600" />
+            <span className="font-semibold text-[11px] text-[#31889C] uppercase tracking-wider flex items-center gap-1.5">
+              <TrendingUp className="w-3.5 h-3.5 text-[#31889C]" />
               <span>Tren Aktivitas Sidang</span>
             </span>
             <h2 className="font-bold text-[18px] text-slate-900 mt-0.5">
@@ -56,11 +56,11 @@ export function ActivityTrendChart() {
           <button
             type="button"
             onClick={handleReplay}
-            className="group inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-amber-50 hover:bg-amber-100 border border-amber-200 text-amber-900 text-[11px] font-bold transition-all cursor-pointer shadow-2xs"
+            className="group inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-[#F0F9FA] hover:bg-[#E8F5F7] border border-[#BCE3EB] text-[#215865] text-[11px] font-bold transition-all cursor-pointer shadow-2xs"
             title="Klik untuk memutar ulang animasi tren"
           >
             <span>Jan - Sep</span>
-            <RotateCcw className="w-3 h-3 text-amber-700 group-hover:rotate-180 transition-transform duration-500" />
+            <RotateCcw className="w-3 h-3 text-[#31889C] group-hover:rotate-180 transition-transform duration-500" />
           </button>
         </div>
 
@@ -93,9 +93,9 @@ export function ActivityTrendChart() {
                     className={cn(
                       "text-[11px] font-extrabold mb-1.5 transition-all duration-200 transform",
                       isHovered
-                        ? "text-amber-700 scale-110 -translate-y-1 opacity-100"
+                        ? "text-[#31889C] scale-110 -translate-y-1 opacity-100"
                         : isPeak
-                        ? "text-amber-800 opacity-100"
+                        ? "text-[#215865] opacity-100"
                         : "text-slate-400 opacity-0 group-hover:opacity-100"
                     )}
                   >
@@ -112,21 +112,21 @@ export function ActivityTrendChart() {
                       className={cn(
                         "w-full max-w-[26px] sm:max-w-[30px] rounded-t-md transition-all duration-700 ease-out relative group-hover:scale-y-105 origin-bottom",
                         isPeak
-                          ? "bg-gradient-to-t from-amber-600 via-amber-500 to-amber-400 shadow-md shadow-amber-500/25 ring-1 ring-amber-400/50"
+                          ? "bg-gradient-to-t from-[#215865] via-[#31889C] to-[#51ADC2] shadow-md shadow-[#31889C]/25 ring-1 ring-[#31889C]/50"
                           : isHovered
-                          ? "bg-gradient-to-t from-amber-500 to-amber-300 shadow-xs"
+                          ? "bg-gradient-to-t from-[#266F80] to-[#51ADC2] shadow-xs"
                           : item.count >= 20
-                          ? "bg-gradient-to-t from-amber-400 to-amber-300"
+                          ? "bg-gradient-to-t from-[#31889C] to-[#80C3D1]"
                           : item.count >= 16
-                          ? "bg-gradient-to-t from-amber-300 to-amber-200"
-                          : "bg-gradient-to-t from-amber-200/90 to-amber-100/90"
+                          ? "bg-gradient-to-t from-[#51ADC2] to-[#BCE3EB]"
+                          : "bg-gradient-to-t from-[#BCE3EB] to-[#E8F5F7]"
                       )}
                     >
                       {/* Peak indicator dot & pulse */}
                       {isPeak && (
                         <div className="absolute -top-1 left-1/2 -translate-x-1/2 flex items-center justify-center">
-                          <span className="w-2 h-2 rounded-full bg-amber-500 animate-ping absolute" />
-                          <span className="w-1.5 h-1.5 rounded-full bg-amber-600 relative z-10" />
+                          <span className="w-2 h-2 rounded-full bg-[#31889C] animate-ping absolute" />
+                          <span className="w-1.5 h-1.5 rounded-full bg-[#215865] relative z-10" />
                         </div>
                       )}
                     </div>
@@ -137,9 +137,9 @@ export function ActivityTrendChart() {
                     className={cn(
                       "text-[11px] font-semibold mt-2 transition-colors",
                       isHovered
-                        ? "text-amber-800 font-bold"
+                        ? "text-[#31889C] font-bold"
                         : isPeak
-                        ? "text-amber-700 font-bold"
+                        ? "text-[#215865] font-bold"
                         : "text-slate-500"
                     )}
                   >
@@ -153,16 +153,16 @@ export function ActivityTrendChart() {
       </div>
 
       {/* Footer Info Callout - Interactive according to hovered month */}
-      <div className="mt-4 pt-2 bg-gradient-to-r from-amber-50/80 via-white to-amber-50/50 border border-amber-200/70 rounded-xl p-3 flex items-center justify-between transition-all">
+      <div className="mt-4 pt-2 bg-gradient-to-r from-[#F0F9FA] via-white to-[#F0F9FA]/50 border border-[#BCE3EB] rounded-xl p-3 flex items-center justify-between transition-all">
         <div className="flex items-center gap-2 min-w-0">
-          <span className="w-2.5 h-2.5 rounded-full bg-amber-600 shrink-0 animate-pulse" />
+          <span className="w-2.5 h-2.5 rounded-full bg-[#31889C] shrink-0 animate-pulse" />
           <span className="text-[12.5px] text-slate-700 font-medium truncate">
             {activeItem
               ? `Bulan ${activeItem.month} 2026: Aktivitas Rapat Dewan`
               : 'Puncak Realisasi Investasi (September)'}
           </span>
         </div>
-        <span className="text-[12.5px] text-amber-900 font-extrabold shrink-0 ml-2">
+        <span className="text-[12.5px] text-[#215865] font-extrabold shrink-0 ml-2">
           {activeItem ? `${activeItem.count} Sesi Rapat` : '28 Sesi Rapat'}
         </span>
       </div>

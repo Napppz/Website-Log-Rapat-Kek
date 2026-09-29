@@ -134,17 +134,17 @@ export function PreviousMeetingModal({
       onClick={onClose}
     >
       <div
-        className="relative w-full max-w-3xl bg-white rounded-2xl shadow-2xl border border-amber-200 overflow-hidden flex flex-col max-h-[90vh] animate-in zoom-in-95 duration-150"
+        className="relative w-full max-w-3xl bg-white rounded-2xl shadow-2xl border border-slate-200 overflow-hidden flex flex-col max-h-[90vh] animate-in zoom-in-95 duration-150"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Modal Header */}
-        <div className="px-6 py-4 bg-gradient-to-r from-amber-500 to-amber-600 text-white flex items-center justify-between shadow-xs">
+        <div className="px-6 py-4 bg-gradient-to-r from-[#31889C] to-[#266F80] text-white flex items-center justify-between shadow-xs">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-xl bg-white/20 flex items-center justify-center backdrop-blur-xs shadow-inner">
               <History className="w-5 h-5 text-white" />
             </div>
             <div>
-              <span className="text-[11px] font-bold uppercase tracking-wider text-amber-100">
+              <span className="text-[11px] font-bold uppercase tracking-wider text-teal-100">
                 Rujukan Rapat Sebelumnya
               </span>
               <h2 className="text-[17px] font-bold text-white leading-tight">
@@ -163,23 +163,23 @@ export function PreviousMeetingModal({
         </div>
 
         {/* Meeting Metadata Banner */}
-        <div className="px-6 py-3 bg-amber-50/70 border-b border-amber-200 text-[12px] flex flex-wrap items-center justify-between gap-3">
+        <div className="px-6 py-3 bg-[#F0F9FA] border-b border-[#BCE3EB] text-[12px] flex flex-wrap items-center justify-between gap-3">
           <div className="flex flex-wrap items-center gap-4 text-slate-700">
             <span className="inline-flex items-center gap-1.5 font-medium">
-              <Calendar className="w-3.5 h-3.5 text-amber-600" />
+              <Calendar className="w-3.5 h-3.5 text-[#31889C]" />
               {formatIndonesianDate(previousMeeting.date)}
             </span>
             <span className="inline-flex items-center gap-1.5 font-medium">
-              <Clock className="w-3.5 h-3.5 text-amber-600" />
+              <Clock className="w-3.5 h-3.5 text-[#31889C]" />
               {previousMeeting.startTime} - {previousMeeting.endTime} WIB
             </span>
             <span className="inline-flex items-center gap-1.5 font-medium">
-              <Building2 className="w-3.5 h-3.5 text-amber-600" />
+              <Building2 className="w-3.5 h-3.5 text-[#31889C]" />
               Biro {previousMeeting.primaryBiro?.code}
             </span>
             {previousMeeting.chairperson?.name && (
               <span className="inline-flex items-center gap-1.5 font-medium">
-                <User className="w-3.5 h-3.5 text-amber-600" />
+                <User className="w-3.5 h-3.5 text-[#31889C]" />
                 {previousMeeting.chairperson.name}
               </span>
             )}
@@ -190,7 +190,7 @@ export function PreviousMeetingModal({
               type="button"
               disabled={isDownloadingPdf}
               onClick={handleDownloadPdf}
-              className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-white border border-amber-300 text-amber-800 hover:bg-amber-100 text-[11px] font-semibold transition-colors shadow-2xs cursor-pointer"
+              className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-white border border-[#BCE3EB] text-[#215865] hover:bg-[#E8F5F7] text-[11px] font-semibold transition-colors shadow-2xs cursor-pointer"
             >
               <FileDown className="w-3.5 h-3.5" />
               <span>{isDownloadingPdf ? 'Mengunduh...' : 'Unduh PDF'}</span>
@@ -198,7 +198,7 @@ export function PreviousMeetingModal({
             <Link
               href={`/semua-rapat/${previousMeeting.id}`}
               target="_blank"
-              className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-amber-600 text-white hover:bg-amber-700 text-[11px] font-semibold transition-colors shadow-2xs cursor-pointer"
+              className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-[#31889C] text-white hover:bg-[#266F80] text-[11px] font-semibold transition-colors shadow-2xs cursor-pointer"
             >
               <span>Buka di Tab Baru</span>
               <ExternalLink className="w-3 h-3" />
@@ -213,7 +213,7 @@ export function PreviousMeetingModal({
             onClick={() => setActiveTab('minutes')}
             className={`py-3 text-[13px] font-bold border-b-2 flex items-center gap-2 transition-colors cursor-pointer ${
               activeTab === 'minutes'
-                ? 'border-amber-600 text-amber-700'
+                ? 'border-[#31889C] text-[#31889C]'
                 : 'border-transparent text-slate-500 hover:text-slate-800'
             }`}
           >
@@ -225,7 +225,7 @@ export function PreviousMeetingModal({
             onClick={() => setActiveTab('actionItems')}
             className={`py-3 text-[13px] font-bold border-b-2 flex items-center gap-2 transition-colors cursor-pointer ${
               activeTab === 'actionItems'
-                ? 'border-amber-600 text-amber-700'
+                ? 'border-[#31889C] text-[#31889C]'
                 : 'border-transparent text-slate-500 hover:text-slate-800'
             }`}
           >
@@ -249,8 +249,8 @@ export function PreviousMeetingModal({
                 <>
                   {/* Agenda */}
                   {minutes.agenda && (
-                    <div className="p-4 bg-amber-50/50 rounded-xl border border-amber-200 space-y-1.5">
-                      <h4 className="text-[12px] font-bold text-amber-800 uppercase tracking-wider">
+                    <div className="p-4 bg-[#F8FAFC] rounded-xl border border-slate-200 space-y-1.5">
+                      <h4 className="text-[12px] font-bold text-[#31889C] uppercase tracking-wider">
                         Agenda Rapat
                       </h4>
                       <div className="text-slate-900 leading-relaxed font-['Arial',sans-serif]">
@@ -337,9 +337,9 @@ export function PreviousMeetingModal({
                   <span className="block text-[18px] font-bold text-emerald-700">{completedItems}</span>
                   <span className="text-[11px] font-semibold text-emerald-600">Selesai</span>
                 </div>
-                <div className="p-3 bg-amber-50 border border-amber-200 rounded-xl">
-                  <span className="block text-[18px] font-bold text-amber-700">{inProgressItems}</span>
-                  <span className="text-[11px] font-semibold text-amber-600">Sedang Berjalan</span>
+                <div className="p-3 bg-[#F0F9FA] border border-[#BCE3EB] rounded-xl">
+                  <span className="block text-[18px] font-bold text-[#31889C]">{inProgressItems}</span>
+                  <span className="text-[11px] font-semibold text-[#215865]">Sedang Berjalan</span>
                 </div>
                 <div className="p-3 bg-slate-50 border border-slate-200 rounded-xl">
                   <span className="block text-[18px] font-bold text-slate-700">{pendingItems}</span>
@@ -370,7 +370,7 @@ export function PreviousMeetingModal({
                             ? 'bg-emerald-50/30 border-emerald-200'
                             : isLate
                             ? 'bg-rose-50/30 border-rose-200'
-                            : 'bg-white border-slate-200 hover:border-amber-300'
+                            : 'bg-white border-slate-200 hover:border-[#BCE3EB]'
                         }`}
                       >
                         <div className="flex items-start justify-between gap-3">
@@ -387,7 +387,7 @@ export function PreviousMeetingModal({
                               </p>
                             )}
                             <div className="flex flex-wrap items-center gap-3 text-[11px] text-slate-500 pl-6 pt-1">
-                              <span className="inline-flex items-center gap-1 font-semibold text-amber-700">
+                              <span className="inline-flex items-center gap-1 font-semibold text-[#31889C]">
                                 <Building2 className="w-3 h-3" />
                                 {item.picBiro?.code || 'Biro'}
                               </span>
@@ -424,7 +424,7 @@ export function PreviousMeetingModal({
             <button
               type="button"
               onClick={onOpenLinkDialog}
-              className="inline-flex items-center gap-1.5 text-slate-600 hover:text-amber-700 font-semibold cursor-pointer"
+              className="inline-flex items-center gap-1.5 text-slate-600 hover:text-[#31889C] font-semibold cursor-pointer"
             >
               <Link2 className="w-4 h-4" />
               <span>Ganti / Lepas Tautan Rapat Ini</span>

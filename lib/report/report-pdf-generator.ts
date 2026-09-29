@@ -97,7 +97,7 @@ export async function generateReportPdf(data: ReportSummaryResult): Promise<Buff
 
       doc.y = 78;
       doc
-        .strokeColor('#D97706')
+        .strokeColor('#31889C')
         .lineWidth(2)
         .moveTo(leftMargin, doc.y)
         .lineTo(leftMargin + printableWidth, doc.y)
@@ -163,14 +163,14 @@ export async function generateReportPdf(data: ReportSummaryResult): Promise<Buff
       doc.y += 6;
 
       const kpis = [
-        { label: 'Total Rapat', val: String(data.kpi.totalMeetings), color: '#2563EB' },
+        { label: 'Total Rapat', val: String(data.kpi.totalMeetings), color: '#31889C' },
         { label: 'Total Tindak Lanjut', val: String(data.kpi.totalActionItems), color: '#4F46E5' },
-        { label: 'Completion Rate', val: `${data.kpi.completionRate}%`, color: '#059669' },
-        { label: 'Selesai (Completed)', val: String(data.kpi.completedActionItems), color: '#16A34A' },
-        { label: 'Berjalan (In Progress)', val: String(data.kpi.inProgressActionItems), color: '#D97706' },
-        { label: 'Menunggu (Pending)', val: String(data.kpi.pendingActionItems), color: '#475569' },
+        { label: 'Completion Rate', val: `${data.kpi.completionRate}%`, color: '#7CC563' },
+        { label: 'Selesai (Completed)', val: String(data.kpi.completedActionItems), color: '#7CC563' },
+        { label: 'Berjalan (In Progress)', val: String(data.kpi.inProgressActionItems), color: '#31889C' },
+        { label: 'Menunggu (Pending)', val: String(data.kpi.pendingActionItems), color: '#64748B' },
         { label: 'Terlambat (Overdue)', val: String(data.kpi.overdueActionItems), color: '#DC2626' },
-        { label: 'Rapat Ada Notulen', val: String(data.kpi.meetingsWithMinutes), color: '#0284C7' },
+        { label: 'Rapat Ada Notulen', val: String(data.kpi.meetingsWithMinutes), color: '#31889C' },
         { label: 'Rapat Tanpa Notulen', val: String(data.kpi.meetingsWithoutMinutes), color: '#9333EA' },
       ];
 

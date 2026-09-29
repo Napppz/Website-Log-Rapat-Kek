@@ -67,16 +67,16 @@ const ATTENDANCE_OPTIONS: {
     value: 'PRESENT',
     label: 'Hadir',
     icon: Check,
-    activeClass: 'bg-emerald-600 text-white shadow-xs border-emerald-600',
-    badgeClass: 'bg-emerald-50 text-emerald-700 border-emerald-300',
+    activeClass: 'bg-[#7CC563] text-white shadow-xs border-[#7CC563]',
+    badgeClass: 'bg-[#ECF8E9] text-[#4D8F3D] border-[#D2EFCA]',
     desc: 'Peserta hadir mengikuti sidang rapat',
   },
   {
     value: 'EXCUSED',
     label: 'Izin',
     icon: Clock3,
-    activeClass: 'bg-amber-500 text-white shadow-xs border-amber-500',
-    badgeClass: 'bg-amber-50 text-amber-700 border-amber-300',
+    activeClass: 'bg-[#FFD300] text-slate-900 shadow-xs border-[#FFD300]',
+    badgeClass: 'bg-[#FFF8CC] text-[#8A7200] border-[#FFEE99]',
     desc: 'Peserta berhalangan hadir dengan konfirmasi izin resmi',
   },
   {
@@ -383,7 +383,7 @@ export function MeetingDetailView({
       <div className="flex items-center justify-between">
         <Link
           href="/semua-rapat"
-          className="inline-flex items-center gap-1.5 text-slate-600 hover:text-amber-800 text-[13px] font-semibold transition-colors"
+          className="inline-flex items-center gap-1.5 text-slate-600 hover:text-[#31889C] text-[13px] font-semibold transition-colors"
         >
           <ArrowLeft className="w-4 h-4" />
           <span>Kembali ke Semua Rapat</span>
@@ -395,7 +395,7 @@ export function MeetingDetailView({
             type="button"
             disabled={isExporting}
             onClick={handleExportPdf}
-            className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg bg-amber-600 hover:bg-amber-700 text-white text-[12px] font-semibold transition-all shadow-xs cursor-pointer disabled:opacity-50"
+            className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg bg-[#31889C] hover:bg-[#266F80] text-white text-[12px] font-semibold transition-all shadow-xs cursor-pointer disabled:opacity-50"
             title="Unduh Risalah Rapat Resmi Format PDF"
           >
             <FileDown className="w-3.5 h-3.5" />
@@ -419,10 +419,10 @@ export function MeetingDetailView({
       </div>
 
       {/* Main Header Card */}
-      <div className="bg-white rounded-2xl border border-amber-200 shadow-sm p-6 space-y-4">
+      <div className="bg-white rounded-2xl border border-slate-200 shadow-xs p-6 space-y-4">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div className="flex items-center gap-3">
-            <span className="font-bold text-[18px] text-amber-900 bg-amber-100/80 px-3 py-1 rounded-lg border border-amber-300">
+            <span className="font-bold text-[18px] text-[#215865] bg-[#F0F9FA] px-3 py-1 rounded-lg border border-[#BCE3EB]">
               {meeting.meetingNumber}
             </span>
             <MeetingStatusBadge status={status} />
@@ -430,7 +430,7 @@ export function MeetingDetailView({
 
           {/* Quick Status Update (SUPER_ADMIN, ADMIN) */}
           {canEditMeeting && (
-            <div className="flex items-center gap-1.5 bg-amber-50/70 p-1.5 rounded-xl border border-amber-200">
+            <div className="flex items-center gap-1.5 bg-[#F8FAFC] p-1.5 rounded-xl border border-slate-200">
               <span className="text-[11px] font-bold text-slate-600 px-1.5 hidden sm:inline">Ubah Status:</span>
               {(['DRAFT', 'REVIEW', 'APPROVED', 'FINAL'] as MeetingStatus[]).map((st) => (
                 <button
@@ -440,8 +440,8 @@ export function MeetingDetailView({
                   onClick={() => handleStatusChange(st)}
                   className={`px-2.5 py-1 rounded-md text-[11px] font-bold transition-all cursor-pointer ${
                     status === st
-                      ? 'bg-amber-600 text-white shadow-xs'
-                      : 'bg-white hover:bg-amber-100 text-slate-700 border border-amber-200'
+                      ? 'bg-[#31889C] text-white shadow-xs'
+                      : 'bg-white hover:bg-[#F0F9FA] text-slate-700 border border-slate-200'
                   }`}
                 >
                   {st}
@@ -452,7 +452,7 @@ export function MeetingDetailView({
         </div>
 
         <div>
-          <span className="text-[12px] font-bold text-amber-700 uppercase tracking-wider block">
+          <span className="text-[12px] font-bold text-[#31889C] uppercase tracking-wider block">
             Agenda Pembahasan Sidang
           </span>
           <h1 className="text-[24px] font-bold text-slate-900 mt-1 leading-snug">
@@ -461,10 +461,10 @@ export function MeetingDetailView({
         </div>
 
         {/* Metadata Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 pt-3 border-t border-amber-100 text-[13px]">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 pt-3 border-t border-slate-100 text-[13px]">
           {/* Biro Utama & Terlibat */}
           <div className="flex items-start gap-2.5">
-            <Building2 className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
+            <Building2 className="w-4 h-4 text-[#31889C] shrink-0 mt-0.5" />
             <div>
               <p className="text-[11px] text-slate-400 font-semibold uppercase">Biro Utama &amp; Terlibat</p>
               <p className="font-bold text-slate-800">
@@ -480,7 +480,7 @@ export function MeetingDetailView({
 
           {/* Tanggal & Waktu */}
           <div className="flex items-start gap-2.5">
-            <Calendar className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
+            <Calendar className="w-4 h-4 text-[#31889C] shrink-0 mt-0.5" />
             <div>
               <p className="text-[11px] text-slate-400 font-semibold uppercase">Jadwal &amp; Waktu</p>
               <p className="font-bold text-slate-800">{formattedDate}</p>
@@ -492,7 +492,7 @@ export function MeetingDetailView({
 
           {/* Lokasi */}
           <div className="flex items-start gap-2.5">
-            <MapPin className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
+            <MapPin className="w-4 h-4 text-[#31889C] shrink-0 mt-0.5" />
             <div>
               <p className="text-[11px] text-slate-400 font-semibold uppercase">Lokasi / Media</p>
               <p className="font-bold text-slate-800 line-clamp-2">{meeting.location}</p>
@@ -501,7 +501,7 @@ export function MeetingDetailView({
 
           {/* Ketua Sidang */}
           <div className="flex items-start gap-2.5">
-            <UserCheck className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
+            <UserCheck className="w-4 h-4 text-[#31889C] shrink-0 mt-0.5" />
             <div>
               <p className="text-[11px] text-slate-400 font-semibold uppercase">Ketua Sidang</p>
               <p className="font-bold text-slate-800">
@@ -519,7 +519,7 @@ export function MeetingDetailView({
 
           {/* Notulis Sidang */}
           <div className="flex items-start gap-2.5">
-            <FileText className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
+            <FileText className="w-4 h-4 text-[#31889C] shrink-0 mt-0.5" />
             <div>
               <p className="text-[11px] text-slate-400 font-semibold uppercase">Notulis Sidang</p>
               <p className="font-bold text-slate-800">
@@ -537,7 +537,7 @@ export function MeetingDetailView({
 
           {/* Peserta Total */}
           <div className="flex items-start gap-2.5">
-            <Users className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
+            <Users className="w-4 h-4 text-[#31889C] shrink-0 mt-0.5" />
             <div>
               <p className="text-[11px] text-slate-400 font-semibold uppercase">Total Peserta Terdaftar</p>
               <p className="font-bold text-slate-800">
@@ -550,20 +550,20 @@ export function MeetingDetailView({
 
       {/* Rapat Lanjutan / Rujukan Section */}
       {previousMeeting ? (
-        <div className="bg-gradient-to-r from-amber-500/10 via-amber-100/40 to-amber-500/5 rounded-2xl border border-amber-300/90 p-5 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div className="bg-[#F0F9FA] rounded-2xl border border-[#BCE3EB] p-5 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div className="flex items-start gap-3.5">
-            <div className="p-2.5 rounded-xl bg-amber-600 text-white shadow-xs shrink-0 mt-0.5">
+            <div className="p-2.5 rounded-xl bg-[#31889C] text-white shadow-xs shrink-0 mt-0.5">
               <Link2 className="w-5 h-5" />
             </div>
             <div>
               <div className="flex items-center gap-2 flex-wrap">
-                <span className="text-[11px] font-extrabold uppercase tracking-wider text-amber-800 bg-amber-200/80 px-2 py-0.5 rounded-md border border-amber-300">
+                <span className="text-[11px] font-extrabold uppercase tracking-wider text-[#215865] bg-[#E8F5F7] px-2 py-0.5 rounded-md border border-[#BCE3EB]">
                   Rapat Lanjutan
                 </span>
                 <span className="text-[12px] font-bold text-slate-700">
                   Merujuk ke Rapat Sebelumnya:
                 </span>
-                <span className="font-bold text-[12px] text-amber-900 bg-white px-2 py-0.5 rounded-md border border-amber-200 shadow-2xs">
+                <span className="font-bold text-[12px] text-[#215865] bg-white px-2 py-0.5 rounded-md border border-[#BCE3EB] shadow-2xs">
                   {previousMeeting.meetingNumber}
                 </span>
               </div>
@@ -572,7 +572,7 @@ export function MeetingDetailView({
               </h4>
               <div className="flex items-center gap-4 text-[12px] text-slate-600 mt-1.5 flex-wrap">
                 <span className="flex items-center gap-1">
-                  <Calendar className="w-3.5 h-3.5 text-amber-600" />
+                  <Calendar className="w-3.5 h-3.5 text-[#31889C]" />
                   {new Date(previousMeeting.date).toLocaleDateString('id-ID', {
                     weekday: 'short',
                     day: 'numeric',
@@ -581,16 +581,16 @@ export function MeetingDetailView({
                   })}
                 </span>
                 <span className="flex items-center gap-1">
-                  <Building2 className="w-3.5 h-3.5 text-amber-600" />
+                  <Building2 className="w-3.5 h-3.5 text-[#31889C]" />
                   {previousMeeting.primaryBiro?.code || 'Biro KEK'}
                 </span>
                 <span className="flex items-center gap-1">
-                  <FileText className="w-3.5 h-3.5 text-amber-600" />
+                  <FileText className="w-3.5 h-3.5 text-[#31889C]" />
                   {previousMeeting.minutes ? 'Notula Tersedia' : 'Belum Ada Notula'}
                 </span>
                 {previousMeeting.actionItems && (
                   <span className="flex items-center gap-1">
-                    <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
+                    <CheckCircle2 className="w-3.5 h-3.5 text-[#7CC563]" />
                     {previousMeeting.actionItems.filter((a: any) => a.status === 'COMPLETED').length}/
                     {previousMeeting.actionItems.length} Tindak Lanjut Selesai
                   </span>
@@ -603,7 +603,7 @@ export function MeetingDetailView({
             <button
               type="button"
               onClick={() => setShowPreviousMeetingModal(true)}
-              className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-amber-600 hover:bg-amber-700 text-white font-semibold text-[12px] transition-all shadow-xs cursor-pointer"
+              className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-[#31889C] hover:bg-[#266F80] text-white font-semibold text-[12px] transition-all shadow-xs cursor-pointer"
             >
               <FileText className="w-4 h-4" />
               <span>Lihat Hasil Rapat {previousMeeting.meetingNumber}</span>
@@ -613,7 +613,7 @@ export function MeetingDetailView({
               <button
                 type="button"
                 onClick={() => setShowLinkMeetingModal(true)}
-                className="inline-flex items-center gap-1 px-3 py-2 rounded-xl bg-white border border-amber-300 hover:bg-amber-100/80 text-amber-900 font-semibold text-[12px] transition-colors cursor-pointer"
+                className="inline-flex items-center gap-1 px-3 py-2 rounded-xl bg-white border border-[#BCE3EB] hover:bg-[#E8F5F7] text-[#215865] font-semibold text-[12px] transition-colors cursor-pointer"
                 title="Ubah Rujukan Rapat Sebelumnya"
               >
                 <Link2 className="w-3.5 h-3.5" />
@@ -623,9 +623,9 @@ export function MeetingDetailView({
           </div>
         </div>
       ) : canEditMeeting ? (
-        <div className="bg-amber-50/40 rounded-xl border border-dashed border-amber-300 p-3.5 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-[12px]">
+        <div className="bg-[#F0F9FA] rounded-xl border border-dashed border-[#BCE3EB] p-3.5 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-[12px]">
           <div className="flex items-center gap-2.5 text-slate-700">
-            <Link2 className="w-4 h-4 text-amber-600 shrink-0" />
+            <Link2 className="w-4 h-4 text-[#31889C] shrink-0" />
             <span>
               Apakah rapat ini merupakan <strong>rapat lanjutan</strong> dari rapat sebelumnya?
             </span>
@@ -633,23 +633,23 @@ export function MeetingDetailView({
           <button
             type="button"
             onClick={() => setShowLinkMeetingModal(true)}
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white border border-amber-300 hover:bg-amber-100 text-amber-900 font-semibold text-[12px] transition-all shadow-2xs cursor-pointer self-start sm:self-auto shrink-0"
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white border border-[#BCE3EB] hover:bg-[#E8F5F7] text-[#215865] font-semibold text-[12px] transition-all shadow-2xs cursor-pointer self-start sm:self-auto shrink-0"
           >
-            <Link2 className="w-3.5 h-3.5 text-amber-600" />
+            <Link2 className="w-3.5 h-3.5 text-[#31889C]" />
             <span>+ Tautkan Rapat Sebelumnya</span>
           </button>
         </div>
       ) : null}
 
       {/* Tabs Navigation */}
-      <div className="flex items-center gap-2 border-b border-amber-200/80 pb-0">
+      <div className="flex items-center gap-2 border-b border-slate-200 pb-0">
         <button
           type="button"
           onClick={() => setActiveTab('overview')}
           className={`flex items-center gap-2 px-5 py-3 font-bold text-[13px] border-b-2 transition-all cursor-pointer ${
             activeTab === 'overview'
-              ? 'border-amber-600 text-amber-900 bg-amber-50/50 rounded-t-lg'
-              : 'border-transparent text-slate-600 hover:text-amber-800 hover:bg-amber-50/20'
+              ? 'border-[#31889C] text-[#31889C] bg-[#F0F9FA] rounded-t-lg'
+              : 'border-transparent text-slate-600 hover:text-[#31889C] hover:bg-[#F0F9FA]/50'
           }`}
         >
           <Layers className="w-4 h-4" />
@@ -661,8 +661,8 @@ export function MeetingDetailView({
           onClick={() => setActiveTab('participants')}
           className={`flex items-center gap-2 px-5 py-3 font-bold text-[13px] border-b-2 transition-all cursor-pointer ${
             activeTab === 'participants'
-              ? 'border-amber-600 text-amber-900 bg-amber-50/50 rounded-t-lg'
-              : 'border-transparent text-slate-600 hover:text-amber-800 hover:bg-amber-50/20'
+              ? 'border-[#31889C] text-[#31889C] bg-[#F0F9FA] rounded-t-lg'
+              : 'border-transparent text-slate-600 hover:text-[#31889C] hover:bg-[#F0F9FA]/50'
           }`}
         >
           <Users className="w-4 h-4" />
@@ -674,14 +674,14 @@ export function MeetingDetailView({
           onClick={() => setActiveTab('minutes')}
           className={`flex items-center gap-2 px-5 py-3 font-bold text-[13px] border-b-2 transition-all cursor-pointer ${
             activeTab === 'minutes'
-              ? 'border-amber-600 text-amber-900 bg-amber-50/50 rounded-t-lg'
-              : 'border-transparent text-slate-600 hover:text-amber-800 hover:bg-amber-50/20'
+              ? 'border-[#31889C] text-[#31889C] bg-[#F0F9FA] rounded-t-lg'
+              : 'border-transparent text-slate-600 hover:text-[#31889C] hover:bg-[#F0F9FA]/50'
           }`}
         >
           <FileText className="w-4 h-4" />
           <span>Notulen &amp; Hasil Rapat</span>
           {meeting.minutes && (
-            <span className="w-2 h-2 rounded-full bg-emerald-500" title="Notulen telah terisi" />
+            <span className="w-2 h-2 rounded-full bg-[#7CC563]" title="Notulen telah terisi" />
           )}
         </button>
 
@@ -690,8 +690,8 @@ export function MeetingDetailView({
           onClick={() => setActiveTab('actionItems')}
           className={`flex items-center gap-2 px-5 py-3 font-bold text-[13px] border-b-2 transition-all cursor-pointer ${
             activeTab === 'actionItems'
-              ? 'border-amber-600 text-amber-900 bg-amber-50/50 rounded-t-lg'
-              : 'border-transparent text-slate-600 hover:text-amber-800 hover:bg-amber-50/20'
+              ? 'border-[#31889C] text-[#31889C] bg-[#F0F9FA] rounded-t-lg'
+              : 'border-transparent text-slate-600 hover:text-[#31889C] hover:bg-[#F0F9FA]/50'
           }`}
         >
           <CheckSquare className="w-4 h-4" />
@@ -702,7 +702,7 @@ export function MeetingDetailView({
       {/* Tab 1: Informasi Rapat / Overview */}
       {activeTab === 'overview' && (
         <div className="space-y-6">
-          <div className="bg-white rounded-xl border border-amber-200/80 p-6 shadow-xs space-y-4 text-[13px]">
+          <div className="bg-white rounded-xl border border-slate-200 p-6 shadow-xs space-y-4 text-[13px]">
             <h3 className="text-[16px] font-bold text-slate-900">Deskripsi &amp; Cakupan Sidang</h3>
             <p className="text-slate-600 leading-relaxed">
               Pertemuan koordinasi resmi diprakarsai oleh <strong>{meeting.primaryBiro.name}</strong>.
@@ -710,7 +710,7 @@ export function MeetingDetailView({
               operasional Kawasan Ekonomi Khusus RI.
             </p>
 
-            <div className="p-4 bg-amber-50/50 rounded-xl border border-amber-200 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div className="p-4 bg-[#F0F9FA] rounded-xl border border-[#BCE3EB] flex flex-col sm:flex-row sm:items-center justify-between gap-4">
               <div>
                 <h4 className="font-bold text-slate-900">Arsip Risalah &amp; Notulen Digital</h4>
                 <p className="text-[12px] text-slate-500">
@@ -722,14 +722,14 @@ export function MeetingDetailView({
               <button
                 type="button"
                 onClick={() => setActiveTab('minutes')}
-                className="px-4 py-2 rounded-lg bg-amber-600 hover:bg-amber-700 text-white font-semibold text-[12px] transition-all shrink-0 cursor-pointer shadow-xs"
+                className="px-4 py-2 rounded-lg bg-[#31889C] hover:bg-[#266F80] text-white font-semibold text-[12px] transition-all shrink-0 cursor-pointer shadow-xs"
               >
                 {meeting.minutes ? 'Buka Notulen Rapat' : '+ Buat Notulen Sekarang'}
               </button>
             </div>
 
             {/* Matriks Tindak Lanjut Quick Card */}
-            <div className="p-4 bg-amber-50/50 rounded-xl border border-amber-200 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div className="p-4 bg-[#F0F9FA] rounded-xl border border-[#BCE3EB] flex flex-col sm:flex-row sm:items-center justify-between gap-4">
               <div>
                 <h4 className="font-bold text-slate-900">Matriks &amp; Komitmen Tindak Lanjut</h4>
                 <p className="text-[12px] text-slate-500">
@@ -743,7 +743,7 @@ export function MeetingDetailView({
               <button
                 type="button"
                 onClick={() => setActiveTab('actionItems')}
-                className="px-4 py-2 rounded-lg bg-white border border-amber-300 hover:bg-amber-100 text-amber-900 font-semibold text-[12px] transition-all shrink-0 cursor-pointer shadow-xs"
+                className="px-4 py-2 rounded-lg bg-white border border-[#BCE3EB] hover:bg-[#E8F5F7] text-[#215865] font-semibold text-[12px] transition-all shrink-0 cursor-pointer shadow-xs"
               >
                 {meeting.actionItems && meeting.actionItems.length > 0
                   ? 'Buka Matriks Tindak Lanjut'
@@ -753,13 +753,13 @@ export function MeetingDetailView({
 
             {/* Rujukan Rapat Sebelumnya di Overview */}
             {previousMeeting && (
-              <div className="p-4 bg-gradient-to-r from-amber-50 to-amber-100/50 rounded-xl border border-amber-300/80 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+              <div className="p-4 bg-[#F0F9FA] rounded-xl border border-[#BCE3EB] flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <div className="space-y-1">
                   <div className="flex items-center gap-2 flex-wrap">
-                    <span className="text-[10px] font-bold uppercase tracking-wider text-amber-800 bg-amber-200/90 px-2 py-0.5 rounded">
+                    <span className="text-[10px] font-bold uppercase tracking-wider text-[#215865] bg-[#E8F5F7] px-2 py-0.5 rounded border border-[#BCE3EB]">
                       Rapat Rujukan / Sidang Ke-1
                     </span>
-                    <span className="font-bold text-[12px] text-amber-950">
+                    <span className="font-bold text-[12px] text-[#215865]">
                       {previousMeeting.meetingNumber}
                     </span>
                   </div>
@@ -771,7 +771,7 @@ export function MeetingDetailView({
                 <button
                   type="button"
                   onClick={() => setShowPreviousMeetingModal(true)}
-                  className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg bg-amber-600 hover:bg-amber-700 text-white font-semibold text-[12px] transition-all shrink-0 cursor-pointer shadow-xs"
+                  className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg bg-[#31889C] hover:bg-[#266F80] text-white font-semibold text-[12px] transition-all shrink-0 cursor-pointer shadow-xs"
                 >
                   <Eye className="w-3.5 h-3.5" />
                   <span>Buka Hasil Rapat 1</span>
@@ -786,11 +786,11 @@ export function MeetingDetailView({
       {activeTab === 'participants' && (
         <div className="space-y-4">
           {/* Card Header & Controls */}
-          <div className="bg-white rounded-xl border border-amber-200/80 p-6 shadow-xs space-y-4">
+          <div className="bg-white rounded-xl border border-slate-200 p-6 shadow-xs space-y-4">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
               <div>
                 <h3 className="text-[18px] font-bold text-slate-900 flex items-center gap-2">
-                  <Users className="w-5 h-5 text-amber-600" />
+                  <Users className="w-5 h-5 text-[#31889C]" />
                   <span>Daftar Presensi Peserta Sidang</span>
                 </h3>
                 <p className="text-[12px] text-slate-500 mt-0.5">
@@ -806,13 +806,13 @@ export function MeetingDetailView({
                     type="button"
                     disabled={isBulkUpdating || totalCount === 0}
                     onClick={handleMarkAllPresent}
-                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-emerald-300 bg-emerald-50 text-emerald-800 hover:bg-emerald-100 text-[12px] font-semibold transition-all cursor-pointer disabled:opacity-50"
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-[#D2EFCA] bg-[#ECF8E9] text-[#4D8F3D] hover:bg-[#daf2d1] text-[12px] font-semibold transition-all cursor-pointer disabled:opacity-50"
                     title="Tandai semua peserta sebagai Hadir"
                   >
                     {isBulkUpdating ? (
                       <Loader2 className="w-3.5 h-3.5 animate-spin" />
                     ) : (
-                      <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
+                      <CheckCircle2 className="w-3.5 h-3.5 text-[#7CC563]" />
                     )}
                     <span>Tandai Semua Hadir</span>
                   </button>
@@ -820,7 +820,7 @@ export function MeetingDetailView({
                   <button
                     type="button"
                     onClick={() => setShowAddModal(true)}
-                    className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg bg-amber-600 hover:bg-amber-700 text-white text-[12px] font-semibold transition-all shadow-xs cursor-pointer"
+                    className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg bg-[#31889C] hover:bg-[#266F80] text-white text-[12px] font-semibold transition-all shadow-xs cursor-pointer"
                   >
                     <UserPlus className="w-3.5 h-3.5" />
                     <span>Tambah Peserta</span>
@@ -840,20 +840,20 @@ export function MeetingDetailView({
                 </span>
               </div>
 
-              <div className="p-3 bg-emerald-50 border border-emerald-200 rounded-xl text-center">
-                <span className="text-[11px] font-bold uppercase tracking-wider text-emerald-700 block">
+              <div className="p-3 bg-[#ECF8E9] border border-[#D2EFCA] rounded-xl text-center">
+                <span className="text-[11px] font-bold uppercase tracking-wider text-[#4D8F3D] block">
                   Hadir
                 </span>
-                <span className="text-[20px] font-extrabold text-emerald-800 mt-0.5 block">
+                <span className="text-[20px] font-extrabold text-[#2E6B20] mt-0.5 block">
                   {presentCount}
                 </span>
               </div>
 
-              <div className="p-3 bg-amber-50 border border-amber-200 rounded-xl text-center">
-                <span className="text-[11px] font-bold uppercase tracking-wider text-amber-700 block">
+              <div className="p-3 bg-[#FFF8CC] border border-[#FFEE99] rounded-xl text-center">
+                <span className="text-[11px] font-bold uppercase tracking-wider text-[#8A7200] block">
                   Izin
                 </span>
-                <span className="text-[20px] font-extrabold text-amber-800 mt-0.5 block">
+                <span className="text-[20px] font-extrabold text-[#6B5800] mt-0.5 block">
                   {excusedCount}
                 </span>
               </div>
@@ -879,11 +879,11 @@ export function MeetingDetailView({
 
             {/* Quick Helper Banner for Admin/Notulis */}
             {canManageParticipants && (
-              <div className="p-3 bg-amber-50/60 rounded-xl border border-amber-200/80 text-[12px] text-amber-900 flex items-start gap-2.5">
-                <Info className="w-4 h-4 text-amber-700 shrink-0 mt-0.5" />
+              <div className="p-3 bg-[#F0F9FA] rounded-xl border border-[#BCE3EB] text-[12px] text-[#215865] flex items-start gap-2.5">
+                <Info className="w-4 h-4 text-[#31889C] shrink-0 mt-0.5" />
                 <div className="space-y-0.5">
                   <p className="font-semibold">Cara Mengubah Status Presensi:</p>
-                  <p className="text-amber-800 text-[11.5px] leading-relaxed">
+                  <p className="text-slate-600 text-[11.5px] leading-relaxed">
                     Klik tombol pilihan (<strong>Hadir</strong>, <strong>Izin</strong>, <strong>Tidak Hadir</strong>, atau <strong>Diundang</strong>) di sebelah kanan nama peserta. Sistem akan langsung menyimpan status ke database dan memperbarui dokumen PDF Risalah Rapat.
                   </p>
                 </div>
@@ -892,7 +892,7 @@ export function MeetingDetailView({
 
             {/* Participant List */}
             {participants.length > 0 ? (
-              <div className="divide-y divide-amber-100 border border-amber-200/70 rounded-xl overflow-hidden text-[13px] shadow-xs">
+              <div className="divide-y divide-slate-100 border border-slate-200 rounded-xl overflow-hidden text-[13px] shadow-xs">
                 {participants.map((p: any, idx: number) => {
                   const isUpdating = updatingParticipantId === p.id;
                   const currentOpt = ATTENDANCE_OPTIONS.find((o) => o.value === p.attendanceStatus) || ATTENDANCE_OPTIONS[3];
@@ -900,14 +900,14 @@ export function MeetingDetailView({
                   return (
                     <div
                       key={p.id}
-                      className="p-3.5 flex flex-col md:flex-row md:items-center justify-between gap-3 bg-white hover:bg-amber-50/30 transition-colors"
+                      className="p-3.5 flex flex-col md:flex-row md:items-center justify-between gap-3 bg-white hover:bg-[#F0F9FA] transition-colors"
                     >
                       {/* Left: User Details */}
                       <div className="flex items-center gap-3 min-w-0">
                         <span className="text-[11px] font-bold text-slate-400 w-5 text-right shrink-0">
                           {idx + 1}.
                         </span>
-                        <div className="w-9 h-9 rounded-full bg-amber-100 text-amber-900 font-bold flex items-center justify-center text-[11px] border border-amber-300 shrink-0">
+                        <div className="w-9 h-9 rounded-full bg-[#F0F9FA] text-[#31889C] font-bold flex items-center justify-center text-[11px] border border-[#BCE3EB] shrink-0">
                           {p.user?.name
                             ? p.user.name
                                 .split(' ')
@@ -923,7 +923,7 @@ export function MeetingDetailView({
                           <div className="flex items-center gap-2 text-[11px] text-slate-500 flex-wrap">
                             <span className="truncate">{p.user?.email}</span>
                             <span>•</span>
-                            <span className="font-medium text-amber-800 bg-amber-50 px-1.5 py-0.2 rounded border border-amber-200">
+                            <span className="font-medium text-[#215865] bg-[#F0F9FA] px-1.5 py-0.2 rounded border border-[#BCE3EB]">
                               {p.user?.biro?.code || p.user?.biro?.shortName || 'Biro KEK'}
                             </span>
                           </div>
@@ -987,8 +987,8 @@ export function MeetingDetailView({
                 })}
               </div>
             ) : (
-              <div className="p-8 text-center border border-dashed border-amber-200 rounded-xl bg-amber-50/30">
-                <Users className="w-8 h-8 text-amber-500 mx-auto mb-2 opacity-60" />
+              <div className="p-8 text-center border border-dashed border-slate-200 rounded-xl bg-slate-50/50">
+                <Users className="w-8 h-8 text-[#31889C] mx-auto mb-2 opacity-60" />
                 <p className="text-[13px] font-semibold text-slate-700">
                   Belum ada peserta yang terdaftar pada rapat ini.
                 </p>
@@ -1005,9 +1005,9 @@ export function MeetingDetailView({
       {activeTab === 'minutes' && (
         <div className="space-y-4">
           {previousMeeting && (
-            <div className="p-3.5 bg-gradient-to-r from-amber-50 to-amber-100/70 rounded-xl border border-amber-300/80 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-[12px]">
+            <div className="p-3.5 bg-[#F0F9FA] rounded-xl border border-[#BCE3EB] flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-[12px]">
               <div className="flex items-center gap-2.5 text-slate-700">
-                <Sparkles className="w-4 h-4 text-amber-600 shrink-0" />
+                <Sparkles className="w-4 h-4 text-[#31889C] shrink-0" />
                 <span>
                   <strong>Referensi Rapat Sebelumnya:</strong> Notula &amp; butir tindak lanjut dari rapat <strong>{previousMeeting.meetingNumber} ({previousMeeting.title})</strong> dapat Anda tinjau atau salin langsung ke risalah rapat ini.
                 </span>
@@ -1015,7 +1015,7 @@ export function MeetingDetailView({
               <button
                 type="button"
                 onClick={() => setShowPreviousMeetingModal(true)}
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-amber-600 hover:bg-amber-700 text-white font-semibold text-[11px] shrink-0 transition-all shadow-xs cursor-pointer self-start sm:self-auto"
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#31889C] hover:bg-[#266F80] text-white font-semibold text-[11px] shrink-0 transition-all shadow-xs cursor-pointer self-start sm:self-auto"
               >
                 <FileText className="w-3.5 h-3.5" />
                 <span>Tinjau Risalah {previousMeeting.meetingNumber}</span>
@@ -1046,11 +1046,11 @@ export function MeetingDetailView({
       {/* Modal: Tambah Peserta Sidang */}
       {showAddModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 backdrop-blur-xs p-4 animate-in fade-in">
-          <div className="bg-white rounded-2xl border border-amber-200 shadow-2xl max-w-lg w-full overflow-hidden">
-            <div className="px-6 py-4 bg-amber-50 border-b border-amber-200 flex items-center justify-between">
+          <div className="bg-white rounded-2xl border border-slate-200 shadow-2xl max-w-lg w-full overflow-hidden">
+            <div className="px-6 py-4 bg-[#F8FAFC] border-b border-slate-200 flex items-center justify-between">
               <div>
                 <h3 className="text-[16px] font-bold text-slate-900 flex items-center gap-2">
-                  <UserPlus className="w-4 h-4 text-amber-600" />
+                  <UserPlus className="w-4 h-4 text-[#31889C]" />
                   <span>Tambah Peserta Sidang</span>
                 </h3>
                 <p className="text-[11px] text-slate-500 mt-0.5">
@@ -1060,7 +1060,7 @@ export function MeetingDetailView({
               <button
                 type="button"
                 onClick={() => setShowAddModal(false)}
-                className="text-slate-400 hover:text-slate-600 p-1 rounded-lg hover:bg-amber-100 transition-colors cursor-pointer"
+                className="text-slate-400 hover:text-slate-600 p-1 rounded-lg hover:bg-slate-100 transition-colors cursor-pointer"
               >
                 <X className="w-4 h-4" />
               </button>
@@ -1073,7 +1073,7 @@ export function MeetingDetailView({
                 onClick={() => setParticipantMode('registered')}
                 className={`py-2 px-3 rounded-lg transition-all cursor-pointer ${
                   participantMode === 'registered'
-                    ? 'bg-white text-amber-900 shadow-xs border border-slate-200/80'
+                    ? 'bg-white text-[#31889C] shadow-xs border border-slate-200/80'
                     : 'text-slate-600 hover:text-slate-900'
                 }`}
               >
@@ -1084,7 +1084,7 @@ export function MeetingDetailView({
                 onClick={() => setParticipantMode('unregistered')}
                 className={`py-2 px-3 rounded-lg transition-all cursor-pointer ${
                   participantMode === 'unregistered'
-                    ? 'bg-white text-amber-900 shadow-xs border border-slate-200/80'
+                    ? 'bg-white text-[#31889C] shadow-xs border border-slate-200/80'
                     : 'text-slate-600 hover:text-slate-900'
                 }`}
               >
@@ -1103,7 +1103,7 @@ export function MeetingDetailView({
                     required
                     value={selectedAddUserId}
                     onChange={(e) => setSelectedAddUserId(e.target.value)}
-                    className="w-full px-3 py-2 rounded-xl border border-slate-300 focus:border-amber-600 focus:ring-1 focus:ring-amber-600 bg-white text-slate-800 text-[13px] outline-none"
+                    className="w-full px-3 py-2 rounded-xl border border-slate-300 focus:border-[#31889C] focus:ring-1 focus:ring-[#31889C] bg-white text-slate-800 text-[13px] outline-none"
                   >
                     <option value="">-- Pilih Pegawai dari Daftar Database --</option>
                     {unaddedUsers.map((u: any) => (
@@ -1113,7 +1113,7 @@ export function MeetingDetailView({
                     ))}
                   </select>
                   {unaddedUsers.length === 0 && (
-                    <p className="text-[11px] text-amber-700 italic">
+                    <p className="text-[11px] text-[#31889C] italic">
                       Semua pengguna terdaftar sudah masuk dalam daftar peserta.
                     </p>
                   )}
@@ -1138,7 +1138,7 @@ export function MeetingDetailView({
                       placeholder="Contoh: Dr. Ir. Budi Santoso, M.Sc. (Deputi Kemenko)"
                       value={customName}
                       onChange={(e) => setCustomName(e.target.value)}
-                      className="w-full px-3 py-2 rounded-xl border border-slate-300 focus:border-amber-600 focus:ring-1 focus:ring-amber-600 bg-white text-slate-800 text-[13px] outline-none"
+                      className="w-full px-3 py-2 rounded-xl border border-slate-300 focus:border-[#31889C] focus:ring-1 focus:ring-[#31889C] bg-white text-slate-800 text-[13px] outline-none"
                     />
                   </div>
 
@@ -1150,7 +1150,7 @@ export function MeetingDetailView({
                       <select
                         value={customBiroId}
                         onChange={(e) => setCustomBiroId(e.target.value)}
-                        className="w-full px-3 py-2 rounded-xl border border-slate-300 focus:border-amber-600 focus:ring-1 focus:ring-amber-600 bg-white text-slate-800 text-[12px] outline-none"
+                        className="w-full px-3 py-2 rounded-xl border border-slate-300 focus:border-[#31889C] focus:ring-1 focus:ring-[#31889C] bg-white text-slate-800 text-[12px] outline-none"
                       >
                         {availableBiros.map((b: any) => (
                           <option key={b.id} value={b.id}>
@@ -1169,7 +1169,7 @@ export function MeetingDetailView({
                         placeholder="pejabat@instansi.go.id"
                         value={customEmail}
                         onChange={(e) => setCustomEmail(e.target.value)}
-                        className="w-full px-3 py-2 rounded-xl border border-slate-300 focus:border-amber-600 focus:ring-1 focus:ring-amber-600 bg-white text-slate-800 text-[12px] outline-none"
+                        className="w-full px-3 py-2 rounded-xl border border-slate-300 focus:border-[#31889C] focus:ring-1 focus:ring-[#31889C] bg-white text-slate-800 text-[12px] outline-none"
                       />
                     </div>
                   </div>
@@ -1195,11 +1195,11 @@ export function MeetingDetailView({
                         onClick={() => setNewParticipantStatus(opt.value)}
                         className={`flex items-center gap-2 p-2.5 rounded-xl border text-left transition-all cursor-pointer ${
                           isSelected
-                            ? 'bg-amber-50/80 border-amber-600 text-amber-900 font-bold shadow-xs'
+                            ? 'bg-[#F0F9FA] border-[#31889C] text-[#31889C] font-bold shadow-xs'
                             : 'bg-white border-slate-200 text-slate-700 hover:bg-slate-50'
                         }`}
                       >
-                        <Icon className="w-3.5 h-3.5 text-amber-600 shrink-0" />
+                        <Icon className="w-3.5 h-3.5 text-[#31889C] shrink-0" />
                         <div>
                           <p className="text-[12px]">{opt.label}</p>
                         </div>
@@ -1225,7 +1225,7 @@ export function MeetingDetailView({
                     (participantMode === 'registered' && !selectedAddUserId) ||
                     (participantMode === 'unregistered' && !customName.trim())
                   }
-                  className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-amber-600 hover:bg-amber-700 text-white font-semibold text-[12px] transition-all shadow-xs cursor-pointer disabled:opacity-50"
+                  className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-[#31889C] hover:bg-[#266F80] text-white font-semibold text-[12px] transition-all shadow-xs cursor-pointer disabled:opacity-50"
                 >
                   {isAddingParticipant ? (
                     <Loader2 className="w-3.5 h-3.5 animate-spin" />

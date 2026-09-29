@@ -24,8 +24,8 @@ export default function PengaturanPage() {
 
   return (
     <div className="max-w-4xl mx-auto flex flex-col gap-6">
-      <div className="p-6 bg-white rounded-xl border border-amber-200 shadow-sm">
-        <span className="font-semibold text-[12px] text-amber-700 uppercase tracking-wider">
+      <div className="p-6 bg-white rounded-xl border border-slate-200 shadow-xs">
+        <span className="font-semibold text-[12px] text-[#215865] uppercase tracking-wider">
           Konfigurasi
         </span>
         <h1 className="text-[24px] font-bold text-slate-900 mt-0.5">Pengaturan Akun &amp; Sistem</h1>
@@ -34,11 +34,11 @@ export default function PengaturanPage() {
         </p>
       </div>
 
-      <form onSubmit={handleSave} className="bg-white rounded-xl border border-amber-200 shadow-sm p-6 space-y-6 text-[13px]">
+      <form onSubmit={handleSave} className="bg-white rounded-xl border border-slate-200 shadow-xs p-6 space-y-6 text-[13px]">
         {/* User Information */}
         <div>
           <h3 className="text-[15px] font-bold text-slate-900 mb-4 flex items-center gap-2">
-            <User className="w-4 h-4 text-amber-600" />
+            <User className="w-4 h-4 text-[#31889C]" />
             Informasi Profil Pejabat
           </h3>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -48,7 +48,7 @@ export default function PengaturanPage() {
                 type="text"
                 value={userName}
                 onChange={(e) => setUserName(e.target.value)}
-                className="w-full px-3 py-2 rounded-lg border border-amber-200 focus:outline-none focus:ring-2 focus:ring-amber-500"
+                className="w-full px-3 py-2 rounded-lg border border-slate-200 focus:outline-none focus:ring-2 focus:ring-[#31889C]/25 focus:border-[#31889C]"
               />
             </div>
             <div>
@@ -57,7 +57,7 @@ export default function PengaturanPage() {
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="w-full px-3 py-2 rounded-lg border border-amber-200 focus:outline-none focus:ring-2 focus:ring-amber-500"
+                className="w-full px-3 py-2 rounded-lg border border-slate-200 focus:outline-none focus:ring-2 focus:ring-[#31889C]/25 focus:border-[#31889C]"
               />
             </div>
             <div>
@@ -74,7 +74,7 @@ export default function PengaturanPage() {
               <select
                 value={biroCode}
                 onChange={(e) => setBiroCode(e.target.value)}
-                className="w-full px-3 py-2 rounded-lg border border-amber-200 focus:outline-none focus:ring-2 focus:ring-amber-500 bg-white"
+                className="w-full px-3 py-2 rounded-lg border border-slate-200 focus:outline-none focus:ring-2 focus:ring-[#31889C]/25 focus:border-[#31889C] bg-white cursor-pointer"
               >
                 {BIRO_LIST.map((b) => (
                   <option key={b.code} value={b.code}>
@@ -87,12 +87,12 @@ export default function PengaturanPage() {
         </div>
 
         {/* Notifications Preference */}
-        <div className="pt-4 border-t border-amber-100">
+        <div className="pt-4 border-t border-slate-100">
           <h3 className="text-[15px] font-bold text-slate-900 mb-4 flex items-center gap-2">
-            <Bell className="w-4 h-4 text-amber-600" />
+            <Bell className="w-4 h-4 text-[#31889C]" />
             Preferensi Notifikasi
           </h3>
-          <div className="flex items-center justify-between p-3 rounded-lg bg-amber-50/50 border border-amber-200">
+          <div className="flex items-center justify-between p-3.5 rounded-lg bg-[#F0F9FA] border border-[#BCE3EB]">
             <div>
               <div className="font-semibold text-slate-800">Pemberitahuan Email Otomatis</div>
               <div className="text-[12px] text-slate-500">Kirim email saat ada notulen rapat baru atau eskalasi terlambat</div>
@@ -101,17 +101,17 @@ export default function PengaturanPage() {
               type="checkbox"
               checked={emailNotif}
               onChange={(e) => setEmailNotif(e.target.checked)}
-              className="w-4 h-4 text-amber-600 rounded border-amber-300 focus:ring-amber-500"
+              className="w-4 h-4 text-[#31889C] rounded border-slate-300 focus:ring-[#31889C] cursor-pointer"
             />
           </div>
         </div>
 
         {/* Submit */}
-        <div className="pt-4 border-t border-amber-100 flex justify-end">
+        <div className="pt-4 border-t border-slate-100 flex justify-end">
           <button
             type="submit"
             disabled={saved}
-            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg bg-amber-600 hover:bg-amber-700 text-white font-semibold transition-all shadow-md shadow-amber-600/20 cursor-pointer"
+            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg bg-[#31889C] hover:bg-[#266F80] text-white font-semibold transition-all shadow-xs shadow-[#31889C]/20 cursor-pointer"
           >
             <Save className="w-4 h-4" />
             <span>{saved ? 'Menyimpan...' : 'Simpan Pengaturan'}</span>

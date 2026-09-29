@@ -27,11 +27,11 @@ export function StatusDonutChart({ kpi }: StatusDonutChartProps) {
       id: 'completed',
       label: 'Selesai',
       count: kpi.completedActionItems,
-      color: '#10B981', // emerald-500
-      glowColor: 'rgba(16, 185, 129, 0.25)',
-      bgColor: 'bg-emerald-50',
-      borderColor: 'border-emerald-200',
-      textColor: 'text-emerald-700',
+      color: '#7CC563', // secondary green
+      glowColor: 'rgba(124, 197, 99, 0.25)',
+      bgColor: 'bg-[#ECF8E9]',
+      borderColor: 'border-[#D2EFCA]',
+      textColor: 'text-[#4D8F3D]',
       icon: CheckCircle2,
       pct: total > 0 ? (kpi.completedActionItems / total) * 100 : 0,
     },
@@ -39,11 +39,11 @@ export function StatusDonutChart({ kpi }: StatusDonutChartProps) {
       id: 'in_progress',
       label: 'Berjalan',
       count: kpi.inProgressActionItems,
-      color: '#F59E0B', // amber-500
-      glowColor: 'rgba(245, 158, 11, 0.25)',
-      bgColor: 'bg-amber-50',
-      borderColor: 'border-amber-200',
-      textColor: 'text-amber-700',
+      color: '#31889C', // primary teal
+      glowColor: 'rgba(49, 136, 156, 0.25)',
+      bgColor: 'bg-[#E8F5F7]',
+      borderColor: 'border-[#BCE3EB]',
+      textColor: 'text-[#31889C]',
       icon: Clock,
       pct: total > 0 ? (kpi.inProgressActionItems / total) * 100 : 0,
     },
@@ -51,11 +51,11 @@ export function StatusDonutChart({ kpi }: StatusDonutChartProps) {
       id: 'pending',
       label: 'Menunggu',
       count: kpi.pendingActionItems,
-      color: '#64748B', // slate-500
-      glowColor: 'rgba(100, 116, 139, 0.25)',
-      bgColor: 'bg-slate-50',
-      borderColor: 'border-slate-200',
-      textColor: 'text-slate-700',
+      color: '#FFD300', // accent yellow
+      glowColor: 'rgba(255, 211, 0, 0.25)',
+      bgColor: 'bg-[#FFF8CC]',
+      borderColor: 'border-[#FFEE99]',
+      textColor: 'text-[#8A7200]',
       icon: Hourglass,
       pct: total > 0 ? (kpi.pendingActionItems / total) * 100 : 0,
     },
@@ -63,11 +63,11 @@ export function StatusDonutChart({ kpi }: StatusDonutChartProps) {
       id: 'overdue',
       label: 'Terlambat',
       count: kpi.overdueActionItems,
-      color: '#EF4444', // red-500
-      glowColor: 'rgba(239, 68, 68, 0.25)',
-      bgColor: 'bg-red-50',
-      borderColor: 'border-red-200',
-      textColor: 'text-red-700',
+      color: '#DC2626', // semantic red
+      glowColor: 'rgba(220, 38, 38, 0.25)',
+      bgColor: 'bg-[#FEF2F2]',
+      borderColor: 'border-[#FCA5A5]',
+      textColor: 'text-[#DC2626]',
       icon: AlertTriangle,
       pct: total > 0 ? (kpi.overdueActionItems / total) * 100 : 0,
     },
@@ -105,16 +105,16 @@ export function StatusDonutChart({ kpi }: StatusDonutChartProps) {
               <feDropShadow dx="0" dy="2" stdDeviation="4" floodOpacity="0.15" />
             </filter>
             <linearGradient id="emerald-grad" x1="0%" y1="0%" x2="100%" y2="100%">
-              <stop offset="0%" stopColor="#34D399" />
-              <stop offset="100%" stopColor="#059669" />
+              <stop offset="0%" stopColor="#7CC563" />
+              <stop offset="100%" stopColor="#5aa542" />
             </linearGradient>
-            <linearGradient id="amber-grad" x1="0%" y1="0%" x2="100%" y2="100%">
-              <stop offset="0%" stopColor="#FBBF24" />
-              <stop offset="100%" stopColor="#D97706" />
+            <linearGradient id="teal-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#31889C" />
+              <stop offset="100%" stopColor="#266F80" />
             </linearGradient>
-            <linearGradient id="slate-grad" x1="0%" y1="0%" x2="100%" y2="100%">
-              <stop offset="0%" stopColor="#94A3B8" />
-              <stop offset="100%" stopColor="#475569" />
+            <linearGradient id="yellow-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#FFD300" />
+              <stop offset="100%" stopColor="#D4AF00" />
             </linearGradient>
             <linearGradient id="red-grad" x1="0%" y1="0%" x2="100%" y2="100%">
               <stop offset="0%" stopColor="#F87171" />
@@ -163,8 +163,8 @@ export function StatusDonutChart({ kpi }: StatusDonutChartProps) {
 
               const gradientMap: Record<string, string> = {
                 Selesai: 'url(#emerald-grad)',
-                Berjalan: 'url(#amber-grad)',
-                Menunggu: 'url(#slate-grad)',
+                Berjalan: 'url(#teal-grad)',
+                Menunggu: 'url(#yellow-grad)',
                 Terlambat: 'url(#red-grad)',
               };
 
@@ -219,8 +219,8 @@ export function StatusDonutChart({ kpi }: StatusDonutChartProps) {
               <span className="text-2xl font-black text-slate-900 tracking-tight">
                 {kpi.completionRate}%
               </span>
-              <span className="text-[10px] font-bold text-emerald-600 uppercase tracking-wider mt-0.5 flex items-center gap-1">
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+              <span className="text-[10px] font-bold text-[#4D8F3D] uppercase tracking-wider mt-0.5 flex items-center gap-1">
+                <span className="w-1.5 h-1.5 rounded-full bg-[#7CC563] animate-pulse" />
                 Selesai
               </span>
               <span className="text-[10px] font-medium text-slate-400">
