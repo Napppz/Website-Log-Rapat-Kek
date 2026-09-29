@@ -366,6 +366,23 @@ classDiagram
 
     <!-- TAB 3: ERD DIAGRAM -->
     <div id="content-erd" class="tab-content hidden space-y-6">
+      <!-- Roadmap Banner -->
+      <div class="bg-gradient-to-r from-[#215865] to-[#31889C] rounded-2xl p-5 text-white shadow-xs">
+        <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <div>
+            <span class="px-2.5 py-0.5 bg-white/20 rounded-full text-[11px] font-bold tracking-wide uppercase">Tahap 1 dari 6 UML & Database</span>
+            <h3 class="text-base font-bold mt-1">Entity Relationship Diagram (ERD) - Siap Buka di Draw.io</h3>
+            <p class="text-xs text-white/80 mt-0.5">Dibuat khusus dan terstandarisasi untuk presentasi, tugas akhir, dan laporan teknis.</p>
+          </div>
+          <div class="flex items-center gap-2">
+            <a href="/ERD_SIM_RAPAT.drawio" download="ERD_SIM_RAPAT.drawio" class="px-4 py-2 rounded-xl text-xs font-bold bg-white text-[#215865] hover:bg-slate-100 shadow-sm transition-all flex items-center gap-1.5">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+              Unduh File Draw.io (.drawio)
+            </a>
+          </div>
+        </div>
+      </div>
+
       <div class="bg-white rounded-2xl border border-slate-200 shadow-xs p-6 overflow-hidden">
         <div class="flex items-center justify-between mb-4">
           <div>
@@ -399,7 +416,7 @@ erDiagram
     MEETING ||--o| MEETING : "rujukan rapat sebelumnya"
 
     BIRO {
-        string biro_id PK "UUID"
+        string biro_id PK "BIRO-IKK, BIRO-BPPK"
         string code UK "Kode Biro (IKK/BPPK/dll)"
         string name "Nama Lengkap Biro"
         string shortName "Nama Singkat Biro"
@@ -410,7 +427,7 @@ erDiagram
     }
 
     USER {
-        string user_id PK "UUID"
+        string user_id PK "USR-001, USR-002"
         string biro_id FK "Relasi ke BIRO"
         string name "Nama Pengguna"
         string email UK "Email Login"
@@ -422,7 +439,7 @@ erDiagram
     }
 
     MEETING {
-        string meeting_id PK "UUID"
+        string meeting_id PK "MTG-001, MTG-002"
         string meeting_number UK "Nomor Surat Rapat (IKK-015)"
         string primary_biro_id FK "Biro Penyelenggara"
         string chairperson_id FK "Pimpinan Sidang (User)"
