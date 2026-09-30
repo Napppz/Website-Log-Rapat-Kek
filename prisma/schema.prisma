@@ -80,6 +80,8 @@ model User {
   secretaryMeetings   Meeting[]            @relation("SecretaryMeetings")
   meetingParticipants MeetingParticipant[]
   actionItems         ActionItem[]         @relation("UserActionItems")
+  actionItemLogs      ActionItemLog[]
+  notifications       Notification[]
   accounts            Account[]
   sessions            Session[]
 
@@ -199,6 +201,7 @@ model ActionItem {
   meeting Meeting @relation(fields: [meetingId], references: [id], onDelete: Cascade)
   picBiro Biro    @relation("BiroActionItems", fields: [picBiroId], references: [id], onDelete: Restrict)
   picUser User?   @relation("UserActionItems", fields: [picUserId], references: [id], onDelete: SetNull)
+  logs    ActionItemLog[]
 
   @@index([meetingId])
   @@index([picBiroId])
@@ -254,3 +257,41 @@ model VerificationToken {
   @@unique([identifier, token])
   @@map("token_verifikasi")
 }
+
+model ActionItemLog {
+  id             String            @id @default(uuid()) @map("id_riwayat")
+  actionItemId   String            @map("id_tindak_lanjut")
+  userId         String?           @map("id_pengguna")
+  previousStatus ActionItemStatus? @map("status_sebelumnya")
+  newStatus      ActionItemStatus  @map("status_terbaru")
+  notes          String            @map("catatan_progres")
+  progress       Int?              @default(0) @map("persentase_progres")
+  createdAt      DateTime          @default(now()) @map("dibuat_pada")
+
+  actionItem ActionItem @relation(fields: [actionItemId], references: [id], onDelete: Cascade)
+  user       User?      @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([actionItemId])
+  @@index([userId])
+  @@index([createdAt])
+  @@map("riwayat_tindak_lanjut")
+}
+
+model Notification {
+  id        String   @id @default(uuid()) @map("id_notifikasi")
+  userId    String?  @map("id_pengguna")
+  title     String   @map("judul")
+  message   String   @map("pesan")
+  type      String   @default("info") @map("tipe")
+  link      String?  @map("tautan")
+  isRead    Boolean  @default(false) @map("sudah_dibaca")
+  createdAt DateTime @default(now()) @map("dibuat_pada")
+
+  user User? @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([isRead])
+  @@index([createdAt])
+  @@map("notifikasi")
+}
+

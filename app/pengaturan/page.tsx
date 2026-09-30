@@ -1,123 +1,78 @@
-'use client';
+import React from 'react';
+import { Metadata } from 'next';
+import { prisma } from '@/lib/prisma';
+import { getCurrentUser } from '@/lib/auth/authorization';
+import { PengaturanClient } from './pengaturan-client';
 
-import React, { useState } from 'react';
-import { User, Bell, Save } from 'lucide-react';
-import { BIRO_LIST } from '@/lib/mock-data';
-import { toast } from '@/components/providers/toast-provider';
+export const metadata: Metadata = {
+  title: 'Pengaturan Akun & Sistem — Sekretariat Dewan Nasional KEK',
+  description:
+    'Pengaturan profil dinas, preferensi notifikasi, dan unit kerja biro Dewan Nasional Kawasan Ekonomi Khusus.',
+};
 
-export default function PengaturanPage() {
-  const [userName, setUserName] = useState('Dr. Hendra Suprayitno, M.Si');
-  const [email, setEmail] = useState('hendra.suprayitno@kek.go.id');
-  const role = 'SUPER ADMIN';
-  const [biroCode, setBiroCode] = useState('INV');
-  const [emailNotif, setEmailNotif] = useState(true);
-  const [saved, setSaved] = useState(false);
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
 
-  const handleSave = (e: React.FormEvent) => {
-    e.preventDefault();
-    setSaved(true);
-    setTimeout(() => {
-      toast.success('Pengaturan profil dan preferensi sistem berhasil disimpan.');
-      setSaved(false);
-    }, 400);
-  };
+export default async function PengaturanPage() {
+  const authUser = await getCurrentUser();
 
-  return (
-    <div className="max-w-4xl mx-auto flex flex-col gap-6">
-      <div className="p-6 bg-white rounded-xl border border-slate-200 shadow-xs">
-        <span className="font-semibold text-[12px] text-[#215865] uppercase tracking-wider">
-          Konfigurasi
-        </span>
-        <h1 className="text-[24px] font-bold text-slate-900 mt-0.5">Pengaturan Akun &amp; Sistem</h1>
-        <p className="text-[13px] text-slate-500 mt-1">
-          Kelola profil pengguna, preferensi pemberitahuan, dan unit kerja biro.
-        </p>
-      </div>
+  // Fetch real user from DB if logged in, or fetch default admin
+  let user = null;
+  if (authUser?.id) {
+    user = await prisma.user.findUnique({
+      where: { id: authUser.id },
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        role: true,
+        biroId: true,
+        biro: {
+          select: {
+            id: true,
+            code: true,
+            shortName: true,
+            name: true,
+          },
+        },
+      },
+    });
+  }
 
-      <form onSubmit={handleSave} className="bg-white rounded-xl border border-slate-200 shadow-xs p-6 space-y-6 text-[13px]">
-        {/* User Information */}
-        <div>
-          <h3 className="text-[15px] font-bold text-slate-900 mb-4 flex items-center gap-2">
-            <User className="w-4 h-4 text-[#31889C]" />
-            Informasi Profil Pejabat
-          </h3>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div>
-              <label className="block font-semibold text-slate-700 mb-1">Nama Lengkap &amp; Gelar</label>
-              <input
-                type="text"
-                value={userName}
-                onChange={(e) => setUserName(e.target.value)}
-                className="w-full px-3 py-2 rounded-lg border border-slate-200 focus:outline-none focus:ring-2 focus:ring-[#31889C]/25 focus:border-[#31889C]"
-              />
-            </div>
-            <div>
-              <label className="block font-semibold text-slate-700 mb-1">Alamat Email Dinas</label>
-              <input
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                className="w-full px-3 py-2 rounded-lg border border-slate-200 focus:outline-none focus:ring-2 focus:ring-[#31889C]/25 focus:border-[#31889C]"
-              />
-            </div>
-            <div>
-              <label className="block font-semibold text-slate-700 mb-1">Peran / Hak Akses</label>
-              <input
-                type="text"
-                disabled
-                value={role}
-                className="w-full px-3 py-2 rounded-lg border border-slate-200 bg-slate-50 text-slate-500 font-bold"
-              />
-            </div>
-            <div>
-              <label className="block font-semibold text-slate-700 mb-1">Penugasan Biro</label>
-              <select
-                value={biroCode}
-                onChange={(e) => setBiroCode(e.target.value)}
-                className="w-full px-3 py-2 rounded-lg border border-slate-200 focus:outline-none focus:ring-2 focus:ring-[#31889C]/25 focus:border-[#31889C] bg-white cursor-pointer"
-              >
-                {BIRO_LIST.map((b) => (
-                  <option key={b.code} value={b.code}>
-                    {b.code} — {b.name}
-                  </option>
-                ))}
-              </select>
-            </div>
-          </div>
-        </div>
+  // Fallback to first superadmin or admin if no active session in standalone view
+  if (!user) {
+    user = await prisma.user.findFirst({
+      where: { isActive: true },
+      orderBy: { createdAt: 'asc' },
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        role: true,
+        biroId: true,
+        biro: {
+          select: {
+            id: true,
+            code: true,
+            shortName: true,
+            name: true,
+          },
+        },
+      },
+    });
+  }
 
-        {/* Notifications Preference */}
-        <div className="pt-4 border-t border-slate-100">
-          <h3 className="text-[15px] font-bold text-slate-900 mb-4 flex items-center gap-2">
-            <Bell className="w-4 h-4 text-[#31889C]" />
-            Preferensi Notifikasi
-          </h3>
-          <div className="flex items-center justify-between p-3.5 rounded-lg bg-[#F0F9FA] border border-[#BCE3EB]">
-            <div>
-              <div className="font-semibold text-slate-800">Pemberitahuan Email Otomatis</div>
-              <div className="text-[12px] text-slate-500">Kirim email saat ada notulen rapat baru atau eskalasi terlambat</div>
-            </div>
-            <input
-              type="checkbox"
-              checked={emailNotif}
-              onChange={(e) => setEmailNotif(e.target.checked)}
-              className="w-4 h-4 text-[#31889C] rounded border-slate-300 focus:ring-[#31889C] cursor-pointer"
-            />
-          </div>
-        </div>
+  // Fetch all active biros
+  const biros = await prisma.biro.findMany({
+    where: { isActive: true },
+    select: {
+      id: true,
+      code: true,
+      shortName: true,
+      name: true,
+    },
+    orderBy: { code: 'asc' },
+  });
 
-        {/* Submit */}
-        <div className="pt-4 border-t border-slate-100 flex justify-end">
-          <button
-            type="submit"
-            disabled={saved}
-            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg bg-[#31889C] hover:bg-[#266F80] text-white font-semibold transition-all shadow-xs shadow-[#31889C]/20 cursor-pointer"
-          >
-            <Save className="w-4 h-4" />
-            <span>{saved ? 'Menyimpan...' : 'Simpan Pengaturan'}</span>
-          </button>
-        </div>
-      </form>
-    </div>
-  );
+  return <PengaturanClient initialUser={user} availableBiros={biros} />;
 }

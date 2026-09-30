@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
+import Link from 'next/link';
 import { Search, Plus, Bell, ChevronDown, Menu, LogOut, User as UserIcon } from 'lucide-react';
 import { useSession, signOut } from 'next-auth/react';
 import { cn } from '@/lib/utils';
@@ -117,13 +118,18 @@ export function Header({
               </div>
               <div className="divide-y divide-slate-100 mt-2">
                 <div className="py-2">
-                  <p className="font-semibold text-slate-800 text-[12px]">Rapat Koordinasi KEK Sei Mangkei</p>
-                  <p className="text-slate-500 text-[11px]">Risalah disetujui • 10 menit lalu</p>
+                  <p className="font-semibold text-slate-800 text-[12px]">Pusat Notifikasi Aktif</p>
+                  <p className="text-slate-500 text-[11px]">Pantau pembaruan risalah rapat dan tenggat tindak lanjut.</p>
                 </div>
-                <div className="py-2">
-                  <p className="font-semibold text-red-600 text-[12px]">Tindak Lanjut Butuh Eskalasi</p>
-                  <p className="text-slate-500 text-[11px]">2 butir di KEK Bitung terlambat • 1 jam lalu</p>
-                </div>
+              </div>
+              <div className="pt-2 border-t border-slate-100 mt-2 text-center">
+                <Link
+                  href="/notifikasi"
+                  onClick={() => setNotifDropdownOpen(false)}
+                  className="text-[12px] font-bold text-[#31889C] hover:text-[#215865] hover:underline"
+                >
+                  Buka Semua Notifikasi &rarr;
+                </Link>
               </div>
             </div>
           )}
@@ -174,14 +180,14 @@ export function Header({
                   )}
                 </div>
               </div>
-              <button
-                type="button"
+              <Link
+                href="/pengaturan"
                 className="w-full flex items-center gap-2 text-left px-3 py-1.5 rounded-md hover:bg-[#F0F9FA] text-slate-700 hover:text-[#31889C] transition-colors cursor-pointer"
                 onClick={() => setProfileDropdownOpen(false)}
               >
                 <UserIcon className="w-3.5 h-3.5 text-slate-500" />
-                <span>Profil Akun</span>
-              </button>
+                <span>Profil &amp; Pengaturan Akun</span>
+              </Link>
               <button
                 type="button"
                 onClick={() => signOut({ callbackUrl: '/login' })}

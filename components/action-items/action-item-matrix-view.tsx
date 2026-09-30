@@ -20,11 +20,13 @@ import {
   PlayCircle,
   FileSpreadsheet,
   Loader2,
+  History,
 } from 'lucide-react';
 import { ActionItem, ActionItemStatus } from '@/lib/types';
 import { ActionItemStatusBadge, ActionItemPriorityBadge } from './action-item-status-badge';
 import { ActionItemFormDialog } from './action-item-form-dialog';
 import { ActionItemDeleteDialog } from './action-item-delete-dialog';
+import { ActionItemLogDialog } from './action-item-log-dialog';
 import { updateActionItemStatusAction } from '@/app/actions/action-item-actions';
 import { toast } from '@/components/providers/toast-provider';
 
@@ -55,6 +57,7 @@ export function ActionItemMatrixView({
   );
   const [editingItem, setEditingItem] = useState<ActionItem | null>(null);
   const [deletingItem, setDeletingItem] = useState<ActionItem | null>(null);
+  const [loggingItem, setLoggingItem] = useState<ActionItem | null>(null);
   const [updatingStatusId, setUpdatingStatusId] = useState<string | null>(null);
   const [isExporting, setIsExporting] = useState(false);
 
@@ -500,6 +503,16 @@ export function ActionItemMatrixView({
                             </button>
                           )}
 
+                          {/* Audit Trail & Progress Log button */}
+                          <button
+                            type="button"
+                            onClick={() => setLoggingItem(task)}
+                            className="p-1 text-sky-600 hover:text-sky-800 hover:bg-sky-50 rounded transition-colors cursor-pointer"
+                            title="Lihat Riwayat & Catatan Progres"
+                          >
+                            <History className="w-4 h-4" />
+                          </button>
+
                           {/* Edit button */}
                           <button
                             type="button"
@@ -564,6 +577,20 @@ export function ActionItemMatrixView({
             setDeletingItem(null);
             router.refresh();
           }
+        }}
+      />
+
+      {/* Audit Trail & Progress Log Dialog */}
+      <ActionItemLogDialog
+        item={loggingItem}
+        isOpen={Boolean(loggingItem)}
+        onClose={() => setLoggingItem(null)}
+        onItemUpdated={(updated) => {
+          setItems((prev) =>
+            prev.map((it) => (it.id === updated.id ? { ...it, ...updated } : it))
+          );
+          setLoggingItem(updated);
+          router.refresh();
         }}
       />
     </div>

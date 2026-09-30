@@ -5,13 +5,15 @@ import {
   actionItemSchema,
   updateActionItemSchema,
   updateActionItemStatusSchema,
+  addActionItemLogSchema,
   computeActionItemStatus,
   ActionItemInput,
   UpdateActionItemInput,
   UpdateActionItemStatusInput,
+  AddActionItemLogInput,
 } from '@/lib/validations/action-item';
 import { revalidatePath } from 'next/cache';
-import { requirePermission } from '@/lib/auth/authorization';
+import { requirePermission, getCurrentUser } from '@/lib/auth/authorization';
 
 /**
  * Helper to safely revalidate paths without crashing in standalone tests
@@ -456,3 +458,179 @@ export async function deleteActionItemAction(id: string) {
     };
   }
 }
+
+/**
+ * Server Action: Get all audit logs / progress notes for a specific action item
+ */
+export async function getActionItemLogsAction(actionItemId: string) {
+  try {
+    if (!actionItemId) {
+      return { success: false, error: 'ID tindak lanjut tidak valid.' };
+    }
+
+    const logs = await prisma.actionItemLog.findMany({
+      where: { actionItemId },
+      include: {
+        user: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+            role: true,
+            biro: {
+              select: {
+                id: true,
+                code: true,
+                shortName: true,
+                name: true,
+              },
+            },
+          },
+        },
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+
+    return {
+      success: true,
+      data: logs,
+    };
+  } catch (error: any) {
+    console.error('Error getting action item logs:', error);
+    return {
+      success: false,
+      error: 'Gagal memuat riwayat progres tindak lanjut.',
+    };
+  }
+}
+
+/**
+ * Server Action: Add a new progress note & audit log to an Action Item
+ */
+export async function addActionItemLogAction(input: AddActionItemLogInput) {
+  try {
+    const parsed = addActionItemLogSchema.safeParse(input);
+    if (!parsed.success) {
+      const errorMsg = parsed.error.issues.map((i) => i.message).join(', ');
+      return { success: false, error: `Validasi gagal: ${errorMsg}` };
+    }
+
+    const { actionItemId, notes, progress, newStatus } = parsed.data;
+
+    const existing = await prisma.actionItem.findUnique({
+      where: { id: actionItemId },
+      include: {
+        picBiro: true,
+        meeting: {
+          include: {
+            primaryBiro: true,
+          },
+        },
+      },
+    });
+
+    if (!existing) {
+      return { success: false, error: 'Tindak lanjut tidak ditemukan.' };
+    }
+
+    // Authorization check
+    await requirePermission('edit:action_item', {
+      actionItemPicUserId: existing.picUserId,
+    });
+
+    const currentUser = await getCurrentUser();
+
+    // Determine target status
+    const targetStatus = newStatus || existing.status;
+    let completedAt: Date | null = existing.completedAt;
+    if (targetStatus === 'COMPLETED' && existing.status !== 'COMPLETED') {
+      completedAt = new Date();
+    } else if (targetStatus !== 'COMPLETED' && existing.status === 'COMPLETED') {
+      completedAt = null;
+    }
+
+    // Update the action item
+    const updatedItem = await prisma.actionItem.update({
+      where: { id: actionItemId },
+      data: {
+        status: targetStatus,
+        completedAt,
+      },
+      include: {
+        picBiro: true,
+        picUser: true,
+        meeting: true,
+      },
+    });
+
+    // Create the audit log record
+    const log = await prisma.actionItemLog.create({
+      data: {
+        actionItemId,
+        userId: currentUser?.id || null,
+        previousStatus: existing.status,
+        newStatus: targetStatus,
+        notes,
+        progress: progress ?? (targetStatus === 'COMPLETED' ? 100 : 0),
+      },
+      include: {
+        user: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+            role: true,
+            biro: {
+              select: {
+                id: true,
+                code: true,
+                shortName: true,
+                name: true,
+              },
+            },
+          },
+        },
+      },
+    });
+
+    // Optionally create a system notification for the organization
+    try {
+      await prisma.notification.create({
+        data: {
+          title: `Pembaruan Tindak Lanjut: ${existing.title.slice(0, 40)}`,
+          message: `${currentUser?.name || 'Staf'} mencatat progres (${progress ?? 0}%): "${notes.slice(0, 80)}"`,
+          type: targetStatus === 'COMPLETED' ? 'success' : 'info',
+          link: `/tindak-lanjut?search=${encodeURIComponent(existing.title)}`,
+        },
+      });
+    } catch (notifErr) {
+      console.warn('Failed to insert notification:', notifErr);
+    }
+
+    safeRevalidate([
+      '/',
+      '/semua-rapat',
+      '/tindak-lanjut',
+      `/semua-rapat/${existing.meetingId}`,
+      existing.picBiro?.code ? `/biro/${existing.picBiro.code.toLowerCase()}` : '',
+      existing.meeting?.primaryBiro?.code
+        ? `/biro/${existing.meeting.primaryBiro.code.toLowerCase()}`
+        : '',
+    ].filter(Boolean));
+
+    return {
+      success: true,
+      data: {
+        log,
+        updatedItem: computeActionItemStatus(updatedItem),
+      },
+    };
+  } catch (error: any) {
+    console.error('Error adding action item log:', error);
+    return {
+      success: false,
+      error: 'Gagal menambahkan catatan progres tindak lanjut.',
+    };
+  }
+}
+

@@ -60,3 +60,13 @@ export function computeActionItemStatus<
     isOverdue,
   };
 }
+
+export const addActionItemLogSchema = z.object({
+  actionItemId: z.string().min(1, 'ID tindak lanjut wajib disertakan'),
+  notes: z.string().trim().min(1, 'Catatan progres tidak boleh kosong'),
+  progress: z.number().int().min(0).max(100).optional().default(0),
+  newStatus: actionItemStatusEnum.optional(),
+});
+
+export type AddActionItemLogInput = z.infer<typeof addActionItemLogSchema>;
+

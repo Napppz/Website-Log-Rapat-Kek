@@ -4,7 +4,7 @@ import { LaporanClient } from './laporan-client';
 import { Loader2 } from 'lucide-react';
 
 export const metadata: Metadata = {
-  title: 'Laporan Berkala Mingguan & Bulanan — SIM-RAPAT KEK RI',
+  title: 'Laporan Berkala Mingguan & Bulanan — Sekretariat Dewan Nasional KEK',
   description:
     'Pusat laporan berkala aktivitas rapat, ketersediaan notulen, dan performa tindak lanjut seluruh Biro Sekretariat Dewan Nasional KEK RI.',
 };

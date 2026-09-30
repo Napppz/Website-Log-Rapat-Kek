@@ -4,7 +4,7 @@ import { getMeetingsFromDb, getOfficialBiros } from '@/lib/db-service';
 import { KalenderClient } from './kalender-client';
 
 export const metadata: Metadata = {
-  title: 'Kalender Agenda Sidang — SIM-RAPAT KEK RI',
+  title: 'Kalender Agenda Sidang — Sekretariat Dewan Nasional KEK',
   description:
     'Jadwal dan agenda rapat koordinasi lintas biro Sekretariat Jenderal Dewan Nasional Kawasan Ekonomi Khusus Republik Indonesia.',
 };
