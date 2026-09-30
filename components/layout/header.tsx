@@ -40,7 +40,7 @@ export function Header({
   const [notifDropdownOpen, setNotifDropdownOpen] = useState(false);
 
   const currentUser = session?.user;
-  const userName = currentUser?.name || 'Pengguna SIM-RAPAT';
+  const userName = currentUser?.name || 'Pengguna Sistem';
   const userEmail = currentUser?.email || '';
   const userRole = currentUser?.role || 'VIEWER';
   const roleLabel = ROLE_LABELS[userRole] || userRole;

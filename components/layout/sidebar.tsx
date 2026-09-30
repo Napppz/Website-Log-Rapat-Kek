@@ -112,29 +112,29 @@ export function Sidebar({
       >
         <div className="flex flex-col flex-1 min-h-0">
           {/* Header Branding */}
-          <div className="h-16 px-4 flex items-center justify-between bg-gradient-to-r from-[#31889C] to-[#266F80] border-b border-[#215865] shadow-xs shrink-0">
+          <div className="min-h-[72px] py-2 px-3.5 flex items-center justify-between bg-gradient-to-r from-[#31889C] to-[#266F80] border-b border-[#215865] shadow-xs shrink-0">
             <Link
               href="/"
               onClick={handleLinkClick}
-              className="flex items-center gap-2.5 min-w-0"
+              className="flex items-center gap-2.5 min-w-0 flex-1"
             >
-              <div className="bg-white rounded-lg px-2 py-1 shadow-xs flex items-center justify-center shrink-0">
+              <div className="bg-white rounded-xl p-1 shadow-sm flex items-center justify-center shrink-0 w-12 h-12 overflow-hidden border border-white/30">
                 <Image
-                  src="/logo-kek.png"
-                  alt="Logo Kawasan Ekonomi Khusus"
-                  width={64}
-                  height={24}
-                  className="h-6 w-auto object-contain"
+                  src="/logo-wantannas.png"
+                  alt="Logo Dewan Ketahanan Nasional"
+                  width={46}
+                  height={46}
+                  className="w-full h-full object-contain"
                   priority
                 />
               </div>
               {!collapsed && (
                 <div className="flex flex-col min-w-0 text-left">
-                  <span className="font-bold text-[13px] text-white truncate uppercase tracking-wider">
-                    SIM-RAPAT KEK
+                  <span className="font-extrabold text-[12.5px] text-white tracking-wide leading-tight">
+                    LOG &amp; NOTULA RAPAT
                   </span>
-                  <span className="text-[11px] text-teal-100 truncate font-medium">
-                    Republik Indonesia
+                  <span className="text-[10px] text-teal-100 font-medium leading-[1.25] mt-0.5 line-clamp-2">
+                    Sekretariat Dewan Nasional Kawasan Ekonomi Khusus
                   </span>
                 </div>
               )}

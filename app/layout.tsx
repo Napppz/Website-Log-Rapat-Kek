@@ -20,8 +20,8 @@ const plusJakartaSans = Plus_Jakarta_Sans({
 });
 
 export const metadata: Metadata = {
-  title: "SIM-RAPAT KEK RI | Sistem Manajemen Rapat & Tindak Lanjut",
-  description: "Sistem Manajemen Rapat & Tindak Lanjut Kawasan Ekonomi Khusus (KEK) Republik Indonesia. Sinergi 5 biro kerja dan akselerasi investasi strategis nasional.",
+  title: "Log & Notula Rapat | Sekretariat Dewan Nasional Kawasan Ekonomi Khusus",
+  description: "Sistem Pengelolaan Agenda Sidang, Risalah Notula & Tindak Lanjut Keputusan Rapat Sekretariat Dewan Nasional Kawasan Ekonomi Khusus.",
 };
 
 export default function RootLayout({

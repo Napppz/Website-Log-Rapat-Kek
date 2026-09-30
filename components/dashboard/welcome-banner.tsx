@@ -47,7 +47,7 @@ export function WelcomeBanner({
 
   const biroInfo = currentUser?.biroCode
     ? `Biro ${currentUser.biroCode}`
-    : 'Sekretariat Jenderal KEK RI';
+    : 'Sekretariat Dewan Nasional KEK';
 
   const todayFormatted = new Date().toLocaleDateString('id-ID', {
     weekday: 'long',
@@ -139,7 +139,7 @@ export function WelcomeBanner({
 
           {/* Simple, Clear Subtext */}
           <p className="text-[13.5px] text-slate-600 max-w-2xl leading-relaxed">
-            Portal Komando Sidang &amp; Pengendalian Tindak Lanjut Dewan Nasional Kawasan Ekonomi Khusus Republik Indonesia. Pantau sinergi 5 biro kerja dan tindak lanjut keputusan rapat secara transparan.
+            Portal Manajemen Agenda, Notula Resmi &amp; Pengendalian Tindak Lanjut Rapat Sekretariat Dewan Nasional Kawasan Ekonomi Khusus. Pantau pelaksanaan agenda sidang dan hasil rapat secara tertib, transparan, dan terintegrasi.
           </p>
         </div>
 

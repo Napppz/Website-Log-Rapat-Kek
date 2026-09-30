@@ -60,8 +60,8 @@ function LoginForm() {
           <div className="p-8 text-center bg-gradient-to-b from-[#F0F9FA] to-transparent border-b border-slate-200/80">
             <div className="inline-flex p-3 rounded-2xl bg-white shadow-xs border border-slate-200 mb-4">
               <Image
-                src="/logo-kek.png"
-                alt="Logo KEK RI"
+                src="/logo-wantannas.png"
+                alt="Logo Dewan Ketahanan Nasional RI"
                 width={80}
                 height={80}
                 className="w-16 h-16 object-contain"
@@ -69,13 +69,13 @@ function LoginForm() {
               />
             </div>
             <span className="text-[11px] font-bold tracking-widest text-[#31889C] uppercase block">
-              Sekretariat Jenderal Dewan Nasional KEK RI
+              Sekretariat Dewan Nasional Kawasan Ekonomi Khusus
             </span>
             <h1 className="text-[22px] font-extrabold text-slate-900 mt-1">
-              SIM-RAPAT KEK RI
+              LOG &amp; NOTULA RAPAT
             </h1>
             <p className="text-[12px] text-slate-500 mt-1">
-              Sistem Manajemen Rapat &amp; Matriks Tindak Lanjut Terintegrasi
+              Sistem Pengelolaan Agenda Sidang, Notula Resmi &amp; Tindak Lanjut Rapat
             </p>
           </div>
 
