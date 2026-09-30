@@ -15,11 +15,18 @@ import {
   ArrowRight,
   RotateCcw,
   Check,
+  History,
 } from 'lucide-react';
 import { ActionItem, ActionItemStatus } from '@/lib/types';
 import { ActionItemStatusBadge, ActionItemPriorityBadge } from './action-item-status-badge';
 import { ActionItemFormDialog } from './action-item-form-dialog';
 import { ActionItemDeleteDialog } from './action-item-delete-dialog';
+import { ActionItemLogDialog } from './action-item-log-dialog';
+import {
+  GoogleDriveLinkCard,
+  extractDriveLink,
+  cleanTextWithoutLink,
+} from './google-drive-link-badge';
 import { updateActionItemStatusAction } from '@/app/actions/action-item-actions';
 import { useSession } from 'next-auth/react';
 import { toast } from '@/components/providers/toast-provider';
@@ -61,6 +68,7 @@ export function ActionItemList({
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingItem, setEditingItem] = useState<ActionItem | null>(null);
   const [deletingItem, setDeletingItem] = useState<ActionItem | null>(null);
+  const [loggingItem, setLoggingItem] = useState<ActionItem | null>(null);
   const [updatingStatusId, setUpdatingStatusId] = useState<string | null>(null);
 
   // Compute stats
@@ -239,41 +247,67 @@ export function ActionItemList({
                     <h4 className="text-[15px] font-bold text-slate-900 pt-1 leading-snug">
                       {item.title}
                     </h4>
-                    {item.description && (
-                      <p className="text-[13px] text-slate-600 leading-relaxed pt-0.5">
-                        {item.description}
-                      </p>
-                    )}
+                    {(() => {
+                      const driveUrl = extractDriveLink(item.description);
+                      const cleanDesc = driveUrl ? cleanTextWithoutLink(item.description) : item.description;
+
+                      return (
+                        <div className="space-y-1.5 pt-0.5">
+                          {cleanDesc ? (
+                            <p className="text-[13px] text-slate-600 leading-relaxed">
+                              {cleanDesc}
+                            </p>
+                          ) : null}
+                          {driveUrl ? (
+                            <div className="pt-0.5">
+                              <GoogleDriveLinkCard url={driveUrl} variant="badge" />
+                            </div>
+                          ) : null}
+                        </div>
+                      );
+                    })()}
                   </div>
 
                   {/* Actions buttons */}
-                  {(canEditThisItem(item) || canDeleteItem) && (
-                    <div className="flex items-center gap-1.5 shrink-0">
-                      {canEditThisItem(item) && (
-                        <button
-                          type="button"
-                          onClick={() => {
-                            setEditingItem(item);
-                            setIsFormOpen(true);
-                          }}
-                          className="p-1.5 text-slate-500 hover:text-[#31889C] hover:bg-[#F0F9FA] rounded-lg transition-colors cursor-pointer"
-                          title="Ubah Tindak Lanjut"
-                        >
-                          <Edit2 className="w-4 h-4" />
-                        </button>
-                      )}
-                      {canDeleteItem && (
-                        <button
-                          type="button"
-                          onClick={() => setDeletingItem(item)}
-                          className="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors cursor-pointer"
-                          title="Hapus Tindak Lanjut"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </button>
-                      )}
-                    </div>
-                  )}
+                  <div className="flex items-center gap-1.5 shrink-0">
+                    {/* Log & Progress History Button (All members can view & PIC can add) */}
+                    <button
+                      type="button"
+                      onClick={() => setLoggingItem(item)}
+                      className="p-1.5 text-sky-600 hover:text-sky-800 hover:bg-sky-50 rounded-lg transition-colors cursor-pointer"
+                      title="Lihat Riwayat & Kirim Progres / Google Drive"
+                    >
+                      <History className="w-4 h-4" />
+                    </button>
+
+                    {(canEditThisItem(item) || canDeleteItem) && (
+                      <>
+                        {canEditThisItem(item) && (
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setEditingItem(item);
+                              setIsFormOpen(true);
+                            }}
+                            className="p-1.5 text-slate-500 hover:text-[#31889C] hover:bg-[#F0F9FA] rounded-lg transition-colors cursor-pointer"
+                            title="Ubah Tindak Lanjut"
+                          >
+                            <Edit2 className="w-4 h-4" />
+                          </button>
+                        )}
+                        {canDeleteItem && (
+                          <button
+                            type="button"
+                            onClick={() => setDeletingItem(item)}
+                            className="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors cursor-pointer"
+                            title="Hapus Tindak Lanjut"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        )}
+                      </>
+                    )}
+                  </div>
                 </div>
 
                 {/* Details Footer Row */}
@@ -386,6 +420,19 @@ export function ActionItemList({
         actionItemTitle={deletingItem?.title}
         onClose={() => setDeletingItem(null)}
         onSuccess={handleDeleted}
+      />
+
+      {/* Progress Log & Google Drive Dialog */}
+      <ActionItemLogDialog
+        isOpen={Boolean(loggingItem)}
+        item={loggingItem}
+        onClose={() => setLoggingItem(null)}
+        onItemUpdated={(updated) => {
+          setItems((prev) =>
+            prev.map((it) => (it.id === updated.id ? { ...it, ...updated } : it))
+          );
+          router.refresh();
+        }}
       />
     </div>
   );

@@ -1,19 +1,30 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { MOCK_MONTHLY_ACTIVITY } from '@/lib/mock-data';
 import { MonthlyActivity } from '@/lib/types';
 import { cn } from '@/lib/utils';
-import { RotateCcw, TrendingUp } from 'lucide-react';
+import { RotateCcw, TrendingUp, ArrowRight, ArrowUpRight } from 'lucide-react';
 
 interface ActivityTrendChartProps {
   data?: MonthlyActivity[];
+  onMonthClick?: (month: string) => void;
 }
 
-export function ActivityTrendChart({ data }: ActivityTrendChartProps) {
+export function ActivityTrendChart({ data, onMonthClick }: ActivityTrendChartProps) {
+  const router = useRouter();
   const chartData = data && data.length > 0 ? data : MOCK_MONTHLY_ACTIVITY;
   const [hoveredMonth, setHoveredMonth] = useState<string | null>(null);
   const [isAnimated, setIsAnimated] = useState(false);
+
+  const handleMonthClick = (month: string) => {
+    if (onMonthClick) {
+      onMonthClick(month);
+    } else {
+      router.push(`/semua-rapat?bulan=${encodeURIComponent(month)}`);
+    }
+  };
 
   // Trigger smooth wave growth on mount
   useEffect(() => {
@@ -101,14 +112,16 @@ export function ActivityTrendChart({ data }: ActivityTrendChartProps) {
               return (
                 <div
                   key={item.month}
+                  onClick={() => handleMonthClick(item.month)}
                   className="flex-1 h-full flex flex-col justify-end items-center group cursor-pointer"
                   onMouseEnter={() => setHoveredMonth(item.month)}
                   onMouseLeave={() => setHoveredMonth(null)}
+                  title={`Klik untuk melihat seluruh rapat bulan ${item.month} (${item.count} rapat)`}
                 >
                   {/* Tooltip / Value on top of bar */}
                   <div
                     className={cn(
-                      "text-[11px] font-extrabold mb-1.5 transition-all duration-200 transform",
+                      "text-[11px] font-extrabold mb-1.5 transition-all duration-200 transform flex items-center gap-0.5",
                       isHovered
                         ? "text-[#31889C] scale-110 -translate-y-1 opacity-100"
                         : isPeak
@@ -118,7 +131,8 @@ export function ActivityTrendChart({ data }: ActivityTrendChartProps) {
                         : "text-slate-300 opacity-0 group-hover:opacity-100"
                     )}
                   >
-                    {item.count}
+                    <span>{item.count}</span>
+                    {isHovered && <ArrowUpRight className="w-2.5 h-2.5" />}
                   </div>
 
                   {/* Fixed-height Bar Track Container */}
@@ -129,7 +143,7 @@ export function ActivityTrendChart({ data }: ActivityTrendChartProps) {
                         transitionDelay: `${idx * 50}ms`,
                       }}
                       className={cn(
-                        "w-full max-w-[26px] sm:max-w-[30px] rounded-t-md transition-all duration-700 ease-out relative group-hover:scale-y-105 origin-bottom",
+                        "w-full max-w-[26px] sm:max-w-[30px] rounded-t-md transition-all duration-700 ease-out relative group-hover:scale-y-105 group-hover:brightness-105 origin-bottom",
                         item.count === 0
                           ? "bg-slate-100 hover:bg-slate-200"
                           : isPeak
@@ -174,18 +188,28 @@ export function ActivityTrendChart({ data }: ActivityTrendChartProps) {
       </div>
 
       {/* Footer Info Callout - Interactive according to hovered month */}
-      <div className="mt-4 pt-2 bg-gradient-to-r from-[#F0F9FA] via-white to-[#F0F9FA]/50 border border-[#BCE3EB] rounded-xl p-3 flex items-center justify-between transition-all">
+      <div
+        onClick={() => {
+          const target = activeItem?.month || peakItem?.month;
+          if (target) handleMonthClick(target);
+        }}
+        className="mt-4 pt-2 bg-gradient-to-r from-[#F0F9FA] via-white to-[#F0F9FA]/50 border border-[#BCE3EB] hover:border-[#31889C] rounded-xl p-3 flex items-center justify-between transition-all cursor-pointer group shadow-2xs"
+        title="Klik untuk membuka semua rapat pada bulan ini"
+      >
         <div className="flex items-center gap-2 min-w-0">
           <span className="w-2.5 h-2.5 rounded-full bg-[#31889C] shrink-0 animate-pulse" />
-          <span className="text-[12.5px] text-slate-700 font-medium truncate">
+          <span className="text-[12.5px] text-slate-700 font-medium truncate group-hover:text-[#215865]">
             {activeItem
-              ? `Bulan ${activeItem.month} 2026: Aktivitas Rapat Dewan`
+              ? `Bulan ${activeItem.month} 2026: Klik untuk melihat rapat`
               : `Puncak Aktivitas Sidang (${peakItem?.month || 'Bulan Terpadat'})`}
           </span>
         </div>
-        <span className="text-[12.5px] text-[#215865] font-extrabold shrink-0 ml-2">
-          {activeItem ? `${activeItem.count} Sesi Rapat` : `${peakItem?.count || 0} Sesi Rapat`}
-        </span>
+        <div className="flex items-center gap-1.5 shrink-0 ml-2 text-[#215865] group-hover:text-[#31889C]">
+          <span className="text-[12.5px] font-extrabold">
+            {activeItem ? `${activeItem.count} Sesi Rapat` : `${peakItem?.count || 0} Sesi Rapat`}
+          </span>
+          <ArrowRight className="w-3.5 h-3.5 transition-transform group-hover:translate-x-1" />
+        </div>
       </div>
     </div>
   );

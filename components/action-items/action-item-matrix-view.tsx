@@ -27,6 +27,11 @@ import { ActionItemStatusBadge, ActionItemPriorityBadge } from './action-item-st
 import { ActionItemFormDialog } from './action-item-form-dialog';
 import { ActionItemDeleteDialog } from './action-item-delete-dialog';
 import { ActionItemLogDialog } from './action-item-log-dialog';
+import {
+  GoogleDriveLinkCard,
+  extractDriveLink,
+  cleanTextWithoutLink,
+} from './google-drive-link-badge';
 import { updateActionItemStatusAction } from '@/app/actions/action-item-actions';
 import { toast } from '@/components/providers/toast-provider';
 
@@ -426,11 +431,25 @@ export function ActionItemMatrixView({
                       {/* Butir Tindak Lanjut */}
                       <td className="py-3.5 px-4 align-top">
                         <p className="font-bold text-slate-900 leading-snug">{task.title}</p>
-                        {task.description && (
-                          <p className="text-[12px] text-slate-500 mt-0.5 line-clamp-2">
-                            {task.description}
-                          </p>
-                        )}
+                        {(() => {
+                          const driveUrl = extractDriveLink(task.description);
+                          const cleanDesc = driveUrl ? cleanTextWithoutLink(task.description) : task.description;
+
+                          return (
+                            <div className="space-y-1 mt-0.5">
+                              {cleanDesc ? (
+                                <p className="text-[12px] text-slate-500 line-clamp-2">
+                                  {cleanDesc}
+                                </p>
+                              ) : null}
+                              {driveUrl ? (
+                                <div className="pt-0.5">
+                                  <GoogleDriveLinkCard url={driveUrl} variant="badge" />
+                                </div>
+                              ) : null}
+                            </div>
+                          );
+                        })()}
                         {task.completedAt && (
                           <span className="inline-flex items-center gap-1 text-[11px] text-[#4D8F3D] font-medium mt-1">
                             <Check className="w-3 h-3" />

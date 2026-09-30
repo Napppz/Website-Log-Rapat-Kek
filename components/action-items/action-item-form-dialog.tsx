@@ -12,6 +12,11 @@ import {
   getActionItemFormOptionsAction,
 } from '@/app/actions/action-item-actions';
 import { ActionItem, ActionItemPriority, ActionItemStatus } from '@/lib/types';
+import {
+  GoogleDriveIcon,
+  extractDriveLink,
+  cleanTextWithoutLink,
+} from './google-drive-link-badge';
 
 interface ActionItemFormDialogProps {
   isOpen: boolean;
@@ -58,6 +63,7 @@ export function ActionItemFormDialog({
   // Form State
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
+  const [driveLink, setDriveLink] = useState('');
   const [picBiroId, setPicBiroId] = useState('');
   const [picUserId, setPicUserId] = useState('');
   const [dueDate, setDueDate] = useState('');
@@ -98,7 +104,14 @@ export function ActionItemFormDialog({
         const dd = String(due.getDate()).padStart(2, '0');
 
         setTitle(actionItem.title || '');
-        setDescription(actionItem.description || '');
+        const foundDrive = extractDriveLink(actionItem.description);
+        if (foundDrive) {
+          setDriveLink(foundDrive);
+          setDescription(cleanTextWithoutLink(actionItem.description));
+        } else {
+          setDriveLink('');
+          setDescription(actionItem.description || '');
+        }
         setPicBiroId(actionItem.picBiroId || (birosList[0]?.id ?? ''));
         setPicUserId(actionItem.picUserId || '');
         setDueDate(`${yyyy}-${mm}-${dd}`);
@@ -112,6 +125,7 @@ export function ActionItemFormDialog({
 
         setTitle('');
         setDescription('');
+        setDriveLink('');
         setPicBiroId(birosList[0]?.id || '');
         setPicUserId('');
         setDueDate(`${yyyy}-${mm}-${dd}`);
@@ -128,11 +142,22 @@ export function ActionItemFormDialog({
     setErrorMessage(null);
     setFieldErrors({});
 
+    let finalDescription = description.trim();
+    if (driveLink.trim()) {
+      let formattedLink = driveLink.trim();
+      if (!/^https?:\/\//i.test(formattedLink)) {
+        formattedLink = `https://${formattedLink}`;
+      }
+      finalDescription = finalDescription
+        ? `${finalDescription}\n\n📎 Tautan Google Drive: ${formattedLink}`
+        : `📎 Tautan Google Drive: ${formattedLink}`;
+    }
+
     // Zod client validation
     const rawData = {
       meetingId,
       title,
-      description: description || null,
+      description: finalDescription || null,
       picBiroId,
       picUserId: picUserId && picUserId.trim() !== '' ? picUserId : null,
       dueDate,
@@ -246,6 +271,34 @@ export function ActionItemFormDialog({
                 onChange={(e) => setDescription(e.target.value)}
                 className="w-full px-3.5 py-2 rounded-lg border border-slate-200 focus:outline-none focus:ring-2 focus:ring-[#31889C]/30 focus:border-[#31889C] text-slate-800 text-[13px]"
               />
+            </div>
+
+            {/* Tautan Google Drive / Dokumen Rujukan (Optional) */}
+            <div>
+              <div className="flex items-center justify-between mb-1">
+                <label className="text-[12px] font-bold text-slate-800 flex items-center gap-1.5">
+                  <GoogleDriveIcon className="w-3.5 h-3.5" />
+                  <span>Tautan Google Drive / Dokumen Rujukan <span className="text-slate-400 font-normal">(Opsional)</span></span>
+                </label>
+                <span className="text-[10.5px] text-slate-400">
+                  Folder Drive, Kerangka Acuan, atau Dokumen Terkait
+                </span>
+              </div>
+              <div className="relative">
+                <input
+                  type="url"
+                  placeholder="https://drive.google.com/drive/folders/... atau https://docs.google.com/..."
+                  value={driveLink}
+                  onChange={(e) => setDriveLink(e.target.value)}
+                  className="w-full pl-9 pr-3.5 py-2 rounded-lg border border-slate-200 focus:outline-none focus:ring-2 focus:ring-[#31889C]/30 focus:border-[#31889C] text-slate-800 text-[13px] font-mono"
+                />
+                <div className="absolute left-3 top-2.5 pointer-events-none">
+                  <GoogleDriveIcon className="w-4 h-4" />
+                </div>
+              </div>
+              <p className="mt-1 text-[11px] text-slate-400">
+                Tautkan Google Drive bahan rujukan agar PIC biro dapat langsung mengakses dokumen pendukung tugas ini.
+              </p>
             </div>
 
             {/* Biro PIC & User PIC Grid */}

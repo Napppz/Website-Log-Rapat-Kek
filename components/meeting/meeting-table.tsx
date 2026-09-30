@@ -25,11 +25,13 @@ import { MeetingDetailDialog } from './meeting-detail-dialog';
 import { useSession } from 'next-auth/react';
 import { deleteMeetingAction } from '@/app/actions/meeting-actions';
 import { toast, confirmModal } from '@/components/providers/toast-provider';
+import { parseMonthFilterIndex } from '@/lib/utils';
 
 interface MeetingTableProps {
   onViewAllMeetings?: () => void;
   filterBiro?: BiroCode | null;
   filterStatus?: MeetingStatus | null;
+  filterMonth?: string | null;
   isLoading?: boolean;
   initialMeetings?: Meeting[];
   pageSize?: number;
@@ -39,6 +41,7 @@ export function MeetingTable({
   onViewAllMeetings,
   filterBiro,
   filterStatus,
+  filterMonth,
   isLoading = false,
   initialMeetings,
   pageSize = 8,
@@ -170,6 +173,7 @@ export function MeetingTable({
   const filteredMeetings = useMemo(() => {
     // Clone and ensure newest date order
     const list = [...meetings];
+    const monthIdx = parseMonthFilterIndex(filterMonth);
 
     return list.filter((m) => {
       if (filterBiro && m.biroCode !== filterBiro) {
@@ -177,6 +181,12 @@ export function MeetingTable({
       }
       if (filterStatus && m.status !== filterStatus) {
         return false;
+      }
+      if (monthIdx !== null) {
+        const mDate = new Date(m.date);
+        if (mDate.getMonth() !== monthIdx) {
+          return false;
+        }
       }
       if (!searchFilter.trim()) return true;
       const q = searchFilter.toLowerCase();
@@ -187,7 +197,7 @@ export function MeetingTable({
         m.location.toLowerCase().includes(q)
       );
     });
-  }, [searchFilter, filterBiro, filterStatus]);
+  }, [searchFilter, filterBiro, filterStatus, filterMonth]);
 
   const handleResetFilter = () => {
     setSearchFilter('');
@@ -196,7 +206,7 @@ export function MeetingTable({
   // Reset page when filters change
   React.useEffect(() => {
     setCurrentPage(1);
-  }, [searchFilter, filterBiro, filterStatus]);
+  }, [searchFilter, filterBiro, filterStatus, filterMonth]);
 
   const itemsPerPage = pageSize;
   const totalPages = Math.max(1, Math.ceil(filteredMeetings.length / itemsPerPage));

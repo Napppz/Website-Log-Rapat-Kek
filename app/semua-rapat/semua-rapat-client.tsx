@@ -4,12 +4,13 @@ import React, { useState } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { MeetingTable } from '@/components/meeting/meeting-table';
 import { MeetingStatus, BiroCode, Meeting } from '@/lib/types';
-import { PlusCircle, Filter, Trash2, AlertTriangle, Loader2, CheckCircle2, X, UploadCloud, Sparkles } from 'lucide-react';
+import { PlusCircle, Filter, Trash2, AlertTriangle, Loader2, CheckCircle2, X, UploadCloud, Sparkles, Calendar } from 'lucide-react';
 import Link from 'next/link';
 import { useSession } from 'next-auth/react';
 import { deleteAllMeetingsAction } from '@/app/actions/meeting-actions';
 import { UploadMeetingDialog } from '@/components/meeting/upload-meeting-dialog';
 import { toast } from '@/components/providers/toast-provider';
+import { parseMonthFilterIndex, getMonthDisplayName } from '@/lib/utils';
 
 interface SemuaRapatClientProps {
   initialMeetings: Meeting[];
@@ -30,6 +31,7 @@ export function SemuaRapatClient({ initialMeetings }: SemuaRapatClientProps) {
 
   const statusParam = searchParams.get('status') as MeetingStatus | null;
   const biroParam = searchParams.get('biro') as BiroCode | null;
+  const monthParam = searchParams.get('bulan') || searchParams.get('month');
 
   const statusFilters: { label: string; value: MeetingStatus | 'ALL' }[] = [
     { label: 'Semua Status', value: 'ALL' },
@@ -40,11 +42,13 @@ export function SemuaRapatClient({ initialMeetings }: SemuaRapatClientProps) {
   ];
 
   const handleSelectStatus = (val: MeetingStatus | 'ALL') => {
+    const params = new URLSearchParams(searchParams.toString());
     if (val === 'ALL') {
-      router.push('/semua-rapat');
+      params.delete('status');
     } else {
-      router.push(`/semua-rapat?status=${val}`);
+      params.set('status', val);
     }
+    router.push(params.toString() ? `/semua-rapat?${params.toString()}` : '/semua-rapat');
   };
 
   const handleDeleteAll = async () => {
@@ -127,29 +131,53 @@ export function SemuaRapatClient({ initialMeetings }: SemuaRapatClientProps) {
         </div>
       </div>
 
-      {/* Filter Tabs */}
-      <div className="flex flex-wrap items-center gap-2 pb-1">
-        <span className="text-[12px] font-semibold text-slate-500 mr-1 flex items-center gap-1">
-          <Filter className="w-3.5 h-3.5 text-[#31889C]" />
-          Filter:
-        </span>
-        {statusFilters.map((tab) => {
-          const isActive = tab.value === 'ALL' ? !statusParam : statusParam === tab.value;
-          return (
+      {/* Filter Tabs & Active Month Indicator */}
+      <div className="flex flex-wrap items-center justify-between gap-3 pb-1">
+        <div className="flex flex-wrap items-center gap-2">
+          <span className="text-[12px] font-semibold text-slate-500 mr-1 flex items-center gap-1">
+            <Filter className="w-3.5 h-3.5 text-[#31889C]" />
+            Filter:
+          </span>
+          {statusFilters.map((tab) => {
+            const isActive = tab.value === 'ALL' ? !statusParam : statusParam === tab.value;
+            return (
+              <button
+                key={tab.value}
+                type="button"
+                onClick={() => handleSelectStatus(tab.value)}
+                className={`px-3 py-1.5 rounded-lg text-[12px] font-semibold transition-all cursor-pointer ${
+                  isActive
+                    ? 'bg-[#31889C] text-white shadow-xs'
+                    : 'bg-white border border-slate-200 text-slate-700 hover:bg-[#F0F9FA] hover:text-[#31889C]'
+                }`}
+              >
+                {tab.label}
+              </button>
+            );
+          })}
+        </div>
+
+        {monthParam && (
+          <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-[#E8F5F7] border border-[#BCE3EB] text-[#215865] text-[12px] font-bold shadow-2xs animate-in fade-in">
+            <Calendar className="w-3.5 h-3.5 text-[#31889C]" />
+            <span>
+              Periode Bulan: {getMonthDisplayName(parseMonthFilterIndex(monthParam) ?? 8)}
+            </span>
             <button
-              key={tab.value}
               type="button"
-              onClick={() => handleSelectStatus(tab.value)}
-              className={`px-3 py-1.5 rounded-lg text-[12px] font-semibold transition-all cursor-pointer ${
-                isActive
-                  ? 'bg-[#31889C] text-white shadow-xs'
-                  : 'bg-white border border-slate-200 text-slate-700 hover:bg-[#F0F9FA] hover:text-[#31889C]'
-              }`}
+              onClick={() => {
+                const params = new URLSearchParams(searchParams.toString());
+                params.delete('bulan');
+                params.delete('month');
+                router.push(params.toString() ? `/semua-rapat?${params.toString()}` : '/semua-rapat');
+              }}
+              className="p-1 hover:bg-[#BCE3EB] rounded text-slate-500 hover:text-slate-800 transition-colors ml-0.5 cursor-pointer"
+              title="Hapus filter bulan & tampilkan semua bulan"
             >
-              {tab.label}
+              <X className="w-3.5 h-3.5" />
             </button>
-          );
-        })}
+          </div>
+        )}
       </div>
 
       {/* Meeting Table */}
@@ -157,6 +185,7 @@ export function SemuaRapatClient({ initialMeetings }: SemuaRapatClientProps) {
         initialMeetings={initialMeetings}
         filterStatus={statusParam}
         filterBiro={biroParam}
+        filterMonth={monthParam}
       />
 
       {/* Danger Modal: Konfirmasi Hapus Semua Rapat */}

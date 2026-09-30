@@ -17,6 +17,13 @@ import {
 import { ActionItem, ActionItemStatus } from '@/lib/types';
 import { ActionItemStatusBadge } from './action-item-status-badge';
 import {
+  GoogleDriveIcon,
+  GoogleDriveLinkCard,
+  extractDriveLink,
+  extractAnyLink,
+  cleanTextWithoutLink,
+} from './google-drive-link-badge';
+import {
   getActionItemLogsAction,
   addActionItemLogAction,
 } from '@/app/actions/action-item-actions';
@@ -41,6 +48,7 @@ export function ActionItemLogDialog({
 
   // Form states
   const [notes, setNotes] = useState('');
+  const [driveLink, setDriveLink] = useState('');
   const [progress, setProgress] = useState(
     item?.status === 'COMPLETED' ? 100 : item?.status === 'IN_PROGRESS' ? 50 : 0
   );
@@ -55,6 +63,7 @@ export function ActionItemLogDialog({
         item.status === 'COMPLETED' ? 100 : item.status === 'IN_PROGRESS' ? 50 : 0
       );
       setNotes('');
+      setDriveLink('');
       fetchLogs(item.id);
     }
   }, [isOpen, item]);
@@ -86,16 +95,26 @@ export function ActionItemLogDialog({
 
     try {
       setIsSubmitting(true);
+      let finalNotes = notes.trim();
+      if (driveLink.trim()) {
+        let formattedLink = driveLink.trim();
+        if (!/^https?:\/\//i.test(formattedLink)) {
+          formattedLink = `https://${formattedLink}`;
+        }
+        finalNotes = `${finalNotes}\n\n📎 Tautan Google Drive: ${formattedLink}`;
+      }
+
       const res = await addActionItemLogAction({
         actionItemId: item.id,
-        notes: notes.trim(),
+        notes: finalNotes,
         progress: Number(progress),
         newStatus: selectedStatus,
       });
 
       if (res.success && res.data) {
-        toast.success('Catatan progres berhasil disimpan dan riwayat diperbarui.');
+        toast.success('Catatan progres & tautan bukti berhasil disimpan.');
         setNotes('');
+        setDriveLink('');
         setLogs((prev) => [res.data.log, ...prev]);
         if (onItemUpdated && res.data.updatedItem) {
           onItemUpdated(res.data.updatedItem);
@@ -221,6 +240,34 @@ export function ActionItemLogDialog({
                 rows={3}
                 className="w-full px-3 py-2 rounded-lg border border-slate-200 focus:outline-none focus:ring-2 focus:ring-[#31889C]/20 focus:border-[#31889C] text-[13px] placeholder:text-slate-400"
               />
+            </div>
+
+            {/* Google Drive Link Input */}
+            <div>
+              <div className="flex items-center justify-between mb-1">
+                <label className="text-[12px] font-semibold text-slate-700 flex items-center gap-1.5">
+                  <GoogleDriveIcon className="w-3.5 h-3.5" />
+                  <span>Tautan Google Drive / Berkas Bukti (Opsional):</span>
+                </label>
+                <span className="text-[10.5px] text-slate-400">
+                  Folder, Dokumen, Spreadsheet, atau Berkas Cloud
+                </span>
+              </div>
+              <div className="relative">
+                <input
+                  type="url"
+                  value={driveLink}
+                  onChange={(e) => setDriveLink(e.target.value)}
+                  placeholder="https://drive.google.com/drive/folders/... atau https://docs.google.com/..."
+                  className="w-full pl-9 pr-3 py-2 rounded-lg border border-slate-200 focus:outline-none focus:ring-2 focus:ring-[#31889C]/20 focus:border-[#31889C] text-[13px] placeholder:text-slate-400 font-mono"
+                />
+                <div className="absolute left-3 top-2.5 pointer-events-none">
+                  <GoogleDriveIcon className="w-4 h-4" />
+                </div>
+              </div>
+              <p className="text-[11px] text-slate-400 mt-1">
+                Lampirkan tautan Google Drive untuk membagikan berkas bukti, foto kegiatan, atau dokumen hasil tindak lanjut.
+              </p>
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -404,10 +451,29 @@ export function ActionItemLogDialog({
                         </div>
                       )}
 
-                      {/* Note */}
-                      <p className="mt-3 text-[13px] text-slate-700 leading-relaxed bg-[#F8FAFC] p-3 rounded-lg border border-slate-100 whitespace-pre-wrap">
-                        {log.notes}
-                      </p>
+                      {/* Note & Google Drive Card */}
+                      {(() => {
+                        const driveUrl = extractDriveLink(log.notes) || extractAnyLink(log.notes);
+                        const cleanNotes = driveUrl ? cleanTextWithoutLink(log.notes) : log.notes;
+
+                        return (
+                          <div className="mt-3 space-y-2">
+                            {cleanNotes ? (
+                              <p className="text-[13px] text-slate-700 leading-relaxed bg-[#F8FAFC] p-3 rounded-lg border border-slate-100 whitespace-pre-wrap">
+                                {cleanNotes}
+                              </p>
+                            ) : null}
+
+                            {driveUrl ? (
+                              <GoogleDriveLinkCard
+                                url={driveUrl}
+                                label="Dokumen Bukti / Hasil Tindak Lanjut"
+                                variant="card"
+                              />
+                            ) : null}
+                          </div>
+                        );
+                      })()}
                     </div>
                   </div>
                 ))}
