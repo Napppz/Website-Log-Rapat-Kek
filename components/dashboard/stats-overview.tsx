@@ -20,7 +20,25 @@ import { AnimatedCounter } from '@/components/ui/animated-counter';
 
 interface StatsOverviewProps {
   metrics?: DashboardMetric[];
+  selectedMonth?: string | null;
+  selectedYear?: number;
+  onResetMonth?: () => void;
 }
+
+const FULL_MONTH_NAMES: Record<string, string> = {
+  Jan: 'Januari',
+  Feb: 'Februari',
+  Mar: 'Maret',
+  Apr: 'April',
+  Mei: 'Mei',
+  Jun: 'Juni',
+  Jul: 'Juli',
+  Agu: 'Agustus',
+  Sep: 'September',
+  Okt: 'Oktober',
+  Nov: 'November',
+  Des: 'Desember',
+};
 
 const METRIC_LINKS: Record<string, { href: string; actionLabel: string }> = {
   'total-rapat': { href: '/semua-rapat', actionLabel: 'Lihat Semua' },
@@ -30,7 +48,12 @@ const METRIC_LINKS: Record<string, { href: string; actionLabel: string }> = {
   'tindak-lanjut-selesai': { href: '/tindak-lanjut?status=COMPLETED', actionLabel: 'Cek Arsip' },
 };
 
-export function StatsOverview({ metrics = MOCK_METRICS }: StatsOverviewProps) {
+export function StatsOverview({
+  metrics = MOCK_METRICS,
+  selectedMonth = null,
+  selectedYear = 2026,
+  onResetMonth,
+}: StatsOverviewProps) {
   const [isAnimated, setIsAnimated] = useState(false);
 
   useEffect(() => {
@@ -40,12 +63,42 @@ export function StatsOverview({ metrics = MOCK_METRICS }: StatsOverviewProps) {
     return () => clearTimeout(timer);
   }, []);
 
+  const fullMonthName = selectedMonth ? (FULL_MONTH_NAMES[selectedMonth] || selectedMonth) : '';
+
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+    <div className="flex flex-col gap-3">
+      {/* Active Month Filter Pill Indicator */}
+      {selectedMonth && (
+        <div className="flex items-center justify-between px-3.5 py-2 bg-gradient-to-r from-[#F0F9FA] via-white to-[#F0F9FA]/60 border border-[#BCE3EB] rounded-xl text-xs shadow-2xs animate-in fade-in duration-200">
+          <div className="flex items-center gap-2 text-[#215865] font-semibold min-w-0">
+            <span className="w-2 h-2 rounded-full bg-[#31889C] animate-pulse shrink-0" />
+            <span className="truncate">
+              Menampilkan data statistik untuk: <strong className="text-[#215865]">Bulan {fullMonthName} {selectedYear}</strong>
+            </span>
+          </div>
+          {onResetMonth && (
+            <button
+              type="button"
+              onClick={onResetMonth}
+              className="inline-flex items-center gap-1 text-[11px] font-bold text-[#31889C] hover:text-[#215865] bg-white px-2.5 py-1 rounded-lg border border-[#BCE3EB] hover:bg-[#F0F9FA] transition-all cursor-pointer shadow-2xs shrink-0 ml-2"
+              title={`Kembali ke tampilan statistik tahunan (YTD ${selectedYear})`}
+            >
+              <span>✕</span>
+              <span>Tampilkan Semua (YTD {selectedYear})</span>
+            </button>
+          )}
+        </div>
+      )}
+
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
       {metrics.map((metric, idx) => {
         const isDanger = metric.variant === 'danger';
         const isSuccess = metric.variant === 'success';
-        const linkInfo = METRIC_LINKS[metric.id] || { href: '/semua-rapat', actionLabel: 'Buka' };
+        const baseLinkInfo = METRIC_LINKS[metric.id] || { href: '/semua-rapat', actionLabel: 'Buka' };
+        const linkHref = selectedMonth && (metric.id === 'total-rapat' || metric.id === 'rapat-bulan-ini')
+          ? `${baseLinkInfo.href}?bulan=${encodeURIComponent(selectedMonth)}`
+          : baseLinkInfo.href;
+        const linkInfo = { ...baseLinkInfo, href: linkHref };
         const numValue =
           typeof metric.value === 'number'
             ? metric.value
@@ -185,6 +238,8 @@ export function StatsOverview({ metrics = MOCK_METRICS }: StatsOverviewProps) {
           </Link>
         );
       })}
+      </div>
     </div>
   );
 }
+

@@ -1,30 +1,57 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
 import { MOCK_MONTHLY_ACTIVITY } from '@/lib/mock-data';
 import { MonthlyActivity } from '@/lib/types';
 import { cn } from '@/lib/utils';
-import { RotateCcw, TrendingUp, ArrowRight, ArrowUpRight } from 'lucide-react';
+import { RotateCcw, TrendingUp, Calendar } from 'lucide-react';
+
+const FULL_MONTH_NAMES: Record<string, string> = {
+  Jan: 'Januari',
+  Feb: 'Februari',
+  Mar: 'Maret',
+  Apr: 'April',
+  Mei: 'Mei',
+  Jun: 'Juni',
+  Jul: 'Juli',
+  Agu: 'Agustus',
+  Sep: 'September',
+  Okt: 'Oktober',
+  Nov: 'November',
+  Des: 'Desember',
+};
 
 interface ActivityTrendChartProps {
   data?: MonthlyActivity[];
+  selectedMonth?: string | null;
+  onMonthSelect?: (month: string | null) => void;
   onMonthClick?: (month: string) => void;
+  selectedYear?: number;
+  availableYears?: number[];
+  onYearChange?: (year: number) => void;
 }
 
-export function ActivityTrendChart({ data, onMonthClick }: ActivityTrendChartProps) {
-  const router = useRouter();
+export function ActivityTrendChart({
+  data,
+  selectedMonth: selectedMonthProp,
+  onMonthSelect,
+  onMonthClick,
+  selectedYear = 2026,
+  availableYears = [2026, 2027],
+  onYearChange,
+}: ActivityTrendChartProps) {
   const chartData = data && data.length > 0 ? data : MOCK_MONTHLY_ACTIVITY;
+
+  const peakItem =
+    chartData.find((m) => m.isPeak) ||
+    chartData.reduce((prev, curr) => (curr.count > prev.count ? curr : prev), chartData[0]);
+
+  const [localSelectedMonth, setLocalSelectedMonth] = useState<string | null>(null);
+  const effectiveSelectedMonth =
+    selectedMonthProp !== undefined ? selectedMonthProp : localSelectedMonth;
+
   const [hoveredMonth, setHoveredMonth] = useState<string | null>(null);
   const [isAnimated, setIsAnimated] = useState(false);
-
-  const handleMonthClick = (month: string) => {
-    if (onMonthClick) {
-      onMonthClick(month);
-    } else {
-      router.push(`/semua-rapat?bulan=${encodeURIComponent(month)}`);
-    }
-  };
 
   // Trigger smooth wave growth on mount
   useEffect(() => {
@@ -33,6 +60,19 @@ export function ActivityTrendChart({ data, onMonthClick }: ActivityTrendChartPro
     }, 100);
     return () => clearTimeout(timer);
   }, []);
+
+  const handleMonthClick = (month: string) => {
+    const nextMonth = effectiveSelectedMonth === month ? null : month;
+    if (selectedMonthProp === undefined) {
+      setLocalSelectedMonth(nextMonth);
+    }
+    if (onMonthSelect) {
+      onMonthSelect(nextMonth);
+    }
+    if (onMonthClick) {
+      onMonthClick(month);
+    }
+  };
 
   const handleReplay = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -44,18 +84,20 @@ export function ActivityTrendChart({ data, onMonthClick }: ActivityTrendChartPro
 
   // Dynamic maximum value from real database counts
   const maxCount = Math.max(...chartData.map((m) => m.count), 1);
+  const totalYearCount = chartData.reduce((sum, item) => sum + item.count, 0);
+
   const getHeightPercent = (count: number) => {
     if (count === 0) return 0;
-    return Math.max(Math.round((count / maxCount) * 100), 6);
+    return Math.max(Math.round((count / maxCount) * 100), 8);
   };
 
-  const activeItem = hoveredMonth
-    ? chartData.find((m) => m.month === hoveredMonth)
-    : null;
-
-  const peakItem =
-    chartData.find((m) => m.isPeak) ||
-    chartData.reduce((prev, curr) => (curr.count > prev.count ? curr : prev), chartData[0]);
+  const activeMonth = hoveredMonth || effectiveSelectedMonth;
+  const activeItem = chartData.find((m) => m.month === activeMonth) || peakItem;
+  const fullMonthName = FULL_MONTH_NAMES[activeItem?.month || ''] || activeItem?.month || '';
+  const monthPercentage =
+    totalYearCount > 0 && activeItem
+      ? Math.round((activeItem.count / totalYearCount) * 100)
+      : 0;
 
   const dateRangeLabel =
     chartData.length > 0
@@ -65,36 +107,60 @@ export function ActivityTrendChart({ data, onMonthClick }: ActivityTrendChartPro
   return (
     <div className="lg:col-span-5 rounded-2xl bg-white p-6 shadow-sm border border-slate-200 flex flex-col justify-between transition-all">
       <div>
-        {/* Header with Title and Interactive Replay Pill */}
-        <div className="flex items-start justify-between">
+        {/* Header with Title, Year Selector & Interactive Replay Pill */}
+        <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3">
           <div>
             <span className="font-semibold text-[11px] text-[#31889C] uppercase tracking-wider flex items-center gap-1.5">
               <TrendingUp className="w-3.5 h-3.5 text-[#31889C]" />
               <span>Tren Aktivitas Sidang</span>
             </span>
             <h2 className="font-bold text-[18px] text-slate-900 mt-0.5">
-              Tren Rapat per Bulan (2026)
+              Tren Rapat per Bulan ({selectedYear})
             </h2>
             <p className="text-[12px] text-slate-500 mt-0.5">
-              Frekuensi sinkronisasi regulasi &amp; akselerasi investasi strategis
+              Klik grafik batang setiap bulan untuk melihat rincian jumlah rapat
             </p>
           </div>
 
-          <button
-            type="button"
-            onClick={handleReplay}
-            className="group inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-[#F0F9FA] hover:bg-[#E8F5F7] border border-[#BCE3EB] text-[#215865] text-[11px] font-bold transition-all cursor-pointer shadow-2xs"
-            title="Klik untuk memutar ulang animasi tren"
-          >
-            <span>{dateRangeLabel}</span>
-            <RotateCcw className="w-3 h-3 text-[#31889C] group-hover:rotate-180 transition-transform duration-500" />
-          </button>
+          <div className="flex items-center gap-2 self-start sm:self-auto shrink-0">
+            {/* Year Switcher Pills */}
+            {availableYears && availableYears.length > 1 && (
+              <div className="inline-flex items-center bg-[#F0F9FA] p-0.5 rounded-full border border-[#BCE3EB]">
+                {availableYears.map((yr) => (
+                  <button
+                    key={yr}
+                    type="button"
+                    onClick={() => onYearChange?.(yr)}
+                    className={cn(
+                      "px-2.5 py-0.5 rounded-full text-[11px] font-extrabold transition-all cursor-pointer",
+                      selectedYear === yr
+                        ? "bg-[#215865] text-white shadow-2xs"
+                        : "text-[#215865]/70 hover:text-[#215865] hover:bg-white/60"
+                    )}
+                    title={`Pilih data rapat tahun ${yr}`}
+                  >
+                    {yr}
+                  </button>
+                ))}
+              </div>
+            )}
+
+            <button
+              type="button"
+              onClick={handleReplay}
+              className="group inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-[#F0F9FA] hover:bg-[#E8F5F7] border border-[#BCE3EB] text-[#215865] text-[11px] font-bold transition-all cursor-pointer shadow-2xs"
+              title="Klik untuk memutar ulang animasi tren"
+            >
+              <span>{dateRangeLabel}</span>
+              <RotateCcw className="w-3 h-3 text-[#31889C] group-hover:rotate-180 transition-transform duration-500" />
+            </button>
+          </div>
         </div>
 
         {/* Bar Chart Area */}
         <div className="mt-6 relative">
           {/* Subtle Horizontal Background Guide Lines */}
-          <div className="absolute inset-x-0 top-6 bottom-7 flex flex-col justify-between pointer-events-none opacity-40">
+          <div className="absolute inset-x-0 top-7 bottom-7 flex flex-col justify-between pointer-events-none opacity-40">
             <div className="border-b border-dashed border-slate-200 w-full" />
             <div className="border-b border-dashed border-slate-200 w-full" />
             <div className="border-b border-dashed border-slate-200 w-full" />
@@ -102,54 +168,78 @@ export function ActivityTrendChart({ data, onMonthClick }: ActivityTrendChartPro
           </div>
 
           {/* Bar Columns Container with fixed height so percentages render properly */}
-          <div className="h-48 w-full flex items-end justify-between gap-1.5 sm:gap-2 pt-2 px-1 relative z-10">
+          <div className="h-52 w-full flex items-end justify-between gap-1 sm:gap-2 pt-2 px-1 relative z-10">
             {chartData.map((item, idx) => {
               const heightPercent = getHeightPercent(item.count);
               const isPeak = item.isPeak && item.count > 0;
+              const isSelected = effectiveSelectedMonth === item.month;
               const isHovered = hoveredMonth === item.month;
+              const isActive = isSelected || isHovered;
               const ratio = maxCount > 0 ? item.count / maxCount : 0;
 
               return (
                 <div
                   key={item.month}
                   onClick={() => handleMonthClick(item.month)}
-                  className="flex-1 h-full flex flex-col justify-end items-center group cursor-pointer"
+                  className="flex-1 h-full flex flex-col justify-end items-center group cursor-pointer focus:outline-none"
                   onMouseEnter={() => setHoveredMonth(item.month)}
                   onMouseLeave={() => setHoveredMonth(null)}
-                  title={`Klik untuk melihat seluruh rapat bulan ${item.month} (${item.count} rapat)`}
+                  role="button"
+                  tabIndex={0}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                      e.preventDefault();
+                      handleMonthClick(item.month);
+                    }
+                  }}
+                  title={`Klik untuk melihat & memfilter rapat bulan ${FULL_MONTH_NAMES[item.month] || item.month} (${item.count} rapat)`}
                 >
                   {/* Tooltip / Value on top of bar */}
-                  <div
-                    className={cn(
-                      "text-[11px] font-extrabold mb-1.5 transition-all duration-200 transform flex items-center gap-0.5",
-                      isHovered
-                        ? "text-[#31889C] scale-110 -translate-y-1 opacity-100"
-                        : isPeak
-                        ? "text-[#215865] opacity-100"
-                        : item.count > 0
-                        ? "text-slate-400 opacity-0 group-hover:opacity-100"
-                        : "text-slate-300 opacity-0 group-hover:opacity-100"
+                  <div className="h-8 w-full flex items-end justify-center mb-1.5 relative">
+                    {isActive ? (
+                      <div className="absolute -top-1 left-1/2 -translate-x-1/2 z-30 flex flex-col items-center animate-in fade-in zoom-in-75 duration-150">
+                        <div className="bg-[#215865] text-white text-[11px] font-extrabold px-2 py-0.5 rounded-full shadow-md whitespace-nowrap flex items-center gap-1 border border-[#31889C]/50">
+                          <span className="w-1.5 h-1.5 rounded-full bg-[#7CC563] animate-pulse" />
+                          <span>{item.count} Rapat</span>
+                        </div>
+                        <div className="w-1.5 h-1.5 bg-[#215865] rotate-45 -mt-0.5 border-r border-b border-[#31889C]/50" />
+                      </div>
+                    ) : (
+                      <span
+                        className={cn(
+                          "text-[11px] font-bold transition-all",
+                          isPeak
+                            ? "text-[#215865] font-extrabold"
+                            : item.count > 0
+                            ? "text-slate-600"
+                            : "text-slate-300"
+                        )}
+                      >
+                        {item.count}
+                      </span>
                     )}
-                  >
-                    <span>{item.count}</span>
-                    {isHovered && <ArrowUpRight className="w-2.5 h-2.5" />}
                   </div>
 
                   {/* Fixed-height Bar Track Container */}
                   <div className="w-full h-32 flex items-end justify-center px-0.5">
                     <div
                       style={{
-                        height: isAnimated ? `${heightPercent}%` : item.count > 0 ? '4px' : '2px',
-                        transitionDelay: `${idx * 50}ms`,
+                        height: isAnimated ? `${heightPercent}%` : item.count > 0 ? '6px' : '2px',
+                        transitionDelay: `${idx * 40}ms`,
                       }}
                       className={cn(
-                        "w-full max-w-[26px] sm:max-w-[30px] rounded-t-md transition-all duration-700 ease-out relative group-hover:scale-y-105 group-hover:brightness-105 origin-bottom",
+                        "w-full max-w-[26px] sm:max-w-[32px] rounded-t-lg transition-all duration-500 ease-out relative origin-bottom",
+                        isSelected
+                          ? "ring-2 ring-[#215865] ring-offset-2 scale-y-[1.03] shadow-md shadow-[#215865]/25 brightness-110"
+                          : isHovered
+                          ? "scale-y-105 brightness-105 shadow-xs"
+                          : "",
                         item.count === 0
                           ? "bg-slate-100 hover:bg-slate-200"
                           : isPeak
-                          ? "bg-gradient-to-t from-[#215865] via-[#31889C] to-[#51ADC2] shadow-md shadow-[#31889C]/25 ring-1 ring-[#31889C]/50"
-                          : isHovered
-                          ? "bg-gradient-to-t from-[#266F80] to-[#51ADC2] shadow-xs"
+                          ? "bg-gradient-to-t from-[#215865] via-[#31889C] to-[#51ADC2]"
+                          : isSelected
+                          ? "bg-gradient-to-t from-[#215865] to-[#31889C]"
                           : ratio >= 0.7
                           ? "bg-gradient-to-t from-[#31889C] to-[#80C3D1]"
                           : ratio >= 0.4
@@ -159,7 +249,7 @@ export function ActivityTrendChart({ data, onMonthClick }: ActivityTrendChartPro
                     >
                       {/* Peak indicator dot & pulse */}
                       {isPeak && (
-                        <div className="absolute -top-1 left-1/2 -translate-x-1/2 flex items-center justify-center">
+                        <div className="absolute -top-1 left-1/2 -translate-x-1/2 flex items-center justify-center pointer-events-none">
                           <span className="w-2 h-2 rounded-full bg-[#31889C] animate-ping absolute" />
                           <span className="w-1.5 h-1.5 rounded-full bg-[#215865] relative z-10" />
                         </div>
@@ -170,12 +260,14 @@ export function ActivityTrendChart({ data, onMonthClick }: ActivityTrendChartPro
                   {/* Month Label */}
                   <span
                     className={cn(
-                      "text-[11px] font-semibold mt-2 transition-colors",
-                      isHovered
-                        ? "text-[#31889C] font-bold"
+                      "text-[11px] mt-2 transition-all px-2 py-0.5 rounded-full select-none",
+                      isSelected
+                        ? "bg-[#215865] text-white font-extrabold shadow-2xs"
+                        : isHovered
+                        ? "bg-[#F0F9FA] text-[#31889C] font-bold"
                         : isPeak
                         ? "text-[#215865] font-bold"
-                        : "text-slate-500"
+                        : "text-slate-500 font-medium"
                     )}
                   >
                     {item.month}
@@ -187,30 +279,55 @@ export function ActivityTrendChart({ data, onMonthClick }: ActivityTrendChartPro
         </div>
       </div>
 
-      {/* Footer Info Callout - Interactive according to hovered month */}
-      <div
-        onClick={() => {
-          const target = activeItem?.month || peakItem?.month;
-          if (target) handleMonthClick(target);
-        }}
-        className="mt-4 pt-2 bg-gradient-to-r from-[#F0F9FA] via-white to-[#F0F9FA]/50 border border-[#BCE3EB] hover:border-[#31889C] rounded-xl p-3 flex items-center justify-between transition-all cursor-pointer group shadow-2xs"
-        title="Klik untuk membuka semua rapat pada bulan ini"
-      >
-        <div className="flex items-center gap-2 min-w-0">
-          <span className="w-2.5 h-2.5 rounded-full bg-[#31889C] shrink-0 animate-pulse" />
-          <span className="text-[12.5px] text-slate-700 font-medium truncate group-hover:text-[#215865]">
-            {activeItem
-              ? `Bulan ${activeItem.month} 2026: Klik untuk melihat rapat`
-              : `Puncak Aktivitas Sidang (${peakItem?.month || 'Bulan Terpadat'})`}
-          </span>
+      {/* Footer Info Callout - Displays detailed count for selected / active month */}
+      <div className="mt-4 pt-2 bg-gradient-to-r from-[#F0F9FA] via-white to-[#F0F9FA]/50 border border-[#BCE3EB] rounded-xl p-3 flex items-center justify-between transition-all shadow-2xs">
+        <div className="flex items-center gap-2.5 min-w-0">
+          <div className="w-8 h-8 rounded-lg bg-[#31889C]/10 border border-[#BCE3EB] flex items-center justify-center shrink-0 text-[#215865]">
+            <Calendar className="w-4 h-4 text-[#31889C]" />
+          </div>
+          <div className="min-w-0">
+            <div className="flex items-center gap-1.5">
+              <span className="text-[13px] font-bold text-slate-800">
+                {effectiveSelectedMonth
+                  ? `Bulan ${fullMonthName} ${selectedYear}`
+                  : `Seluruh Rapat ${selectedYear} (YTD)`}
+              </span>
+              {effectiveSelectedMonth && activeItem?.isPeak && (
+                <span className="text-[10px] font-bold px-1.5 py-0.5 bg-[#FEF3C7] text-[#92400E] rounded-md border border-[#FDE68A]">
+                  Puncak
+                </span>
+              )}
+            </div>
+            <p className="text-[11.5px] text-slate-500 truncate">
+              {effectiveSelectedMonth
+                ? `${activeItem?.count || 0} rapat (${monthPercentage}% dari total) • Kartu statistik di atas otomatis terfilter`
+                : 'Klik batang bulan di atas untuk melihat & memfilter statistik'}
+            </p>
+          </div>
         </div>
-        <div className="flex items-center gap-1.5 shrink-0 ml-2 text-[#215865] group-hover:text-[#31889C]">
-          <span className="text-[12.5px] font-extrabold">
-            {activeItem ? `${activeItem.count} Sesi Rapat` : `${peakItem?.count || 0} Sesi Rapat`}
-          </span>
-          <ArrowRight className="w-3.5 h-3.5 transition-transform group-hover:translate-x-1" />
+
+        <div className="flex items-center gap-2 shrink-0 ml-3">
+          {effectiveSelectedMonth && (
+            <button
+              type="button"
+              onClick={() => handleMonthClick(effectiveSelectedMonth)}
+              className="text-[11px] font-semibold text-[#31889C] hover:text-[#215865] underline cursor-pointer mr-1 hidden sm:inline"
+              title="Reset pilihan bulan"
+            >
+              Reset
+            </button>
+          )}
+          <div className="bg-[#215865] text-white px-3 py-1.5 rounded-xl shadow-xs flex items-baseline gap-1">
+            <span className="text-[15px] font-extrabold tracking-tight">
+              {effectiveSelectedMonth ? activeItem?.count ?? 0 : totalYearCount}
+            </span>
+            <span className="text-[11px] font-medium text-[#BCE3EB]">
+              Rapat
+            </span>
+          </div>
         </div>
       </div>
     </div>
   );
 }
+

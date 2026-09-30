@@ -59,6 +59,7 @@ model Biro {
   meetingBiros    MeetingBiro[]
   sequence        BiroMeetingSequence?
   actionItems     ActionItem[]         @relation("BiroActionItems")
+  teams           BiroTeam[]
 
   @@index([code])
   @@map("biro")
