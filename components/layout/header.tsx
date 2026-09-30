@@ -84,18 +84,6 @@ export function Header({
 
       {/* Right: Actions, Notifications & Profile */}
       <div className="flex items-center gap-2 sm:gap-4 shrink-0 ml-3">
-        {/* "+ Buat Rapat" button (Hidden for STAFF & VIEWER) */}
-        {canCreateMeeting && (
-          <button
-            type="button"
-            onClick={onCreateMeetingClick}
-            className="flex items-center gap-1.5 px-3.5 py-2 rounded-lg bg-[#31889C] hover:bg-[#266F80] text-white transition-all shadow-xs font-semibold text-[13px] cursor-pointer"
-          >
-            <Plus className="w-4 h-4" />
-            <span className="hidden sm:inline">Buat Rapat</span>
-          </button>
-        )}
-
         {/* Notification Bell */}
         <div className="relative">
           <button
