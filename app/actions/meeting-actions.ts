@@ -20,6 +20,7 @@ export interface CreateMeetingInput {
   previousMeetingId?: string | null;
   chairpersonId?: string | null;
   meetingNumber?: string | null;
+  primaryTeamId?: string | null;
 }
 
 function safeRevalidate(paths: string[]) {
@@ -103,6 +104,7 @@ export async function createMeetingAction(input: CreateMeetingInput) {
           meetingNumber: finalMeetingNumber,
           title: input.title,
           primaryBiroId: primaryBiro.id,
+          primaryTeamId: input.primaryTeamId || null,
           date: new Date(input.date),
           startTime: input.startTime,
           endTime: input.endTime,
@@ -657,6 +659,32 @@ export async function getMeetingDetailAction(meetingId: string) {
   } catch (error: any) {
     console.error('Error fetching meeting detail:', error);
     return { success: false, error: error?.message || 'Gagal memuat data rapat' };
+  }
+}
+
+/**
+ * Server action to get active teams under a biro
+ */
+export async function getBiroTeamsAction(biroCode: string) {
+  try {
+    const teams = await prisma.biroTeam.findMany({
+      where: {
+        biro: { code: biroCode.toUpperCase() },
+        isActive: true,
+      },
+      select: {
+        id: true,
+        code: true,
+        name: true,
+        description: true,
+        biroId: true,
+      },
+      orderBy: { code: 'asc' },
+    });
+    return { success: true, data: teams };
+  } catch (error: any) {
+    console.error(`Error fetching teams for biro ${biroCode}:`, error);
+    return { success: false, data: [] };
   }
 }
 

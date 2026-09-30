@@ -46,6 +46,14 @@ export async function getActionItemsAction(meetingId?: string) {
             shortName: true,
           },
         },
+        picTeam: {
+          select: {
+            id: true,
+            code: true,
+            name: true,
+            description: true,
+          },
+        },
         picUser: {
           select: {
             id: true,
@@ -79,7 +87,7 @@ export async function getActionItemsAction(meetingId?: string) {
  */
 export async function getActionItemFormOptionsAction() {
   try {
-    const [biros, users] = await Promise.all([
+    const [biros, users, teams] = await Promise.all([
       prisma.biro.findMany({
         where: { isActive: true },
         select: {
@@ -100,12 +108,24 @@ export async function getActionItemFormOptionsAction() {
         },
         orderBy: { name: 'asc' },
       }),
+      prisma.biroTeam.findMany({
+        where: { isActive: true },
+        select: {
+          id: true,
+          biroId: true,
+          code: true,
+          name: true,
+          description: true,
+        },
+        orderBy: { code: 'asc' },
+      }),
     ]);
 
     return {
       success: true,
       biros,
       users,
+      teams,
     };
   } catch (error: any) {
     console.error('Error fetching action item form options:', error);
@@ -113,6 +133,7 @@ export async function getActionItemFormOptionsAction() {
       success: false,
       biros: [],
       users: [],
+      teams: [],
       error: 'Gagal memuat daftar biro & pengguna.',
     };
   }
@@ -138,6 +159,7 @@ export async function createActionItemAction(input: ActionItemInput) {
       title,
       description,
       picBiroId,
+      picTeamId,
       picUserId,
       dueDate,
       priority,
@@ -184,6 +206,7 @@ export async function createActionItemAction(input: ActionItemInput) {
         title,
         description: description || null,
         picBiroId,
+        picTeamId: picTeamId || null,
         picUserId: validPicUserId,
         dueDate,
         priority,
@@ -192,6 +215,7 @@ export async function createActionItemAction(input: ActionItemInput) {
       },
       include: {
         picBiro: true,
+        picTeam: true,
         picUser: true,
         meeting: true,
       },
@@ -240,6 +264,7 @@ export async function updateActionItemAction(input: UpdateActionItemInput) {
       title,
       description,
       picBiroId,
+      picTeamId,
       picUserId,
       dueDate,
       priority,
@@ -305,6 +330,7 @@ export async function updateActionItemAction(input: UpdateActionItemInput) {
         title,
         description: description || null,
         picBiroId,
+        picTeamId: picTeamId !== undefined ? (picTeamId || null) : undefined,
         picUserId: validPicUserId,
         dueDate,
         priority,
@@ -313,6 +339,7 @@ export async function updateActionItemAction(input: UpdateActionItemInput) {
       },
       include: {
         picBiro: true,
+        picTeam: true,
         picUser: true,
         meeting: true,
       },

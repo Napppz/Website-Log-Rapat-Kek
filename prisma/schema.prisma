@@ -97,6 +97,7 @@ model Meeting {
   meetingNumber     String        @unique @map("nomor_rapat")
   title             String        @map("judul_rapat")
   primaryBiroId     String        @map("id_biro")
+  primaryTeamId     String?       @map("id_tim")
   date              DateTime      @map("tanggal_rapat")
   startTime         String        @map("waktu_mulai")
   endTime           String        @map("waktu_selesai")
@@ -109,6 +110,7 @@ model Meeting {
   updatedAt         DateTime      @updatedAt @map("diperbarui_pada")
 
   primaryBiro      Biro                 @relation("PrimaryBiroMeetings", fields: [primaryBiroId], references: [id], onDelete: Restrict)
+  primaryTeam      BiroTeam?            @relation("PrimaryTeamMeetings", fields: [primaryTeamId], references: [id], onDelete: SetNull)
   chairperson      User?                @relation("ChairpersonMeetings", fields: [chairpersonId], references: [id], onDelete: SetNull)
   secretary        User?                @relation("SecretaryMeetings", fields: [secretaryId], references: [id], onDelete: SetNull)
   previousMeeting  Meeting?             @relation("FollowUpMeetings", fields: [previousMeetingId], references: [id], onDelete: SetNull)
@@ -120,6 +122,7 @@ model Meeting {
 
   @@index([meetingNumber])
   @@index([primaryBiroId])
+  @@index([primaryTeamId])
   @@index([previousMeetingId])
   @@index([date])
   @@index([status])
@@ -191,6 +194,7 @@ model ActionItem {
   title       String             @map("judul_tindakan")
   description String?            @map("deskripsi_tindakan")
   picBiroId   String             @map("id_biro")
+  picTeamId   String?            @map("id_tim")
   picUserId   String?            @map("id_pengguna")
   dueDate     DateTime           @map("tenggat_waktu")
   status      ActionItemStatus   @default(PENDING) @map("status_tindak_lanjut")
@@ -199,13 +203,15 @@ model ActionItem {
   createdAt   DateTime           @default(now()) @map("dibuat_pada")
   updatedAt   DateTime           @updatedAt @map("diperbarui_pada")
 
-  meeting Meeting @relation(fields: [meetingId], references: [id], onDelete: Cascade)
-  picBiro Biro    @relation("BiroActionItems", fields: [picBiroId], references: [id], onDelete: Restrict)
-  picUser User?   @relation("UserActionItems", fields: [picUserId], references: [id], onDelete: SetNull)
+  meeting Meeting   @relation(fields: [meetingId], references: [id], onDelete: Cascade)
+  picBiro Biro      @relation("BiroActionItems", fields: [picBiroId], references: [id], onDelete: Restrict)
+  picTeam BiroTeam? @relation("TeamActionItems", fields: [picTeamId], references: [id], onDelete: SetNull)
+  picUser User?     @relation("UserActionItems", fields: [picUserId], references: [id], onDelete: SetNull)
   logs    ActionItemLog[]
 
   @@index([meetingId])
   @@index([picBiroId])
+  @@index([picTeamId])
   @@index([picUserId])
   @@index([status])
   @@index([dueDate])
@@ -295,4 +301,24 @@ model Notification {
   @@index([createdAt])
   @@map("notifikasi")
 }
+
+model BiroTeam {
+  id          String   @id @default(uuid()) @map("id_tim")
+  biroId      String   @map("id_biro")
+  code        String   @map("kode_tim")
+  name        String   @map("nama_tim")
+  description String?  @map("deskripsi_tim")
+  isActive    Boolean  @default(true) @map("status_aktif")
+  createdAt   DateTime @default(now()) @map("dibuat_pada")
+  updatedAt   DateTime @updatedAt @map("diperbarui_pada")
+
+  biro            Biro         @relation(fields: [biroId], references: [id], onDelete: Cascade)
+  primaryMeetings Meeting[]    @relation("PrimaryTeamMeetings")
+  actionItems     ActionItem[] @relation("TeamActionItems")
+
+  @@unique([biroId, code])
+  @@index([biroId])
+  @@map("tim_biro")
+}
+
 

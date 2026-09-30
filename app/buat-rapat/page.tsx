@@ -22,6 +22,7 @@ import {
   FileText,
   UploadCloud,
   Sparkles,
+  Layers,
 } from 'lucide-react';
 import { BIRO_LIST } from '@/lib/mock-data';
 import { BiroCode } from '@/lib/types';
@@ -31,6 +32,7 @@ import {
   getActiveUsersAction,
   createMeetingAction,
   getMeetingOptionsAction,
+  getBiroTeamsAction,
 } from '@/app/actions/meeting-actions';
 import { saveMinutesAndActionsToMeetingAction } from '@/app/actions/meeting-upload-actions';
 import { UploadMeetingDialog } from '@/components/meeting/upload-meeting-dialog';
@@ -74,6 +76,8 @@ export default function BuatRapatPage() {
   const [customMeetingNumber, setCustomMeetingNumber] = useState('');
   const [availableUsers, setAvailableUsers] = useState<AvailableUser[]>([]);
   const [availableMeetings, setAvailableMeetings] = useState<any[]>([]);
+  const [availableTeams, setAvailableTeams] = useState<Array<{ id: string; code: string; name: string; description?: string | null }>>([]);
+  const [selectedTeamId, setSelectedTeamId] = useState<string>('');
   const [previousMeetingId, setPreviousMeetingId] = useState<string>('');
   const [chairpersonId, setChairpersonId] = useState<string>('');
   const [selectedUserIds, setSelectedUserIds] = useState<string[]>([]);
@@ -137,6 +141,24 @@ export default function BuatRapatPage() {
       })
       .catch((err) => console.warn('Could not load meetings:', err));
   }, []);
+
+  // Fetch teams whenever selected biro changes
+  useEffect(() => {
+    getBiroTeamsAction(selectedBiro)
+      .then((res) => {
+        if (res.success && res.data) {
+          setAvailableTeams(res.data);
+          setSelectedTeamId('');
+        } else {
+          setAvailableTeams([]);
+          setSelectedTeamId('');
+        }
+      })
+      .catch(() => {
+        setAvailableTeams([]);
+        setSelectedTeamId('');
+      });
+  }, [selectedBiro]);
 
   // Loading session state
   if (status === 'loading') {
@@ -235,6 +257,7 @@ export default function BuatRapatPage() {
       const res = await createMeetingAction({
         title,
         biroCode: selectedBiro,
+        primaryTeamId: selectedTeamId || undefined,
         date,
         startTime,
         endTime,
@@ -353,8 +376,8 @@ export default function BuatRapatPage() {
 
         {/* Form Content */}
         <form onSubmit={handleSubmit} className="p-6 space-y-5 text-xs">
-          {/* Biro Penyelenggara, Sifat Pertemuan & Pimpinan Rapat */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          {/* Biro Penyelenggara, Tim Kerja, Sifat Pertemuan & Pimpinan Rapat */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
             <div>
               <label className="block font-semibold text-slate-700 mb-1 flex items-center gap-1.5">
                 <Building2 className="w-4 h-4 text-[#31889C]" />
@@ -368,6 +391,37 @@ export default function BuatRapatPage() {
                 {BIRO_LIST.map((biro) => (
                   <option key={biro.code} value={biro.code}>
                     {biro.code} — {biro.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div>
+              <label className="block font-semibold text-slate-700 mb-1 flex items-center justify-between">
+                <span className="flex items-center gap-1.5">
+                  <Layers className="w-4 h-4 text-[#31889C]" />
+                  <span>Tim Kerja Biro</span>
+                  <span className="text-slate-400 font-normal">(Opsional)</span>
+                </span>
+                {availableTeams.length > 0 && (
+                  <span className="text-[10px] font-bold text-[#215865] bg-[#F0F9FA] px-1.5 py-0.2 rounded border border-[#BCE3EB]">
+                    {availableTeams.length} Tim
+                  </span>
+                )}
+              </label>
+              <select
+                value={selectedTeamId}
+                onChange={(e) => setSelectedTeamId(e.target.value)}
+                className="w-full px-3 py-2 rounded-lg border border-slate-200 bg-white text-slate-800 focus:outline-none focus:ring-2 focus:ring-[#31889C]/25 focus:border-[#31889C]"
+              >
+                <option value="">
+                  {availableTeams.length > 0
+                    ? '-- Bebas / Tingkat Biro Utama --'
+                    : '-- Tim biro ini menyusul --'}
+                </option>
+                {availableTeams.map((t) => (
+                  <option key={t.id} value={t.id}>
+                    [{t.code}] Tim {t.name}
                   </option>
                 ))}
               </select>

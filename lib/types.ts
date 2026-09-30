@@ -1,10 +1,21 @@
 export type BiroCode = 'BPPK' | 'PKKEK' | 'IKK' | 'HSDMO' | 'UK' | 'PPK' | 'REN' | 'DAL' | 'INV' | 'HUK' | 'BUK' | 'OPS' | 'ADM' | 'IT' | 'LEG';
 
+export interface BiroTeam {
+  id: string;
+  biroId: string;
+  code: string;
+  name: string;
+  description?: string | null;
+  isActive?: boolean;
+}
+
 export interface Biro {
+  id?: string;
   code: BiroCode;
   name: string;
   shortName: string;
   description: string;
+  teams?: BiroTeam[];
 }
 
 export type MeetingStatus = 'APPROVED' | 'FINAL' | 'REVIEW' | 'DRAFT';
@@ -18,6 +29,7 @@ export interface ActionItem {
   title: string;
   description?: string | null;
   picBiroId: string;
+  picTeamId?: string | null;
   picUserId?: string | null;
   dueDate: Date | string;
   status: ActionItemStatus;
@@ -31,6 +43,12 @@ export interface ActionItem {
     name: string;
     shortName: string;
   };
+  picTeam?: {
+    id: string;
+    code: string;
+    name: string;
+    description?: string | null;
+  } | null;
   picUser?: {
     id: string;
     name: string;
@@ -66,6 +84,8 @@ export interface Meeting {
   location: string;
   biroCode: BiroCode;
   biroName: string;
+  primaryTeamId?: string | null;
+  primaryTeamName?: string | null;
   status: MeetingStatus;
   isNew?: boolean;
   involvedBiros?: string;

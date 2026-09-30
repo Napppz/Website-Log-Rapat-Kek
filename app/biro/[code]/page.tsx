@@ -3,11 +3,37 @@ import { notFound } from 'next/navigation';
 import { getBiroDetail, getMeetingsFromDb } from '@/lib/db-service';
 import { BiroCode } from '@/lib/types';
 import { MeetingTable } from '@/components/meeting/meeting-table';
-import { Building2, Calendar, ArrowLeft, Users } from 'lucide-react';
+import {
+  Building2,
+  Calendar,
+  ArrowLeft,
+  Users,
+  Layers,
+  Info,
+  Briefcase,
+  Network,
+  Radio,
+  Laptop,
+} from 'lucide-react';
 import Link from 'next/link';
 
 interface BiroPageProps {
   params: Promise<{ code: string }>;
+}
+
+function getTeamIcon(code: string) {
+  switch (code.toUpperCase()) {
+    case 'INV':
+      return <Briefcase className="w-4 h-4 text-[#31889C]" />;
+    case 'KS':
+      return <Network className="w-4 h-4 text-[#2E7D32]" />;
+    case 'KOM':
+      return <Radio className="w-4 h-4 text-[#D97706]" />;
+    case 'SI':
+      return <Laptop className="w-4 h-4 text-[#0284C7]" />;
+    default:
+      return <Layers className="w-4 h-4 text-[#31889C]" />;
+  }
 }
 
 export default async function BiroDetailPage({ params }: BiroPageProps) {
@@ -19,6 +45,7 @@ export default async function BiroDetailPage({ params }: BiroPageProps) {
   }
 
   const meetings = await getMeetingsFromDb({ biroCode: biro.code });
+  const teams = biro.teams || [];
 
   return (
     <div className="flex flex-col gap-6">
@@ -72,6 +99,89 @@ export default async function BiroDetailPage({ params }: BiroPageProps) {
             </div>
           </div>
         </div>
+      </div>
+
+      {/* Tim Kerja Biro Section */}
+      <div className="space-y-3">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1">
+          <div>
+            <h2 className="text-[18px] font-bold text-slate-900 flex items-center gap-2">
+              <Layers className="w-5 h-5 text-[#31889C]" />
+              Struktur Tim Kerja {biro.shortName}
+              <span className="text-[12px] font-semibold text-slate-600 bg-slate-100 px-2 py-0.5 rounded-full border border-slate-200">
+                {teams.length} Tim
+              </span>
+            </h2>
+            <p className="text-[12.5px] text-slate-500">
+              {teams.length > 0
+                ? `Pembagian unit kerja dan bidang operasional di lingkungan ${biro.name}`
+                : `Penetapan tim operasional untuk biro ini sedang dalam penataan dan akan menyusul`}
+            </p>
+          </div>
+        </div>
+
+        {teams.length > 0 ? (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            {teams.map((team, idx) => {
+              const meetingCount = biro.primaryMeetings.filter(
+                (m) => m.primaryTeamId === team.id
+              ).length;
+              return (
+                <div
+                  key={team.id}
+                  className="bg-white p-4 rounded-xl border border-slate-200 hover:border-[#31889C]/50 hover:shadow-xs transition-all flex flex-col justify-between group"
+                >
+                  <div className="space-y-2.5">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <div className="w-7 h-7 rounded-lg bg-[#F0F9FA] border border-[#BCE3EB] flex items-center justify-center shrink-0">
+                          {getTeamIcon(team.code)}
+                        </div>
+                        <span className="px-2 py-0.5 rounded text-[11px] font-bold bg-slate-100 text-slate-700 border border-slate-200">
+                          {team.code}
+                        </span>
+                      </div>
+                      <span className="inline-flex items-center gap-1 text-[11px] font-medium text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200/50">
+                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+                        Tim #{idx + 1}
+                      </span>
+                    </div>
+
+                    <div>
+                      <h3 className="font-bold text-[15px] text-slate-900 group-hover:text-[#31889C] transition-colors">
+                        Tim {team.name}
+                      </h3>
+                      {team.description && (
+                        <p className="text-[12px] text-slate-500 line-clamp-2 mt-1 leading-relaxed">
+                          {team.description}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="pt-3 mt-3 border-t border-slate-100 flex items-center justify-between text-[11.5px] text-slate-500">
+                    <span>Pelaksana Rapat</span>
+                    <span className="font-bold text-[#215865] bg-[#F0F9FA] px-2 py-0.5 rounded border border-[#BCE3EB]">
+                      {meetingCount} Rapat
+                    </span>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        ) : (
+          <div className="p-4 rounded-xl bg-amber-50/70 border border-amber-200 text-[13px] text-amber-900 flex items-start gap-3">
+            <Info className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
+            <div>
+              <p className="font-semibold text-amber-900">
+                Struktur Tim Kerja Biro Sedang Dalam Proses Penataan
+              </p>
+              <p className="text-amber-700 text-[12px] mt-0.5 leading-relaxed">
+                Unit kerja {biro.name} saat ini menjalankan operasional secara terpusat di tingkat biro. Daftar tim operasional akan segera menyusul sesuai pengesahan struktur tata kelola.
+              </p>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Meetings for this Bureau */}

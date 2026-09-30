@@ -387,10 +387,17 @@ export function MeetingTable({
 
                     {/* Biro Pelaksana */}
                     <td className="py-3.5 px-4 align-top whitespace-nowrap">
-                      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-[#F0F9FA] border border-[#BCE3EB] text-[12px] font-bold text-[#215865]">
-                        {getBiroIcon(meeting.biroCode)}
-                        {meeting.biroName}
-                      </span>
+                      <div className="flex flex-col items-start gap-1">
+                        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-[#F0F9FA] border border-[#BCE3EB] text-[12px] font-bold text-[#215865]">
+                          {getBiroIcon(meeting.biroCode)}
+                          {meeting.biroName}
+                        </span>
+                        {meeting.primaryTeamName && (
+                          <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10.5px] font-semibold bg-amber-50 text-amber-900 border border-amber-200">
+                            Tim {meeting.primaryTeamName}
+                          </span>
+                        )}
+                      </div>
                     </td>
 
                     {/* Status */}

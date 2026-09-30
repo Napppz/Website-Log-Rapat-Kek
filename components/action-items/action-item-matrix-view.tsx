@@ -460,10 +460,15 @@ export function ActionItemMatrixView({
 
                       {/* Biro & PIC */}
                       <td className="py-3.5 px-4 align-top">
-                        <div className="space-y-0.5">
+                        <div className="flex flex-col items-start gap-1">
                           <span className="inline-block font-semibold text-[#215865] bg-[#F0F9FA] px-2 py-0.5 rounded border border-[#BCE3EB] text-[11px]">
                             {task.picBiro?.code || 'Biro KEK'}
                           </span>
+                          {task.picTeam && (
+                            <span className="px-1.5 py-0.5 rounded text-[10px] font-semibold bg-amber-50 text-amber-900 border border-amber-200">
+                              Tim {task.picTeam.name}
+                            </span>
+                          )}
                           {task.picUser && (
                             <p className="text-[11px] text-slate-600 truncate max-w-[150px]">
                               {task.picUser.name}

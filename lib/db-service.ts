@@ -78,10 +78,15 @@ export async function getBiroDetail(code: string) {
           users: {
             orderBy: { name: 'asc' },
           },
+          teams: {
+            where: { isActive: true },
+            orderBy: { code: 'asc' },
+          },
           primaryMeetings: {
             orderBy: [{ date: 'desc' }, { createdAt: 'desc' }],
             include: {
               primaryBiro: true,
+              primaryTeam: true,
               meetingBiros: {
                 include: { biro: true },
               },
@@ -104,6 +109,23 @@ export async function getBiroDetail(code: string) {
   }
 }
 
+export async function getBiroTeamsFromDb(biroCodeOrId: string) {
+  try {
+    return await withDbRetry(async () => {
+      return await prisma.biroTeam.findMany({
+        where: {
+          OR: [{ biroId: biroCodeOrId }, { biro: { code: biroCodeOrId.toUpperCase() } }],
+          isActive: true,
+        },
+        orderBy: { code: 'asc' },
+      });
+    });
+  } catch (error) {
+    console.error(`Error fetching teams for biro ${biroCodeOrId}:`, error);
+    return [];
+  }
+}
+
 export async function getMeetingByIdFromDb(idOrNumber: string) {
   try {
     return await withDbRetry(async () => {
@@ -113,6 +135,7 @@ export async function getMeetingByIdFromDb(idOrNumber: string) {
         },
         include: {
           primaryBiro: true,
+          primaryTeam: true,
           meetingBiros: {
             include: { biro: true },
           },
@@ -129,6 +152,7 @@ export async function getMeetingByIdFromDb(idOrNumber: string) {
           actionItems: {
             include: {
               picBiro: true,
+              picTeam: true,
               picUser: true,
             },
             orderBy: [{ dueDate: 'asc' }, { createdAt: 'desc' }],
@@ -136,12 +160,14 @@ export async function getMeetingByIdFromDb(idOrNumber: string) {
           previousMeeting: {
             include: {
               primaryBiro: true,
+              primaryTeam: true,
               chairperson: true,
               secretary: true,
               minutes: true,
               actionItems: {
                 include: {
                   picBiro: true,
+                  picTeam: true,
                   picUser: true,
                 },
                 orderBy: [{ dueDate: 'asc' }],
@@ -191,6 +217,7 @@ export async function getActionItemsFromDb(filters?: {
         where: whereClause,
         include: {
           picBiro: true,
+          picTeam: true,
           picUser: true,
           meeting: true,
         },
@@ -236,6 +263,7 @@ export async function getMeetingsFromDb(filters?: {
         where: whereClause,
         include: {
           primaryBiro: true,
+          primaryTeam: true,
           meetingBiros: {
             include: { biro: true },
           },
@@ -290,6 +318,8 @@ export async function getMeetingsFromDb(filters?: {
           location: m.location,
           biroCode: m.primaryBiro.code as BiroCode,
           biroName: m.primaryBiro.shortName,
+          primaryTeamId: m.primaryTeamId,
+          primaryTeamName: m.primaryTeam?.name || null,
           status: m.status as MeetingStatus,
           // Rapat dianggap 'BARU' jika baru dibuat dalam 3 hari terakhir (72 jam)
           isNew: m.createdAt ? (Date.now() - new Date(m.createdAt).getTime()) <= 3 * 24 * 60 * 60 * 1000 : false,

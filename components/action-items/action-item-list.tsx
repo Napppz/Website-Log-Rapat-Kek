@@ -314,11 +314,16 @@ export function ActionItemList({
                 <div className="flex flex-wrap items-center justify-between gap-3 pt-3 border-t border-slate-100 text-[12px]">
                   <div className="flex flex-wrap items-center gap-4 text-slate-600">
                     {/* Biro PIC */}
-                    <div className="flex items-center gap-1.5">
+                    <div className="flex items-center gap-1.5 flex-wrap">
                       <Building2 className="w-3.5 h-3.5 text-[#31889C]" />
                       <span className="font-semibold text-slate-800">
                         {item.picBiro ? `${item.picBiro.code} - ${item.picBiro.shortName}` : 'Biro KEK'}
                       </span>
+                      {item.picTeam && (
+                        <span className="px-1.5 py-0.5 rounded text-[10.5px] font-semibold bg-amber-50 text-amber-900 border border-amber-200">
+                          Tim {item.picTeam.name}
+                        </span>
+                      )}
                     </div>
 
                     {/* User PIC */}

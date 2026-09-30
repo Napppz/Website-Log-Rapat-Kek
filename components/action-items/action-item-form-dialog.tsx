@@ -42,9 +42,10 @@ export function ActionItemFormDialog({
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const isEditing = Boolean(actionItem);
 
-  // Resilient biros and users state with auto-fetch
+  // Resilient biros, users, and teams state with auto-fetch
   const [birosList, setBirosList] = useState(availableBiros);
   const [usersList, setUsersList] = useState(availableUsers);
+  const [teamsList, setTeamsList] = useState<Array<{ id: string; biroId: string; code: string; name: string; description?: string | null }>>([]);
   const [isLoadingOptions, setIsLoadingOptions] = useState(false);
 
   // Sync state if props change
@@ -65,14 +66,15 @@ export function ActionItemFormDialog({
   const [description, setDescription] = useState('');
   const [driveLink, setDriveLink] = useState('');
   const [picBiroId, setPicBiroId] = useState('');
+  const [picTeamId, setPicTeamId] = useState('');
   const [picUserId, setPicUserId] = useState('');
   const [dueDate, setDueDate] = useState('');
   const [priority, setPriority] = useState<ActionItemPriority>('MEDIUM');
   const [status, setStatus] = useState<ActionItemStatus>('PENDING');
 
-  // Auto-fetch biros & users if not passed via props or currently empty
+  // Auto-fetch biros, users & teams if not passed via props or currently empty
   useEffect(() => {
-    if (isOpen && birosList.length === 0) {
+    if (isOpen && (birosList.length === 0 || teamsList.length === 0)) {
       setIsLoadingOptions(true);
       getActionItemFormOptionsAction()
         .then((res) => {
@@ -84,13 +86,16 @@ export function ActionItemFormDialog({
             if (res.users && res.users.length > 0) {
               setUsersList(res.users);
             }
+            if (res.teams && res.teams.length > 0) {
+              setTeamsList(res.teams);
+            }
           }
         })
         .finally(() => {
           setIsLoadingOptions(false);
         });
     }
-  }, [isOpen, birosList.length]);
+  }, [isOpen, birosList.length, teamsList.length]);
 
   useEffect(() => {
     if (isOpen) {
@@ -113,6 +118,7 @@ export function ActionItemFormDialog({
           setDescription(actionItem.description || '');
         }
         setPicBiroId(actionItem.picBiroId || (birosList[0]?.id ?? ''));
+        setPicTeamId(actionItem.picTeamId || '');
         setPicUserId(actionItem.picUserId || '');
         setDueDate(`${yyyy}-${mm}-${dd}`);
         setPriority(actionItem.priority || 'MEDIUM');
@@ -127,6 +133,7 @@ export function ActionItemFormDialog({
         setDescription('');
         setDriveLink('');
         setPicBiroId(birosList[0]?.id || '');
+        setPicTeamId('');
         setPicUserId('');
         setDueDate(`${yyyy}-${mm}-${dd}`);
         setPriority('MEDIUM');
@@ -159,6 +166,7 @@ export function ActionItemFormDialog({
       title,
       description: finalDescription || null,
       picBiroId,
+      picTeamId: picTeamId && picTeamId.trim() !== '' ? picTeamId : null,
       picUserId: picUserId && picUserId.trim() !== '' ? picUserId : null,
       dueDate,
       priority,
@@ -301,8 +309,8 @@ export function ActionItemFormDialog({
               </p>
             </div>
 
-            {/* Biro PIC & User PIC Grid */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            {/* Biro PIC, Tim Kerja & User PIC Grid */}
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
               {/* Biro Penanggung Jawab (Required, 5 Official Bureaus) */}
               <div>
                 <label className="block font-bold text-slate-800 mb-1">
@@ -310,11 +318,14 @@ export function ActionItemFormDialog({
                 </label>
                 <select
                   value={picBiroId}
-                  onChange={(e) => setPicBiroId(e.target.value)}
+                  onChange={(e) => {
+                    setPicBiroId(e.target.value);
+                    setPicTeamId('');
+                  }}
                   className="w-full px-3 py-2 rounded-lg border border-slate-200 focus:outline-none focus:ring-2 focus:ring-[#31889C]/30 focus:border-[#31889C] bg-white font-medium text-slate-800 text-[13px] cursor-pointer"
                 >
                   <option value="">
-                    {isLoadingOptions ? '-- Memuat Biro Resmi KEK... --' : '-- Pilih Biro Resmi KEK --'}
+                    {isLoadingOptions ? '-- Memuat Biro... --' : '-- Pilih Biro --'}
                   </option>
                   {birosList.map((b) => (
                     <option key={b.id} value={b.id}>
@@ -327,17 +338,51 @@ export function ActionItemFormDialog({
                 )}
               </div>
 
+              {/* Tim Kerja PIC (Optional) */}
+              <div>
+                {(() => {
+                  const filteredTeams = teamsList.filter((t) => t.biroId === picBiroId);
+                  return (
+                    <>
+                      <label className="block font-bold text-slate-800 mb-1 flex items-center justify-between">
+                        <span>Tim Kerja <span className="text-slate-400 font-normal">(Opsional)</span></span>
+                        {filteredTeams.length > 0 && (
+                          <span className="text-[10px] font-bold text-[#215865] bg-[#F0F9FA] px-1.5 py-0.2 rounded border border-[#BCE3EB]">
+                            {filteredTeams.length} Tim
+                          </span>
+                        )}
+                      </label>
+                      <select
+                        value={picTeamId}
+                        onChange={(e) => setPicTeamId(e.target.value)}
+                        disabled={filteredTeams.length === 0}
+                        className="w-full px-3 py-2 rounded-lg border border-slate-200 focus:outline-none focus:ring-2 focus:ring-[#31889C]/30 focus:border-[#31889C] bg-white text-slate-800 text-[13px] cursor-pointer disabled:bg-slate-50 disabled:text-slate-400"
+                      >
+                        <option value="">
+                          {filteredTeams.length > 0 ? '-- Semua / Bebas --' : '-- Menyusul --'}
+                        </option>
+                        {filteredTeams.map((t) => (
+                          <option key={t.id} value={t.id}>
+                            [{t.code}] Tim {t.name}
+                          </option>
+                        ))}
+                      </select>
+                    </>
+                  );
+                })()}
+              </div>
+
               {/* PIC Pengguna (Optional) */}
               <div>
                 <label className="block font-bold text-slate-800 mb-1">
-                  Pejabat / PIC Pengguna <span className="text-slate-400 font-normal">(Opsional)</span>
+                  Pejabat / PIC <span className="text-slate-400 font-normal">(Opsional)</span>
                 </label>
                 <select
                   value={picUserId}
                   onChange={(e) => setPicUserId(e.target.value)}
                   className="w-full px-3 py-2 rounded-lg border border-slate-200 focus:outline-none focus:ring-2 focus:ring-[#31889C]/30 focus:border-[#31889C] bg-white text-slate-800 text-[13px] cursor-pointer"
                 >
-                  <option value="">-- Belum Ditentukan (Semua Tim) --</option>
+                  <option value="">-- Belum Ditentukan --</option>
                   {usersList.map((u) => (
                     <option key={u.id} value={u.id}>
                       {u.name} {u.email ? `(${u.email})` : ''}

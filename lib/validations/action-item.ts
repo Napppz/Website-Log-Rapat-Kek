@@ -23,6 +23,7 @@ export const actionItemSchema = z.object({
     .max(255, 'Judul tindak lanjut maksimal 255 karakter'),
   description: z.string().trim().optional().nullable(),
   picBiroId: z.string().min(1, 'Biro penanggung jawab wajib dipilih'),
+  picTeamId: z.string().trim().optional().nullable(),
   picUserId: z.string().trim().optional().nullable(),
   dueDate: z.coerce.date({
     message: 'Deadline/tenggat waktu harus berupa tanggal yang valid',
