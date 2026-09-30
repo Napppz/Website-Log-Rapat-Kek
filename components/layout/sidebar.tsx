@@ -118,12 +118,12 @@ export function Sidebar({
               onClick={handleLinkClick}
               className="flex items-center gap-2.5 min-w-0 flex-1"
             >
-              <div className="bg-white rounded-xl p-1 shadow-sm flex items-center justify-center shrink-0 w-12 h-12 overflow-hidden border border-white/30">
+              <div className="bg-white rounded-full p-0.5 shadow-sm flex items-center justify-center shrink-0 w-12 h-12 overflow-hidden ring-2 ring-white/50">
                 <Image
-                  src="/logo-wantannas.png"
-                  alt="Logo Dewan Ketahanan Nasional"
-                  width={46}
-                  height={46}
+                  src="/logo-denas-kek.png"
+                  alt="Logo Sekretariat Jenderal Dewan Nasional Kawasan Ekonomi Khusus"
+                  width={48}
+                  height={48}
                   className="w-full h-full object-contain"
                   priority
                 />

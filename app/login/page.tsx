@@ -58,10 +58,10 @@ function LoginForm() {
         <div className="bg-white rounded-2xl border border-slate-200 shadow-xl overflow-hidden backdrop-blur-xs">
           {/* Card Header with Logo */}
           <div className="p-8 text-center bg-gradient-to-b from-[#F0F9FA] to-transparent border-b border-slate-200/80">
-            <div className="inline-flex p-3 rounded-2xl bg-white shadow-xs border border-slate-200 mb-4">
+            <div className="inline-flex p-2 rounded-full bg-white shadow-sm border border-slate-200 mb-4 ring-4 ring-[#E8F5F7]">
               <Image
-                src="/logo-wantannas.png"
-                alt="Logo Dewan Ketahanan Nasional RI"
+                src="/logo-denas-kek.png"
+                alt="Logo Sekretariat Jenderal Dewan Nasional Kawasan Ekonomi Khusus"
                 width={80}
                 height={80}
                 className="w-16 h-16 object-contain"
