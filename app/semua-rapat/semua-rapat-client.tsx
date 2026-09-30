@@ -4,10 +4,11 @@ import React, { useState } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { MeetingTable } from '@/components/meeting/meeting-table';
 import { MeetingStatus, BiroCode, Meeting } from '@/lib/types';
-import { PlusCircle, Filter, Trash2, AlertTriangle, Loader2, CheckCircle2, X } from 'lucide-react';
+import { PlusCircle, Filter, Trash2, AlertTriangle, Loader2, CheckCircle2, X, UploadCloud, Sparkles } from 'lucide-react';
 import Link from 'next/link';
 import { useSession } from 'next-auth/react';
 import { deleteAllMeetingsAction } from '@/app/actions/meeting-actions';
+import { UploadMeetingDialog } from '@/components/meeting/upload-meeting-dialog';
 import { toast } from '@/components/providers/toast-provider';
 
 interface SemuaRapatClientProps {
@@ -22,6 +23,7 @@ export function SemuaRapatClient({ initialMeetings }: SemuaRapatClientProps) {
   const canCreate = userRole === 'SUPER_ADMIN' || userRole === 'ADMIN' || userRole === 'NOTULIS';
   const canDeleteAll = userRole === 'SUPER_ADMIN' || userRole === 'ADMIN';
 
+  const [isUploadDialogOpen, setIsUploadDialogOpen] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [confirmInput, setConfirmInput] = useState('');
   const [isDeletingAll, setIsDeletingAll] = useState(false);
@@ -102,13 +104,25 @@ export function SemuaRapatClient({ initialMeetings }: SemuaRapatClientProps) {
           )}
 
           {canCreate && (
-            <Link
-              href="/buat-rapat"
-              className="inline-flex items-center gap-2 px-4 py-2.5 rounded-lg bg-[#31889C] text-white font-semibold text-[13px] hover:bg-[#266F80] shadow-xs transition-all shrink-0 cursor-pointer"
-            >
-              <PlusCircle className="w-4 h-4" />
-              <span>+ Jadwalkan Rapat Baru</span>
-            </Link>
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={() => setIsUploadDialogOpen(true)}
+                className="inline-flex items-center gap-2 px-3.5 py-2.5 rounded-lg border border-[#31889C] bg-[#F0F9FA] text-[#1B5260] font-semibold text-[13px] hover:bg-[#E8F5F7] shadow-xs transition-all shrink-0 cursor-pointer"
+                title="Unggah berkas Word, PDF, atau Teks untuk otomatis membuat rapat dan notula"
+              >
+                <UploadCloud className="w-4 h-4 text-[#31889C]" />
+                <span>⚡ Unggah Dokumen Rapat</span>
+              </button>
+
+              <Link
+                href="/buat-rapat"
+                className="inline-flex items-center gap-2 px-4 py-2.5 rounded-lg bg-[#31889C] text-white font-semibold text-[13px] hover:bg-[#266F80] shadow-xs transition-all shrink-0 cursor-pointer"
+              >
+                <PlusCircle className="w-4 h-4" />
+                <span>+ Jadwalkan Rapat Baru</span>
+              </Link>
+            </div>
           )}
         </div>
       </div>
@@ -220,6 +234,12 @@ export function SemuaRapatClient({ initialMeetings }: SemuaRapatClientProps) {
           </div>
         </div>
       )}
+
+      {/* Upload Meeting Document Dialog */}
+      <UploadMeetingDialog
+        isOpen={isUploadDialogOpen}
+        onClose={() => setIsUploadDialogOpen(false)}
+      />
     </div>
   );
 }

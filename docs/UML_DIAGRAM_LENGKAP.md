@@ -1,37 +1,35 @@
-# DOKUMENTASI LENGKAP STRUKTUR IDENTITAS TABEL, UML CLASS DIAGRAM, & ERD
+# DOKUMENTASI RESMI STRUKTUR TABEL BASIS DATA (NEON DB), UML CLASS DIAGRAM, & ERD
 ## Sistem Informasi Manajemen Rapat & Tindak Lanjut (SIM-RAPAT KEK RI)
 **Sekretariat Jenderal Dewan Nasional Kawasan Ekonomi Khusus Republik Indonesia**
 
-Dokumen ini memuat standarisasi penamaan Primary Key (PK) & Foreign Key (FK), Kamus Data, UML Class Diagram, dan Entity Relationship Diagram (ERD) untuk keperluan analisis, perancangan sistem, penulisan laporan teknis, maupun tugas akhir/skripsi.
+Dokumen ini memuat standarisasi penamaan tabel dan kolom fisik di **Neon PostgreSQL**, Kamus Data (*Data Dictionary*), UML Class Diagram, dan Entity Relationship Diagram (ERD) dalam **100% Bahasa Indonesia** dengan standarisasi nama Foreign Key yang **selaras sempurna dengan nama tabel induknya**, memudahkan penjelasan relasi **1 to Many (1 : N)** di hadapan Dosen Pembimbing dan Dosen Penguji.
 
 ---
 
-## 1. Kamus Data & Standarisasi Nama ID Tabel (Data Dictionary)
+## 1. Standarisasi Relasi 1 to Many (1 : N) & Kamus Data Neon DB
 
-Dalam perancangan basis data dan pemodelan UML profesional, setiap tabel memiliki identitas Primary Key (PK) yang eksplisit dan deskriptif:
+Dalam prinsip pemodelan basis data relasional akademik, ketika Entitas Induk (*Parent*) berelasi **1 to Many** dengan Entitas Anak (*Child*), Primary Key dari tabel Induk disematkan ke dalam tabel Anak sebagai Foreign Key dengan **nama yang konsisten**:
 
-| No | Nama Tabel / Entitas | Primary Key (PK) | Contoh Format Bersih | Foreign Key (FK) | Relasi & Deskripsi |
-|:---|:---------------------|:-----------------|:---------------------|:-----------------|:-------------------|
-| 1  | **`biro`** | `biro_id` *(String)* | `BIRO-BPPK`, `BIRO-IKK` | - | Master 5 Biro resmi di Sekretariat Jenderal Dewan Nasional KEK (`code`: BPPK, PKKEK, IKK, HSDMO, UK). |
-| 2  | **`user`** | `user_id` *(String)* | `USR-001`, `USR-002` | `biro_id` → `biro.biro_id` | Data pengguna/pegawai, PIC tindak lanjut, dan akun pimpinan sidang. |
-| 3  | **`meeting`** | `meeting_id` *(String)* | `MTG-001`, `MTG-002` | • `primary_biro_id` → `biro.biro_id`<br>• `chairperson_id` → `user.user_id`<br>• `secretary_id` → `user.user_id`<br>• `previous_meeting_id` → `meeting.meeting_id` | Entitas utama agenda rapat dinas KEK. Memiliki Unique Key `meeting_number`. |
-| 4  | **`meeting_minutes`** | `minutes_id` *(String)* | `NOT-001`, `NOT-002` | `meeting_id` → `meeting.meeting_id` *(1:1 Unique)* | Dokumen naskah notula resmi (agenda, substansi pembahasan, keputusan, dan penandatangan). |
-| 5  | **`meeting_participant`** | `participant_id` *(String)* | `PRT-001`, `PRT-002` | • `meeting_id` → `meeting.meeting_id`<br>• `user_id` → `user.user_id` | Daftar absensi peserta sidang dan status kehadiran (`INVITED`, `PRESENT`, `ABSENT`, `EXCUSED`). |
-| 6  | **`meeting_biro`** | `(meeting_id, biro_id)` *(Composite PK)* | `(MTG-001, BIRO-IKK)` | • `meeting_id` → `meeting.meeting_id`<br>• `biro_id` → `biro.biro_id` | Tabel pivot/junction relasi Many-to-Many untuk biro-biro yang terlibat dalam rapat. |
-| 7  | **`action_item`** | `action_item_id` *(String)* | `ACT-001`, `ACT-002` | • `meeting_id` → `meeting.meeting_id`<br>• `pic_biro_id` → `biro.biro_id`<br>• `pic_user_id` → `user.user_id` *(Opsional)* | Butir arahan/resolusi tindak lanjut hasil rapat, tenggat waktu (*due date*), status, dan prioritas. |
-| 8  | **`biro_meeting_sequence`** | `sequence_id` *(String)* | `SEQ-001`, `SEQ-002` | `biro_id` → `biro.biro_id` *(1:1 Unique)* | Generator penomoran urut surat rapat otomatis per biro (contoh: `IKK-015`). |
-| 9  | **`account`** | `account_id` *(String)* | `ACC-001`, `ACC-002` | `user_id` → `user.user_id` | Penyimpanan otentikasi login OAuth dan kredensial aman (NextAuth). |
-| 10 | **`session`** | `session_id` *(String)* | `SES-001`, `SES-002` | `user_id` → `user.user_id` | Penyimpanan token sesi aktif pengguna (NextAuth). |
+| No | Nama Tabel di Neon DB | Primary Key (PK) | Foreign Key (FK) Masuk (Relasi 1 : N) | Nama Tabel Induk Asal | Penjelasan Relasi 1 : N |
+|:---|:----------------------|:-----------------|:--------------------------------------|:----------------------|:------------------------|
+| 1  | **`biro`** | **`id_biro`** | - | - | Entitas Master Unit Kerja (1 Biro menaungi banyak pengguna & banyak rapat). |
+| 2  | **`pengguna`** | **`id_pengguna`** | **`id_biro`** [FK] | `biro` | **`1 : N`** &mdash; 1 `biro` memiliki banyak `pengguna`. |
+| 3  | **`rapat`** | **`id_rapat`** | • **`id_biro`** [FK]<br>• **`id_pengguna`** [FK]<br>• **`id_notulis`** [FK]<br>• **`id_rapat_sebelumnya`** [FK] | • `biro`<br>• `pengguna`<br>• `pengguna`<br>• `rapat` | • **`1 : N`** &mdash; 1 `biro` menyelenggarakan banyak `rapat`.<br>• **`1 : N`** &mdash; 1 `pengguna` memimpin banyak `rapat`.<br>• **`1 : N`** &mdash; 1 `pengguna` mencatat banyak `rapat`.<br>• **`0..1 : N`** &mdash; 1 `rapat` terdahulu dapat memiliki rapat lanjutan. |
+| 4  | **`tindak_lanjut`** | **`id_tindak_lanjut`** | • **`id_rapat`** [FK]<br>• **`id_biro`** [FK]<br>• **`id_pengguna`** [FK] | • `rapat`<br>• `biro`<br>• `pengguna` | • **`1 : N`** &mdash; 1 `rapat` menghasilkan banyak butir `tindak_lanjut`.<br>• **`1 : N`** &mdash; 1 `biro` dibebankan banyak `tindak_lanjut`.<br>• **`1 : N`** &mdash; 1 `pengguna` (PIC) ditugaskan banyak `tindak_lanjut`. |
+| 5  | **`peserta_rapat`** | **`id_peserta`** | • **`id_rapat`** [FK]<br>• **`id_pengguna`** [FK] | • `rapat`<br>• `pengguna` | • **`1 : N`** &mdash; 1 `rapat` memiliki banyak `peserta_rapat`.<br>• **`1 : N`** &mdash; 1 `pengguna` memiliki banyak riwayat kehadiran. |
+| 6  | **`notulen_rapat`** | **`id_notulen`** | **`id_rapat`** [FK, UK] | `rapat` | **`1 : 1`** &mdash; 1 `rapat` menghasilkan tepat 1 naskah `notulen_rapat` resmi. |
+| 7  | **`penomoran_rapat_biro`** | **`id_penomoran`** | **`id_biro`** [FK, UK] | `biro` | **`1 : 1`** &mdash; 1 `biro` memiliki tepat 1 generator nomor surat urut otomatis. |
+| 8  | **`rapat_biro`** | **`(id_rapat, id_biro)`** | • **`id_rapat`** [FK]<br>• **`id_biro`** [FK] | • `rapat`<br>• `biro` | **`M : N`** *(Junction)* &mdash; Rapat gabungan yang melibatkan banyak biro sekaligus. |
 
 ---
 
-## 2. UML Class Diagram (Mermaid Syntax)
+## 2. UML Class Diagram (Mermaid Syntax - Bahasa Indonesia)
 
 ```mermaid
 classDiagram
     direction TB
 
-    class UserRole {
+    class PeranPengguna {
         <<enumeration>>
         SUPER_ADMIN
         ADMIN
@@ -40,7 +38,7 @@ classDiagram
         VIEWER
     }
 
-    class MeetingStatus {
+    class StatusRapat {
         <<enumeration>>
         DRAFT
         REVIEW
@@ -48,7 +46,7 @@ classDiagram
         FINAL
     }
 
-    class AttendanceStatus {
+    class StatusKehadiran {
         <<enumeration>>
         INVITED
         PRESENT
@@ -56,7 +54,7 @@ classDiagram
         EXCUSED
     }
 
-    class ActionItemStatus {
+    class StatusTindakLanjut {
         <<enumeration>>
         PENDING
         IN_PROGRESS
@@ -64,7 +62,7 @@ classDiagram
         OVERDUE
     }
 
-    class ActionItemPriority {
+    class PrioritasTindakLanjut {
         <<enumeration>>
         LOW
         MEDIUM
@@ -73,228 +71,248 @@ classDiagram
     }
 
     class Biro {
-        +String biro_id PK
-        +String code UK
-        +String name
-        +String shortName
-        +String description
-        +Boolean isActive
-        +DateTime createdAt
-        +DateTime updatedAt
-        +getWorkload()
-        +getStaffList()
+        +String id_biro PK
+        +String kode_biro UK
+        +String nama_biro
+        +String nama_singkat
+        +String deskripsi
+        +Boolean status_aktif
+        +DateTime dibuat_pada
+        +DateTime diperbarui_pada
+        +hitungBebanKerja()
+        +getDaftarPegawai()
     }
 
-    class User {
-        +String user_id PK
-        +String biro_id FK
-        +String name
+    class Pengguna {
+        +String id_pengguna PK
+        +String id_biro FK
+        +String nama_lengkap
         +String email UK
-        +String password
-        +UserRole role
-        +Boolean isActive
-        +DateTime createdAt
-        +DateTime updatedAt
-        +authenticate()
-        +updateProfile()
+        +String kata_sandi
+        +PeranPengguna peran
+        +Boolean status_aktif
+        +DateTime dibuat_pada
+        +DateTime diperbarui_pada
+        +autentikasi()
+        +ubahProfil()
     }
 
-    class Meeting {
-        +String meeting_id PK
-        +String meeting_number UK
-        +String title
-        +String primary_biro_id FK
-        +DateTime date
-        +String startTime
-        +String endTime
-        +String location
-        +String chairperson_id FK
-        +String secretary_id FK
-        +String previous_meeting_id FK
-        +MeetingStatus status
-        +DateTime createdAt
-        +DateTime updatedAt
-        +createMeeting()
-        +updateStatus()
-        +exportPdf()
+    class Rapat {
+        +String id_rapat PK
+        +String nomor_rapat UK
+        +String judul_rapat
+        +String id_biro FK
+        +String id_pengguna FK
+        +String id_notulis FK
+        +String id_rapat_sebelumnya FK
+        +DateTime tanggal_rapat
+        +String waktu_mulai
+        +String waktu_selesai
+        +String lokasi_rapat
+        +StatusRapat status_rapat
+        +DateTime dibuat_pada
+        +DateTime diperbarui_pada
+        +buatRapat()
+        +perbaruiStatus()
+        +eksporPdf()
     }
 
-    class MeetingMinutes {
-        +String minutes_id PK
-        +String meeting_id FK
-        +Json agenda
-        +Json discussion
-        +Json decisions
-        +Json conclusion
-        +DateTime createdAt
-        +DateTime updatedAt
-        +saveMinutes()
-        +generatePdf()
+    class NotulenRapat {
+        +String id_notulen PK
+        +String id_rapat FK
+        +Json agenda_pembahasan
+        +Json hasil_pembahasan
+        +Json poin_keputusan
+        +Json kesimpulan
+        +DateTime dibuat_pada
+        +DateTime diperbarui_pada
+        +simpanNotulen()
+        +buatDokumenPdf()
     }
 
-    class MeetingParticipant {
-        +String participant_id PK
-        +String meeting_id FK
-        +String user_id FK
-        +AttendanceStatus attendanceStatus
-        +DateTime createdAt
-        +updateAttendance()
+    class PesertaRapat {
+        +String id_peserta PK
+        +String id_rapat FK
+        +String id_pengguna FK
+        +StatusKehadiran status_kehadiran
+        +DateTime dibuat_pada
+        +catatKehadiran()
     }
 
-    class MeetingBiro {
-        +String meeting_id PK_FK
-        +String biro_id PK_FK
+    class RapatBiro {
+        +String id_rapat PK_FK
+        +String id_biro PK_FK
     }
 
-    class ActionItem {
-        +String action_item_id PK
-        +String meeting_id FK
-        +String title
-        +String description
-        +String pic_biro_id FK
-        +String pic_user_id FK
-        +DateTime dueDate
-        +ActionItemStatus status
-        +ActionItemPriority priority
-        +DateTime completedAt
-        +DateTime createdAt
-        +DateTime updatedAt
-        +updateStatus()
-        +markCompleted()
+    class TindakLanjut {
+        +String id_tindak_lanjut PK
+        +String id_rapat FK
+        +String id_biro FK
+        +String id_pengguna FK
+        +String judul_tindakan
+        +String deskripsi_tindakan
+        +DateTime tenggat_waktu
+        +StatusTindakLanjut status_tindak_lanjut
+        +PrioritasTindakLanjut skala_prioritas
+        +DateTime diselesaikan_pada
+        +DateTime dibuat_pada
+        +DateTime diperbarui_pada
+        +perbaruiStatus()
+        +tandaiSelesai()
     }
 
-    class BiroMeetingSequence {
-        +String sequence_id PK
-        +String biro_id FK
-        +Int currentNumber
-        +DateTime createdAt
-        +DateTime updatedAt
-        +getNextNumber()
+    class PenomoranRapatBiro {
+        +String id_penomoran PK
+        +String id_biro FK
+        +Int nomor_terakhir
+        +DateTime dibuat_pada
+        +DateTime diperbarui_pada
+        +ambilNomorBerikutnya()
     }
 
-    %% Hubungan Antar Kelas
-    Biro "1" --> "0..*" User : biro_id
-    Biro "1" --> "0..*" Meeting : primary_biro_id
-    Biro "1" --> "1" BiroMeetingSequence : biro_id
-    User "1" --> "0..*" Meeting : chairperson_id
-    User "1" --> "0..*" Meeting : secretary_id
-    Meeting "1" --> "0..1" Meeting : previous_meeting_id
-    Meeting "1" *-- "0..1" MeetingMinutes : meeting_id
-    Meeting "1" *-- "0..*" ActionItem : meeting_id
-    Meeting "1" -- "0..*" MeetingBiro : meeting_id
-    Biro "1" -- "0..*" MeetingBiro : biro_id
-    Meeting "1" *-- "0..*" MeetingParticipant : meeting_id
-    User "1" -- "0..*" MeetingParticipant : user_id
-    Biro "1" --> "0..*" ActionItem : pic_biro_id
-    User "0..1" --> "0..*" ActionItem : pic_user_id
+    %% Hubungan 1 to Many yang Konsisten
+    Biro "1" --> "0..*" Pengguna : id_biro (1:N)
+    Biro "1" --> "0..*" Rapat : id_biro (1:N)
+    Biro "1" --> "1" PenomoranRapatBiro : id_biro (1:1)
+    Pengguna "1" --> "0..*" Rapat : id_pengguna (1:N)
+    Rapat "1" --> "0..1" Rapat : id_rapat_sebelumnya (0..1:N)
+    Rapat "1" *-- "0..1" NotulenRapat : id_rapat (1:1)
+    Rapat "1" *-- "0..*" TindakLanjut : id_rapat (1:N)
+    Biro "1" --> "0..*" TindakLanjut : id_biro (1:N)
+    Pengguna "0..1" --> "0..*" TindakLanjut : id_pengguna (1:N)
+    Rapat "1" *-- "0..*" PesertaRapat : id_rapat (1:N)
+    Pengguna "1" -- "0..*" PesertaRapat : id_pengguna (1:N)
+    Rapat "1" -- "0..*" RapatBiro : id_rapat (M:N)
+    Biro "1" -- "0..*" RapatBiro : id_biro (M:N)
 ```
 
 ---
 
-## 3. Entity Relationship Diagram (ERD - Physical Data Model)
+## 3. Entity Relationship Diagram (ERD - Physical Model di Neon DB)
 
 ```mermaid
 erDiagram
-    BIRO ||--o{ USER : "memiliki pegawai"
-    BIRO ||--o{ MEETING : "menyelenggarakan"
-    BIRO ||--|| BIRO_MEETING_SEQUENCE : "nomor urut surat"
-    BIRO ||--o{ ACTION_ITEM : "penanggung jawab biro"
-    BIRO ||--o{ MEETING_BIRO : "terlibat sidang"
+    biro ||--o{ pengguna : "1:N mempekerjakan (id_biro)"
+    biro ||--o{ rapat : "1:N menyelenggarakan (id_biro)"
+    biro ||--|| penomoran_rapat_biro : "1:1 generator nomor (id_biro)"
+    biro ||--o{ tindak_lanjut : "1:N penugasan biro (id_biro)"
+    biro ||--o{ rapat_biro : "1:N keterlibatan biro (id_biro)"
 
-    USER ||--o{ MEETING_PARTICIPANT : "kehadiran sidang"
-    USER ||--o{ ACTION_ITEM : "PIC personal"
-    USER ||--o{ MEETING : "pimpinan atau notulis"
+    pengguna ||--o{ peserta_rapat : "1:N kehadiran (id_pengguna)"
+    pengguna ||--o{ tindak_lanjut : "0..1:N penugasan pegawai (id_pengguna)"
+    pengguna ||--o{ rapat : "1:N memimpin sidang (id_pengguna)"
 
-    MEETING ||--|| MEETING_MINUTES : "memiliki 1 dokumen naskah"
-    MEETING ||--o{ ACTION_ITEM : "menghasilkan resolusi"
-    MEETING ||--o{ MEETING_PARTICIPANT : "daftar peserta"
-    MEETING ||--o{ MEETING_BIRO : "biro terlibat"
-    MEETING ||--o| MEETING : "rujukan rapat sebelumnya"
+    rapat ||--|| notulen_rapat : "1:1 naskah notula (id_rapat)"
+    rapat ||--o{ tindak_lanjut : "1:N resolusi sidang (id_rapat)"
+    rapat ||--o{ peserta_rapat : "1:N daftar peserta (id_rapat)"
+    rapat ||--o{ rapat_biro : "1:N junction biro (id_rapat)"
+    rapat ||--o| rapat : "0..1 rujukan sebelumnya (id_rapat_sebelumnya)"
 
-    BIRO {
-        string biro_id PK "UUID"
-        string code UK "Kode Biro (IKK/BPPK/dll)"
-        string name "Nama Lengkap Biro"
-        string shortName "Nama Singkat Biro"
-        string description "Deskripsi Tugas"
-        boolean isActive "Status Aktif"
-        datetime createdAt "Waktu Dibuat"
-        datetime updatedAt "Waktu Diubah"
+    biro {
+        string id_biro PK "Kode Unik Biro (BIRO-IKK)"
+        string kode_biro UK "Kode Singkat (BPPK, IKK, dll)"
+        string nama_biro "Nama Resmi Biro"
+        string nama_singkat "Nama Singkat Biro"
+        string deskripsi "Tupoksi Biro"
+        boolean status_aktif "Status Aktif"
+        datetime dibuat_pada "Waktu Registrasi"
+        datetime diperbarui_pada "Waktu Pembaruan"
     }
 
-    USER {
-        string user_id PK "UUID"
-        string biro_id FK "Relasi ke BIRO"
-        string name "Nama Pengguna"
-        string email UK "Email Login"
-        string password "Password Terenkripsi"
-        string role "UserRole (SUPER_ADMIN/ADMIN/dll)"
-        boolean isActive "Status Akun Aktif"
-        datetime createdAt "Waktu Dibuat"
-        datetime updatedAt "Waktu Diubah"
+    pengguna {
+        string id_pengguna PK "Format Bersih (USR-001)"
+        string id_biro FK "Relasi 1:N dari biro (id_biro)"
+        string nama_lengkap "Nama Lengkap & Gelar"
+        string email UK "Email Login Dinas"
+        string kata_sandi "Hash Password Terenkripsi"
+        string peran "Hak Akses (PeranPengguna)"
+        boolean status_aktif "Status Akun Aktif"
+        datetime dibuat_pada "Waktu Registrasi"
+        datetime diperbarui_pada "Waktu Pembaruan"
     }
 
-    MEETING {
-        string meeting_id PK "UUID"
-        string meeting_number UK "Nomor Surat Rapat (IKK-015)"
-        string primary_biro_id FK "Biro Penyelenggara"
-        string chairperson_id FK "Pimpinan Sidang (User)"
-        string secretary_id FK "Notulis Sidang (User)"
-        string previous_meeting_id FK "Rujukan Rapat Sebelumnya"
-        string title "Judul Rapat"
-        datetime date "Tanggal Pelaksanaan"
-        string startTime "Waktu Mulai"
-        string endTime "Waktu Selesai"
-        string location "Ruang Rapat / Tautan Virtual"
-        string status "Status (DRAFT/REVIEW/APPROVED/FINAL)"
-        datetime createdAt "Waktu Dibuat"
-        datetime updatedAt "Waktu Diubah"
+    rapat {
+        string id_rapat PK "Format Bersih (MTG-001)"
+        string nomor_rapat UK "Nomor Registrasi Surat (IKK-015)"
+        string id_biro FK "Relasi 1:N dari biro (id_biro)"
+        string id_pengguna FK "Relasi 1:N dari pengguna - Pimpinan (id_pengguna)"
+        string id_notulis FK "Relasi 1:N dari pengguna - Notulis (id_notulis)"
+        string id_rapat_sebelumnya FK "Relasi 0..1:N dari rapat (id_rapat)"
+        string judul_rapat "Judul Agenda Rapat"
+        datetime tanggal_rapat "Tanggal Rapat"
+        string waktu_mulai "Waktu Mulai (HH:mm)"
+        string waktu_selesai "Waktu Selesai (HH:mm)"
+        string lokasi_rapat "Lokasi / Tautan Zoom"
+        string status_rapat "Status Rapat (DRAFT/REVIEW/APPROVED/FINAL)"
+        datetime dibuat_pada "Waktu Registrasi"
+        datetime diperbarui_pada "Waktu Pembaruan"
     }
 
-    MEETING_MINUTES {
-        string minutes_id PK "UUID"
-        string meeting_id FK "Relasi Unik ke MEETING"
-        json agenda "Agenda Pembahasan"
-        json discussion "Substansi Pembahasan"
-        json decisions "Keputusan / Hasil Sidang"
-        json conclusion "Pengesahan, Pimpinan, dan TTD"
-        datetime createdAt "Waktu Dibuat"
-        datetime updatedAt "Waktu Diubah"
+    notulen_rapat {
+        string id_notulen PK "Format Bersih (NOT-001)"
+        string id_rapat FK "Relasi 1:1 dari rapat (id_rapat)"
+        json agenda_pembahasan "Daftar Butir Agenda"
+        json hasil_pembahasan "Pembahasan & Dinamika Sidang"
+        json poin_keputusan "Keputusan & Kesepakatan"
+        json kesimpulan "Pengesahan & Pihak Penandatangan"
+        datetime dibuat_pada "Waktu Registrasi"
+        datetime diperbarui_pada "Waktu Pembaruan"
     }
 
-    ACTION_ITEM {
-        string action_item_id PK "UUID"
-        string meeting_id FK "Relasi ke MEETING"
-        string pic_biro_id FK "Biro Penanggung Jawab"
-        string pic_user_id FK "Pegawai PIC Spesifik"
-        string title "Judul Tindak Lanjut"
-        string description "Deskripsi Tindak Lanjut"
-        datetime dueDate "Tenggat Waktu Selesai"
-        string status "Status (PENDING/IN_PROGRESS/dll)"
-        string priority "Prioritas (LOW/MEDIUM/HIGH/URGENT)"
-        datetime completedAt "Waktu Selesai"
-        datetime createdAt "Waktu Dibuat"
-        datetime updatedAt "Waktu Diubah"
+    tindak_lanjut {
+        string id_tindak_lanjut PK "Format Bersih (ACT-001)"
+        string id_rapat FK "Relasi 1:N dari rapat (id_rapat)"
+        string id_biro FK "Relasi 1:N dari biro (id_biro)"
+        string id_pengguna FK "Relasi 1:N dari pengguna (id_pengguna)"
+        string judul_tindakan "Judul Butir Arahan"
+        string deskripsi_tindakan "Uraian Tindak Lanjut"
+        datetime tenggat_waktu "Batas Waktu Penyelesaian"
+        string status_tindak_lanjut "Status (PENDING/IN_PROGRESS/COMPLETED/OVERDUE)"
+        string skala_prioritas "Prioritas (LOW/MEDIUM/HIGH/URGENT)"
+        datetime diselesaikan_pada "Waktu Tugas Diselesaikan"
+        datetime dibuat_pada "Waktu Registrasi"
+        datetime diperbarui_pada "Waktu Pembaruan"
     }
 
-    MEETING_PARTICIPANT {
-        string participant_id PK "UUID"
-        string meeting_id FK "Relasi ke MEETING"
-        string user_id FK "Relasi ke USER"
-        string attendanceStatus "Status Kehadiran"
-        datetime createdAt "Waktu Dicatat"
+    peserta_rapat {
+        string id_peserta PK "Format Bersih (PRT-001)"
+        string id_rapat FK "Relasi 1:N dari rapat (id_rapat)"
+        string id_pengguna FK "Relasi 1:N dari pengguna (id_pengguna)"
+        string status_kehadiran "Status Kehadiran"
+        datetime dibuat_pada "Waktu Pencatatan"
     }
 
-    MEETING_BIRO {
-        string meeting_id PK_FK "Relasi ke MEETING"
-        string biro_id PK_FK "Relasi ke BIRO"
+    rapat_biro {
+        string id_rapat PK_FK "Relasi ke rapat (id_rapat)"
+        string id_biro PK_FK "Relasi ke biro (id_biro)"
     }
 
-    BIRO_MEETING_SEQUENCE {
-        string sequence_id PK "UUID"
-        string biro_id FK "Relasi Unik ke BIRO"
-        int currentNumber "Nomor Urut Terakhir"
-        datetime createdAt "Waktu Dibuat"
-        datetime updatedAt "Waktu Diubah"
+    penomoran_rapat_biro {
+        string id_penomoran PK "Format Bersih (SEQ-001)"
+        string id_biro FK "Relasi 1:1 dari biro (id_biro)"
+        int nomor_terakhir "Nomor Urut Terakhir yang Terbit"
+        datetime dibuat_pada "Waktu Registrasi"
+        datetime diperbarui_pada "Waktu Pembaruan"
     }
 ```
+
+---
+
+## 4. Panduan Menjelaskan Relasi 1 to Many kepada Dosen
+
+Ketika Dosen menguji: *"Coba jelaskan bagaimana aturan penamaan Foreign Key dan relasi 1 to Many pada perancangan basis data Anda?"*, Anda dapat menjawab dengan percaya diri:
+
+> *"Bapak/Ibu Dosen, seluruh relasi **1 to Many (1 : N)** pada sistem kami mengikuti kaidah baku basis data relasional, di mana **Primary Key entitas Induk disematkan secara identik ke entitas Anak sebagai Foreign Key**, sehingga langsung sesuai dengan nama tabel asalnya:*
+> 
+> 1. ***Relasi `biro` ke `rapat` (1 : N)***:
+>    *Tabel induk **`biro`** memiliki Primary Key **`id_biro`**. Masuk ke tabel anak **`rapat`** sebagai Foreign Key bernama **`id_biro`**. Satu biro dapat menyelenggarakan banyak rapat.*
+> 2. ***Relasi `pengguna` ke `rapat` (1 : N)***:
+>    *Tabel induk **`pengguna`** memiliki Primary Key **`id_pengguna`**. Masuk ke tabel **`rapat`** sebagai Foreign Key bernama **`id_pengguna`** (sebagai pimpinan sidang). Satu pengguna dapat memimpin banyak agenda rapat.*
+> 3. ***Relasi `rapat` ke `tindak_lanjut` (1 : N)***:
+>    *Tabel induk **`rapat`** memiliki Primary Key **`id_rapat`**. Masuk ke tabel anak **`tindak_lanjut`** sebagai Foreign Key bernama **`id_rapat`**. Satu rapat menghasilkan banyak butir tindak lanjut.*
+> 4. ***Relasi `biro` & `pengguna` ke `tindak_lanjut` (1 : N)***:
+>    *Tabel **`tindak_lanjut`** memegang Foreign Key **`id_biro`** dan **`id_pengguna`** yang merujuk langsung ke tabel asal penanggung jawabnya. Satu biro maupun satu pegawai dapat menerima banyak penugasan tindak lanjut.*
+> 5. ***Relasi `rapat` & `pengguna` ke `peserta_rapat` (1 : N)***:
+>    *Tabel **`peserta_rapat`** memegang Foreign Key **`id_rapat`** dan **`id_pengguna`**.*
+> 
+> *Dengan standarisasi ini, tidak ada lagi ambiguitas penamaan, dan pembacaan alur data dari tabel induk ke tabel turunan menjadi sangat jelas dan logis."*

@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import {
   Calendar,
   Clock,
@@ -20,6 +20,8 @@ import {
   UserCheck,
   Link2,
   FileText,
+  UploadCloud,
+  Sparkles,
 } from 'lucide-react';
 import { BIRO_LIST } from '@/lib/mock-data';
 import { BiroCode } from '@/lib/types';
@@ -30,6 +32,9 @@ import {
   createMeetingAction,
   getMeetingOptionsAction,
 } from '@/app/actions/meeting-actions';
+import { saveMinutesAndActionsToMeetingAction } from '@/app/actions/meeting-upload-actions';
+import { UploadMeetingDialog } from '@/components/meeting/upload-meeting-dialog';
+import { ExtractedMeetingData } from '@/lib/meeting-extractor';
 import { toast } from '@/components/providers/toast-provider';
 
 interface AvailableUser {
@@ -46,10 +51,14 @@ interface AvailableUser {
 
 export default function BuatRapatPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { data: session, status } = useSession();
   const userRole = session?.user?.role || 'VIEWER';
   const canCreate =
     userRole === 'SUPER_ADMIN' || userRole === 'ADMIN' || userRole === 'NOTULIS';
+
+  const [isUploadDialogOpen, setIsUploadDialogOpen] = useState(false);
+  const [pendingMinutes, setPendingMinutes] = useState<ExtractedMeetingData | null>(null);
 
   const [selectedBiro, setSelectedBiro] = useState<BiroCode>('IKK');
   const [title, setTitle] = useState('');
@@ -70,6 +79,39 @@ export default function BuatRapatPage() {
   const [selectedUserIds, setSelectedUserIds] = useState<string[]>([]);
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+
+  // Check query params to auto-open upload dialog if ?upload=true
+  useEffect(() => {
+    if (searchParams.get('upload') === 'true') {
+      setIsUploadDialogOpen(true);
+    }
+  }, [searchParams]);
+
+  // Handle data applied from uploaded meeting document
+  const handleApplyExtractedData = (
+    extractedData: ExtractedMeetingData,
+    matchedUserIds: string[]
+  ) => {
+    setTitle(extractedData.title);
+    if (extractedData.biroCode) {
+      setSelectedBiro(extractedData.biroCode as BiroCode);
+    }
+    setDate(extractedData.date);
+    setTime(`${extractedData.startTime} - ${extractedData.endTime} WIB`);
+    setLocation(extractedData.location);
+    if (extractedData.classification) {
+      setClassification(extractedData.classification);
+    }
+    setAttendees(extractedData.attendees);
+    if (extractedData.meetingNumber) {
+      setCustomMeetingNumber(extractedData.meetingNumber);
+    }
+    if (matchedUserIds && matchedUserIds.length > 0) {
+      setSelectedUserIds(matchedUserIds);
+    }
+
+    setPendingMinutes(extractedData);
+  };
 
   // Fetch available users and existing meetings on mount
   useEffect(() => {
@@ -205,6 +247,15 @@ export default function BuatRapatPage() {
       });
 
       if (res.success && res.data) {
+        // If there are pending minutes and action items from uploaded document, save them automatically
+        if (pendingMinutes) {
+          try {
+            await saveMinutesAndActionsToMeetingAction(res.data.id, pendingMinutes);
+          } catch (mErr) {
+            console.warn('Could not auto-save minutes to meeting:', mErr);
+          }
+        }
+
         toast.success(
           `Rapat "${title}" (${res.data.meetingNumber}) berhasil dijadwalkan dengan ${res.data.participantCount || 0} peserta terdaftar!`
         );
@@ -235,6 +286,47 @@ export default function BuatRapatPage() {
           <span>Kembali ke Semua Rapat</span>
         </Link>
       </div>
+
+      {/* Quick Upload Action Card */}
+      <div className="bg-gradient-to-r from-[#1B5260] via-[#266F80] to-[#31889C] rounded-2xl p-5 text-white shadow-md flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div className="flex items-start gap-3.5">
+          <div className="w-11 h-11 rounded-xl bg-white/20 backdrop-blur-md flex items-center justify-center shrink-0">
+            <Sparkles className="w-5 h-5 text-amber-300" />
+          </div>
+          <div>
+            <div className="flex items-center gap-2 mb-1">
+              <span className="px-2 py-0.5 rounded-full bg-amber-400 text-slate-900 text-[10px] font-extrabold uppercase tracking-wider">
+                ⚡ Fitur Cepat Ekstraksi Otomatis
+              </span>
+              {pendingMinutes && (
+                <span className="px-2 py-0.5 rounded-full bg-emerald-500/80 text-white text-[10px] font-bold">
+                  ✓ Dokumen Terpasang
+                </span>
+              )}
+            </div>
+            <h3 className="text-base font-bold text-white leading-snug">
+              Punya Berkas Hasil Rapat Offline / Dokumen Eksternal?
+            </h3>
+            <p className="text-white/80 text-xs mt-0.5 max-w-xl">
+              Unggah berkas Word (.docx), PDF (.pdf), atau Teks (.txt). Sistem secara cerdas mengisi formulir rapat dan menyusun naskah notula resmi (agenda, pembahasan, keputusan, serta butir tindak lanjut).
+            </p>
+          </div>
+        </div>
+        <button
+          type="button"
+          onClick={() => setIsUploadDialogOpen(true)}
+          className="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-white text-[#1B5260] hover:bg-[#E8F5F7] font-bold text-xs transition-all shadow-md shrink-0 cursor-pointer hover:scale-105 active:scale-95"
+        >
+          <UploadCloud className="w-4 h-4 text-[#31889C]" />
+          <span>Unggah Berkas Rapat</span>
+        </button>
+      </div>
+
+      <UploadMeetingDialog
+        isOpen={isUploadDialogOpen}
+        onClose={() => setIsUploadDialogOpen(false)}
+        onApplyToForm={handleApplyExtractedData}
+      />
 
       <div className="bg-white rounded-xl border border-slate-200 shadow-xs overflow-hidden">
         {/* Banner */}

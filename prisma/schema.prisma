@@ -45,14 +45,14 @@ enum ActionItemPriority {
 }
 
 model Biro {
-  id          String   @id @default(uuid()) @map("biro_id")
-  code        String   @unique
-  name        String
-  shortName   String
-  description String?
-  isActive    Boolean  @default(true)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id          String   @id @default(uuid()) @map("id_biro")
+  code        String   @unique @map("kode_biro")
+  name        String   @map("nama_biro")
+  shortName   String   @map("nama_singkat")
+  description String?  @map("deskripsi")
+  isActive    Boolean  @default(true) @map("status_aktif")
+  createdAt   DateTime @default(now()) @map("dibuat_pada")
+  updatedAt   DateTime @updatedAt @map("diperbarui_pada")
 
   users           User[]
   primaryMeetings Meeting[]            @relation("PrimaryBiroMeetings")
@@ -65,15 +65,15 @@ model Biro {
 }
 
 model User {
-  id        String   @id @default(uuid()) @map("user_id")
-  name      String
-  email     String   @unique
-  password  String?
-  role      UserRole @default(STAFF)
-  biroId    String   @map("biro_id")
-  isActive  Boolean  @default(true)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id        String   @id @default(uuid()) @map("id_pengguna")
+  name      String   @map("nama_lengkap")
+  email     String   @unique @map("email")
+  password  String?  @map("kata_sandi")
+  role      UserRole @default(STAFF) @map("peran")
+  biroId    String   @map("id_biro")
+  isActive  Boolean  @default(true) @map("status_aktif")
+  createdAt DateTime @default(now()) @map("dibuat_pada")
+  updatedAt DateTime @updatedAt @map("diperbarui_pada")
 
   biro                Biro                 @relation(fields: [biroId], references: [id], onDelete: Restrict)
   chairedMeetings     Meeting[]            @relation("ChairpersonMeetings")
@@ -86,24 +86,24 @@ model User {
   @@index([email])
   @@index([biroId])
   @@index([isActive])
-  @@map("user")
+  @@map("pengguna")
 }
 
 model Meeting {
-  id                String        @id @default(uuid()) @map("meeting_id")
-  meetingNumber     String        @unique @map("meeting_number")
-  title             String
-  primaryBiroId     String        @map("primary_biro_id")
-  date              DateTime
-  startTime         String
-  endTime           String
-  location          String
-  chairpersonId     String?       @map("chairperson_id")
-  secretaryId       String?       @map("secretary_id")
-  previousMeetingId String?       @map("previous_meeting_id")
-  status            MeetingStatus @default(DRAFT)
-  createdAt         DateTime      @default(now())
-  updatedAt         DateTime      @updatedAt
+  id                String        @id @default(uuid()) @map("id_rapat")
+  meetingNumber     String        @unique @map("nomor_rapat")
+  title             String        @map("judul_rapat")
+  primaryBiroId     String        @map("id_biro")
+  date              DateTime      @map("tanggal_rapat")
+  startTime         String        @map("waktu_mulai")
+  endTime           String        @map("waktu_selesai")
+  location          String        @map("lokasi_rapat")
+  chairpersonId     String?       @map("id_pengguna")
+  secretaryId       String?       @map("id_notulis")
+  previousMeetingId String?       @map("id_rapat_sebelumnya")
+  status            MeetingStatus @default(DRAFT) @map("status_rapat")
+  createdAt         DateTime      @default(now()) @map("dibuat_pada")
+  updatedAt         DateTime      @updatedAt @map("diperbarui_pada")
 
   primaryBiro      Biro                 @relation("PrimaryBiroMeetings", fields: [primaryBiroId], references: [id], onDelete: Restrict)
   chairperson      User?                @relation("ChairpersonMeetings", fields: [chairpersonId], references: [id], onDelete: SetNull)
@@ -121,12 +121,12 @@ model Meeting {
   @@index([date])
   @@index([status])
   @@index([createdAt])
-  @@map("meeting")
+  @@map("rapat")
 }
 
 model MeetingBiro {
-  meetingId String @map("meeting_id")
-  biroId    String @map("biro_id")
+  meetingId String @map("id_rapat")
+  biroId    String @map("id_biro")
 
   meeting Meeting @relation(fields: [meetingId], references: [id], onDelete: Cascade)
   biro    Biro    @relation(fields: [biroId], references: [id], onDelete: Restrict)
@@ -134,15 +134,15 @@ model MeetingBiro {
   @@id([meetingId, biroId])
   @@index([meetingId])
   @@index([biroId])
-  @@map("meeting_biro")
+  @@map("rapat_biro")
 }
 
 model MeetingParticipant {
-  id               String           @id @default(uuid()) @map("participant_id")
-  meetingId        String           @map("meeting_id")
-  userId           String           @map("user_id")
-  attendanceStatus AttendanceStatus @default(INVITED)
-  createdAt        DateTime         @default(now())
+  id               String           @id @default(uuid()) @map("id_peserta")
+  meetingId        String           @map("id_rapat")
+  userId           String           @map("id_pengguna")
+  attendanceStatus AttendanceStatus @default(INVITED) @map("status_kehadiran")
+  createdAt        DateTime         @default(now()) @map("dibuat_pada")
 
   meeting Meeting @relation(fields: [meetingId], references: [id], onDelete: Cascade)
   user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -150,51 +150,51 @@ model MeetingParticipant {
   @@unique([meetingId, userId])
   @@index([meetingId])
   @@index([userId])
-  @@map("meeting_participant")
+  @@map("peserta_rapat")
 }
 
 model BiroMeetingSequence {
-  id            String   @id @default(uuid()) @map("sequence_id")
-  biroId        String   @unique @map("biro_id")
-  currentNumber Int      @default(0)
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  id            String   @id @default(uuid()) @map("id_penomoran")
+  biroId        String   @unique @map("id_biro")
+  currentNumber Int      @default(0) @map("nomor_terakhir")
+  createdAt     DateTime @default(now()) @map("dibuat_pada")
+  updatedAt     DateTime @updatedAt @map("diperbarui_pada")
 
   biro Biro @relation(fields: [biroId], references: [id], onDelete: Cascade)
 
   @@index([biroId])
-  @@map("biro_meeting_sequence")
+  @@map("penomoran_rapat_biro")
 }
 
 model MeetingMinutes {
-  id         String   @id @default(uuid()) @map("minutes_id")
-  meetingId  String   @unique @map("meeting_id")
-  agenda     Json?
-  discussion Json?
-  decisions  Json?
-  conclusion Json?
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
+  id         String   @id @default(uuid()) @map("id_notulen")
+  meetingId  String   @unique @map("id_rapat")
+  agenda     Json?    @map("agenda_pembahasan")
+  discussion Json?    @map("hasil_pembahasan")
+  decisions  Json?    @map("poin_keputusan")
+  conclusion Json?    @map("kesimpulan")
+  createdAt  DateTime @default(now()) @map("dibuat_pada")
+  updatedAt  DateTime @updatedAt @map("diperbarui_pada")
 
   meeting Meeting @relation(fields: [meetingId], references: [id], onDelete: Cascade)
 
   @@index([meetingId])
-  @@map("meeting_minutes")
+  @@map("notulen_rapat")
 }
 
 model ActionItem {
-  id          String             @id @default(uuid()) @map("action_item_id")
-  meetingId   String             @map("meeting_id")
-  title       String
-  description String?
-  picBiroId   String             @map("pic_biro_id")
-  picUserId   String?            @map("pic_user_id")
-  dueDate     DateTime
-  status      ActionItemStatus   @default(PENDING)
-  priority    ActionItemPriority @default(MEDIUM)
-  completedAt DateTime?
-  createdAt   DateTime           @default(now())
-  updatedAt   DateTime           @updatedAt
+  id          String             @id @default(uuid()) @map("id_tindak_lanjut")
+  meetingId   String             @map("id_rapat")
+  title       String             @map("judul_tindakan")
+  description String?            @map("deskripsi_tindakan")
+  picBiroId   String             @map("id_biro")
+  picUserId   String?            @map("id_pengguna")
+  dueDate     DateTime           @map("tenggat_waktu")
+  status      ActionItemStatus   @default(PENDING) @map("status_tindak_lanjut")
+  priority    ActionItemPriority @default(MEDIUM) @map("skala_prioritas")
+  completedAt DateTime?          @map("diselesaikan_pada")
+  createdAt   DateTime           @default(now()) @map("dibuat_pada")
+  updatedAt   DateTime           @updatedAt @map("diperbarui_pada")
 
   meeting Meeting @relation(fields: [meetingId], references: [id], onDelete: Cascade)
   picBiro Biro    @relation("BiroActionItems", fields: [picBiroId], references: [id], onDelete: Restrict)
@@ -205,52 +205,52 @@ model ActionItem {
   @@index([picUserId])
   @@index([status])
   @@index([dueDate])
-  @@map("action_item")
+  @@map("tindak_lanjut")
 }
 
 model Account {
-  id                String  @id @default(uuid()) @map("account_id")
-  userId            String  @map("user_id")
-  type              String
-  provider          String
-  providerAccountId String
-  refresh_token     String?
-  access_token      String?
-  expires_at        Int?
-  token_type        String?
-  scope             String?
-  id_token          String?
-  session_state     String?
+  id                String  @id @default(uuid()) @map("id_akun")
+  userId            String  @map("id_pengguna")
+  type              String  @map("tipe")
+  provider          String  @map("penyedia")
+  providerAccountId String  @map("id_akun_penyedia")
+  refresh_token     String? @map("token_penyegar")
+  access_token      String? @map("token_akses")
+  expires_at        Int?    @map("kedaluwarsa_pada")
+  token_type        String? @map("tipe_token")
+  scope             String? @map("cakupan")
+  id_token          String? @map("token_identitas")
+  session_state     String? @map("status_sesi")
 
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  createdAt DateTime @default(now()) @map("dibuat_pada")
+  updatedAt DateTime @updatedAt @map("diperbarui_pada")
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([provider, providerAccountId])
   @@index([userId])
-  @@map("account")
+  @@map("akun")
 }
 
 model Session {
-  id           String   @id @default(uuid()) @map("session_id")
-  sessionToken String   @unique
-  userId       String   @map("user_id")
-  expires      DateTime
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  id           String   @id @default(uuid()) @map("id_sesi")
+  sessionToken String   @unique @map("token_sesi")
+  userId       String   @map("id_pengguna")
+  expires      DateTime @map("waktu_kedaluwarsa")
+  createdAt    DateTime @default(now()) @map("dibuat_pada")
+  updatedAt    DateTime @updatedAt @map("diperbarui_pada")
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
-  @@map("session")
+  @@map("sesi")
 }
 
 model VerificationToken {
-  identifier String
-  token      String
-  expires    DateTime
+  identifier String   @map("identifikasi")
+  token      String   @map("token")
+  expires    DateTime @map("waktu_kedaluwarsa")
 
   @@unique([identifier, token])
-  @@map("verification_token")
+  @@map("token_verifikasi")
 }

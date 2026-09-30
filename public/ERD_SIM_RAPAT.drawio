@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<mxfile host="app.diagrams.net" modified="2026-09-29T08:16:26.570Z" agent="Mozilla/5.0" version="21.0.0" type="device">
+<mxfile host="app.diagrams.net" modified="2026-09-30T03:25:06.448Z" agent="Mozilla/5.0" version="21.0.0" type="device">
   <diagram id="sim-rapat-chen-erd" name="ERD Chen - SIM-RAPAT KEK RI">
     <mxGraphModel dx="1600" dy="1200" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1550" pageHeight="1150" background="#ffffff" math="0" shadow="0">
       <root>
@@ -16,33 +16,33 @@
           <mxGeometry x="350" y="220" width="160" height="60" as="geometry" />
         </mxCell>
 
-        <!-- Entity: user -->
-        <mxCell id="ent_user" value="user" style="shape=rectangle;rounded=0;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#183E47;strokeWidth=2.2;fontColor=#183E47;fontStyle=1;fontSize=14;align=center;verticalAlign=middle;fontFamily=Helvetica;shadow=1;" vertex="1" parent="1">
+        <!-- Entity: pengguna -->
+        <mxCell id="ent_user" value="pengguna" style="shape=rectangle;rounded=0;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#183E47;strokeWidth=2.2;fontColor=#183E47;fontStyle=1;fontSize=14;align=center;verticalAlign=middle;fontFamily=Helvetica;shadow=1;" vertex="1" parent="1">
           <mxGeometry x="1050" y="220" width="160" height="60" as="geometry" />
         </mxCell>
 
-        <!-- Entity: biro_meeting_sequence -->
-        <mxCell id="ent_seq" value="biro_meeting_sequence" style="shape=rectangle;rounded=0;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#183E47;strokeWidth=2.2;fontColor=#183E47;fontStyle=1;fontSize=14;align=center;verticalAlign=middle;fontFamily=Helvetica;shadow=1;" vertex="1" parent="1">
+        <!-- Entity: penomoran_rapat_biro -->
+        <mxCell id="ent_seq" value="penomoran_rapat_biro" style="shape=rectangle;rounded=0;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#183E47;strokeWidth=2.2;fontColor=#183E47;fontStyle=1;fontSize=14;align=center;verticalAlign=middle;fontFamily=Helvetica;shadow=1;" vertex="1" parent="1">
           <mxGeometry x="80" y="440" width="180" height="60" as="geometry" />
         </mxCell>
 
-        <!-- Entity: meeting -->
-        <mxCell id="ent_meeting" value="meeting" style="shape=rectangle;rounded=0;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#183E47;strokeWidth=2.2;fontColor=#183E47;fontStyle=1;fontSize=14;align=center;verticalAlign=middle;fontFamily=Helvetica;shadow=1;" vertex="1" parent="1">
+        <!-- Entity: rapat -->
+        <mxCell id="ent_meeting" value="rapat" style="shape=rectangle;rounded=0;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#183E47;strokeWidth=2.2;fontColor=#183E47;fontStyle=1;fontSize=14;align=center;verticalAlign=middle;fontFamily=Helvetica;shadow=1;" vertex="1" parent="1">
           <mxGeometry x="700" y="580" width="160" height="65" as="geometry" />
         </mxCell>
 
-        <!-- Entity: action_item -->
-        <mxCell id="ent_action" value="action_item" style="shape=rectangle;rounded=0;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#183E47;strokeWidth=2.2;fontColor=#183E47;fontStyle=1;fontSize=14;align=center;verticalAlign=middle;fontFamily=Helvetica;shadow=1;" vertex="1" parent="1">
+        <!-- Entity: tindak_lanjut -->
+        <mxCell id="ent_action" value="tindak_lanjut" style="shape=rectangle;rounded=0;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#183E47;strokeWidth=2.2;fontColor=#183E47;fontStyle=1;fontSize=14;align=center;verticalAlign=middle;fontFamily=Helvetica;shadow=1;" vertex="1" parent="1">
           <mxGeometry x="350" y="920" width="160" height="60" as="geometry" />
         </mxCell>
 
-        <!-- Entity: meeting_minutes -->
-        <mxCell id="ent_minutes" value="meeting_minutes" style="shape=rectangle;rounded=0;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#183E47;strokeWidth=2.2;fontColor=#183E47;fontStyle=1;fontSize=14;align=center;verticalAlign=middle;fontFamily=Helvetica;shadow=1;" vertex="1" parent="1">
+        <!-- Entity: notulen_rapat -->
+        <mxCell id="ent_minutes" value="notulen_rapat" style="shape=rectangle;rounded=0;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#183E47;strokeWidth=2.2;fontColor=#183E47;fontStyle=1;fontSize=14;align=center;verticalAlign=middle;fontFamily=Helvetica;shadow=1;" vertex="1" parent="1">
           <mxGeometry x="1050" y="920" width="170" height="60" as="geometry" />
         </mxCell>
 
         <!-- Attribute: att_b_id -->
-        <mxCell id="att_b_id" value="&lt;u&gt;&lt;b&gt;biro_id&lt;/b&gt;&lt;/u&gt;" style="shape=ellipse;whiteSpace=wrap;html=1;fillColor=#FFFBEB;strokeColor=#B7791F;strokeWidth=2;fontColor=#B7791F;fontStyle=0;fontSize=11;align=center;verticalAlign=middle;fontFamily=Helvetica;" vertex="1" parent="1">
+        <mxCell id="att_b_id" value="&lt;u&gt;&lt;b&gt;id_biro&lt;/b&gt;&lt;/u&gt;" style="shape=ellipse;whiteSpace=wrap;html=1;fillColor=#FFFBEB;strokeColor=#B7791F;strokeWidth=2;fontColor=#B7791F;fontStyle=0;fontSize=11;align=center;verticalAlign=middle;fontFamily=Helvetica;" vertex="1" parent="1">
           <mxGeometry x="200" y="120" width="100" height="42" as="geometry" />
         </mxCell>
         <!-- Edge Attribute to Entity -->
@@ -51,7 +51,7 @@
         </mxCell>
 
         <!-- Attribute: att_b_code -->
-        <mxCell id="att_b_code" value="code" style="shape=ellipse;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#64748B;strokeWidth=1.2;fontColor=#1E293B;fontStyle=0;fontSize=11;align=center;verticalAlign=middle;fontFamily=Helvetica;" vertex="1" parent="1">
+        <mxCell id="att_b_code" value="kode_biro" style="shape=ellipse;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#64748B;strokeWidth=1.2;fontColor=#1E293B;fontStyle=0;fontSize=11;align=center;verticalAlign=middle;fontFamily=Helvetica;" vertex="1" parent="1">
           <mxGeometry x="320" y="110" width="85" height="40" as="geometry" />
         </mxCell>
         <!-- Edge Attribute to Entity -->
@@ -60,7 +60,7 @@
         </mxCell>
 
         <!-- Attribute: att_b_name -->
-        <mxCell id="att_b_name" value="name" style="shape=ellipse;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#64748B;strokeWidth=1.2;fontColor=#1E293B;fontStyle=0;fontSize=11;align=center;verticalAlign=middle;fontFamily=Helvetica;" vertex="1" parent="1">
+        <mxCell id="att_b_name" value="nama_biro" style="shape=ellipse;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#64748B;strokeWidth=1.2;fontColor=#1E293B;fontStyle=0;fontSize=11;align=center;verticalAlign=middle;fontFamily=Helvetica;" vertex="1" parent="1">
           <mxGeometry x="420" y="110" width="85" height="40" as="geometry" />
         </mxCell>
         <!-- Edge Attribute to Entity -->
@@ -69,7 +69,7 @@
         </mxCell>
 
         <!-- Attribute: att_b_short -->
-        <mxCell id="att_b_short" value="shortName" style="shape=ellipse;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#64748B;strokeWidth=1.2;fontColor=#1E293B;fontStyle=0;fontSize=11;align=center;verticalAlign=middle;fontFamily=Helvetica;" vertex="1" parent="1">
+        <mxCell id="att_b_short" value="nama_singkat" style="shape=ellipse;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#64748B;strokeWidth=1.2;fontColor=#1E293B;fontStyle=0;fontSize=11;align=center;verticalAlign=middle;fontFamily=Helvetica;" vertex="1" parent="1">
           <mxGeometry x="520" y="120" width="90" height="40" as="geometry" />
         </mxCell>
         <!-- Edge Attribute to Entity -->
@@ -78,7 +78,7 @@
         </mxCell>
 
         <!-- Attribute: att_b_desc -->
-        <mxCell id="att_b_desc" value="description" style="shape=ellipse;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#64748B;strokeWidth=1.2;fontColor=#1E293B;fontStyle=0;fontSize=11;align=center;verticalAlign=middle;fontFamily=Helvetica;" vertex="1" parent="1">
+        <mxCell id="att_b_desc" value="deskripsi" style="shape=ellipse;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#64748B;strokeWidth=1.2;fontColor=#1E293B;fontStyle=0;fontSize=11;align=center;verticalAlign=middle;fontFamily=Helvetica;" vertex="1" parent="1">
           <mxGeometry x="190" y="200" width="95" height="40" as="geometry" />
         </mxCell>
         <!-- Edge Attribute to Entity -->
@@ -87,7 +87,7 @@
         </mxCell>
 
         <!-- Attribute: att_b_act -->
-        <mxCell id="att_b_act" value="isActive" style="shape=ellipse;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#64748B;strokeWidth=1.2;fontColor=#1E293B;fontStyle=0;fontSize=11;align=center;verticalAlign=middle;fontFamily=Helvetica;" vertex="1" parent="1">
+        <mxCell id="att_b_act" value="status_aktif" style="shape=ellipse;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#64748B;strokeWidth=1.2;fontColor=#1E293B;fontStyle=0;fontSize=11;align=center;verticalAlign=middle;fontFamily=Helvetica;" vertex="1" parent="1">
           <mxGeometry x="190" y="260" width="85" height="40" as="geometry" />
         </mxCell>
         <!-- Edge Attribute to Entity -->
@@ -96,7 +96,7 @@
         </mxCell>
 
         <!-- Attribute: att_u_id -->
-        <mxCell id="att_u_id" value="&lt;u&gt;&lt;b&gt;user_id&lt;/b&gt;&lt;/u&gt;" style="shape=ellipse;whiteSpace=wrap;html=1;fillColor=#FFFBEB;strokeColor=#B7791F;strokeWidth=2;fontColor=#B7791F;fontStyle=0;fontSize=11;align=center;verticalAlign=middle;fontFamily=Helvetica;" vertex="1" parent="1">
+        <mxCell id="att_u_id" value="&lt;u&gt;&lt;b&gt;id_pengguna&lt;/b&gt;&lt;/u&gt;" style="shape=ellipse;whiteSpace=wrap;html=1;fillColor=#FFFBEB;strokeColor=#B7791F;strokeWidth=2;fontColor=#B7791F;fontStyle=0;fontSize=11;align=center;verticalAlign=middle;fontFamily=Helvetica;" vertex="1" parent="1">
           <mxGeometry x="1260" y="120" width="100" height="42" as="geometry" />
         </mxCell>
         <!-- Edge Attribute to Entity -->
@@ -105,8 +105,8 @@
         </mxCell>
 
         <!-- Attribute: att_u_name -->
-        <mxCell id="att_u_name" value="name" style="shape=ellipse;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#64748B;strokeWidth=1.2;fontColor=#1E293B;fontStyle=0;fontSize=11;align=center;verticalAlign=middle;fontFamily=Helvetica;" vertex="1" parent="1">
-          <mxGeometry x="1150" y="110" width="85" height="40" as="geometry" />
+        <mxCell id="att_u_name" value="nama_lengkap" style="shape=ellipse;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#64748B;strokeWidth=1.2;fontColor=#1E293B;fontStyle=0;fontSize=11;align=center;verticalAlign=middle;fontFamily=Helvetica;" vertex="1" parent="1">
+          <mxGeometry x="1150" y="110" width="95" height="40" as="geometry" />
         </mxCell>
         <!-- Edge Attribute to Entity -->
         <mxCell id="edge_att_u_name" style="endArrow=none;html=1;strokeColor=#94A3B8;strokeWidth=1.2;" edge="1" parent="1" source="ent_user" target="att_u_name">
@@ -123,7 +123,7 @@
         </mxCell>
 
         <!-- Attribute: att_u_pass -->
-        <mxCell id="att_u_pass" value="password" style="shape=ellipse;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#64748B;strokeWidth=1.2;fontColor=#1E293B;fontStyle=0;fontSize=11;align=center;verticalAlign=middle;fontFamily=Helvetica;" vertex="1" parent="1">
+        <mxCell id="att_u_pass" value="kata_sandi" style="shape=ellipse;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#64748B;strokeWidth=1.2;fontColor=#1E293B;fontStyle=0;fontSize=11;align=center;verticalAlign=middle;fontFamily=Helvetica;" vertex="1" parent="1">
           <mxGeometry x="950" y="120" width="90" height="40" as="geometry" />
         </mxCell>
         <!-- Edge Attribute to Entity -->
@@ -132,7 +132,7 @@
         </mxCell>
 
         <!-- Attribute: att_u_role -->
-        <mxCell id="att_u_role" value="role" style="shape=ellipse;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#64748B;strokeWidth=1.2;fontColor=#1E293B;fontStyle=0;fontSize=11;align=center;verticalAlign=middle;fontFamily=Helvetica;" vertex="1" parent="1">
+        <mxCell id="att_u_role" value="peran" style="shape=ellipse;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#64748B;strokeWidth=1.2;fontColor=#1E293B;fontStyle=0;fontSize=11;align=center;verticalAlign=middle;fontFamily=Helvetica;" vertex="1" parent="1">
           <mxGeometry x="1260" y="200" width="85" height="40" as="geometry" />
         </mxCell>
         <!-- Edge Attribute to Entity -->
@@ -141,7 +141,7 @@
         </mxCell>
 
         <!-- Attribute: att_u_act -->
-        <mxCell id="att_u_act" value="isActive" style="shape=ellipse;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#64748B;strokeWidth=1.2;fontColor=#1E293B;fontStyle=0;fontSize=11;align=center;verticalAlign=middle;fontFamily=Helvetica;" vertex="1" parent="1">
+        <mxCell id="att_u_act" value="status_aktif" style="shape=ellipse;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#64748B;strokeWidth=1.2;fontColor=#1E293B;fontStyle=0;fontSize=11;align=center;verticalAlign=middle;fontFamily=Helvetica;" vertex="1" parent="1">
           <mxGeometry x="1260" y="260" width="85" height="40" as="geometry" />
         </mxCell>
         <!-- Edge Attribute to Entity -->
@@ -150,7 +150,7 @@
         </mxCell>
 
         <!-- Attribute: att_s_id -->
-        <mxCell id="att_s_id" value="&lt;u&gt;&lt;b&gt;sequence_id&lt;/b&gt;&lt;/u&gt;" style="shape=ellipse;whiteSpace=wrap;html=1;fillColor=#FFFBEB;strokeColor=#B7791F;strokeWidth=2;fontColor=#B7791F;fontStyle=0;fontSize=11;align=center;verticalAlign=middle;fontFamily=Helvetica;" vertex="1" parent="1">
+        <mxCell id="att_s_id" value="&lt;u&gt;&lt;b&gt;id_penomoran&lt;/b&gt;&lt;/u&gt;" style="shape=ellipse;whiteSpace=wrap;html=1;fillColor=#FFFBEB;strokeColor=#B7791F;strokeWidth=2;fontColor=#B7791F;fontStyle=0;fontSize=11;align=center;verticalAlign=middle;fontFamily=Helvetica;" vertex="1" parent="1">
           <mxGeometry x="50" y="550" width="105" height="42" as="geometry" />
         </mxCell>
         <!-- Edge Attribute to Entity -->
@@ -159,7 +159,7 @@
         </mxCell>
 
         <!-- Attribute: att_s_num -->
-        <mxCell id="att_s_num" value="currentNumber" style="shape=ellipse;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#64748B;strokeWidth=1.2;fontColor=#1E293B;fontStyle=0;fontSize=11;align=center;verticalAlign=middle;fontFamily=Helvetica;" vertex="1" parent="1">
+        <mxCell id="att_s_num" value="nomor_terakhir" style="shape=ellipse;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#64748B;strokeWidth=1.2;fontColor=#1E293B;fontStyle=0;fontSize=11;align=center;verticalAlign=middle;fontFamily=Helvetica;" vertex="1" parent="1">
           <mxGeometry x="175" y="550" width="105" height="40" as="geometry" />
         </mxCell>
         <!-- Edge Attribute to Entity -->
@@ -168,7 +168,7 @@
         </mxCell>
 
         <!-- Attribute: att_m_id -->
-        <mxCell id="att_m_id" value="&lt;u&gt;&lt;b&gt;meeting_id&lt;/b&gt;&lt;/u&gt;" style="shape=ellipse;whiteSpace=wrap;html=1;fillColor=#FFFBEB;strokeColor=#B7791F;strokeWidth=2;fontColor=#B7791F;fontStyle=0;fontSize=11;align=center;verticalAlign=middle;fontFamily=Helvetica;" vertex="1" parent="1">
+        <mxCell id="att_m_id" value="&lt;u&gt;&lt;b&gt;id_rapat&lt;/b&gt;&lt;/u&gt;" style="shape=ellipse;whiteSpace=wrap;html=1;fillColor=#FFFBEB;strokeColor=#B7791F;strokeWidth=2;fontColor=#B7791F;fontStyle=0;fontSize=11;align=center;verticalAlign=middle;fontFamily=Helvetica;" vertex="1" parent="1">
           <mxGeometry x="730" y="470" width="100" height="42" as="geometry" />
         </mxCell>
         <!-- Edge Attribute to Entity -->
@@ -177,7 +177,7 @@
         </mxCell>
 
         <!-- Attribute: att_m_num -->
-        <mxCell id="att_m_num" value="meeting_number" style="shape=ellipse;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#64748B;strokeWidth=1.2;fontColor=#1E293B;fontStyle=0;fontSize=11;align=center;verticalAlign=middle;fontFamily=Helvetica;" vertex="1" parent="1">
+        <mxCell id="att_m_num" value="nomor_rapat" style="shape=ellipse;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#64748B;strokeWidth=1.2;fontColor=#1E293B;fontStyle=0;fontSize=11;align=center;verticalAlign=middle;fontFamily=Helvetica;" vertex="1" parent="1">
           <mxGeometry x="570" y="680" width="115" height="40" as="geometry" />
         </mxCell>
         <!-- Edge Attribute to Entity -->
@@ -186,7 +186,7 @@
         </mxCell>
 
         <!-- Attribute: att_m_title -->
-        <mxCell id="att_m_title" value="title" style="shape=ellipse;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#64748B;strokeWidth=1.2;fontColor=#1E293B;fontStyle=0;fontSize=11;align=center;verticalAlign=middle;fontFamily=Helvetica;" vertex="1" parent="1">
+        <mxCell id="att_m_title" value="judul_rapat" style="shape=ellipse;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#64748B;strokeWidth=1.2;fontColor=#1E293B;fontStyle=0;fontSize=11;align=center;verticalAlign=middle;fontFamily=Helvetica;" vertex="1" parent="1">
           <mxGeometry x="700" y="700" width="85" height="40" as="geometry" />
         </mxCell>
         <!-- Edge Attribute to Entity -->
@@ -195,8 +195,8 @@
         </mxCell>
 
         <!-- Attribute: att_m_date -->
-        <mxCell id="att_m_date" value="date" style="shape=ellipse;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#64748B;strokeWidth=1.2;fontColor=#1E293B;fontStyle=0;fontSize=11;align=center;verticalAlign=middle;fontFamily=Helvetica;" vertex="1" parent="1">
-          <mxGeometry x="800" y="700" width="85" height="40" as="geometry" />
+        <mxCell id="att_m_date" value="tanggal_rapat" style="shape=ellipse;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#64748B;strokeWidth=1.2;fontColor=#1E293B;fontStyle=0;fontSize=11;align=center;verticalAlign=middle;fontFamily=Helvetica;" vertex="1" parent="1">
+          <mxGeometry x="800" y="700" width="95" height="40" as="geometry" />
         </mxCell>
         <!-- Edge Attribute to Entity -->
         <mxCell id="edge_att_m_date" style="endArrow=none;html=1;strokeColor=#94A3B8;strokeWidth=1.2;" edge="1" parent="1" source="ent_meeting" target="att_m_date">
@@ -204,7 +204,7 @@
         </mxCell>
 
         <!-- Attribute: att_m_time -->
-        <mxCell id="att_m_time" value="startTime" style="shape=ellipse;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#64748B;strokeWidth=1.2;fontColor=#1E293B;fontStyle=0;fontSize=11;align=center;verticalAlign=middle;fontFamily=Helvetica;" vertex="1" parent="1">
+        <mxCell id="att_m_time" value="waktu_mulai" style="shape=ellipse;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#64748B;strokeWidth=1.2;fontColor=#1E293B;fontStyle=0;fontSize=11;align=center;verticalAlign=middle;fontFamily=Helvetica;" vertex="1" parent="1">
           <mxGeometry x="890" y="680" width="90" height="40" as="geometry" />
         </mxCell>
         <!-- Edge Attribute to Entity -->
@@ -213,7 +213,7 @@
         </mxCell>
 
         <!-- Attribute: att_m_loc -->
-        <mxCell id="att_m_loc" value="location" style="shape=ellipse;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#64748B;strokeWidth=1.2;fontColor=#1E293B;fontStyle=0;fontSize=11;align=center;verticalAlign=middle;fontFamily=Helvetica;" vertex="1" parent="1">
+        <mxCell id="att_m_loc" value="lokasi_rapat" style="shape=ellipse;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#64748B;strokeWidth=1.2;fontColor=#1E293B;fontStyle=0;fontSize=11;align=center;verticalAlign=middle;fontFamily=Helvetica;" vertex="1" parent="1">
           <mxGeometry x="880" y="490" width="90" height="40" as="geometry" />
         </mxCell>
         <!-- Edge Attribute to Entity -->
@@ -222,7 +222,7 @@
         </mxCell>
 
         <!-- Attribute: att_m_stat -->
-        <mxCell id="att_m_stat" value="status" style="shape=ellipse;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#64748B;strokeWidth=1.2;fontColor=#1E293B;fontStyle=0;fontSize=11;align=center;verticalAlign=middle;fontFamily=Helvetica;" vertex="1" parent="1">
+        <mxCell id="att_m_stat" value="status_rapat" style="shape=ellipse;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#64748B;strokeWidth=1.2;fontColor=#1E293B;fontStyle=0;fontSize=11;align=center;verticalAlign=middle;fontFamily=Helvetica;" vertex="1" parent="1">
           <mxGeometry x="620" y="490" width="85" height="40" as="geometry" />
         </mxCell>
         <!-- Edge Attribute to Entity -->
@@ -231,7 +231,7 @@
         </mxCell>
 
         <!-- Attribute: att_a_id -->
-        <mxCell id="att_a_id" value="&lt;u&gt;&lt;b&gt;action_item_id&lt;/b&gt;&lt;/u&gt;" style="shape=ellipse;whiteSpace=wrap;html=1;fillColor=#FFFBEB;strokeColor=#B7791F;strokeWidth=2;fontColor=#B7791F;fontStyle=0;fontSize=11;align=center;verticalAlign=middle;fontFamily=Helvetica;" vertex="1" parent="1">
+        <mxCell id="att_a_id" value="&lt;u&gt;&lt;b&gt;id_tindak_lanjut&lt;/b&gt;&lt;/u&gt;" style="shape=ellipse;whiteSpace=wrap;html=1;fillColor=#FFFBEB;strokeColor=#B7791F;strokeWidth=2;fontColor=#B7791F;fontStyle=0;fontSize=11;align=center;verticalAlign=middle;fontFamily=Helvetica;" vertex="1" parent="1">
           <mxGeometry x="215" y="920" width="110" height="42" as="geometry" />
         </mxCell>
         <!-- Edge Attribute to Entity -->
@@ -240,8 +240,8 @@
         </mxCell>
 
         <!-- Attribute: att_a_title -->
-        <mxCell id="att_a_title" value="title" style="shape=ellipse;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#64748B;strokeWidth=1.2;fontColor=#1E293B;fontStyle=0;fontSize=11;align=center;verticalAlign=middle;fontFamily=Helvetica;" vertex="1" parent="1">
-          <mxGeometry x="230" y="1010" width="85" height="40" as="geometry" />
+        <mxCell id="att_a_title" value="judul_tindakan" style="shape=ellipse;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#64748B;strokeWidth=1.2;fontColor=#1E293B;fontStyle=0;fontSize=11;align=center;verticalAlign=middle;fontFamily=Helvetica;" vertex="1" parent="1">
+          <mxGeometry x="230" y="1010" width="95" height="40" as="geometry" />
         </mxCell>
         <!-- Edge Attribute to Entity -->
         <mxCell id="edge_att_a_title" style="endArrow=none;html=1;strokeColor=#94A3B8;strokeWidth=1.2;" edge="1" parent="1" source="ent_action" target="att_a_title">
@@ -249,8 +249,8 @@
         </mxCell>
 
         <!-- Attribute: att_a_desc -->
-        <mxCell id="att_a_desc" value="description" style="shape=ellipse;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#64748B;strokeWidth=1.2;fontColor=#1E293B;fontStyle=0;fontSize=11;align=center;verticalAlign=middle;fontFamily=Helvetica;" vertex="1" parent="1">
-          <mxGeometry x="330" y="1025" width="95" height="40" as="geometry" />
+        <mxCell id="att_a_desc" value="deskripsi_tindakan" style="shape=ellipse;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#64748B;strokeWidth=1.2;fontColor=#1E293B;fontStyle=0;fontSize=11;align=center;verticalAlign=middle;fontFamily=Helvetica;" vertex="1" parent="1">
+          <mxGeometry x="330" y="1025" width="110" height="40" as="geometry" />
         </mxCell>
         <!-- Edge Attribute to Entity -->
         <mxCell id="edge_att_a_desc" style="endArrow=none;html=1;strokeColor=#94A3B8;strokeWidth=1.2;" edge="1" parent="1" source="ent_action" target="att_a_desc">
@@ -258,8 +258,8 @@
         </mxCell>
 
         <!-- Attribute: att_a_due -->
-        <mxCell id="att_a_due" value="dueDate" style="shape=ellipse;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#64748B;strokeWidth=1.2;fontColor=#1E293B;fontStyle=0;fontSize=11;align=center;verticalAlign=middle;fontFamily=Helvetica;" vertex="1" parent="1">
-          <mxGeometry x="440" y="1025" width="85" height="40" as="geometry" />
+        <mxCell id="att_a_due" value="tenggat_waktu" style="shape=ellipse;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#64748B;strokeWidth=1.2;fontColor=#1E293B;fontStyle=0;fontSize=11;align=center;verticalAlign=middle;fontFamily=Helvetica;" vertex="1" parent="1">
+          <mxGeometry x="450" y="1025" width="95" height="40" as="geometry" />
         </mxCell>
         <!-- Edge Attribute to Entity -->
         <mxCell id="edge_att_a_due" style="endArrow=none;html=1;strokeColor=#94A3B8;strokeWidth=1.2;" edge="1" parent="1" source="ent_action" target="att_a_due">
@@ -267,8 +267,8 @@
         </mxCell>
 
         <!-- Attribute: att_a_stat -->
-        <mxCell id="att_a_stat" value="status" style="shape=ellipse;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#64748B;strokeWidth=1.2;fontColor=#1E293B;fontStyle=0;fontSize=11;align=center;verticalAlign=middle;fontFamily=Helvetica;" vertex="1" parent="1">
-          <mxGeometry x="535" y="1010" width="85" height="40" as="geometry" />
+        <mxCell id="att_a_stat" value="status_tindak_lanjut" style="shape=ellipse;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#64748B;strokeWidth=1.2;fontColor=#1E293B;fontStyle=0;fontSize=11;align=center;verticalAlign=middle;fontFamily=Helvetica;" vertex="1" parent="1">
+          <mxGeometry x="555" y="1010" width="110" height="40" as="geometry" />
         </mxCell>
         <!-- Edge Attribute to Entity -->
         <mxCell id="edge_att_a_stat" style="endArrow=none;html=1;strokeColor=#94A3B8;strokeWidth=1.2;" edge="1" parent="1" source="ent_action" target="att_a_stat">
@@ -276,8 +276,8 @@
         </mxCell>
 
         <!-- Attribute: att_a_prio -->
-        <mxCell id="att_a_prio" value="priority" style="shape=ellipse;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#64748B;strokeWidth=1.2;fontColor=#1E293B;fontStyle=0;fontSize=11;align=center;verticalAlign=middle;fontFamily=Helvetica;" vertex="1" parent="1">
-          <mxGeometry x="205" y="840" width="85" height="40" as="geometry" />
+        <mxCell id="att_a_prio" value="skala_prioritas" style="shape=ellipse;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#64748B;strokeWidth=1.2;fontColor=#1E293B;fontStyle=0;fontSize=11;align=center;verticalAlign=middle;fontFamily=Helvetica;" vertex="1" parent="1">
+          <mxGeometry x="205" y="840" width="90" height="40" as="geometry" />
         </mxCell>
         <!-- Edge Attribute to Entity -->
         <mxCell id="edge_att_a_prio" style="endArrow=none;html=1;strokeColor=#94A3B8;strokeWidth=1.2;" edge="1" parent="1" source="ent_action" target="att_a_prio">
@@ -285,7 +285,7 @@
         </mxCell>
 
         <!-- Attribute: att_n_id -->
-        <mxCell id="att_n_id" value="&lt;u&gt;&lt;b&gt;minutes_id&lt;/b&gt;&lt;/u&gt;" style="shape=ellipse;whiteSpace=wrap;html=1;fillColor=#FFFBEB;strokeColor=#B7791F;strokeWidth=2;fontColor=#B7791F;fontStyle=0;fontSize=11;align=center;verticalAlign=middle;fontFamily=Helvetica;" vertex="1" parent="1">
+        <mxCell id="att_n_id" value="&lt;u&gt;&lt;b&gt;id_notulen&lt;/b&gt;&lt;/u&gt;" style="shape=ellipse;whiteSpace=wrap;html=1;fillColor=#FFFBEB;strokeColor=#B7791F;strokeWidth=2;fontColor=#B7791F;fontStyle=0;fontSize=11;align=center;verticalAlign=middle;fontFamily=Helvetica;" vertex="1" parent="1">
           <mxGeometry x="1260" y="920" width="100" height="42" as="geometry" />
         </mxCell>
         <!-- Edge Attribute to Entity -->
@@ -294,8 +294,8 @@
         </mxCell>
 
         <!-- Attribute: att_n_agenda -->
-        <mxCell id="att_n_agenda" value="agenda" style="shape=ellipse;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#64748B;strokeWidth=1.2;fontColor=#1E293B;fontStyle=0;fontSize=11;align=center;verticalAlign=middle;fontFamily=Helvetica;" vertex="1" parent="1">
-          <mxGeometry x="990" y="1025" width="85" height="40" as="geometry" />
+        <mxCell id="att_n_agenda" value="agenda_pembahasan" style="shape=ellipse;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#64748B;strokeWidth=1.2;fontColor=#1E293B;fontStyle=0;fontSize=11;align=center;verticalAlign=middle;fontFamily=Helvetica;" vertex="1" parent="1">
+          <mxGeometry x="970" y="1025" width="115" height="40" as="geometry" />
         </mxCell>
         <!-- Edge Attribute to Entity -->
         <mxCell id="edge_att_n_agenda" style="endArrow=none;html=1;strokeColor=#94A3B8;strokeWidth=1.2;" edge="1" parent="1" source="ent_minutes" target="att_n_agenda">
@@ -303,8 +303,8 @@
         </mxCell>
 
         <!-- Attribute: att_n_disc -->
-        <mxCell id="att_n_disc" value="discussion" style="shape=ellipse;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#64748B;strokeWidth=1.2;fontColor=#1E293B;fontStyle=0;fontSize=11;align=center;verticalAlign=middle;fontFamily=Helvetica;" vertex="1" parent="1">
-          <mxGeometry x="1090" y="1030" width="90" height="40" as="geometry" />
+        <mxCell id="att_n_disc" value="hasil_pembahasan" style="shape=ellipse;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#64748B;strokeWidth=1.2;fontColor=#1E293B;fontStyle=0;fontSize=11;align=center;verticalAlign=middle;fontFamily=Helvetica;" vertex="1" parent="1">
+          <mxGeometry x="1095" y="1030" width="105" height="40" as="geometry" />
         </mxCell>
         <!-- Edge Attribute to Entity -->
         <mxCell id="edge_att_n_disc" style="endArrow=none;html=1;strokeColor=#94A3B8;strokeWidth=1.2;" edge="1" parent="1" source="ent_minutes" target="att_n_disc">
@@ -312,8 +312,8 @@
         </mxCell>
 
         <!-- Attribute: att_n_dec -->
-        <mxCell id="att_n_dec" value="decisions" style="shape=ellipse;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#64748B;strokeWidth=1.2;fontColor=#1E293B;fontStyle=0;fontSize=11;align=center;verticalAlign=middle;fontFamily=Helvetica;" vertex="1" parent="1">
-          <mxGeometry x="1195" y="1030" width="85" height="40" as="geometry" />
+        <mxCell id="att_n_dec" value="poin_keputusan" style="shape=ellipse;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#64748B;strokeWidth=1.2;fontColor=#1E293B;fontStyle=0;fontSize=11;align=center;verticalAlign=middle;fontFamily=Helvetica;" vertex="1" parent="1">
+          <mxGeometry x="1210" y="1030" width="95" height="40" as="geometry" />
         </mxCell>
         <!-- Edge Attribute to Entity -->
         <mxCell id="edge_att_n_dec" style="endArrow=none;html=1;strokeColor=#94A3B8;strokeWidth=1.2;" edge="1" parent="1" source="ent_minutes" target="att_n_dec">
@@ -321,8 +321,8 @@
         </mxCell>
 
         <!-- Attribute: att_n_conc -->
-        <mxCell id="att_n_conc" value="conclusion" style="shape=ellipse;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#64748B;strokeWidth=1.2;fontColor=#1E293B;fontStyle=0;fontSize=11;align=center;verticalAlign=middle;fontFamily=Helvetica;" vertex="1" parent="1">
-          <mxGeometry x="1290" y="1010" width="90" height="40" as="geometry" />
+        <mxCell id="att_n_conc" value="kesimpulan" style="shape=ellipse;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#64748B;strokeWidth=1.2;fontColor=#1E293B;fontStyle=0;fontSize=11;align=center;verticalAlign=middle;fontFamily=Helvetica;" vertex="1" parent="1">
+          <mxGeometry x="1310" y="1010" width="90" height="40" as="geometry" />
         </mxCell>
         <!-- Edge Attribute to Entity -->
         <mxCell id="edge_att_n_conc" style="endArrow=none;html=1;strokeColor=#94A3B8;strokeWidth=1.2;" edge="1" parent="1" source="ent_minutes" target="att_n_conc">
@@ -531,8 +531,9 @@
           </mxGeometry>
         </mxCell>
 
-        <!-- Relationship: pic_biro -->
-        <mxCell id="rel_pic_biro" value="pic_biro" style="shape=rhombus;whiteSpace=wrap;html=1;fillColor=#E8F5F7;strokeColor=#215865;strokeWidth=2;fontColor=#215865;fontStyle=1;fontSize=11;align=center;verticalAlign=middle;fontFamily=Helvetica;shadow=1;" vertex="1" parent="1">
+        <!-- Relationship: penugasan (biro) -->
+        <mxCell id="rel_pic_biro" value="penugasan
+(biro)" style="shape=rhombus;whiteSpace=wrap;html=1;fillColor=#E8F5F7;strokeColor=#215865;strokeWidth=2;fontColor=#215865;fontStyle=1;fontSize=11;align=center;verticalAlign=middle;fontFamily=Helvetica;shadow=1;" vertex="1" parent="1">
           <mxGeometry x="230" y="730" width="120" height="55" as="geometry" />
         </mxCell>
         
@@ -556,8 +557,9 @@
           </mxGeometry>
         </mxCell>
 
-        <!-- Relationship: pic_user -->
-        <mxCell id="rel_pic_user" value="pic_user" style="shape=rhombus;whiteSpace=wrap;html=1;fillColor=#E8F5F7;strokeColor=#215865;strokeWidth=2;fontColor=#215865;fontStyle=1;fontSize=11;align=center;verticalAlign=middle;fontFamily=Helvetica;shadow=1;" vertex="1" parent="1">
+        <!-- Relationship: penugasan (pegawai) -->
+        <mxCell id="rel_pic_user" value="penugasan
+(pegawai)" style="shape=rhombus;whiteSpace=wrap;html=1;fillColor=#E8F5F7;strokeColor=#215865;strokeWidth=2;fontColor=#215865;fontStyle=1;fontSize=11;align=center;verticalAlign=middle;fontFamily=Helvetica;shadow=1;" vertex="1" parent="1">
           <mxGeometry x="715" y="922" width="130" height="55" as="geometry" />
         </mxCell>
         
@@ -582,7 +584,7 @@
         </mxCell>
 
         <!-- Attribute on Relationship menghadiri -->
-        <mxCell id="att_rel_attendance" value="attendanceStatus" style="shape=ellipse;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#64748B;strokeWidth=1.2;fontColor=#1E293B;fontSize=11;align=center;verticalAlign=middle;fontFamily=Helvetica;" vertex="1" parent="1">
+        <mxCell id="att_rel_attendance" value="status_kehadiran" style="shape=ellipse;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#64748B;strokeWidth=1.2;fontColor=#1E293B;fontSize=11;align=center;verticalAlign=middle;fontFamily=Helvetica;" vertex="1" parent="1">
           <mxGeometry x="1270" y="570" width="115" height="40" as="geometry" />
         </mxCell>
         <mxCell id="edge_rel_attendance" style="endArrow=none;dashed=1;html=1;strokeColor=#64748B;strokeWidth=1.2;" edge="1" parent="1" source="rel_menghadiri" target="att_rel_attendance">

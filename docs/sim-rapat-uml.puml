@@ -10,9 +10,9 @@ skinparam class {
     BorderColor #215865
 }
 
-title SISTEM INFORMASI MANAJEMEN RAPAT & TINDAK LANJUT (SIM-RAPAT KEK RI)\nUML Class Diagram
+title SISTEM INFORMASI MANAJEMEN RAPAT & TINDAK LANJUT (SIM-RAPAT KEK RI)\nUML Class Diagram (Standarisasi Relasi 1 to Many)
 
-enum UserRole {
+enum PeranPengguna {
   SUPER_ADMIN
   ADMIN
   NOTULIS
@@ -20,28 +20,28 @@ enum UserRole {
   VIEWER
 }
 
-enum MeetingStatus {
+enum StatusRapat {
   DRAFT
   REVIEW
   APPROVED
   FINAL
 }
 
-enum AttendanceStatus {
+enum StatusKehadiran {
   INVITED
   PRESENT
   ABSENT
   EXCUSED
 }
 
-enum ActionItemStatus {
+enum StatusTindakLanjut {
   PENDING
   IN_PROGRESS
   COMPLETED
   OVERDUE
 }
 
-enum ActionItemPriority {
+enum PrioritasTindakLanjut {
   LOW
   MEDIUM
   HIGH
@@ -49,129 +49,125 @@ enum ActionItemPriority {
 }
 
 class Biro {
-  + String biro_id <<PK>>
-  + String code <<UK>>
-  + String name
-  + String shortName
-  + String description
-  + Boolean isActive
-  + DateTime createdAt
-  + DateTime updatedAt
+  + String id_biro <<PK>>
+  + String kode_biro <<UK>>
+  + String nama_biro
+  + String nama_singkat
+  + String deskripsi
+  + Boolean status_aktif
+  + DateTime dibuat_pada
+  + DateTime diperbarui_pada
   --
-  + getWorkload()
-  + getStaffList()
+  + hitungBebanKerja()
+  + getDaftarPegawai()
 }
 
-class User {
-  + String user_id <<PK>>
-  + String biro_id <<FK>>
-  + String name
+class Pengguna {
+  + String id_pengguna <<PK>>
+  + String id_biro <<FK>>
+  + String nama_lengkap
   + String email <<UK>>
-  + String password
-  + UserRole role
-  + Boolean isActive
-  + DateTime createdAt
-  + DateTime updatedAt
+  + String kata_sandi
+  + PeranPengguna peran
+  + Boolean status_aktif
+  + DateTime dibuat_pada
+  + DateTime diperbarui_pada
   --
-  + authenticate()
-  + updateProfile()
+  + autentikasi()
+  + ubahProfil()
 }
 
-class Meeting {
-  + String meeting_id <<PK>>
-  + String meeting_number <<UK>>
-  + String title
-  + String primary_biro_id <<FK>>
-  + DateTime date
-  + String startTime
-  + String endTime
-  + String location
-  + String chairperson_id <<FK>>
-  + String secretary_id <<FK>>
-  + String previous_meeting_id <<FK>>
-  + MeetingStatus status
-  + DateTime createdAt
-  + DateTime updatedAt
+class Rapat {
+  + String id_rapat <<PK>>
+  + String nomor_rapat <<UK>>
+  + String judul_rapat
+  + String id_biro <<FK>>
+  + String id_pengguna <<FK>>
+  + String id_notulis <<FK>>
+  + String id_rapat_sebelumnya <<FK>>
+  + DateTime tanggal_rapat
+  + String waktu_mulai
+  + String waktu_selesai
+  + String lokasi_rapat
+  + StatusRapat status_rapat
+  + DateTime dibuat_pada
+  + DateTime diperbarui_pada
   --
-  + createMeeting()
-  + updateStatus()
-  + exportPdf()
+  + buatRapat()
+  + perbaruiStatus()
+  + eksporPdf()
 }
 
-class MeetingMinutes {
-  + String minutes_id <<PK>>
-  + String meeting_id <<FK, UK>>
-  + Json agenda
-  + Json discussion
-  + Json decisions
-  + Json conclusion
-  + DateTime createdAt
-  + DateTime updatedAt
+class NotulenRapat {
+  + String id_notulen <<PK>>
+  + String id_rapat <<FK, UK>>
+  + Json agenda_pembahasan
+  + Json hasil_pembahasan
+  + Json poin_keputusan
+  + Json kesimpulan
+  + DateTime dibuat_pada
+  + DateTime diperbarui_pada
   --
-  + saveMinutes()
-  + generatePdf()
+  + simpanNotulen()
+  + buatDokumenPdf()
 }
 
-class MeetingParticipant {
-  + String participant_id <<PK>>
-  + String meeting_id <<FK>>
-  + String user_id <<FK>>
-  + AttendanceStatus attendanceStatus
-  + DateTime createdAt
+class PesertaRapat {
+  + String id_peserta <<PK>>
+  + String id_rapat <<FK>>
+  + String id_pengguna <<FK>>
+  + StatusKehadiran status_kehadiran
+  + DateTime dibuat_pada
   --
-  + updateAttendance()
+  + catatKehadiran()
 }
 
-class MeetingBiro {
-  + String meeting_id <<PK, FK>>
-  + String biro_id <<PK, FK>>
+class RapatBiro {
+  + String id_rapat <<PK, FK>>
+  + String id_biro <<PK, FK>>
 }
 
-class ActionItem {
-  + String action_item_id <<PK>>
-  + String meeting_id <<FK>>
-  + String title
-  + String description
-  + String pic_biro_id <<FK>>
-  + String pic_user_id <<FK>>
-  + DateTime dueDate
-  + ActionItemStatus status
-  + ActionItemPriority priority
-  + DateTime completedAt
-  + DateTime createdAt
-  + DateTime updatedAt
+class TindakLanjut {
+  + String id_tindak_lanjut <<PK>>
+  + String id_rapat <<FK>>
+  + String id_biro <<FK>>
+  + String id_pengguna <<FK>>
+  + String judul_tindakan
+  + String deskripsi_tindakan
+  + DateTime tenggat_waktu
+  + StatusTindakLanjut status_tindak_lanjut
+  + PrioritasTindakLanjut skala_prioritas
+  + DateTime diselesaikan_pada
+  + DateTime dibuat_pada
+  + DateTime diperbarui_pada
   --
-  + updateStatus()
-  + markCompleted()
+  + perbaruiStatus()
+  + tandaiSelesai()
 }
 
-class BiroMeetingSequence {
-  + String sequence_id <<PK>>
-  + String biro_id <<FK, UK>>
-  + Int currentNumber
-  + DateTime createdAt
-  + DateTime updatedAt
+class PenomoranRapatBiro {
+  + String id_penomoran <<PK>>
+  + String id_biro <<FK, UK>>
+  + Int nomor_terakhir
+  + DateTime dibuat_pada
+  + DateTime diperbarui_pada
   --
-  + getNextNumber()
+  + ambilNomorBerikutnya()
 }
 
-' Relations
-Biro "1" *-- "0..*" User : mempekerjakan (biro_id)
-Biro "1" --> "0..*" Meeting : menyelenggarakan (primary_biro_id)
-Biro "1" *-- "1" BiroMeetingSequence : penomoran surat (biro_id)
-User "1" --> "0..*" Meeting : memimpin (chairperson_id)
-User "1" --> "0..*" Meeting : mencatat (secretary_id)
-Meeting "1" --> "0..1" Meeting : rujukan (previous_meeting_id)
-
-Meeting "1" *-- "1" MeetingMinutes : menghasilkan naskah (meeting_id)
-Meeting "1" *-- "0..*" ActionItem : menghasilkan resolusi (meeting_id)
-Biro "1" --> "0..*" ActionItem : penanggung jawab (pic_biro_id)
-User "0..1" --> "0..*" ActionItem : staf pelaksana (pic_user_id)
-
-Meeting "1" *-- "0..*" MeetingParticipant : dihadiri (meeting_id)
-User "1" --> "0..*" MeetingParticipant : sebagai peserta (user_id)
-
-Meeting "1" -- "0..*" MeetingBiro : melibatkan (meeting_id)
-Biro "1" -- "0..*" MeetingBiro : terlibat (biro_id)
+' Relasi Antar Kelas 1 to Many
+Biro "1" --> "0..*" Pengguna : id_biro (1:N)
+Biro "1" --> "0..*" Rapat : id_biro (1:N)
+Biro "1" --> "1" PenomoranRapatBiro : id_biro (1:1)
+Pengguna "1" --> "0..*" Rapat : id_pengguna (1:N)
+Rapat "1" --> "0..1" Rapat : id_rapat_sebelumnya (0..1:N)
+Rapat "1" *-- "0..1" NotulenRapat : id_rapat (1:1)
+Rapat "1" *-- "0..*" TindakLanjut : id_rapat (1:N)
+Biro "1" --> "0..*" TindakLanjut : id_biro (1:N)
+Pengguna "0..1" --> "0..*" TindakLanjut : id_pengguna (1:N)
+Rapat "1" *-- "0..*" PesertaRapat : id_rapat (1:N)
+Pengguna "1" -- "0..*" PesertaRapat : id_pengguna (1:N)
+Rapat "1" -- "0..*" RapatBiro : id_rapat (M:N)
+Biro "1" -- "0..*" RapatBiro : id_biro (M:N)
 
 @enduml

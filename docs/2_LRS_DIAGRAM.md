@@ -31,31 +31,31 @@ File diagram LRS resmi telah disediakan di repository:
 LRS dibentuk melalui aturan pemetaan baku (*mapping rules*) basis data relasional:
 
 ### A. Aturan Relasi Satu-ke-Satu (1 : 1)
-* **Kasus 1: `BIRO` &mdash; `BIRO_MEETING_SEQUENCE`**
-  * Primary Key dari entitas induk (`biro_id` dari `BIRO`) disematkan sebagai Foreign Key sekaligus Unique Key (`biro_id`) pada tabel `BIRO_MEETING_SEQUENCE`.
-* **Kasus 2: `MEETING` &mdash; `MEETING_MINUTES`**
-  * Satu rapat hanya menghasilkan tepat satu notula resmi. Primary Key `meeting_id` dari `MEETING` disematkan sebagai Foreign Key unik pada tabel `MEETING_MINUTES`.
+* **Kasus 1: `biro` &mdash; `penomoran_rapat_biro`**
+  * Primary Key dari entitas induk (`biro_id` dari `biro`) disematkan sebagai Foreign Key sekaligus Unique Key (`biro_id`) pada tabel `penomoran_rapat_biro`.
+* **Kasus 2: `rapat` &mdash; `notulen_rapat`**
+  * Satu rapat hanya menghasilkan tepat satu notula resmi. Primary Key `meeting_id` dari `rapat` disematkan sebagai Foreign Key unik pada tabel `notulen_rapat`.
 
 ### B. Aturan Relasi Satu-ke-Banyak (1 : N)
 Primary Key pada entitas berderajat **1 (Parent)** ditempatkan sebagai Foreign Key pada entitas berderajat **N (Child)**:
-* `BIRO(biro_id)` &rarr; disematkan ke `USER(biro_id)`
-* `BIRO(biro_id)` &rarr; disematkan ke `MEETING(primary_biro_id)`
-* `BIRO(biro_id)` &rarr; disematkan ke `ACTION_ITEM(pic_biro_id)`
-* `USER(user_id)` &rarr; disematkan ke `MEETING(chairperson_id)` dan `MEETING(secretary_id)`
-* `USER(user_id)` &rarr; disematkan ke `MEETING_PARTICIPANT(user_id)`
-* `USER(user_id)` &rarr; disematkan ke `ACTION_ITEM(pic_user_id)`
-* `MEETING(meeting_id)` &rarr; disematkan ke `ACTION_ITEM(meeting_id)`
-* `MEETING(meeting_id)` &rarr; disematkan ke `MEETING_PARTICIPANT(meeting_id)`
+* `biro(biro_id)` &rarr; disematkan ke `pengguna(biro_id)`
+* `biro(biro_id)` &rarr; disematkan ke `rapat(primary_biro_id)`
+* `biro(biro_id)` &rarr; disematkan ke `tindak_lanjut(pic_biro_id)`
+* `pengguna(user_id)` &rarr; disematkan ke `rapat(chairperson_id)` dan `rapat(secretary_id)`
+* `pengguna(user_id)` &rarr; disematkan ke `peserta_rapat(user_id)`
+* `pengguna(user_id)` &rarr; disematkan ke `tindak_lanjut(pic_user_id)`
+* `rapat(meeting_id)` &rarr; disematkan ke `tindak_lanjut(meeting_id)`
+* `rapat(meeting_id)` &rarr; disematkan ke `peserta_rapat(meeting_id)`
 
 ### C. Aturan Relasi Banyak-ke-Banyak (M : N)
-* **Kasus: `MEETING` &mdash; `BIRO` (Rapat Gabungan Lintas Biro)**
+* **Kasus: `rapat` &mdash; `biro` (Rapat Gabungan Lintas Biro)**
   * Pada ERD, satu rapat dapat melibatkan banyak biro, dan satu biro dapat terlibat dalam banyak rapat.
-  * Pada LRS, relasi M:N wajib dipecah menjadi tabel perantara (*junction table*) bernama **`MEETING_BIRO`**.
-  * Tabel `MEETING_BIRO` memiliki **Composite Primary Key** yang terdiri dari gabungan `meeting_id` dan `biro_id`.
+  * Pada LRS, relasi M:N wajib dipecah menjadi tabel perantara (*junction table*) bernama **`rapat_biro`**.
+  * Tabel `rapat_biro` memiliki **Composite Primary Key** yang terdiri dari gabungan `meeting_id` dan `biro_id`.
 
 ### D. Aturan Relasi Rekursif / Unary (0..1 : N)
-* **Kasus: `MEETING` &mdash; `MEETING` (Rapat Rujukan / Tindak Lanjut)**
-  * Rapat koordinasi lanjutan merujuk pada rapat terdahulu. Menghasilkan Foreign Key `previous_meeting_id` di dalam tabel `MEETING` itu sendiri (*self-referencing*).
+* **Kasus: `rapat` &mdash; `rapat` (Rapat Rujukan / Tindak Lanjut)**
+  * Rapat koordinasi lanjutan merujuk pada rapat terdahulu. Menghasilkan Foreign Key `previous_meeting_id` di dalam tabel `rapat` itu sendiri (*self-referencing*).
 
 ---
 
@@ -65,83 +65,83 @@ Berikut adalah representasi 8 rekod logis basis data SIM-RAPAT KEK RI:
 
 ```text
 1. biro
-   ├── *biro_id : VARCHAR(50) <PK>
-   ├── code : VARCHAR(20) <UK>
-   ├── name : VARCHAR(255)
-   ├── shortName : VARCHAR(100)
-   ├── description : TEXT
-   ├── isActive : BOOLEAN
-   ├── createdAt : TIMESTAMP
-   └── updatedAt : TIMESTAMP
+   ├── *id_biro : VARCHAR(50) <PK>
+   ├── kode_biro : VARCHAR(20) <UK>
+   ├── nama_biro : VARCHAR(255)
+   ├── nama_singkat : VARCHAR(100)
+   ├── deskripsi : TEXT
+   ├── status_aktif : BOOLEAN
+   ├── dibuat_pada : TIMESTAMP
+   └── diperbarui_pada : TIMESTAMP
 
-2. biro_meeting_sequence
-   ├── *sequence_id : VARCHAR(50) <PK>
-   ├── **biro_id : VARCHAR(50) <FK, UK> ─── (Relasi 1:1 dari biro)
-   ├── currentNumber : INTEGER
-   ├── createdAt : TIMESTAMP
-   └── updatedAt : TIMESTAMP
+2. penomoran_rapat_biro
+   ├── *id_penomoran : VARCHAR(50) <PK>
+   ├── **id_biro : VARCHAR(50) <FK, UK> ─── (Relasi 1:1 dari biro)
+   ├── nomor_terakhir : INTEGER
+   ├── dibuat_pada : TIMESTAMP
+   └── diperbarui_pada : TIMESTAMP
 
-3. user
-   ├── *user_id : VARCHAR(50) <PK>
-   ├── **biro_id : VARCHAR(50) <FK> ───────── (Relasi 1:N dari biro)
+3. pengguna
+   ├── *id_pengguna : VARCHAR(50) <PK>
+   ├── **id_biro : VARCHAR(50) <FK> ───────── (Relasi 1:N dari biro)
    ├── email : VARCHAR(150) <UK>
-   ├── name : VARCHAR(150)
-   ├── password : VARCHAR(255)
-   ├── role : ENUM('SUPER_ADMIN', 'ADMIN', 'NOTULIS', 'STAFF', 'VIEWER')
-   ├── isActive : BOOLEAN
-   ├── createdAt : TIMESTAMP
-   └── updatedAt : TIMESTAMP
+   ├── nama_lengkap : VARCHAR(150)
+   ├── kata_sandi : VARCHAR(255)
+   ├── peran : ENUM('SUPER_ADMIN', 'ADMIN', 'NOTULIS', 'STAFF', 'VIEWER')
+   ├── status_aktif : BOOLEAN
+   ├── dibuat_pada : TIMESTAMP
+   └── diperbarui_pada : TIMESTAMP
 
-4. meeting
-   ├── *meeting_id : VARCHAR(50) <PK>
-   ├── meeting_number : VARCHAR(50) <UK>
-   ├── **primary_biro_id : VARCHAR(50) <FK> ── (Relasi 1:N dari biro)
-   ├── **chairperson_id : VARCHAR(50) <FK> ─── (Relasi 1:N dari user)
-   ├── **secretary_id : VARCHAR(50) <FK> ───── (Relasi 1:N dari user)
-   ├── **previous_meeting_id : VARCHAR(50) <FK> (Relasi 1:N Rekursif dari meeting)
-   ├── title : VARCHAR(255)
-   ├── date : DATE
-   ├── startTime : VARCHAR(10)
-   ├── endTime : VARCHAR(10)
-   ├── location : VARCHAR(255)
-   ├── status : ENUM('DRAFT', 'REVIEW', 'APPROVED', 'FINAL')
-   ├── createdAt : TIMESTAMP
-   └── updatedAt : TIMESTAMP
+4. rapat
+   ├── *id_rapat : VARCHAR(50) <PK>
+   ├── nomor_rapat : VARCHAR(50) <UK>
+   ├── **id_biro : VARCHAR(50) <FK> ──────── (Relasi 1:N dari biro)
+   ├── **id_pengguna : VARCHAR(50) <FK> ──── (Relasi 1:N dari pengguna - Pimpinan)
+   ├── **id_notulis : VARCHAR(50) <FK> ───── (Relasi 1:N dari pengguna - Notulis)
+   ├── **id_rapat_sebelumnya : VARCHAR(50) <FK> (Relasi 0..1:N Rekursif dari rapat)
+   ├── judul_rapat : VARCHAR(255)
+   ├── tanggal_rapat : DATE
+   ├── waktu_mulai : VARCHAR(10)
+   ├── waktu_selesai : VARCHAR(10)
+   ├── lokasi_rapat : VARCHAR(255)
+   ├── status_rapat : ENUM('DRAFT', 'REVIEW', 'APPROVED', 'FINAL')
+   ├── dibuat_pada : TIMESTAMP
+   └── diperbarui_pada : TIMESTAMP
 
-5. meeting_biro (Junction Table)
-   ├── *meeting_id : VARCHAR(50) <PK, FK> ──── (Relasi 1:N dari meeting)
-   └── *biro_id : VARCHAR(50) <PK, FK> ─────── (Relasi 1:N dari biro)
+5. rapat_biro (Junction Table)
+   ├── *id_rapat : VARCHAR(50) <PK, FK> ──── (Relasi 1:N dari rapat)
+   └── *id_biro : VARCHAR(50) <PK, FK> ───── (Relasi 1:N dari biro)
 
-6. meeting_participant
-   ├── *participant_id : VARCHAR(50) <PK>
-   ├── **meeting_id : VARCHAR(50) <FK> ─────── (Relasi 1:N dari meeting)
-   ├── **user_id : VARCHAR(50) <FK> ────────── (Relasi 1:N dari user)
-   ├── attendanceStatus : ENUM('INVITED', 'PRESENT', 'ABSENT', 'EXCUSED')
-   └── createdAt : TIMESTAMP
+6. peserta_rapat
+   ├── *id_peserta : VARCHAR(50) <PK>
+   ├── **id_rapat : VARCHAR(50) <FK> ─────── (Relasi 1:N dari rapat)
+   ├── **id_pengguna : VARCHAR(50) <FK> ──── (Relasi 1:N dari pengguna)
+   ├── status_kehadiran : ENUM('INVITED', 'PRESENT', 'ABSENT', 'EXCUSED')
+   └── dibuat_pada : TIMESTAMP
 
-7. meeting_minutes
-   ├── *minutes_id : VARCHAR(50) <PK>
-   ├── **meeting_id : VARCHAR(50) <FK, UK> ─── (Relasi 1:1 dari meeting)
-   ├── agenda : JSON
-   ├── discussion : JSON
-   ├── decisions : JSON
-   ├── conclusion : JSON
-   ├── createdAt : TIMESTAMP
-   └── updatedAt : TIMESTAMP
+7. notulen_rapat
+   ├── *id_notulen : VARCHAR(50) <PK>
+   ├── **id_rapat : VARCHAR(50) <FK, UK> ─── (Relasi 1:1 dari rapat)
+   ├── agenda_pembahasan : JSON
+   ├── hasil_pembahasan : JSON
+   ├── poin_keputusan : JSON
+   ├── kesimpulan : JSON
+   ├── dibuat_pada : TIMESTAMP
+   └── diperbarui_pada : TIMESTAMP
 
-8. action_item
-   ├── *action_item_id : VARCHAR(50) <PK>
-   ├── **meeting_id : VARCHAR(50) <FK> ─────── (Relasi 1:N dari meeting)
-   ├── **pic_biro_id : VARCHAR(50) <FK> ────── (Relasi 1:N dari biro)
-   ├── **pic_user_id : VARCHAR(50) <FK> ────── (Relasi 1:N dari user, Opsional)
-   ├── title : VARCHAR(255)
-   ├── description : TEXT
-   ├── dueDate : TIMESTAMP
-   ├── status : ENUM('PENDING', 'IN_PROGRESS', 'COMPLETED', 'OVERDUE')
-   ├── priority : ENUM('LOW', 'MEDIUM', 'HIGH', 'URGENT')
-   ├── completedAt : TIMESTAMP
-   ├── createdAt : TIMESTAMP
-   └── updatedAt : TIMESTAMP
+8. tindak_lanjut
+   ├── *id_tindak_lanjut : VARCHAR(50) <PK>
+   ├── **id_rapat : VARCHAR(50) <FK> ─────── (Relasi 1:N dari rapat)
+   ├── **id_biro : VARCHAR(50) <FK> ──────── (Relasi 1:N dari biro)
+   ├── **id_pengguna : VARCHAR(50) <FK> ──── (Relasi 1:N dari pengguna, Opsional)
+   ├── judul_tindakan : VARCHAR(255)
+   ├── deskripsi_tindakan : TEXT
+   ├── tenggat_waktu : TIMESTAMP
+   ├── status_tindak_lanjut : ENUM('PENDING', 'IN_PROGRESS', 'COMPLETED', 'OVERDUE')
+   ├── skala_prioritas : ENUM('LOW', 'MEDIUM', 'HIGH', 'URGENT')
+   ├── diselesaikan_pada : TIMESTAMP
+   ├── dibuat_pada : TIMESTAMP
+   └── diperbarui_pada : TIMESTAMP
 ```
 
 ---
@@ -150,4 +150,4 @@ Berikut adalah representasi 8 rekod logis basis data SIM-RAPAT KEK RI:
 
 > **Gambar 3.x: Logical Record Structure (LRS) SIM-RAPAT KEK RI**
 > 
-> *Gambar di atas menampilkan Logical Record Structure (LRS) hasil transformasi dari Entity Relationship Diagram (ERD). Pada tahap pemodelan logis ini, kardinalitas Many-to-Many antara tabel MEETING dan BIRO telah direalisasikan menjadi tabel perantara bernama MEETING_BIRO dengan Primary Key komposit (meeting_id, biro_id). Seluruh relasi 1:N telah dipetakan dengan menempatkan Primary Key entitas induk ke dalam entitas turunan sebagai Foreign Key (ditandai dengan prefix **FK). Sedangkan relasi 1:1 pada MEETING_MINUTES dan BIRO_MEETING_SEQUENCE menerapkan batasan Unique Constraint pada kunci tamunya untuk menjamin integritas referensial satu-ke-satu secara konsisten.*
+> *Gambar di atas menampilkan Logical Record Structure (LRS) hasil transformasi dari Entity Relationship Diagram (ERD). Pada tahap pemodelan logis ini, kardinalitas Many-to-Many antara tabel rapat dan biro telah direalisasikan menjadi tabel perantara bernama rapat_biro dengan Primary Key komposit (meeting_id, biro_id). Seluruh relasi 1:N telah dipetakan dengan menempatkan Primary Key entitas induk ke dalam entitas turunan sebagai Foreign Key (ditandai dengan prefix **FK). Sedangkan relasi 1:1 pada notulen_rapat dan penomoran_rapat_biro menerapkan batasan Unique Constraint pada kunci tamunya untuk menjamin integritas referensial satu-ke-satu secara konsisten.*

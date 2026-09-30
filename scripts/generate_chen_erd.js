@@ -13,7 +13,7 @@ function generateChenErdXml() {
     },
     {
       id: 'ent_user',
-      name: 'user',
+      name: 'pengguna',
       x: 1050,
       y: 220,
       w: 160,
@@ -21,7 +21,7 @@ function generateChenErdXml() {
     },
     {
       id: 'ent_seq',
-      name: 'biro_meeting_sequence',
+      name: 'penomoran_rapat_biro',
       x: 80,
       y: 440,
       w: 180,
@@ -29,7 +29,7 @@ function generateChenErdXml() {
     },
     {
       id: 'ent_meeting',
-      name: 'meeting',
+      name: 'rapat',
       x: 700,
       y: 580,
       w: 160,
@@ -37,7 +37,7 @@ function generateChenErdXml() {
     },
     {
       id: 'ent_action',
-      name: 'action_item',
+      name: 'tindak_lanjut',
       x: 350,
       y: 920,
       w: 160,
@@ -45,7 +45,7 @@ function generateChenErdXml() {
     },
     {
       id: 'ent_minutes',
-      name: 'meeting_minutes',
+      name: 'notulen_rapat',
       x: 1050,
       y: 920,
       w: 170,
@@ -56,48 +56,48 @@ function generateChenErdXml() {
   // Attributes (ellipses) connected to each entity
   const attributes = [
     // --- biro attributes ---
-    { id: 'att_b_id', entId: 'ent_biro', name: '&lt;u&gt;&lt;b&gt;biro_id&lt;/b&gt;&lt;/u&gt;', x: 200, y: 120, w: 100, h: 42, isPk: true },
-    { id: 'att_b_code', entId: 'ent_biro', name: 'code', x: 320, y: 110, w: 85, h: 40 },
-    { id: 'att_b_name', entId: 'ent_biro', name: 'name', x: 420, y: 110, w: 85, h: 40 },
-    { id: 'att_b_short', entId: 'ent_biro', name: 'shortName', x: 520, y: 120, w: 90, h: 40 },
-    { id: 'att_b_desc', entId: 'ent_biro', name: 'description', x: 190, y: 200, w: 95, h: 40 },
-    { id: 'att_b_act', entId: 'ent_biro', name: 'isActive', x: 190, y: 260, w: 85, h: 40 },
+    { id: 'att_b_id', entId: 'ent_biro', name: '&lt;u&gt;&lt;b&gt;id_biro&lt;/b&gt;&lt;/u&gt;', x: 200, y: 120, w: 100, h: 42, isPk: true },
+    { id: 'att_b_code', entId: 'ent_biro', name: 'kode_biro', x: 320, y: 110, w: 85, h: 40 },
+    { id: 'att_b_name', entId: 'ent_biro', name: 'nama_biro', x: 420, y: 110, w: 85, h: 40 },
+    { id: 'att_b_short', entId: 'ent_biro', name: 'nama_singkat', x: 520, y: 120, w: 90, h: 40 },
+    { id: 'att_b_desc', entId: 'ent_biro', name: 'deskripsi', x: 190, y: 200, w: 95, h: 40 },
+    { id: 'att_b_act', entId: 'ent_biro', name: 'status_aktif', x: 190, y: 260, w: 85, h: 40 },
 
     // --- user attributes ---
-    { id: 'att_u_id', entId: 'ent_user', name: '&lt;u&gt;&lt;b&gt;user_id&lt;/b&gt;&lt;/u&gt;', x: 1260, y: 120, w: 100, h: 42, isPk: true },
-    { id: 'att_u_name', entId: 'ent_user', name: 'name', x: 1150, y: 110, w: 85, h: 40 },
+    { id: 'att_u_id', entId: 'ent_user', name: '&lt;u&gt;&lt;b&gt;id_pengguna&lt;/b&gt;&lt;/u&gt;', x: 1260, y: 120, w: 100, h: 42, isPk: true },
+    { id: 'att_u_name', entId: 'ent_user', name: 'nama_lengkap', x: 1150, y: 110, w: 95, h: 40 },
     { id: 'att_u_email', entId: 'ent_user', name: 'email', x: 1050, y: 110, w: 85, h: 40 },
-    { id: 'att_u_pass', entId: 'ent_user', name: 'password', x: 950, y: 120, w: 90, h: 40 },
-    { id: 'att_u_role', entId: 'ent_user', name: 'role', x: 1260, y: 200, w: 85, h: 40 },
-    { id: 'att_u_act', entId: 'ent_user', name: 'isActive', x: 1260, y: 260, w: 85, h: 40 },
+    { id: 'att_u_pass', entId: 'ent_user', name: 'kata_sandi', x: 950, y: 120, w: 90, h: 40 },
+    { id: 'att_u_role', entId: 'ent_user', name: 'peran', x: 1260, y: 200, w: 85, h: 40 },
+    { id: 'att_u_act', entId: 'ent_user', name: 'status_aktif', x: 1260, y: 260, w: 85, h: 40 },
 
-    // --- biro_meeting_sequence attributes ---
-    { id: 'att_s_id', entId: 'ent_seq', name: '&lt;u&gt;&lt;b&gt;sequence_id&lt;/b&gt;&lt;/u&gt;', x: 50, y: 550, w: 105, h: 42, isPk: true },
-    { id: 'att_s_num', entId: 'ent_seq', name: 'currentNumber', x: 175, y: 550, w: 105, h: 40 },
+    // --- penomoran_rapat_biro attributes ---
+    { id: 'att_s_id', entId: 'ent_seq', name: '&lt;u&gt;&lt;b&gt;id_penomoran&lt;/b&gt;&lt;/u&gt;', x: 50, y: 550, w: 105, h: 42, isPk: true },
+    { id: 'att_s_num', entId: 'ent_seq', name: 'nomor_terakhir', x: 175, y: 550, w: 105, h: 40 },
 
-    // --- meeting attributes ---
-    { id: 'att_m_id', entId: 'ent_meeting', name: '&lt;u&gt;&lt;b&gt;meeting_id&lt;/b&gt;&lt;/u&gt;', x: 730, y: 470, w: 100, h: 42, isPk: true },
-    { id: 'att_m_num', entId: 'ent_meeting', name: 'meeting_number', x: 570, y: 680, w: 115, h: 40 },
-    { id: 'att_m_title', entId: 'ent_meeting', name: 'title', x: 700, y: 700, w: 85, h: 40 },
-    { id: 'att_m_date', entId: 'ent_meeting', name: 'date', x: 800, y: 700, w: 85, h: 40 },
-    { id: 'att_m_time', entId: 'ent_meeting', name: 'startTime', x: 890, y: 680, w: 90, h: 40 },
-    { id: 'att_m_loc', entId: 'ent_meeting', name: 'location', x: 880, y: 490, w: 90, h: 40 },
-    { id: 'att_m_stat', entId: 'ent_meeting', name: 'status', x: 620, y: 490, w: 85, h: 40 },
+    // --- rapat attributes ---
+    { id: 'att_m_id', entId: 'ent_meeting', name: '&lt;u&gt;&lt;b&gt;id_rapat&lt;/b&gt;&lt;/u&gt;', x: 730, y: 470, w: 100, h: 42, isPk: true },
+    { id: 'att_m_num', entId: 'ent_meeting', name: 'nomor_rapat', x: 570, y: 680, w: 115, h: 40 },
+    { id: 'att_m_title', entId: 'ent_meeting', name: 'judul_rapat', x: 700, y: 700, w: 85, h: 40 },
+    { id: 'att_m_date', entId: 'ent_meeting', name: 'tanggal_rapat', x: 800, y: 700, w: 95, h: 40 },
+    { id: 'att_m_time', entId: 'ent_meeting', name: 'waktu_mulai', x: 890, y: 680, w: 90, h: 40 },
+    { id: 'att_m_loc', entId: 'ent_meeting', name: 'lokasi_rapat', x: 880, y: 490, w: 90, h: 40 },
+    { id: 'att_m_stat', entId: 'ent_meeting', name: 'status_rapat', x: 620, y: 490, w: 85, h: 40 },
 
-    // --- action_item attributes ---
-    { id: 'att_a_id', entId: 'ent_action', name: '&lt;u&gt;&lt;b&gt;action_item_id&lt;/b&gt;&lt;/u&gt;', x: 215, y: 920, w: 110, h: 42, isPk: true },
-    { id: 'att_a_title', entId: 'ent_action', name: 'title', x: 230, y: 1010, w: 85, h: 40 },
-    { id: 'att_a_desc', entId: 'ent_action', name: 'description', x: 330, y: 1025, w: 95, h: 40 },
-    { id: 'att_a_due', entId: 'ent_action', name: 'dueDate', x: 440, y: 1025, w: 85, h: 40 },
-    { id: 'att_a_stat', entId: 'ent_action', name: 'status', x: 535, y: 1010, w: 85, h: 40 },
-    { id: 'att_a_prio', entId: 'ent_action', name: 'priority', x: 205, y: 840, w: 85, h: 40 },
+    // --- tindak_lanjut attributes ---
+    { id: 'att_a_id', entId: 'ent_action', name: '&lt;u&gt;&lt;b&gt;id_tindak_lanjut&lt;/b&gt;&lt;/u&gt;', x: 215, y: 920, w: 110, h: 42, isPk: true },
+    { id: 'att_a_title', entId: 'ent_action', name: 'judul_tindakan', x: 230, y: 1010, w: 95, h: 40 },
+    { id: 'att_a_desc', entId: 'ent_action', name: 'deskripsi_tindakan', x: 330, y: 1025, w: 110, h: 40 },
+    { id: 'att_a_due', entId: 'ent_action', name: 'tenggat_waktu', x: 450, y: 1025, w: 95, h: 40 },
+    { id: 'att_a_stat', entId: 'ent_action', name: 'status_tindak_lanjut', x: 555, y: 1010, w: 110, h: 40 },
+    { id: 'att_a_prio', entId: 'ent_action', name: 'skala_prioritas', x: 205, y: 840, w: 90, h: 40 },
 
-    // --- meeting_minutes attributes ---
-    { id: 'att_n_id', entId: 'ent_minutes', name: '&lt;u&gt;&lt;b&gt;minutes_id&lt;/b&gt;&lt;/u&gt;', x: 1260, y: 920, w: 100, h: 42, isPk: true },
-    { id: 'att_n_agenda', entId: 'ent_minutes', name: 'agenda', x: 990, y: 1025, w: 85, h: 40 },
-    { id: 'att_n_disc', entId: 'ent_minutes', name: 'discussion', x: 1090, y: 1030, w: 90, h: 40 },
-    { id: 'att_n_dec', entId: 'ent_minutes', name: 'decisions', x: 1195, y: 1030, w: 85, h: 40 },
-    { id: 'att_n_conc', entId: 'ent_minutes', name: 'conclusion', x: 1290, y: 1010, w: 90, h: 40 }
+    // --- notulen_rapat attributes ---
+    { id: 'att_n_id', entId: 'ent_minutes', name: '&lt;u&gt;&lt;b&gt;id_notulen&lt;/b&gt;&lt;/u&gt;', x: 1260, y: 920, w: 100, h: 42, isPk: true },
+    { id: 'att_n_agenda', entId: 'ent_minutes', name: 'agenda_pembahasan', x: 970, y: 1025, w: 115, h: 40 },
+    { id: 'att_n_disc', entId: 'ent_minutes', name: 'hasil_pembahasan', x: 1095, y: 1030, w: 105, h: 40 },
+    { id: 'att_n_dec', entId: 'ent_minutes', name: 'poin_keputusan', x: 1210, y: 1030, w: 95, h: 40 },
+    { id: 'att_n_conc', entId: 'ent_minutes', name: 'kesimpulan', x: 1310, y: 1010, w: 90, h: 40 }
   ];
 
   // Relationships (Rhombus / Diamond)
@@ -200,7 +200,7 @@ function generateChenErdXml() {
     },
     {
       id: 'rel_pic_biro',
-      name: 'pic_biro',
+      name: 'penugasan\n(biro)',
       x: 230,
       y: 730,
       w: 120,
@@ -212,7 +212,7 @@ function generateChenErdXml() {
     },
     {
       id: 'rel_pic_user',
-      name: 'pic_user',
+      name: 'penugasan\n(pegawai)',
       x: 715,
       y: 922,
       w: 130,
@@ -300,7 +300,7 @@ function generateChenErdXml() {
   // 4. Attribute for relationship 'menghadiri' (attendanceStatus)
   xml += `
         <!-- Attribute on Relationship menghadiri -->
-        <mxCell id="att_rel_attendance" value="attendanceStatus" style="shape=ellipse;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#64748B;strokeWidth=1.2;fontColor=#1E293B;fontSize=11;align=center;verticalAlign=middle;fontFamily=Helvetica;" vertex="1" parent="1">
+        <mxCell id="att_rel_attendance" value="status_kehadiran" style="shape=ellipse;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#64748B;strokeWidth=1.2;fontColor=#1E293B;fontSize=11;align=center;verticalAlign=middle;fontFamily=Helvetica;" vertex="1" parent="1">
           <mxGeometry x="1270" y="570" width="115" height="40" as="geometry" />
         </mxCell>
         <mxCell id="edge_rel_attendance" style="endArrow=none;dashed=1;html=1;strokeColor=#64748B;strokeWidth=1.2;" edge="1" parent="1" source="rel_menghadiri" target="att_rel_attendance">
