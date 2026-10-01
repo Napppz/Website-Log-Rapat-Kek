@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import {
   Calendar,
@@ -23,6 +23,9 @@ import {
   UploadCloud,
   Sparkles,
   Layers,
+  Search,
+  User,
+  Filter,
 } from 'lucide-react';
 import { BIRO_LIST } from '@/lib/mock-data';
 import { BiroCode } from '@/lib/types';
@@ -38,6 +41,8 @@ import { saveMinutesAndActionsToMeetingAction } from '@/app/actions/meeting-uplo
 import { UploadMeetingDialog } from '@/components/meeting/upload-meeting-dialog';
 import { ExtractedMeetingData } from '@/lib/meeting-extractor';
 import { toast } from '@/components/providers/toast-provider';
+import { Badge } from '@/components/ui/badge';
+import { cn } from '@/lib/utils';
 
 interface AvailableUser {
   id: string;
@@ -83,6 +88,8 @@ export default function BuatRapatPage() {
   const [previousMeetingId, setPreviousMeetingId] = useState<string>('');
   const [chairpersonId, setChairpersonId] = useState<string>('');
   const [selectedUserIds, setSelectedUserIds] = useState<string[]>([]);
+  const [participantSearch, setParticipantSearch] = useState('');
+  const [participantBiroFilter, setParticipantBiroFilter] = useState<string>('ALL');
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
@@ -140,7 +147,6 @@ export default function BuatRapatPage() {
       .then((res) => {
         if (res.success && res.data) {
           setAvailableUsers(res.data);
-          // Automatically select matching users based on initial attendees text
           const initialLower = 'dr. hendra suprayitno, maya puspita, s.sos'.toLowerCase();
           const matchedIds = res.data
             .filter((u) => initialLower.includes(u.name.toLowerCase()))
@@ -177,12 +183,28 @@ export default function BuatRapatPage() {
       });
   }, [selectedBiro]);
 
+  // Filtered available users for participant selector
+  const filteredUsers = useMemo(() => {
+    return availableUsers.filter((user) => {
+      const matchesSearch =
+        !participantSearch.trim() ||
+        user.name.toLowerCase().includes(participantSearch.toLowerCase()) ||
+        user.email.toLowerCase().includes(participantSearch.toLowerCase()) ||
+        (user.biro?.code && user.biro.code.toLowerCase().includes(participantSearch.toLowerCase()));
+
+      const matchesBiro =
+        participantBiroFilter === 'ALL' || user.biro?.code === participantBiroFilter;
+
+      return matchesSearch && matchesBiro;
+    });
+  }, [availableUsers, participantSearch, participantBiroFilter]);
+
   // Loading session state
   if (status === 'loading') {
     return (
-      <div className="flex flex-col items-center justify-center min-h-[300px] gap-3">
-        <Loader2 className="w-8 h-8 animate-spin text-[#31889C]" />
-        <p className="text-xs text-slate-500 font-medium">Memeriksa hak akses...</p>
+      <div className="flex flex-col items-center justify-center min-h-[350px] gap-3">
+        <Loader2 className="w-8 h-8 animate-spin text-[#1E6B7B]" />
+        <p className="text-sm text-slate-500 font-medium">Memeriksa hak akses...</p>
       </div>
     );
   }
@@ -191,18 +213,16 @@ export default function BuatRapatPage() {
   if (status === 'unauthenticated' || !session) {
     return (
       <div className="max-w-md mx-auto my-16 bg-white p-8 rounded-2xl border border-slate-200 text-center shadow-xs space-y-4">
-        <div className="w-12 h-12 rounded-full bg-[#E8F5F7] text-[#31889C] flex items-center justify-center mx-auto">
+        <div className="w-12 h-12 rounded-full bg-[#F0F8FA] text-[#1E6B7B] flex items-center justify-center mx-auto">
           <LogIn className="w-6 h-6" />
         </div>
-        <h2 className="text-lg font-bold text-slate-800">
-          Autentikasi Diperlukan
-        </h2>
-        <p className="text-xs text-slate-500">
+        <h2 className="text-lg font-bold text-slate-800">Autentikasi Diperlukan</h2>
+        <p className="text-sm text-slate-500">
           Anda harus masuk ke sistem terlebih dahulu untuk menjadwalkan rapat baru.
         </p>
         <Link
           href="/login?callbackUrl=/buat-rapat"
-          className="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-lg bg-[#31889C] hover:bg-[#266F80] text-white font-semibold text-xs transition-all shadow-xs shadow-[#31889C]/20"
+          className="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-[#1E6B7B] hover:bg-[#175360] text-white font-semibold text-sm transition-all shadow-xs"
         >
           <LogIn className="w-4 h-4" />
           <span>Masuk ke Akun Anda</span>
@@ -218,17 +238,15 @@ export default function BuatRapatPage() {
         <div className="w-12 h-12 rounded-full bg-red-100 text-red-600 flex items-center justify-center mx-auto">
           <ShieldAlert className="w-6 h-6" />
         </div>
-        <h2 className="text-lg font-bold text-slate-800">
-          Izin Tidak Mencukupi
-        </h2>
-        <p className="text-xs text-slate-500">
+        <h2 className="text-lg font-bold text-slate-800">Izin Tidak Mencukupi</h2>
+        <p className="text-sm text-slate-500 leading-relaxed">
           Peran akun Anda saat ini (<strong>{userRole}</strong>) hanya memiliki hak baca.
           Hanya peran <strong>SUPER_ADMIN</strong>, <strong>ADMIN</strong>, atau{' '}
           <strong>NOTULIS</strong> yang dapat menjadwalkan rapat baru.
         </p>
         <Link
           href="/"
-          className="inline-flex items-center justify-center px-4 py-2 rounded-lg bg-[#31889C] hover:bg-[#266F80] text-white font-semibold text-xs transition-all shadow-xs"
+          className="inline-flex items-center justify-center px-5 py-2.5 rounded-xl bg-[#1E6B7B] hover:bg-[#175360] text-white font-semibold text-sm transition-all shadow-xs"
         >
           Kembali ke Dashboard
         </Link>
@@ -293,7 +311,6 @@ export default function BuatRapatPage() {
       });
 
       if (res.success && res.data) {
-        // If there are pending minutes and action items from uploaded document, save them automatically
         if (pendingMinutes) {
           try {
             await saveMinutesAndActionsToMeetingAction(res.data.id, pendingMinutes);
@@ -321,49 +338,54 @@ export default function BuatRapatPage() {
   };
 
   return (
-    <div className="max-w-4xl mx-auto flex flex-col gap-6">
-      {/* Header & Back Link */}
+    <div className="max-w-5xl mx-auto flex flex-col gap-6 pb-12">
+      {/* Top Navigation */}
       <div className="flex items-center justify-between">
         <Link
           href="/semua-rapat"
-          className="inline-flex items-center gap-1.5 text-slate-600 hover:text-[#31889C] text-xs font-semibold transition-colors"
+          className="inline-flex items-center gap-2 text-slate-600 hover:text-[#1E6B7B] text-sm font-semibold transition-colors group cursor-pointer"
         >
-          <ArrowLeft className="w-4 h-4" />
+          <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
           <span>Kembali ke Semua Rapat</span>
         </Link>
+        <div className="flex items-center gap-2">
+          <Badge variant="teal" dot>
+            Birokrasi Resmi KEK RI
+          </Badge>
+        </div>
       </div>
 
       {/* Quick Upload Action Card */}
-      <div className="bg-gradient-to-r from-[#1B5260] via-[#266F80] to-[#31889C] rounded-2xl p-5 text-white shadow-md flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div className="flex items-start gap-3.5">
-          <div className="w-11 h-11 rounded-xl bg-white/20 backdrop-blur-md flex items-center justify-center shrink-0">
-            <Sparkles className="w-5 h-5 text-amber-300" />
+      <div className="bg-gradient-to-r from-[#175360] via-[#1E6B7B] to-[#266F80] rounded-2xl p-6 text-white shadow-md flex flex-col md:flex-row md:items-center justify-between gap-5 border border-white/10">
+        <div className="flex items-start gap-4">
+          <div className="w-12 h-12 rounded-xl bg-white/15 backdrop-blur-md flex items-center justify-center shrink-0 border border-white/20">
+            <Sparkles className="w-6 h-6 text-amber-300" />
           </div>
           <div>
-            <div className="flex items-center gap-2 mb-1">
-              <span className="px-2 py-0.5 rounded-full bg-amber-400 text-slate-900 text-[10px] font-extrabold uppercase tracking-wider">
-                ⚡ Fitur Cepat Ekstraksi Otomatis
+            <div className="flex items-center gap-2 mb-1.5 flex-wrap">
+              <span className="px-2.5 py-0.5 rounded-full bg-amber-400 text-slate-900 text-[11px] font-extrabold uppercase tracking-wider shadow-2xs">
+                ⚡ Ekstraksi Otomatis AI
               </span>
               {pendingMinutes && (
-                <span className="px-2 py-0.5 rounded-full bg-emerald-500/80 text-white text-[10px] font-bold">
-                  ✓ Dokumen Terpasang
+                <span className="px-2.5 py-0.5 rounded-full bg-emerald-500 text-white text-[11px] font-bold shadow-2xs">
+                  ✓ Berkas Dokumen Terpasang
                 </span>
               )}
             </div>
-            <h3 className="text-base font-bold text-white leading-snug">
-              Punya Berkas Hasil Rapat Offline / Dokumen Eksternal?
+            <h3 className="text-base sm:text-lg font-bold text-white leading-snug">
+              Punya Berkas Hasil Rapat Offline atau Format Undangan?
             </h3>
-            <p className="text-white/80 text-xs mt-0.5 max-w-xl">
-              Unggah berkas Word (.docx), PDF (.pdf), atau Teks (.txt). Sistem secara cerdas mengisi formulir rapat dan menyusun naskah notula resmi (agenda, pembahasan, keputusan, serta butir tindak lanjut).
+            <p className="text-white/80 text-sm mt-1 max-w-2xl leading-relaxed">
+              Unggah berkas Word (.docx), PDF (.pdf), atau Teks (.txt). Sistem akan otomatis mengekstrak judul, tanggal, lokasi, serta butir naskah notula ke formulir ini.
             </p>
           </div>
         </div>
         <button
           type="button"
           onClick={() => setIsUploadDialogOpen(true)}
-          className="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-white text-[#1B5260] hover:bg-[#E8F5F7] font-bold text-xs transition-all shadow-md shrink-0 cursor-pointer hover:scale-105 active:scale-95"
+          className="inline-flex items-center justify-center gap-2 px-5 py-3 rounded-xl bg-white text-[#175360] hover:bg-[#F0F8FA] font-bold text-sm transition-all shadow-md shrink-0 cursor-pointer hover:scale-105 active:scale-95"
         >
-          <UploadCloud className="w-4 h-4 text-[#31889C]" />
+          <UploadCloud className="w-4 h-4 text-[#1E6B7B]" />
           <span>Unggah Berkas Rapat</span>
         </button>
       </div>
@@ -374,315 +396,443 @@ export default function BuatRapatPage() {
         onApplyToForm={handleApplyExtractedData}
       />
 
-      <div className="bg-white rounded-xl border border-slate-200 shadow-xs overflow-hidden">
-        {/* Banner */}
-        <div className="p-6 bg-gradient-to-r from-[#31889C] to-[#266F80] text-white">
-          <span className="inline-block px-2.5 py-0.5 rounded-full bg-white/20 text-white text-[11px] font-bold uppercase tracking-wider mb-1">
-            Formulir Penjadwalan
-          </span>
-          <h1 className="text-xl font-bold">Jadwalkan Rapat Baru KEK RI</h1>
-          <p className="text-white/80 text-xs mt-1">
-            Inputkan rincian agenda, biro pelaksana, dan daftar pejabat peserta rapat koordinasi resmi.
-          </p>
-        </div>
-
-        {/* Error Alert if any */}
+      {/* Main Form Container */}
+      <form onSubmit={handleSubmit} className="space-y-6">
+        {/* Error Alert */}
         {errorMessage && (
-          <div className="mx-6 mt-6 p-4 bg-red-50 border border-red-200 rounded-xl flex items-start gap-3 text-red-700 text-xs">
-            <AlertCircle className="w-4 h-4 text-red-600 flex-shrink-0 mt-0.5" />
+          <div className="p-4 bg-red-50 border border-red-200 rounded-2xl flex items-start gap-3.5 text-red-700 text-sm animate-in fade-in">
+            <AlertCircle className="w-5 h-5 text-red-600 shrink-0 mt-0.5" />
             <div>
               <p className="font-bold">Gagal Menyimpan Rapat</p>
-              <p className="mt-0.5">{errorMessage}</p>
+              <p className="mt-0.5 text-red-600">{errorMessage}</p>
             </div>
           </div>
         )}
 
-        {/* Form Content */}
-        <form onSubmit={handleSubmit} className="p-6 space-y-5 text-xs">
-          {/* Biro Penyelenggara, Tim Kerja, Sifat Pertemuan & Pimpinan Rapat */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 items-start">
-            <div>
-              <label className="font-semibold text-slate-700 mb-1.5 flex items-center gap-1.5 h-5 text-xs whitespace-nowrap">
-                <Building2 className="w-4 h-4 text-[#31889C] shrink-0" />
-                <span>Biro Penyelenggara</span>
-                <span className="text-red-500">*</span>
-              </label>
-              {userBiroCode ? (
-                <div className="w-full px-3 py-2 h-[38px] rounded-lg border border-[#BCE3EB] bg-[#F0F9FA] text-[#215865] font-semibold text-xs flex items-center justify-between">
-                  <span>Biro {userBiroCode}</span>
-                  <span className="text-[11px] text-slate-500 font-normal">(Terkunci sesuai akun)</span>
-                </div>
-              ) : (
+        {/* ======================================================== */}
+        {/* SECTION 1: Identitas & Informasi Pokok Rapat              */}
+        {/* ======================================================== */}
+        <div className="bg-white rounded-2xl border border-slate-200/90 shadow-2xs overflow-hidden border-t-[4px] border-t-[#1E6B7B]">
+          {/* Section Header */}
+          <div className="px-6 py-5 border-b border-slate-100 bg-slate-50/50 flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-[#F0F8FA] border border-[#BCE3EB] flex items-center justify-center text-[#1E6B7B]">
+                <Building2 className="w-5 h-5" />
+              </div>
+              <div>
+                <h2 className="text-base font-bold text-slate-900">
+                  1. Identitas &amp; Pengorganisasian Rapat
+                </h2>
+                <p className="text-xs text-slate-500 mt-0.5">
+                  Tentukan biro penyelenggara, tim kerja, dan sifat prioritas pertemuan
+                </p>
+              </div>
+            </div>
+            <span className="text-xs font-semibold text-slate-400">Bagian 1 dari 3</span>
+          </div>
+
+          <div className="p-6 sm:p-7 space-y-6">
+            {/* Grid 2 Kolom Lega untuk Dropdowns Pokok */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-5 sm:gap-6">
+              {/* Biro Penyelenggara */}
+              <div>
+                <label className="font-semibold text-slate-800 mb-2 flex items-center gap-1.5 text-sm">
+                  <span>Biro Penyelenggara Utama</span>
+                  <span className="text-red-500 font-bold">*</span>
+                </label>
+                {userBiroCode ? (
+                  <div className="w-full px-4 h-[44px] rounded-xl border border-[#BCE3EB] bg-[#F0F8FA] text-[#174853] font-semibold text-sm flex items-center justify-between shadow-2xs">
+                    <span>Biro {userBiroCode}</span>
+                    <span className="text-xs text-slate-500 font-normal">(Terkunci sesuai akun)</span>
+                  </div>
+                ) : (
+                  <select
+                    value={selectedBiro}
+                    onChange={(e) => setSelectedBiro(e.target.value as BiroCode)}
+                    className="w-full px-4 h-[44px] rounded-xl border border-slate-300 bg-white text-slate-800 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-[#1E6B7B]/20 focus:border-[#1E6B7B] shadow-2xs transition-all cursor-pointer"
+                  >
+                    {BIRO_LIST.map((biro) => (
+                      <option key={biro.code} value={biro.code}>
+                        {biro.code} — {biro.name}
+                      </option>
+                    ))}
+                  </select>
+                )}
+                <p className="text-xs text-slate-400 mt-1.5">
+                  Biro yang bertanggung jawab atas penyelenggaraan dan penyusunan risalah notula.
+                </p>
+              </div>
+
+              {/* Tim Kerja Biro */}
+              <div>
+                <label className="font-semibold text-slate-800 mb-2 flex items-center justify-between text-sm">
+                  <span className="flex items-center gap-1.5">
+                    <span>Sub-Tim Kerja</span>
+                    <span className="text-slate-400 font-normal text-xs">(Opsional)</span>
+                  </span>
+                  {availableTeams.length > 0 && (
+                    <span className="text-xs font-bold text-[#174853] bg-[#F0F8FA] px-2 py-0.5 rounded-md border border-[#BCE3EB]">
+                      {availableTeams.length} Tim Tersedia
+                    </span>
+                  )}
+                </label>
                 <select
-                  value={selectedBiro}
-                  onChange={(e) => setSelectedBiro(e.target.value as BiroCode)}
-                  className="w-full px-3 py-2 h-[38px] rounded-lg border border-slate-200 bg-white text-slate-800 text-xs focus:outline-none focus:ring-2 focus:ring-[#31889C]/25 focus:border-[#31889C]"
+                  value={selectedTeamId}
+                  onChange={(e) => setSelectedTeamId(e.target.value)}
+                  className="w-full px-4 h-[44px] rounded-xl border border-slate-300 bg-white text-slate-800 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-[#1E6B7B]/20 focus:border-[#1E6B7B] shadow-2xs transition-all cursor-pointer"
                 >
-                  {BIRO_LIST.map((biro) => (
-                    <option key={biro.code} value={biro.code}>
-                      {biro.code} — {biro.name}
+                  <option value="">
+                    {availableTeams.length > 0
+                      ? '-- Bebas / Tingkat Biro Utama --'
+                      : '-- Belum ada sub-tim terdaftar --'}
+                  </option>
+                  {availableTeams.map((t) => (
+                    <option key={t.id} value={t.id}>
+                      [{t.code}] Tim {t.name}
                     </option>
                   ))}
                 </select>
-              )}
+                <p className="text-xs text-slate-400 mt-1.5">
+                  Pilih sub-tim kerja jika rapat merupakan lingkup kerja spesifik di dalam biro.
+                </p>
+              </div>
+
+              {/* Sifat Pertemuan */}
+              <div>
+                <label className="font-semibold text-slate-800 mb-2 flex items-center gap-1.5 text-sm">
+                  <Shield className="w-4 h-4 text-[#1E6B7B]" />
+                  <span>Sifat / Klasifikasi Rapat</span>
+                  <span className="text-red-500 font-bold">*</span>
+                </label>
+                <select
+                  value={classification}
+                  onChange={(e) => setClassification(e.target.value)}
+                  className="w-full px-4 h-[44px] rounded-xl border border-slate-300 bg-white text-slate-800 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-[#1E6B7B]/20 focus:border-[#1E6B7B] shadow-2xs transition-all cursor-pointer"
+                >
+                  <option value="STRATEGIS">Prioritas Strategis Nasional</option>
+                  <option value="REGULER">Koordinasi Berkala (Reguler)</option>
+                  <option value="DARURAT">Eskalasi Mendesak / Khusus</option>
+                </select>
+                <p className="text-xs text-slate-400 mt-1.5">
+                  Menentukan tingkat urgensi penanganan butir tindak lanjut keputusan.
+                </p>
+              </div>
+
+              {/* Ketua / Pimpinan Sidang */}
+              <div>
+                <label className="font-semibold text-slate-800 mb-2 flex items-center gap-1.5 text-sm">
+                  <UserCheck className="w-4 h-4 text-[#1E6B7B]" />
+                  <span>Ketua / Pimpinan Sidang</span>
+                </label>
+                <select
+                  value={chairpersonId}
+                  onChange={(e) => setChairpersonId(e.target.value)}
+                  className="w-full px-4 h-[44px] rounded-xl border border-slate-300 bg-white text-slate-800 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-[#1E6B7B]/20 focus:border-[#1E6B7B] shadow-2xs transition-all cursor-pointer"
+                >
+                  <option value="">-- Bebas / Ditetapkan dalam Notula --</option>
+                  {availableUsers.map((u) => (
+                    <option key={u.id} value={u.id}>
+                      {u.name} {u.biro?.code ? `[${u.biro.code}]` : ''}
+                    </option>
+                  ))}
+                </select>
+                <p className="text-xs text-slate-400 mt-1.5">
+                  Pejabat yang memimpin jalannya rapat koordinasi.
+                </p>
+              </div>
             </div>
 
+            {/* Agenda & Topik Pembahasan (Full Width) */}
             <div>
-              <label className="font-semibold text-slate-700 mb-1.5 flex items-center justify-between h-5 text-xs whitespace-nowrap">
-                <span className="flex items-center gap-1.5 min-w-0">
-                  <Layers className="w-4 h-4 text-[#31889C] shrink-0" />
-                  <span>Tim Kerja</span>
-                  <span className="text-slate-400 font-normal text-[11px]">(Opsional)</span>
-                </span>
-                {availableTeams.length > 0 && (
-                  <span className="text-[10px] font-bold text-[#215865] bg-[#E8F5F7] px-1.5 py-0.5 rounded border border-[#BCE3EB] shrink-0 ml-1">
-                    {availableTeams.length} Tim
-                  </span>
-                )}
+              <label className="font-semibold text-slate-800 mb-2 flex items-center gap-1.5 text-sm">
+                <span>Agenda &amp; Topik Pembahasan Rapat</span>
+                <span className="text-red-500 font-bold">*</span>
               </label>
-              <select
-                value={selectedTeamId}
-                onChange={(e) => setSelectedTeamId(e.target.value)}
-                className="w-full px-3 py-2 h-[38px] rounded-lg border border-slate-200 bg-white text-slate-800 text-xs focus:outline-none focus:ring-2 focus:ring-[#31889C]/25 focus:border-[#31889C]"
-              >
-                <option value="">
-                  {availableTeams.length > 0
-                    ? '-- Bebas / Tingkat Biro Utama --'
-                    : '-- Belum ada tim terdaftar --'}
-                </option>
-                {availableTeams.map((t) => (
-                  <option key={t.id} value={t.id}>
-                    [{t.code}] Tim {t.name}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            <div>
-              <label className="font-semibold text-slate-700 mb-1.5 flex items-center gap-1.5 h-5 text-xs whitespace-nowrap">
-                <Shield className="w-4 h-4 text-[#31889C] shrink-0" />
-                <span>Sifat Pertemuan</span>
-              </label>
-              <select
-                value={classification}
-                onChange={(e) => setClassification(e.target.value)}
-                className="w-full px-3 py-2 h-[38px] rounded-lg border border-slate-200 bg-white text-slate-800 text-xs focus:outline-none focus:ring-2 focus:ring-[#31889C]/25 focus:border-[#31889C]"
-              >
-                <option value="STRATEGIS">Prioritas Strategis Nasional</option>
-                <option value="REGULER">Koordinasi Berkala (Reguler)</option>
-                <option value="DARURAT">Eskalasi Mendesak</option>
-              </select>
-            </div>
-
-            <div>
-              <label className="font-semibold text-slate-700 mb-1.5 flex items-center gap-1.5 h-5 text-xs whitespace-nowrap">
-                <UserCheck className="w-4 h-4 text-[#31889C] shrink-0" />
-                <span>Ketua / Pimpinan Sidang</span>
-              </label>
-              <select
-                value={chairpersonId}
-                onChange={(e) => setChairpersonId(e.target.value)}
-                className="w-full px-3 py-2 h-[38px] rounded-lg border border-slate-200 bg-white text-slate-800 text-xs focus:outline-none focus:ring-2 focus:ring-[#31889C]/25 focus:border-[#31889C]"
-              >
-                <option value="">-- Bebas / Diatur di Notula --</option>
-                {availableUsers.map((u) => (
-                  <option key={u.id} value={u.id}>
-                    {u.name} {u.biro?.code ? `[${u.biro.code}]` : ''}
-                  </option>
-                ))}
-              </select>
-            </div>
-          </div>
-
-          {/* Nomor Undangan Surat (Opsional) */}
-          <div className="p-3.5 bg-slate-50/80 rounded-xl border border-slate-200 space-y-1.5">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1">
-              <label className="font-semibold text-slate-800 flex items-center gap-1.5">
-                <FileText className="w-4 h-4 text-[#31889C]" />
-                <span>Nomor Surat Undangan Rapat</span>
-                <span className="text-slate-400 font-normal">(Opsional)</span>
-              </label>
-              <span className="text-[11px] text-[#31889C]">
-                Kosongkan jika rapat internal tanpa surat undangan (akan bertanda &apos;-&apos;)
-              </span>
-            </div>
-            <input
-              type="text"
-              value={customMeetingNumber}
-              onChange={(e) => setCustomMeetingNumber(e.target.value)}
-              placeholder="Contoh: UND-014/SET.KEK/IX/2026 atau tanda '-' jika tanpa surat undangan"
-              className="w-full px-3 py-2 rounded-lg border border-slate-300 bg-white text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-[#31889C]/25 focus:border-[#31889C]"
-            />
-            <p className="text-[11px] text-slate-500">
-              Jika diisi nomor surat (misal <strong>UND-014/...</strong>), nomor ini akan dicantumkan pada baris <strong>Nomor Surat Undangan</strong> di notula &amp; PDF. Jika diisi tanda <strong>&apos;-&apos;</strong> atau dikosongkan, sistem otomatis memberikan tanda <strong>&apos;-&apos;</strong> untuk rapat internal tanpa undangan.
-            </p>
-          </div>
-
-          {/* Rapat Rujukan / Lanjutan (Opsional) */}
-          <div className="p-4 bg-[#F0F9FA] rounded-xl border border-[#BCE3EB] space-y-1.5">
-            <label className="block font-semibold text-slate-800 flex items-center gap-1.5">
-              <Link2 className="w-4 h-4 text-[#31889C]" />
-              <span>Tautkan ke Rapat Sebelumnya (Opsional — Jika Rapat Lanjutan)</span>
-            </label>
-            <p className="text-[11px] text-slate-500">
-              Jika rapat ini merupakan tindak lanjut dari rapat terdahulu, pilih rapat rujukan agar peserta dapat langsung meninjau notula dan memantau status butir tindak lanjut rapat ke-1.
-            </p>
-            <select
-              value={previousMeetingId}
-              onChange={(e) => setPreviousMeetingId(e.target.value)}
-              className="w-full px-3 py-2 rounded-lg border border-slate-200 bg-white text-slate-800 focus:outline-none focus:ring-2 focus:ring-[#31889C]/25 focus:border-[#31889C]"
-            >
-              <option value="">-- Tidak Ada (Rapat Baru Mandiri / Bukan Rapat Lanjutan) --</option>
-              {availableMeetings.map((m) => (
-                <option key={m.id} value={m.id}>
-                  [{m.meetingNumber}] {m.title} ({new Date(m.date).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' })})
-                </option>
-              ))}
-            </select>
-          </div>
-
-          {/* Agenda / Judul */}
-          <div>
-            <label className="block font-semibold text-slate-700 mb-1">
-              Agenda &amp; Topik Pembahasan <span className="text-red-500">*</span>
-            </label>
-            <textarea
-              required
-              rows={3}
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-              placeholder="Contoh: Rapat Koordinasi Fasilitasi Investasi Lintas Sektor Kawasan Industri KEK Sei Mangkei..."
-              className="w-full px-3 py-2 rounded-lg border border-slate-200 bg-white text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-[#31889C]/25 focus:border-[#31889C]"
-            />
-          </div>
-
-          {/* Tanggal & Waktu */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <label className="block font-semibold text-slate-700 mb-1 flex items-center gap-1.5">
-                <Calendar className="w-4 h-4 text-[#31889C]" />
-                Tanggal Pelaksanaan <span className="text-red-500">*</span>
-              </label>
-              <input
-                type="date"
+              <textarea
                 required
-                value={date}
-                onChange={(e) => setDate(e.target.value)}
-                className="w-full px-3 py-2 rounded-lg border border-slate-200 bg-white text-slate-800 focus:outline-none focus:ring-2 focus:ring-[#31889C]/25 focus:border-[#31889C]"
+                rows={3}
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
+                placeholder="Contoh: Rapat Koordinasi Fasilitasi Investasi Lintas Sektor dan Percepatan Pembangunan Infrastruktur Kawasan Industri KEK..."
+                className="w-full px-4 py-3 rounded-xl border border-slate-300 bg-white text-slate-800 text-sm placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-[#1E6B7B]/20 focus:border-[#1E6B7B] shadow-2xs transition-all leading-relaxed"
               />
+              <p className="text-xs text-slate-400 mt-1.5">
+                Tuliskan judul atau agenda rapat secara jelas dan lengkap sebagaimana tercantum pada surat undangan.
+              </p>
             </div>
+
+            {/* Panel Rujukan & Surat Undangan (Grid 2 Kolom) */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-5 pt-2">
+              {/* Nomor Surat Undangan */}
+              <div className="p-4 bg-slate-50/80 rounded-xl border border-slate-200/80 space-y-2">
+                <label className="font-semibold text-slate-800 flex items-center gap-2 text-sm">
+                  <FileText className="w-4 h-4 text-[#1E6B7B]" />
+                  <span>Nomor Surat Undangan</span>
+                  <span className="text-slate-400 font-normal text-xs">(Opsional)</span>
+                </label>
+                <input
+                  type="text"
+                  value={customMeetingNumber}
+                  onChange={(e) => setCustomMeetingNumber(e.target.value)}
+                  placeholder="Contoh: UND-014/SET.KEK/IX/2026 atau '-'"
+                  className="w-full px-3.5 h-[40px] rounded-lg border border-slate-300 bg-white text-slate-800 text-sm focus:outline-none focus:ring-2 focus:ring-[#1E6B7B]/20 focus:border-[#1E6B7B]"
+                />
+                <p className="text-[11.5px] text-slate-500 leading-normal">
+                  Kosongkan jika rapat internal tanpa nomor surat undangan resmi.
+                </p>
+              </div>
+
+              {/* Tautkan Rapat Sebelumnya */}
+              <div className="p-4 bg-[#F0F8FA]/70 rounded-xl border border-[#BCE3EB]/80 space-y-2">
+                <label className="font-semibold text-slate-800 flex items-center gap-2 text-sm">
+                  <Link2 className="w-4 h-4 text-[#1E6B7B]" />
+                  <span>Tautkan Rapat Lanjutan</span>
+                  <span className="text-slate-400 font-normal text-xs">(Opsional)</span>
+                </label>
+                <select
+                  value={previousMeetingId}
+                  onChange={(e) => setPreviousMeetingId(e.target.value)}
+                  className="w-full px-3.5 h-[40px] rounded-lg border border-slate-300 bg-white text-slate-800 text-sm focus:outline-none focus:ring-2 focus:ring-[#1E6B7B]/20 focus:border-[#1E6B7B] cursor-pointer"
+                >
+                  <option value="">-- Bukan Rapat Lanjutan (Rapat Mandiri) --</option>
+                  {availableMeetings.map((m) => (
+                    <option key={m.id} value={m.id}>
+                      [{m.meetingNumber}] {m.title.slice(0, 50)}...
+                    </option>
+                  ))}
+                </select>
+                <p className="text-[11.5px] text-slate-500 leading-normal">
+                  Hubungkan jika rapat ini melanjutkan butir tindak lanjut sesi terdahulu.
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* ======================================================== */}
+        {/* SECTION 2: Jadwal & Lokasi Sidang                         */}
+        {/* ======================================================== */}
+        <div className="bg-white rounded-2xl border border-slate-200/90 shadow-2xs overflow-hidden border-t-[4px] border-t-[#7CC563]">
+          {/* Section Header */}
+          <div className="px-6 py-5 border-b border-slate-100 bg-slate-50/50 flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-[#ECF8E9] border border-[#D2EFCA] flex items-center justify-center text-[#15803D]">
+                <Calendar className="w-5 h-5" />
+              </div>
+              <div>
+                <h2 className="text-base font-bold text-slate-900">
+                  2. Jadwal &amp; Lokasi Pelaksanaan Sidang
+                </h2>
+                <p className="text-xs text-slate-500 mt-0.5">
+                  Waktu pelaksanaan, durasi pertemuan, dan media ruang sidang
+                </p>
+              </div>
+            </div>
+            <span className="text-xs font-semibold text-slate-400">Bagian 2 dari 3</span>
+          </div>
+
+          <div className="p-6 sm:p-7 space-y-5">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-5 sm:gap-6">
+              {/* Tanggal Pelaksanaan */}
+              <div>
+                <label className="font-semibold text-slate-800 mb-2 flex items-center gap-1.5 text-sm">
+                  <Calendar className="w-4 h-4 text-[#1E6B7B]" />
+                  <span>Tanggal Pelaksanaan</span>
+                  <span className="text-red-500 font-bold">*</span>
+                </label>
+                <input
+                  type="date"
+                  required
+                  value={date}
+                  onChange={(e) => setDate(e.target.value)}
+                  className="w-full px-4 h-[44px] rounded-xl border border-slate-300 bg-white text-slate-800 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-[#1E6B7B]/20 focus:border-[#1E6B7B] shadow-2xs"
+                />
+              </div>
+
+              {/* Waktu Pelaksanaan */}
+              <div>
+                <label className="font-semibold text-slate-800 mb-2 flex items-center gap-1.5 text-sm">
+                  <Clock className="w-4 h-4 text-[#1E6B7B]" />
+                  <span>Waktu / Jam Sidang</span>
+                  <span className="text-red-500 font-bold">*</span>
+                </label>
+                <input
+                  type="text"
+                  required
+                  value={time}
+                  onChange={(e) => setTime(e.target.value)}
+                  placeholder="Contoh: 09:00 - 12:00 WIB"
+                  className="w-full px-4 h-[44px] rounded-xl border border-slate-300 bg-white text-slate-800 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-[#1E6B7B]/20 focus:border-[#1E6B7B] shadow-2xs"
+                />
+              </div>
+            </div>
+
+            {/* Lokasi / Media Pertemuan */}
             <div>
-              <label className="block font-semibold text-slate-700 mb-1 flex items-center gap-1.5">
-                <Clock className="w-4 h-4 text-[#31889C]" />
-                Waktu Pelaksanaan <span className="text-red-500">*</span>
+              <label className="font-semibold text-slate-800 mb-2 flex items-center gap-1.5 text-sm">
+                <MapPin className="w-4 h-4 text-[#1E6B7B]" />
+                <span>Lokasi Fisik / Tautan Media Pertemuan (Hybrid/Zoom)</span>
+                <span className="text-red-500 font-bold">*</span>
               </label>
               <input
                 type="text"
                 required
-                value={time}
-                onChange={(e) => setTime(e.target.value)}
-                placeholder="Contoh: 09:00 - 12:00 WIB"
-                className="w-full px-3 py-2 rounded-lg border border-slate-200 bg-white text-slate-800 focus:outline-none focus:ring-2 focus:ring-[#31889C]/25 focus:border-[#31889C]"
+                value={location}
+                onChange={(e) => setLocation(e.target.value)}
+                placeholder="Contoh: Ruang Rapat Utama Gedung Posko KEK & Zoom Meeting ID: 821 9920 112..."
+                className="w-full px-4 h-[44px] rounded-xl border border-slate-300 bg-white text-slate-800 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-[#1E6B7B]/20 focus:border-[#1E6B7B] shadow-2xs"
               />
+              <p className="text-xs text-slate-400 mt-1.5">
+                Sertakan nama gedung/ruangan atau informasi tautan rapat virtual jika dilaksanakan secara daring/hybrid.
+              </p>
             </div>
           </div>
+        </div>
 
-          {/* Lokasi */}
-          <div>
-            <label className="block font-semibold text-slate-700 mb-1 flex items-center gap-1.5">
-              <MapPin className="w-4 h-4 text-[#31889C]" />
-              Lokasi / Media Pertemuan <span className="text-red-500">*</span>
-            </label>
-            <input
-              type="text"
-              required
-              value={location}
-              onChange={(e) => setLocation(e.target.value)}
-              placeholder="Ruang Rapat Utama Gedung Posko KEK & Zoom..."
-              className="w-full px-3 py-2 rounded-lg border border-slate-200 bg-white text-slate-800 focus:outline-none focus:ring-2 focus:ring-[#31889C]/25 focus:border-[#31889C]"
-            />
+        {/* ======================================================== */}
+        {/* SECTION 3: Daftar Peserta & Notulis                      */}
+        {/* ======================================================== */}
+        <div className="bg-white rounded-2xl border border-slate-200/90 shadow-2xs overflow-hidden border-t-[4px] border-t-[#F99D1C]">
+          {/* Section Header */}
+          <div className="px-6 py-5 border-b border-slate-100 bg-slate-50/50 flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-[#FFF0DC] border border-[#FEDEBE] flex items-center justify-center text-[#C2410C]">
+                <Users className="w-5 h-5" />
+              </div>
+              <div>
+                <h2 className="text-base font-bold text-slate-900">
+                  3. Daftar Peserta &amp; Pemangku Kepentingan
+                </h2>
+                <p className="text-xs text-slate-500 mt-0.5">
+                  Pilih pejabat/staf terdaftar dari database KEK atau input nama manual
+                </p>
+              </div>
+            </div>
+            <Badge variant="teal" dot className="text-xs">
+              {selectedUserIds.length} Pejabat Dipilih
+            </Badge>
           </div>
 
-          {/* Peserta & Pemangku Kepentingan */}
-          <div className="space-y-2">
-            <div className="flex items-center justify-between">
-              <label className="block font-semibold text-slate-700 flex items-center gap-1.5">
-                <Users className="w-4 h-4 text-[#31889C]" />
-                Daftar Peserta &amp; Pemangku Kepentingan <span className="text-red-500">*</span>
-              </label>
-              <span className="text-[11px] text-slate-400">
-                {selectedUserIds.length} pejabat dipilih
-              </span>
-            </div>
-
-            {/* Quick Picker from Registered Users */}
+          <div className="p-6 sm:p-7 space-y-6">
+            {/* Quick Picker Container */}
             {availableUsers.length > 0 && (
-              <div className="p-3 bg-[#F0F9FA] rounded-xl border border-[#BCE3EB] space-y-2">
-                <div className="flex items-center justify-between">
-                  <span className="text-[11px] font-bold text-[#215865] flex items-center gap-1">
-                    <UserCheck className="w-3.5 h-3.5 text-[#31889C]" />
-                    Pilih Cepat Pejabat / Staf Terdaftar:
-                  </span>
-                  <span className="text-[10px] text-[#31889C]">
-                    Klik nama untuk menambahkan atau menghapus
-                  </span>
+              <div className="p-5 bg-slate-50/70 rounded-2xl border border-slate-200 space-y-4">
+                {/* Search & Filter Bar */}
+                <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
+                  {/* Participant Search */}
+                  <div className="relative flex-1">
+                    <Search className="w-4 h-4 absolute left-3.5 top-3 text-[#1E6B7B]" />
+                    <input
+                      type="text"
+                      value={participantSearch}
+                      onChange={(e) => setParticipantSearch(e.target.value)}
+                      placeholder="Cari nama pejabat, staf, atau biro..."
+                      className="w-full pl-10 pr-4 h-[40px] rounded-xl bg-white border border-slate-300 text-sm text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-[#1E6B7B]/20 focus:border-[#1E6B7B] shadow-2xs"
+                    />
+                  </div>
+
+                  {/* Biro Filter Buttons */}
+                  <div className="flex items-center gap-1 overflow-x-auto pb-1 sm:pb-0 text-xs font-semibold">
+                    {['ALL', 'BPPK', 'PKKEK', 'IKK', 'HSDMO', 'UK'].map((code) => {
+                      const isActive = participantBiroFilter === code;
+                      return (
+                        <button
+                          key={code}
+                          type="button"
+                          onClick={() => setParticipantBiroFilter(code)}
+                          className={cn(
+                            'px-3 py-1.5 rounded-lg transition-colors cursor-pointer shrink-0',
+                            isActive
+                              ? 'bg-[#1E6B7B] text-white shadow-2xs'
+                              : 'bg-white text-slate-600 border border-slate-200 hover:bg-slate-100'
+                          )}
+                        >
+                          {code === 'ALL' ? 'Semua Biro' : code}
+                        </button>
+                      );
+                    })}
+                  </div>
                 </div>
 
-                <div className="flex flex-wrap gap-1.5 max-h-36 overflow-y-auto pr-1">
-                  {availableUsers.map((u) => {
-                    const isSelected = selectedUserIds.includes(u.id);
-                    return (
-                      <button
-                        type="button"
-                        key={u.id}
-                        onClick={() => handleToggleUser(u)}
-                        className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-medium transition-all ${
-                          isSelected
-                            ? 'bg-[#31889C] text-white shadow-xs'
-                            : 'bg-white text-slate-700 border border-slate-200 hover:border-[#31889C] hover:text-[#31889C]'
-                        }`}
-                      >
-                        {isSelected && <Check className="w-3 h-3 stroke-[2.5]" />}
-                        <span>{u.name}</span>
-                        {u.biro?.code && (
-                          <span
-                            className={`text-[9px] px-1 py-0.2 rounded font-bold ${
-                              isSelected
-                                ? 'bg-[#266F80] text-teal-100'
-                                : 'bg-slate-100 text-slate-500'
-                            }`}
-                          >
-                            {u.biro.code}
-                          </span>
-                        )}
-                      </button>
-                    );
-                  })}
+                {/* Participant Chips Grid */}
+                <div className="flex flex-wrap gap-2 max-h-56 overflow-y-auto pr-1 p-1">
+                  {filteredUsers.length === 0 ? (
+                    <div className="py-6 text-center w-full text-slate-400 text-xs">
+                      Tidak ada pejabat yang cocok dengan pencarian &quot;{participantSearch}&quot;
+                    </div>
+                  ) : (
+                    filteredUsers.map((u) => {
+                      const isSelected = selectedUserIds.includes(u.id);
+                      return (
+                        <button
+                          type="button"
+                          key={u.id}
+                          onClick={() => handleToggleUser(u)}
+                          className={cn(
+                            'inline-flex items-center gap-2 h-9 px-3.5 rounded-xl text-[13px] font-medium transition-all cursor-pointer shadow-2xs select-none',
+                            isSelected
+                              ? 'bg-[#1E6B7B] text-white border border-[#175360] shadow-xs'
+                              : 'bg-white text-slate-700 border border-slate-200 hover:border-[#1E6B7B] hover:text-[#1E6B7B]'
+                          )}
+                        >
+                          {isSelected ? (
+                            <Check className="w-3.5 h-3.5 text-emerald-300 stroke-[3]" />
+                          ) : (
+                            <User className="w-3.5 h-3.5 text-slate-400" />
+                          )}
+                          <span className="truncate max-w-[200px]">{u.name}</span>
+                          {u.biro?.code && (
+                            <span
+                              className={cn(
+                                'text-[10px] px-1.5 py-0.5 rounded font-bold tracking-wider',
+                                isSelected
+                                  ? 'bg-[#175360] text-teal-100'
+                                  : 'bg-slate-100 text-slate-500'
+                              )}
+                            >
+                              {u.biro.code}
+                            </span>
+                          )}
+                        </button>
+                      );
+                    })
+                  )}
                 </div>
               </div>
             )}
 
-            {/* Manual text input for additional guests / attendees */}
+            {/* Manual Attendees Textarea */}
             <div>
+              <label className="font-semibold text-slate-800 mb-2 flex items-center justify-between text-sm">
+                <span>Rangkuman Daftar Peserta / Tamu Eksternal</span>
+                <span className="text-slate-400 font-normal text-xs">
+                  (Dapat disunting manual)
+                </span>
+              </label>
               <textarea
-                rows={2}
+                rows={3}
                 required
                 value={attendees}
                 onChange={(e) => setAttendees(e.target.value)}
                 placeholder="Pisahkan nama peserta dengan tanda koma..."
-                className="w-full px-3 py-2 rounded-lg border border-slate-200 bg-white text-slate-800 focus:outline-none focus:ring-2 focus:ring-[#31889C]/25 focus:border-[#31889C] text-xs"
+                className="w-full px-4 py-3 rounded-xl border border-slate-300 bg-white text-slate-800 text-sm focus:outline-none focus:ring-2 focus:ring-[#1E6B7B]/20 focus:border-[#1E6B7B] shadow-2xs leading-relaxed"
               />
-              <p className="text-[11px] text-slate-400 mt-0.5">
-                Anda juga dapat mengetikkan nama pemangku kepentingan atau instansi luar lainnya secara manual dipisahkan dengan tanda koma.
+              <p className="text-xs text-slate-400 mt-1.5">
+                Ketikkan nama peserta tamu luar atau instansi lintas kementerian/lembaga yang belum terdaftar di sistem. Pisahkan tiap nama dengan tanda koma.
               </p>
             </div>
           </div>
+        </div>
 
-          {/* Submit Actions */}
-          <div className="pt-4 border-t border-slate-100 flex items-center justify-end gap-3">
+        {/* Bottom Submission Bar */}
+        <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex flex-col sm:flex-row items-center justify-between gap-4">
+          <p className="text-xs text-slate-500 text-center sm:text-left">
+            Pastikan seluruh data jadwal dan agenda telah diverifikasi sebelum disimpan.
+          </p>
+          <div className="flex items-center gap-3 w-full sm:w-auto">
             <Link
               href="/semua-rapat"
-              className="px-4 py-2 rounded-lg border border-slate-200 text-slate-700 hover:bg-slate-50 font-semibold transition-colors"
+              className="flex-1 sm:flex-none px-6 h-[46px] rounded-xl border border-slate-200 text-slate-700 hover:bg-slate-50 font-semibold text-sm transition-colors inline-flex items-center justify-center cursor-pointer"
             >
               Batal
             </Link>
@@ -690,12 +840,12 @@ export default function BuatRapatPage() {
             <button
               type="submit"
               disabled={isSubmitted}
-              className="inline-flex items-center gap-2 px-5 py-2 rounded-lg bg-[#31889C] hover:bg-[#266F80] text-white font-semibold transition-all shadow-xs shadow-[#31889C]/20 cursor-pointer disabled:opacity-50"
+              className="flex-1 sm:flex-none inline-flex items-center justify-center gap-2 px-7 h-[46px] rounded-xl bg-[#1E6B7B] hover:bg-[#175360] active:bg-[#103C46] text-white font-bold text-sm transition-all shadow-md shadow-[#1E6B7B]/20 cursor-pointer disabled:opacity-50"
             >
               {isSubmitted ? (
                 <>
                   <Loader2 className="w-4 h-4 animate-spin" />
-                  <span>Menyimpan Rapat &amp; Peserta...</span>
+                  <span>Menyimpan Rapat...</span>
                 </>
               ) : (
                 <>
@@ -705,8 +855,8 @@ export default function BuatRapatPage() {
               )}
             </button>
           </div>
-        </form>
-      </div>
+        </div>
+      </form>
     </div>
   );
 }
