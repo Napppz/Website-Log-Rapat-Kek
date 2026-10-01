@@ -423,7 +423,7 @@ export async function generateMeetingPdf(meeting: MeetingPdfData): Promise<Buffe
       if (discussionBlocks.length === 0) {
         doc.font(fonts.arial).fontSize(11).fillColor('#000000');
         doc.text(
-          'Rapat membahas terkait kajian dampak KEK terhadap perekonomian, adapun hasil rapat sebagaimana berikut:',
+          '-',
           leftMargin,
           doc.y,
           { width: printableWidth, align: 'justify', lineGap: 3.5 }
@@ -455,7 +455,7 @@ export async function generateMeetingPdf(meeting: MeetingPdfData): Promise<Buffe
       if (conclusionBlocks.length === 0) {
         doc.font(fonts.arial).fontSize(11).fillColor('#000000');
         doc.text(
-          '1. Berdasarkan hasil pembahasan, kajian dampak KEK perlu diarahkan untuk mengukur manfaat nyata keberadaan KEK terhadap perekonomian dan pengembangan wilayah, sekaligus mengidentifikasi faktor keberhasilan serta praktik yang dapat direplikasi di luar kawasan.',
+          '-',
           leftMargin,
           doc.y,
           { width: printableWidth, align: 'justify', lineGap: 3.5 }
@@ -503,7 +503,7 @@ export async function generateMeetingPdf(meeting: MeetingPdfData): Promise<Buffe
       } else {
         doc.font(fonts.arial).fontSize(11).fillColor('#000000');
         doc.text(
-          '1. Tim kerja akan segera melakukan pembahasan lebih lanjut untuk menajamkan desain pelaksanaan serta kebutuhan data terkait.',
+          '-',
           leftMargin,
           doc.y,
           { width: printableWidth, align: 'justify', lineGap: 3.5 }
@@ -758,14 +758,9 @@ export async function generateNotaDinasPdf(meeting: MeetingPdfData): Promise<Buf
           renderFormattedBlock(doc, block, leftMargin, printableWidth, fonts, numberPrefix);
         });
       } else {
-        // Fallback pokok pembahasan jika belum diisi khusus
-        const fallbackText =
-          extractPlainText(meeting.minutes?.agenda) ||
-          meeting.title ||
-          DEFAULT_DISCUSSION_FALLBACK;
-
+        // Pokok pembahasan belum diisi
         doc.font(fonts.arial).fontSize(11).fillColor('#000000').text(
-          `1. ${fallbackText}`,
+          '-',
           leftMargin,
           doc.y,
           { width: printableWidth, align: 'justify', lineGap: 3.5 }
@@ -792,7 +787,7 @@ export async function generateNotaDinasPdf(meeting: MeetingPdfData): Promise<Buf
         });
       } else {
         doc.font(fonts.arial).fontSize(11).fillColor('#000000').text(
-          DEFAULT_CONCLUSION_FALLBACK,
+          '-',
           leftMargin,
           doc.y,
           { width: printableWidth, align: 'justify', lineGap: 3.5 }
@@ -835,7 +830,7 @@ export async function generateNotaDinasPdf(meeting: MeetingPdfData): Promise<Buf
         });
       } else {
         doc.font(fonts.arial).fontSize(11).fillColor('#000000').text(
-          DEFAULT_ACTION_ITEM_FALLBACK,
+          '-',
           leftMargin,
           doc.y,
           { width: printableWidth, align: 'justify', lineGap: 3.5 }

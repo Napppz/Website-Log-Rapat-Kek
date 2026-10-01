@@ -71,14 +71,11 @@ export interface MeetingPdfData {
   }>;
 }
 
-export const DEFAULT_DISCUSSION_FALLBACK =
-  'Rapat membahas terkait kajian dampak KEK terhadap perekonomian, adapun hasil rapat sebagaimana berikut:';
+export const DEFAULT_DISCUSSION_FALLBACK = '-';
 
-export const DEFAULT_CONCLUSION_FALLBACK =
-  '1. Berdasarkan hasil pembahasan, kajian dampak KEK perlu diarahkan untuk mengukur manfaat nyata keberadaan KEK terhadap perekonomian dan pengembangan wilayah, sekaligus mengidentifikasi faktor keberhasilan serta praktik yang dapat direplikasi di luar kawasan.';
+export const DEFAULT_CONCLUSION_FALLBACK = '-';
 
-export const DEFAULT_ACTION_ITEM_FALLBACK =
-  '1. Tim kerja akan segera melakukan pembahasan lebih lanjut untuk menajamkan desain pelaksanaan serta kebutuhan data terkait.';
+export const DEFAULT_ACTION_ITEM_FALLBACK = '-';
 
 /**
  * Format tanggal Indonesia dengan koma (Contoh: "Jumat, 5 September 2026")

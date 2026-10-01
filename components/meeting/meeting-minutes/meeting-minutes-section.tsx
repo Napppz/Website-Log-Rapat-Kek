@@ -189,21 +189,21 @@ export function MeetingMinutesSection({
     <div className="space-y-3">
       {/* Notice if minutes is standard draft vs customized */}
       {!hasCustomMinutes && (
-        <div className="p-3 bg-[#E8F5F7] rounded-xl border border-[#BCE3EB] flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 text-[12px]">
-          <div className="flex items-center gap-2 text-[#215865]">
-            <Info className="w-4 h-4 text-[#31889C] shrink-0" />
+        <div className="p-3.5 bg-amber-50/80 rounded-xl border border-amber-200/80 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-[12px]">
+          <div className="flex items-center gap-2.5 text-amber-900">
+            <Info className="w-4 h-4 text-amber-600 shrink-0" />
             <span>
-              <strong>Draf Standar Naskah Dinas:</strong> Belum ada catatan khusus yang disimpan. Anda dapat memilih pratinjau antara <strong>Risalah Rapat</strong> atau <strong>Nota Dinas</strong> resmi, atau klik tombol tulis untuk mengisi catatan rapat.
+              <strong>Notulen Belum Diisi:</strong> Lembar naskah rapat ini masih kosong. Klik tombol di samping untuk mulai mengisi catatan pembahasan, kesimpulan, dan tindak lanjut.
             </span>
           </div>
           {canEditMinutes && (
             <button
               type="button"
               onClick={() => setMode('edit')}
-              className="inline-flex items-center gap-1 px-3 py-1 rounded-lg bg-[#31889C] hover:bg-[#266F80] text-white font-semibold text-[11px] shrink-0 transition-colors shadow-xs cursor-pointer self-start sm:self-auto"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#31889C] hover:bg-[#266F80] text-white font-semibold text-[11.5px] shrink-0 transition-colors shadow-xs cursor-pointer self-start sm:self-auto"
             >
-              <FileEdit className="w-3 h-3" />
-              <span>Tulis Notula / Nota Dinas</span>
+              <FileEdit className="w-3.5 h-3.5" />
+              <span>+ Isi Notula / Nota Dinas</span>
             </button>
           )}
         </div>

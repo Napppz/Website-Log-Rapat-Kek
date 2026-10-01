@@ -372,8 +372,9 @@ export function MeetingMinutesPreview({
               {/* 5. POKOK-POKOK PEMBAHASAN */}
               <div className="space-y-1.5 mb-4 text-justify">
                 {discussionBlocks.length === 0 ? (
-                  <div className="leading-relaxed text-black">
-                    1. {DEFAULT_DISCUSSION_FALLBACK}
+                  <div className="text-slate-400 italic text-[10.5pt] py-2 px-3 rounded-lg border border-dashed border-slate-200 bg-slate-50/50 print:border-none print:bg-transparent print:p-0">
+                    <span className="print:hidden">(Belum ada pokok-pokok pembahasan yang diisi)</span>
+                    <span className="hidden print:inline text-black not-italic">-</span>
                   </div>
                 ) : (
                   discussionBlocks.map((b, idx) => {
@@ -398,7 +399,10 @@ export function MeetingMinutesPreview({
                 </div>
                 <div className="text-justify leading-relaxed text-black">
                   {conclusionBlocks.length === 0 ? (
-                    <p>{DEFAULT_CONCLUSION_FALLBACK}</p>
+                    <div className="text-slate-400 italic text-[10.5pt] py-2 px-3 rounded-lg border border-dashed border-slate-200 bg-slate-50/50 print:border-none print:bg-transparent print:p-0">
+                      <span className="print:hidden">(Belum ada kesimpulan yang diisi)</span>
+                      <span className="hidden print:inline text-black not-italic">-</span>
+                    </div>
                   ) : (
                     conclusionBlocks.map((b, idx) => renderBlock(b, idx))
                   )}
@@ -425,7 +429,10 @@ export function MeetingMinutesPreview({
                       );
                     })
                   ) : (
-                    <p>{DEFAULT_ACTION_ITEM_FALLBACK}</p>
+                    <div className="text-slate-400 italic text-[10.5pt] py-2 px-3 rounded-lg border border-dashed border-slate-200 bg-slate-50/50 print:border-none print:bg-transparent print:p-0">
+                      <span className="print:hidden">(Belum ada tindak lanjut yang diisi)</span>
+                      <span className="hidden print:inline text-black not-italic">-</span>
+                    </div>
                   )}
                 </div>
               </div>
@@ -639,9 +646,10 @@ export function MeetingMinutesPreview({
 
               <div className="pt-1">
                 {discussionBlocks.length === 0 ? (
-                  <p className="text-justify leading-relaxed text-black">
-                    {DEFAULT_DISCUSSION_FALLBACK}
-                  </p>
+                  <div className="text-slate-400 italic text-[10.5pt] py-2 px-3 rounded-lg border border-dashed border-slate-200 bg-slate-50/50 print:border-none print:bg-transparent print:p-0">
+                    <span className="print:hidden">(Belum ada substansi pembahasan yang diisi)</span>
+                    <span className="hidden print:inline text-black not-italic">-</span>
+                  </div>
                 ) : (
                   discussionBlocks.map((b, idx) => renderBlock(b, idx))
                 )}
@@ -656,9 +664,10 @@ export function MeetingMinutesPreview({
 
               <div>
                 {conclusionBlocks.length === 0 ? (
-                  <p className="text-justify leading-relaxed text-black">
-                    {DEFAULT_CONCLUSION_FALLBACK}
-                  </p>
+                  <div className="text-slate-400 italic text-[10.5pt] py-2 px-3 rounded-lg border border-dashed border-slate-200 bg-slate-50/50 print:border-none print:bg-transparent print:p-0">
+                    <span className="print:hidden">(Belum ada kesimpulan yang diisi)</span>
+                    <span className="hidden print:inline text-black not-italic">-</span>
+                  </div>
                 ) : (
                   conclusionBlocks.map((b, idx) => {
                     const itemNum = b.type === 'ordered' && b.number ? b.number : idx + 1;
@@ -693,9 +702,10 @@ export function MeetingMinutesPreview({
                     return renderBlock(b, idx, prefix);
                   })
                 ) : (
-                  <p className="text-justify leading-relaxed text-black">
-                    {DEFAULT_ACTION_ITEM_FALLBACK}
-                  </p>
+                  <div className="text-slate-400 italic text-[10.5pt] py-2 px-3 rounded-lg border border-dashed border-slate-200 bg-slate-50/50 print:border-none print:bg-transparent print:p-0">
+                    <span className="print:hidden">(Belum ada tindak lanjut yang diisi)</span>
+                    <span className="hidden print:inline text-black not-italic">-</span>
+                  </div>
                 )}
               </div>
             </div>
