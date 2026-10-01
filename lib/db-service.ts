@@ -259,9 +259,10 @@ export async function getMeetingsFromDb(filters?: {
       const whereClause: any = {};
 
       if (filters?.biroCode) {
-        whereClause.primaryBiro = {
-          code: filters.biroCode.toUpperCase(),
-        };
+        whereClause.OR = [
+          { primaryBiro: { code: filters.biroCode.toUpperCase() } },
+          { meetingBiros: { some: { biro: { code: filters.biroCode.toUpperCase() } } } },
+        ];
       }
 
       if (filters?.status) {

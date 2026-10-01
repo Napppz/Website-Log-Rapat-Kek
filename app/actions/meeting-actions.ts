@@ -5,7 +5,7 @@ import { getNextMeetingNumber } from '@/lib/sequence';
 import { getMeetingByIdFromDb } from '@/lib/db-service';
 import { MeetingStatus, AttendanceStatus } from '@prisma/client';
 import { revalidatePath } from 'next/cache';
-import { requirePermission, requireAuth } from '@/lib/auth/authorization';
+import { requirePermission, requireAuth, getCurrentUser } from '@/lib/auth/authorization';
 import { extractPlainText } from '@/lib/pdf/pdf-utils';
 
 export interface CreateMeetingInput {
@@ -71,7 +71,17 @@ export async function getActiveUsersAction() {
 export async function createMeetingAction(input: CreateMeetingInput) {
   try {
     // Authorization Check: Must have 'create:meeting' permission (SUPER_ADMIN, ADMIN, NOTULIS)
-    await requirePermission('create:meeting');
+    const currentUser = await requirePermission('create:meeting');
+    const isPrivileged =
+      currentUser.role === 'SUPER_ADMIN' || currentUser.role === 'ADMIN';
+
+    // Bureau Scoping: Non-admin users can only create meetings for their own bureau
+    if (!isPrivileged && currentUser.biroCode && input.biroCode.toUpperCase() !== currentUser.biroCode.toUpperCase()) {
+      return {
+        success: false,
+        error: `Anda hanya dapat menjadwalkan rapat untuk biro Anda sendiri (${currentUser.biroCode}).`,
+      };
+    }
 
     const result = await prisma.$transaction(async (tx) => {
       // 1. Generate sequence atomically or use custom meetingNumber if provided (and not '-' or empty)
@@ -241,7 +251,24 @@ export async function createMeetingAction(input: CreateMeetingInput) {
 export async function updateMeetingStatusAction(meetingId: string, status: MeetingStatus) {
   try {
     // Authorization Check: Must have 'edit:meeting' permission (SUPER_ADMIN, ADMIN)
-    await requirePermission('edit:meeting');
+    const currentUser = await requirePermission('edit:meeting');
+    const isPrivileged =
+      currentUser.role === 'SUPER_ADMIN' || currentUser.role === 'ADMIN';
+
+    const existing = await prisma.meeting.findUnique({
+      where: { id: meetingId },
+      include: { primaryBiro: true },
+    });
+    if (!existing) {
+      return { success: false, error: 'Rapat tidak ditemukan.' };
+    }
+
+    if (!isPrivileged && currentUser.biroCode && existing.primaryBiro.code.toUpperCase() !== currentUser.biroCode.toUpperCase()) {
+      return {
+        success: false,
+        error: 'Anda hanya dapat memperbarui status rapat biro Anda sendiri.',
+      };
+    }
 
     const updated = await prisma.meeting.update({
       where: { id: meetingId },
@@ -270,7 +297,24 @@ export async function updateMeetingStatusAction(meetingId: string, status: Meeti
 export async function updateMeetingNumberAction(meetingId: string, newMeetingNumber: string) {
   try {
     // Authorization Check: Must have 'edit:meeting' permission (SUPER_ADMIN, ADMIN, NOTULIS)
-    await requirePermission('edit:meeting');
+    const currentUser = await requirePermission('edit:meeting');
+    const isPrivileged =
+      currentUser.role === 'SUPER_ADMIN' || currentUser.role === 'ADMIN';
+
+    const existingMeeting = await prisma.meeting.findUnique({
+      where: { id: meetingId },
+      include: { primaryBiro: true },
+    });
+    if (!existingMeeting) {
+      return { success: false, error: 'Rapat tidak ditemukan.' };
+    }
+
+    if (!isPrivileged && currentUser.biroCode && existingMeeting.primaryBiro.code.toUpperCase() !== currentUser.biroCode.toUpperCase()) {
+      return {
+        success: false,
+        error: 'Anda hanya dapat memperbarui nomor rapat biro Anda sendiri.',
+      };
+    }
 
     const trimmed = newMeetingNumber.trim();
     if (!trimmed) {
@@ -495,7 +539,9 @@ export async function removeParticipantFromMeetingAction(participantId: string) 
 export async function deleteMeetingAction(meetingId: string) {
   try {
     // Authorization Check: Must have 'delete:meeting' permission (SUPER_ADMIN, ADMIN)
-    await requirePermission('delete:meeting');
+    const currentUser = await requirePermission('delete:meeting');
+    const isPrivileged =
+      currentUser.role === 'SUPER_ADMIN' || currentUser.role === 'ADMIN';
 
     const meeting = await prisma.meeting.findUnique({
       where: { id: meetingId },
@@ -504,6 +550,13 @@ export async function deleteMeetingAction(meetingId: string) {
 
     if (!meeting) {
       throw new Error('Rapat tidak ditemukan.');
+    }
+
+    if (!isPrivileged && currentUser.biroCode && meeting.primaryBiro.code.toUpperCase() !== currentUser.biroCode.toUpperCase()) {
+      return {
+        success: false,
+        error: 'Anda hanya dapat menghapus rapat milik biro Anda sendiri.',
+      };
     }
 
     // 1. Explicitly delete child relations for maximum reliability across database drivers
@@ -540,7 +593,13 @@ export async function deleteMeetingAction(meetingId: string) {
  */
 export async function deleteAllMeetingsAction() {
   try {
-    await requirePermission('delete:meeting');
+    const currentUser = await requirePermission('delete:meeting');
+    if (currentUser.role !== 'SUPER_ADMIN') {
+      return {
+        success: false,
+        error: 'Hanya Super Admin yang berwenang untuk menghapus seluruh data rapat.',
+      };
+    }
 
     const totalCount = await prisma.meeting.count();
 
@@ -625,8 +684,25 @@ export async function linkPreviousMeetingAction(
  */
 export async function getMeetingOptionsAction(excludeMeetingId?: string) {
   try {
+    let currentUser = null;
+    try {
+      currentUser = await getCurrentUser();
+    } catch {}
+
+    const isPrivileged =
+      currentUser?.role === 'SUPER_ADMIN' || currentUser?.role === 'ADMIN';
+
+    const where: any = excludeMeetingId ? { id: { not: excludeMeetingId } } : {};
+
+    if (!isPrivileged && currentUser?.biroCode) {
+      where.OR = [
+        { primaryBiro: { code: currentUser.biroCode.toUpperCase() } },
+        { meetingBiros: { some: { biro: { code: currentUser.biroCode.toUpperCase() } } } },
+      ];
+    }
+
     const meetings = await prisma.meeting.findMany({
-      where: excludeMeetingId ? { id: { not: excludeMeetingId } } : {},
+      where,
       select: {
         id: true,
         meetingNumber: true,
@@ -656,6 +732,30 @@ export async function getMeetingDetailAction(meetingId: string) {
     if (!meeting) {
       return { success: false, error: 'Rapat tidak ditemukan' };
     }
+
+    let currentUser = null;
+    try {
+      currentUser = await getCurrentUser();
+    } catch {}
+
+    const isPrivileged =
+      currentUser?.role === 'SUPER_ADMIN' || currentUser?.role === 'ADMIN';
+
+    if (!isPrivileged && currentUser?.biroCode) {
+      const userCode = currentUser.biroCode.toUpperCase();
+      const isPrimary = meeting.primaryBiro?.code?.toUpperCase() === userCode;
+      const isInvolved = meeting.meetingBiros?.some(
+        (mb: any) => mb.biro?.code?.toUpperCase() === userCode
+      );
+
+      if (!isPrimary && !isInvolved) {
+        return {
+          success: false,
+          error: 'Anda tidak memiliki hak akses untuk melihat rapat dari biro lain.',
+        };
+      }
+    }
+
     return { success: true, data: meeting };
   } catch (error: any) {
     console.error('Error fetching meeting detail:', error);

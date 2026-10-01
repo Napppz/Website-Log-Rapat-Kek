@@ -4,7 +4,7 @@ import React, { useState } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { MeetingTable } from '@/components/meeting/meeting-table';
 import { MeetingStatus, BiroCode, Meeting } from '@/lib/types';
-import { PlusCircle, Filter, Trash2, AlertTriangle, Loader2, CheckCircle2, X, UploadCloud, Sparkles, Calendar } from 'lucide-react';
+import { PlusCircle, Filter, Trash2, AlertTriangle, Loader2, CheckCircle2, X, UploadCloud, Sparkles, Calendar, Building2 } from 'lucide-react';
 import Link from 'next/link';
 import { useSession } from 'next-auth/react';
 import { deleteAllMeetingsAction } from '@/app/actions/meeting-actions';
@@ -14,13 +14,21 @@ import { parseMonthFilterIndex, getMonthDisplayName } from '@/lib/utils';
 
 interface SemuaRapatClientProps {
   initialMeetings: Meeting[];
+  lockedBiroCode?: string;
+  currentUserBiroName?: string;
+  currentUserRole?: string;
 }
 
-export function SemuaRapatClient({ initialMeetings }: SemuaRapatClientProps) {
+export function SemuaRapatClient({
+  initialMeetings,
+  lockedBiroCode,
+  currentUserBiroName,
+  currentUserRole,
+}: SemuaRapatClientProps) {
   const searchParams = useSearchParams();
   const router = useRouter();
   const { data: session } = useSession();
-  const userRole = session?.user?.role || 'VIEWER';
+  const userRole = currentUserRole || session?.user?.role || 'VIEWER';
   const canCreate = userRole === 'SUPER_ADMIN' || userRole === 'ADMIN' || userRole === 'NOTULIS';
   const canDeleteAll = userRole === 'SUPER_ADMIN' || userRole === 'ADMIN';
 
@@ -79,22 +87,44 @@ export function SemuaRapatClient({ initialMeetings }: SemuaRapatClientProps) {
   return (
     <div className="flex flex-col gap-6">
 
+      {/* Warning banner if redirected due to unauthorized cross-bureau access */}
+      {searchParams.get('denied') === 'true' && (
+        <div className="p-4 bg-amber-50 border border-amber-200 rounded-xl flex items-center gap-3 text-amber-800 text-[13px] shadow-xs animate-in fade-in">
+          <AlertTriangle className="w-5 h-5 text-amber-600 shrink-0" />
+          <div>
+            <span className="font-bold">Akses Dibatasi: </span>
+            Anda tidak memiliki hak akses untuk membuka rapat dari biro lain. Anda telah diarahkan kembali ke daftar rapat biro Anda ({lockedBiroCode}).
+          </div>
+        </div>
+      )}
+
       {/* Header section */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 p-6 bg-white rounded-xl border border-slate-200 shadow-xs">
         <div>
-          <span className="font-semibold text-[12px] text-[#31889C] uppercase tracking-wider">
-            Manajemen Risalah
+          <span className="font-semibold text-[12px] text-[#31889C] uppercase tracking-wider flex items-center gap-1.5">
+            {lockedBiroCode ? (
+              <>
+                <Building2 className="w-3.5 h-3.5" />
+                Risalah Biro {lockedBiroCode}
+              </>
+            ) : (
+              'Manajemen Risalah Dewan KEK'
+            )}
           </span>
           <h1 className="text-[24px] font-bold text-slate-900 mt-0.5">
-            Semua Risalah Rapat KEK RI
+            {lockedBiroCode
+              ? `Semua Risalah Rapat — ${currentUserBiroName || `Biro ${lockedBiroCode}`}`
+              : 'Semua Risalah Rapat KEK RI'}
           </h1>
           <p className="text-[13px] text-slate-500 mt-1">
-            Arsip lengkap agenda, risalah keputusan, dan status tindak lanjut seluruh Biro KEK.
+            {lockedBiroCode
+              ? `Arsip lengkap agenda, risalah keputusan, dan status tindak lanjut khusus penugasan ${currentUserBiroName || `Biro ${lockedBiroCode}`}.`
+              : 'Arsip lengkap agenda, risalah keputusan, dan status tindak lanjut seluruh Biro KEK.'}
           </p>
         </div>
 
         <div className="flex flex-wrap items-center gap-2.5 shrink-0 self-start sm:self-center">
-          {/* Hapus Semua Rapat Button (SUPER_ADMIN / ADMIN) */}
+          {/* Hapus Semua Rapat Button (SUPER_ADMIN / ADMIN only) */}
           {canDeleteAll && initialMeetings.length > 0 && (
             <button
               type="button"
@@ -184,7 +214,7 @@ export function SemuaRapatClient({ initialMeetings }: SemuaRapatClientProps) {
       <MeetingTable
         initialMeetings={initialMeetings}
         filterStatus={statusParam}
-        filterBiro={biroParam}
+        filterBiro={lockedBiroCode ? (lockedBiroCode as BiroCode) : biroParam}
         filterMonth={monthParam}
       />
 

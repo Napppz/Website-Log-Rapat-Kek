@@ -56,13 +56,15 @@ export default function BuatRapatPage() {
   const searchParams = useSearchParams();
   const { data: session, status } = useSession();
   const userRole = session?.user?.role || 'VIEWER';
+  const isPrivileged = userRole === 'SUPER_ADMIN' || userRole === 'ADMIN';
+  const userBiroCode = !isPrivileged && session?.user?.biroCode ? (session.user.biroCode as BiroCode) : undefined;
   const canCreate =
     userRole === 'SUPER_ADMIN' || userRole === 'ADMIN' || userRole === 'NOTULIS';
 
   const [isUploadDialogOpen, setIsUploadDialogOpen] = useState(false);
   const [pendingMinutes, setPendingMinutes] = useState<ExtractedMeetingData | null>(null);
 
-  const [selectedBiro, setSelectedBiro] = useState<BiroCode>('IKK');
+  const [selectedBiro, setSelectedBiro] = useState<BiroCode>(userBiroCode || 'IKK');
   const [title, setTitle] = useState('');
   const [date, setDate] = useState('2026-09-25');
   const [time, setTime] = useState('09:00 - 12:00 WIB');
@@ -99,10 +101,12 @@ export default function BuatRapatPage() {
     if (paramTitle) {
       setTitle(paramTitle);
     }
-    if (paramBiro && ['BPPK', 'PKKEK', 'IKK', 'HSDMO', 'UK'].includes(paramBiro.toUpperCase())) {
+    if (userBiroCode) {
+      setSelectedBiro(userBiroCode);
+    } else if (paramBiro && ['BPPK', 'PKKEK', 'IKK', 'HSDMO', 'UK'].includes(paramBiro.toUpperCase())) {
       setSelectedBiro(paramBiro.toUpperCase() as BiroCode);
     }
-  }, [searchParams]);
+  }, [searchParams, userBiroCode]);
 
   // Handle data applied from uploaded meeting document
   const handleApplyExtractedData = (
@@ -110,7 +114,7 @@ export default function BuatRapatPage() {
     matchedUserIds: string[]
   ) => {
     setTitle(extractedData.title);
-    if (extractedData.biroCode) {
+    if (extractedData.biroCode && !userBiroCode) {
       setSelectedBiro(extractedData.biroCode as BiroCode);
     }
     setDate(extractedData.date);
@@ -403,17 +407,24 @@ export default function BuatRapatPage() {
                 <span>Biro Penyelenggara</span>
                 <span className="text-red-500">*</span>
               </label>
-              <select
-                value={selectedBiro}
-                onChange={(e) => setSelectedBiro(e.target.value as BiroCode)}
-                className="w-full px-3 py-2 h-[38px] rounded-lg border border-slate-200 bg-white text-slate-800 text-xs focus:outline-none focus:ring-2 focus:ring-[#31889C]/25 focus:border-[#31889C]"
-              >
-                {BIRO_LIST.map((biro) => (
-                  <option key={biro.code} value={biro.code}>
-                    {biro.code} — {biro.name}
-                  </option>
-                ))}
-              </select>
+              {userBiroCode ? (
+                <div className="w-full px-3 py-2 h-[38px] rounded-lg border border-[#BCE3EB] bg-[#F0F9FA] text-[#215865] font-semibold text-xs flex items-center justify-between">
+                  <span>Biro {userBiroCode}</span>
+                  <span className="text-[11px] text-slate-500 font-normal">(Terkunci sesuai akun)</span>
+                </div>
+              ) : (
+                <select
+                  value={selectedBiro}
+                  onChange={(e) => setSelectedBiro(e.target.value as BiroCode)}
+                  className="w-full px-3 py-2 h-[38px] rounded-lg border border-slate-200 bg-white text-slate-800 text-xs focus:outline-none focus:ring-2 focus:ring-[#31889C]/25 focus:border-[#31889C]"
+                >
+                  {BIRO_LIST.map((biro) => (
+                    <option key={biro.code} value={biro.code}>
+                      {biro.code} — {biro.name}
+                    </option>
+                  ))}
+                </select>
+              )}
             </div>
 
             <div>

@@ -113,10 +113,19 @@ export async function directSaveUploadedMeetingAction(
   input: DirectSaveUploadedMeetingInput
 ) {
   try {
-    await requirePermission('create:meeting');
+    const currentUser = await requirePermission('create:meeting');
     await requirePermission('create:minutes');
+    const isPrivileged =
+      currentUser.role === 'SUPER_ADMIN' || currentUser.role === 'ADMIN';
 
     const { extracted, participantUserIds = [], chairpersonId, customMeetingNumber } = input;
+
+    if (!isPrivileged && currentUser.biroCode && extracted.biroCode.toUpperCase() !== currentUser.biroCode.toUpperCase()) {
+      return {
+        success: false,
+        error: `Anda hanya dapat membuat rapat untuk biro Anda sendiri (${currentUser.biroCode}).`,
+      };
+    }
 
     const result = await prisma.$transaction(async (tx) => {
       // 1. Resolve Biro
@@ -275,7 +284,9 @@ export async function saveMinutesAndActionsToMeetingAction(
   extracted: ExtractedMeetingData
 ) {
   try {
-    await requirePermission('create:minutes');
+    const currentUser = await requirePermission('create:minutes');
+    const isPrivileged =
+      currentUser.role === 'SUPER_ADMIN' || currentUser.role === 'ADMIN';
 
     const meeting = await prisma.meeting.findUnique({
       where: { id: meetingId },
@@ -284,6 +295,13 @@ export async function saveMinutesAndActionsToMeetingAction(
 
     if (!meeting) {
       return { success: false, error: 'Rapat tidak ditemukan.' };
+    }
+
+    if (!isPrivileged && currentUser.biroCode && meeting.primaryBiro.code.toUpperCase() !== currentUser.biroCode.toUpperCase()) {
+      return {
+        success: false,
+        error: 'Anda hanya dapat mengaitkan notula/tindak lanjut untuk rapat biro Anda sendiri.',
+      };
     }
 
     // 1. Upsert Meeting Minutes

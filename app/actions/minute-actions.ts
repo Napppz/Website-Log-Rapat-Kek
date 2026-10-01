@@ -32,7 +32,9 @@ export async function getMeetingMinutesAction(meetingId: string) {
 export async function upsertMeetingMinutesAction(input: MeetingMinutesInput) {
   try {
     // Authorization Check: Must have 'create:minutes' permission (SUPER_ADMIN, ADMIN, NOTULIS)
-    await requirePermission('create:minutes');
+    const currentUser = await requirePermission('create:minutes');
+    const isPrivileged =
+      currentUser.role === 'SUPER_ADMIN' || currentUser.role === 'ADMIN';
 
     // 1. Zod Validation
     const parsed = meetingMinutesSchema.safeParse(input);
@@ -51,6 +53,14 @@ export async function upsertMeetingMinutesAction(input: MeetingMinutesInput) {
 
     if (!meeting) {
       return { success: false, error: 'Rapat tidak ditemukan.' };
+    }
+
+    // Bureau Scoping: Non-admin users cannot manage minutes for meetings of other bureaus
+    if (!isPrivileged && currentUser.biroCode && meeting.primaryBiro.code.toUpperCase() !== currentUser.biroCode.toUpperCase()) {
+      return {
+        success: false,
+        error: 'Anda hanya dapat mengelola notula/nota dinas untuk rapat biro Anda sendiri.',
+      };
     }
 
     // Merge docType and notaDinas into conclusion JSON payload if provided
@@ -87,13 +97,6 @@ export async function upsertMeetingMinutesAction(input: MeetingMinutesInput) {
     });
 
     // 5. Record audit trail history & create notification
-    let currentUser: any = null;
-    try {
-      currentUser = await requireAuth();
-    } catch {
-      // Safe fallback if called in automated contexts
-    }
-
     if (currentUser) {
       const isNotaDinas = docType === 'NOTA_DINAS';
       const docLabel = isNotaDinas ? 'Nota Dinas' : 'Notulen Rapat';
