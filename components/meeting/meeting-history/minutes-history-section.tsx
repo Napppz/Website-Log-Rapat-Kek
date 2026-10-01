@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import React, { useState, useEffect, useCallback } from 'react';
 import {
@@ -117,15 +117,84 @@ function truncateText(text: string, max = 120) {
   return text.slice(0, max) + '...';
 }
 
-function renderJsonValue(val: any): string {
-  if (!val) return '-';
-  if (typeof val === 'string') return truncateText(val);
-  if (typeof val === 'object') {
-    const str = JSON.stringify(val);
-    return truncateText(str);
+
+/** Extract plain text from ProseMirror/TipTap rich text JSON node */
+function extractNodeText(node: any): string {
+  if (!node) return '';
+  if (typeof node === 'string') return node;
+  // If it's already a plain string value in an object
+  if (typeof node === 'object' && node.type === 'text' && typeof node.text === 'string') {
+    return node.text;
   }
-  return String(val);
+  // ProseMirror doc/block node — recurse into content
+  if (typeof node === 'object' && Array.isArray(node.content)) {
+    return node.content.map(extractNodeText).join('');
+  }
+  if (typeof node === 'object' && node.type === 'doc') {
+    return extractNodeText(node.content);
+  }
+  return '';
 }
+
+/** Extract all text paragraphs from a ProseMirror doc-level field */
+function extractFieldText(field: any): string {
+  if (!field) return '-';
+  if (typeof field === 'string') return truncateText(field);
+  // ProseMirror: {type:"doc", content:[{type:"paragraph",...}]}
+  if (typeof field === 'object' && field.type === 'doc' && Array.isArray(field.content)) {
+    const lines = field.content
+      .map((block: any) => {
+        if (block.type === 'paragraph' || block.type === 'bulletList' || block.type === 'orderedList') {
+          // Recurse into list items or paragraph
+          if (Array.isArray(block.content)) {
+            return block.content.map(extractNodeText).join('');
+          }
+        }
+        return extractNodeText(block);
+      })
+      .filter(Boolean);
+    return truncateText(lines.join(' · ') || '-');
+  }
+  return '-';
+}
+
+const SECTION_DISPLAY_LABELS: Record<string, string> = {
+  agenda: '📋 Agenda',
+  discussion: '💬 Pembahasan',
+  decisions: '✅ Keputusan',
+  conclusion: '📝 Kesimpulan',
+};
+
+/**
+ * Render history value: if it's a minutes snapshot object, show each section as labelled plain text.
+ * Otherwise fall back to truncated string.
+ */
+function renderHistoryValue(val: any): { sections: { label: string; text: string }[] } | { plain: string } {
+  if (!val) return { plain: '-' };
+  if (typeof val === 'string') return { plain: truncateText(val) };
+  if (typeof val === 'object') {
+    // Check if it's a minutes snapshot (has agenda/discussion/decisions keys)
+    const knownKeys = ['agenda', 'discussion', 'decisions', 'conclusion'];
+    const hasMinutesKeys = knownKeys.some((k) => k in val);
+    if (hasMinutesKeys) {
+      const sections = knownKeys
+        .filter((k) => val[k] !== undefined && val[k] !== null)
+        .map((k) => ({
+          label: SECTION_DISPLAY_LABELS[k] || k,
+          text: extractFieldText(val[k]),
+        }))
+        .filter((s) => s.text && s.text !== '-');
+      if (sections.length > 0) return { sections };
+    }
+    // Fallback: simple key-value
+    const entries = Object.entries(val)
+      .map(([k, v]) => `${k}: ${typeof v === 'string' ? truncateText(v) : JSON.stringify(v).slice(0, 60)}`)
+      .join(' | ');
+    return { plain: truncateText(entries) };
+  }
+  return { plain: String(val) };
+}
+
 
 interface HistoryItemProps {
   entry: any;
@@ -208,17 +277,56 @@ function HistoryItem({ entry }: HistoryItemProps) {
               </button>
 
               {expanded && (
-                <div className="mt-3 grid grid-cols-2 gap-3">
-                  <div>
-                    <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-wide mb-1.5">Sebelum</p>
-                    <div className="bg-rose-50 border border-rose-200 rounded-lg px-3 py-2 text-[12px] text-rose-700 font-mono whitespace-pre-wrap break-words">
-                      {renderJsonValue(entry.oldValue)}
+                <div className="mt-3 space-y-3">
+                  {/* Render side-by-side if both values exist */}
+                  <div className="grid grid-cols-2 gap-3">
+                    {/* SEBELUM */}
+                    <div>
+                      <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-wide mb-1.5">Sebelum</p>
+                      {(() => {
+                        const result = renderHistoryValue(entry.oldValue);
+                        if ('sections' in result) {
+                          return (
+                            <div className="bg-rose-50 border border-rose-200 rounded-lg p-3 space-y-2">
+                              {result.sections.map((s, i) => (
+                                <div key={i}>
+                                  <span className="text-[10px] font-semibold text-rose-500 block mb-0.5">{s.label}</span>
+                                  <p className="text-[12px] text-rose-800 leading-relaxed">{s.text || '-'}</p>
+                                </div>
+                              ))}
+                            </div>
+                          );
+                        }
+                        return (
+                          <div className="bg-rose-50 border border-rose-200 rounded-lg px-3 py-2 text-[12px] text-rose-700">
+                            {result.plain}
+                          </div>
+                        );
+                      })()}
                     </div>
-                  </div>
-                  <div>
-                    <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-wide mb-1.5">Sesudah</p>
-                    <div className="bg-emerald-50 border border-emerald-200 rounded-lg px-3 py-2 text-[12px] text-emerald-700 font-mono whitespace-pre-wrap break-words">
-                      {renderJsonValue(entry.newValue)}
+                    {/* SESUDAH */}
+                    <div>
+                      <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-wide mb-1.5">Sesudah</p>
+                      {(() => {
+                        const result = renderHistoryValue(entry.newValue);
+                        if ('sections' in result) {
+                          return (
+                            <div className="bg-emerald-50 border border-emerald-200 rounded-lg p-3 space-y-2">
+                              {result.sections.map((s, i) => (
+                                <div key={i}>
+                                  <span className="text-[10px] font-semibold text-emerald-600 block mb-0.5">{s.label}</span>
+                                  <p className="text-[12px] text-emerald-800 leading-relaxed">{s.text || '-'}</p>
+                                </div>
+                              ))}
+                            </div>
+                          );
+                        }
+                        return (
+                          <div className="bg-emerald-50 border border-emerald-200 rounded-lg px-3 py-2 text-[12px] text-emerald-700">
+                            {result.plain}
+                          </div>
+                        );
+                      })()}
                     </div>
                   </div>
                 </div>
