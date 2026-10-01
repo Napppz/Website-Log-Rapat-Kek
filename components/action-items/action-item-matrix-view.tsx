@@ -19,6 +19,7 @@ import {
   Check,
   PlayCircle,
   FileSpreadsheet,
+  FileText,
   Loader2,
   History,
 } from 'lucide-react';
@@ -81,6 +82,7 @@ export function ActionItemMatrixView({
   const [loggingItem, setLoggingItem] = useState<ActionItem | null>(null);
   const [updatingStatusId, setUpdatingStatusId] = useState<string | null>(null);
   const [isExporting, setIsExporting] = useState(false);
+  const [isExportingDocx, setIsExportingDocx] = useState(false);
 
   /**
    * Export Excel — uses the same active filters as the visible table.
@@ -123,6 +125,49 @@ export function ActionItemMatrixView({
       toast.error(`Terjadi kesalahan saat mengekspor: ${err?.message ?? 'Error tidak diketahui'}`);
     } finally {
       setIsExporting(false);
+    }
+  };
+
+  /**
+   * Export Word (.docx) — same active filters as the visible table.
+   */
+  const handleExportDocx = async () => {
+    try {
+      setIsExportingDocx(true);
+      const params = new URLSearchParams();
+      if (statusParam && statusParam !== 'ALL') params.set('status', statusParam);
+      const effectiveBiro = lockedBiroCode || selectedBiro;
+      if (effectiveBiro && effectiveBiro !== 'ALL') params.set('biro', effectiveBiro);
+      if (search.trim()) params.set('search', search.trim());
+
+      const url = `/api/action-items/export-docx?${params.toString()}`;
+      const res = await fetch(url);
+
+      if (res.status === 401) {
+        toast.warning('Sesi Anda telah berakhir. Silakan masuk kembali ke sistem.');
+        return;
+      }
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({}));
+        toast.error(`Gagal mengekspor Word: ${body?.error ?? 'Terjadi kesalahan server.'}`);
+        return;
+      }
+
+      const blob = await res.blob();
+      const disposition = res.headers.get('Content-Disposition') ?? '';
+      const match = disposition.match(/filename="([^"]+)"/);
+      const filename = match?.[1] ?? 'Matriks-Tindak-Lanjut.docx';
+
+      const anchor = document.createElement('a');
+      anchor.href = URL.createObjectURL(blob);
+      anchor.download = filename;
+      anchor.click();
+      URL.revokeObjectURL(anchor.href);
+      toast.success(`Dokumen Word "${filename}" berhasil diekspor.`);
+    } catch (err: any) {
+      toast.error(`Terjadi kesalahan saat mengekspor Word: ${err?.message ?? 'Error tidak diketahui'}`);
+    } finally {
+      setIsExportingDocx(false);
     }
   };
 
@@ -364,22 +409,41 @@ export function ActionItemMatrixView({
             <Search className="w-3.5 h-3.5 absolute left-2.5 top-2.5 text-[#31889C] pointer-events-none" />
           </div>
 
-          {/* Export Excel button */}
-          <button
-            type="button"
-            id="export-excel-btn"
-            onClick={handleExportExcel}
-            disabled={isExporting}
-            className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg bg-[#7CC563] hover:bg-[#68ab50] disabled:opacity-50 text-white font-semibold text-[12px] shadow-xs transition-all cursor-pointer shrink-0"
-            title="Export data tindak lanjut sesuai filter aktif ke Excel"
-          >
-            {isExporting ? (
-              <Loader2 className="w-3.5 h-3.5 animate-spin" />
-            ) : (
-              <FileSpreadsheet className="w-3.5 h-3.5" />
-            )}
-            <span>{isExporting ? 'Mengekspor...' : 'Export Excel'}</span>
-          </button>
+          {/* Export buttons group */}
+          <div className="flex items-center gap-1.5">
+            {/* Export Excel */}
+            <button
+              type="button"
+              id="export-excel-btn"
+              onClick={handleExportExcel}
+              disabled={isExporting || isExportingDocx}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-l-lg bg-[#7CC563] hover:bg-[#68ab50] disabled:opacity-50 text-white font-semibold text-[12px] shadow-xs transition-all cursor-pointer shrink-0"
+              title="Export data tindak lanjut sesuai filter aktif ke Excel (.xlsx)"
+            >
+              {isExporting ? (
+                <Loader2 className="w-3.5 h-3.5 animate-spin" />
+              ) : (
+                <FileSpreadsheet className="w-3.5 h-3.5" />
+              )}
+              <span className="hidden sm:inline">{isExporting ? 'Excel...' : 'Excel'}</span>
+            </button>
+            {/* Export Word */}
+            <button
+              type="button"
+              id="export-docx-btn"
+              onClick={handleExportDocx}
+              disabled={isExporting || isExportingDocx}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-r-lg bg-[#2B5ED8] hover:bg-[#1e4ab8] disabled:opacity-50 text-white font-semibold text-[12px] shadow-xs transition-all cursor-pointer shrink-0"
+              title="Export data tindak lanjut sesuai filter aktif ke Microsoft Word (.docx)"
+            >
+              {isExportingDocx ? (
+                <Loader2 className="w-3.5 h-3.5 animate-spin" />
+              ) : (
+                <FileText className="w-3.5 h-3.5" />
+              )}
+              <span className="hidden sm:inline">{isExportingDocx ? 'Word...' : 'Word'}</span>
+            </button>
+          </div>
 
           {/* New Action Item Trigger */}
           {availableMeetings.length > 0 && (

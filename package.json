@@ -21,6 +21,7 @@
     "@types/pdfkit": "^0.17.6",
     "bcryptjs": "^3.0.3",
     "clsx": "^2.1.1",
+    "docx": "^9.8.1",
     "exceljs": "^4.4.0",
     "lucide-react": "^1.47.0",
     "mammoth": "^1.13.0",
