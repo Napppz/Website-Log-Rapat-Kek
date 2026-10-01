@@ -504,23 +504,19 @@ export function MeetingTable({
                         const seriesInfo = meetingSeriesMap.get(meeting.id);
                         return (
                           <div className="flex flex-col gap-1.5">
-                            <button
-                              type="button"
-                              onClick={() => {
-                                setSeriesModalMeetingId(meeting.id);
-                                setIsSeriesModalOpen(true);
-                              }}
-                              className="text-left font-bold text-[14px] text-slate-900 hover:text-[#31889C] transition-colors line-clamp-2 cursor-pointer group-hover:text-[#31889C]"
-                              title="Klik untuk melihat seluruh rangkaian rapat terkait agenda ini"
+                            <Link
+                              href={`/semua-rapat/${meeting.id}`}
+                              className="text-left font-bold text-[14px] text-slate-900 hover:text-[#31889C] hover:underline transition-colors line-clamp-2 cursor-pointer group-hover:text-[#31889C]"
+                              title="Buka rincian lengkap rapat ini"
                             >
                               {meeting.title}
-                            </button>
+                            </Link>
                             <div className="flex items-center gap-2 flex-wrap text-slate-500">
                               <div className="flex items-center gap-1 text-[12px]">
                                 <MapPin className="w-3.5 h-3.5 text-[#31889C] shrink-0" />
                                 <span className="line-clamp-1">{meeting.location}</span>
                               </div>
-                              {seriesInfo && seriesInfo.total > 1 && (
+                              {seriesInfo && seriesInfo.total > 1 ? (
                                 <button
                                   type="button"
                                   onClick={(e) => {
@@ -533,6 +529,20 @@ export function MeetingTable({
                                 >
                                   <Layers className="w-3 h-3 text-[#31889C]" />
                                   <span>Rapat Ke-{seriesInfo.index} dari {seriesInfo.total} Sesi</span>
+                                </button>
+                              ) : (
+                                <button
+                                  type="button"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    setSeriesModalMeetingId(meeting.id);
+                                    setIsSeriesModalOpen(true);
+                                  }}
+                                  className="inline-flex items-center gap-1 text-[11px] text-slate-400 hover:text-[#31889C] transition-colors cursor-pointer opacity-70 hover:opacity-100"
+                                  title="Periksa rangkaian atau hubungan agenda rapat ini"
+                                >
+                                  <Layers className="w-3 h-3 text-[#31889C]" />
+                                  <span>Rangkaian Rapat</span>
                                 </button>
                               )}
                             </div>
@@ -576,7 +586,7 @@ export function MeetingTable({
                           type="button"
                           onClick={() => setSelectedMeeting(meeting)}
                           className="p-1.5 rounded-lg text-[#31889C] hover:bg-[#F0F9FA] transition-colors cursor-pointer"
-                          title="Lihat Detail"
+                          title="Pratinjau Cepat Risalah (Modal)"
                         >
                           <Eye className="w-4 h-4" />
                         </button>

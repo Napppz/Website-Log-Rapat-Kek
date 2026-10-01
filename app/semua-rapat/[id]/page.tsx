@@ -10,10 +10,12 @@ export const revalidate = 0;
 
 interface MeetingDetailPageProps {
   params: Promise<{ id: string }>;
+  searchParams?: Promise<{ tab?: string }>;
 }
 
-export default async function MeetingDetailPage({ params }: MeetingDetailPageProps) {
+export default async function MeetingDetailPage({ params, searchParams }: MeetingDetailPageProps) {
   const { id } = await params;
+  const resolvedSearchParams = searchParams ? await searchParams : {};
   const currentUser = await getCurrentUser();
   const isPrivileged =
     currentUser?.role === 'SUPER_ADMIN' || currentUser?.role === 'ADMIN';
@@ -66,6 +68,7 @@ export default async function MeetingDetailPage({ params }: MeetingDetailPagePro
       meeting={meeting}
       availableBiros={biros}
       availableUsers={users}
+      initialTab={resolvedSearchParams.tab}
     />
   );
 }

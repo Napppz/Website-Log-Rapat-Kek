@@ -61,7 +61,48 @@ interface MeetingDetailViewProps {
   meeting: any;
   availableBiros?: any[];
   availableUsers?: any[];
+  initialTab?: string;
 }
+
+type TabType = 'overview' | 'participants' | 'minutes' | 'actionItems' | 'comments' | 'history';
+const VALID_TABS: TabType[] = ['overview', 'participants', 'minutes', 'actionItems', 'comments', 'history'];
+
+const MEETING_WORKFLOW: {
+  key: MeetingStatus;
+  step: number;
+  label: string;
+  sublabel: string;
+  description: string;
+}[] = [
+  {
+    key: 'DRAFT',
+    step: 1,
+    label: 'Draf',
+    sublabel: 'Penyusunan',
+    description: 'Penyusunan naskah risalah awal oleh notulis rapat',
+  },
+  {
+    key: 'REVIEW',
+    step: 2,
+    label: 'Reviu',
+    sublabel: 'Penelaahan',
+    description: 'Pemeriksaan substansi oleh biro terkait / tim perumus',
+  },
+  {
+    key: 'APPROVED',
+    step: 3,
+    label: 'Disetujui',
+    sublabel: 'Validasi',
+    description: 'Substansi risalah telah divalidasi pimpinan sidang',
+  },
+  {
+    key: 'FINAL',
+    step: 4,
+    label: 'Final',
+    sublabel: 'Diterbitkan',
+    description: 'Naskah resmi berkekuatan tetap, siap didistribusikan & ditindaklanjuti',
+  },
+];
 
 const ATTENDANCE_OPTIONS: {
   value: AttendanceStatus;
@@ -109,6 +150,7 @@ export function MeetingDetailView({
   meeting,
   availableBiros = [],
   availableUsers = [],
+  initialTab,
 }: MeetingDetailViewProps) {
   const router = useRouter();
   const { data: session } = useSession();
@@ -118,7 +160,20 @@ export function MeetingDetailView({
   const canManageParticipants =
     userRole === 'SUPER_ADMIN' || userRole === 'ADMIN' || userRole === 'NOTULIS';
 
-  const [activeTab, setActiveTab] = useState<'overview' | 'participants' | 'minutes' | 'actionItems' | 'comments' | 'history'>('overview');
+  const defaultTab: TabType = (initialTab && VALID_TABS.includes(initialTab as TabType))
+    ? (initialTab as TabType)
+    : (meeting.minutes ? 'minutes' : 'overview');
+
+  const [activeTab, setActiveTab] = useState<TabType>(defaultTab);
+
+  const handleTabChange = (tab: TabType) => {
+    setActiveTab(tab);
+    if (typeof window !== 'undefined') {
+      const url = new URL(window.location.href);
+      url.searchParams.set('tab', tab);
+      window.history.replaceState(null, '', url.toString());
+    }
+  };
   const [isDeleting, setIsDeleting] = useState(false);
   const [isUpdatingStatus, setIsUpdatingStatus] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
@@ -247,12 +302,26 @@ export function MeetingDetailView({
   };
 
   const handleStatusChange = async (newStatus: MeetingStatus) => {
+    if (status === newStatus || isUpdatingStatus) return;
+
+    if (newStatus === 'FINAL') {
+      const confirmed = await confirmModal({
+        title: `Finalisasi Risalah Rapat ${currentMeetingNumber}?`,
+        message:
+          'Mengubah status menjadi FINAL menandakan bahwa naskah risalah telah sah dan disetujui sepenuhnya oleh pimpinan sidang. Lanjutkan?',
+        confirmText: 'Ya, Finalkan Risalah',
+        variant: 'primary',
+      });
+      if (!confirmed) return;
+    }
+
     try {
       setIsUpdatingStatus(true);
       const res = await updateMeetingStatusAction(meeting.id, newStatus);
       if (res.success) {
         setStatus(newStatus);
-        toast.success(`Status rapat ${meeting.meetingNumber} berhasil diperbarui ke ${newStatus}.`);
+        const targetWf = MEETING_WORKFLOW.find((w) => w.key === newStatus);
+        toast.success(`Status rapat berhasil diperbarui ke tahap ${targetWf?.label || newStatus}.`);
         router.refresh();
       } else {
         toast.error(res.error || 'Gagal mengubah status');
@@ -567,28 +636,72 @@ export function MeetingDetailView({
             )}
             <MeetingStatusBadge status={status} />
           </div>
+        </div>
 
-          {/* Quick Status Update (SUPER_ADMIN, ADMIN) */}
-          {canEditMeeting && (
-            <div className="flex items-center gap-1.5 bg-[#F8FAFC] p-1.5 rounded-xl border border-slate-200">
-              <span className="text-[11px] font-bold text-slate-600 px-1.5 hidden sm:inline">Ubah Status:</span>
-              {(['DRAFT', 'REVIEW', 'APPROVED', 'FINAL'] as MeetingStatus[]).map((st) => (
-                <button
-                  key={st}
-                  type="button"
-                  disabled={status === st || isUpdatingStatus}
-                  onClick={() => handleStatusChange(st)}
-                  className={`px-2.5 py-1 rounded-md text-[11px] font-bold transition-all cursor-pointer ${
-                    status === st
-                      ? 'bg-[#31889C] text-white shadow-xs'
-                      : 'bg-white hover:bg-[#F0F9FA] text-slate-700 border border-slate-200'
-                  }`}
-                >
-                  {st}
-                </button>
-              ))}
+        {/* Alur Siklus Risalah Stepper */}
+        <div className="bg-[#F8FAFC] rounded-xl p-3.5 border border-slate-200">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-2.5">
+            <div className="flex items-center gap-2">
+              <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">
+                Alur Siklus Risalah Rapat:
+              </span>
+              <MeetingStatusBadge status={status} />
             </div>
-          )}
+            {canEditMeeting && (
+              <span className="text-[11px] text-slate-500 italic">
+                {isUpdatingStatus ? 'Memperbarui status...' : 'Klik tahapan untuk memperbarui status'}
+              </span>
+            )}
+          </div>
+
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+            {MEETING_WORKFLOW.map((wf, idx) => {
+              const currentIdx = MEETING_WORKFLOW.findIndex((w) => w.key === status);
+              const isCurrent = wf.key === status;
+              const isPassed = idx < currentIdx;
+
+              return (
+                <button
+                  key={wf.key}
+                  type="button"
+                  disabled={!canEditMeeting || isCurrent || isUpdatingStatus}
+                  onClick={() => handleStatusChange(wf.key)}
+                  className={`flex items-center gap-2.5 p-2 rounded-lg border text-left transition-all ${
+                    isCurrent
+                      ? 'bg-[#31889C] text-white border-[#215865] shadow-xs ring-2 ring-[#31889C]/30'
+                      : isPassed
+                      ? 'bg-[#ECF8E9] text-[#215865] border-[#D2EFCA] hover:bg-[#D2EFCA]/50'
+                      : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50'
+                  } ${
+                    canEditMeeting && !isCurrent
+                      ? 'cursor-pointer hover:border-[#31889C]'
+                      : 'cursor-default'
+                  }`}
+                  title={`${wf.label}: ${wf.description}${canEditMeeting && !isCurrent ? ' (Klik untuk ubah status)' : ''}`}
+                >
+                  <div
+                    className={`w-6 h-6 rounded-full flex items-center justify-center text-[11px] font-bold shrink-0 ${
+                      isCurrent
+                        ? 'bg-white text-[#31889C]'
+                        : isPassed
+                        ? 'bg-[#7CC563] text-white'
+                        : 'bg-slate-200 text-slate-600'
+                    }`}
+                  >
+                    {isPassed ? <Check className="w-3.5 h-3.5 stroke-[3]" /> : wf.step}
+                  </div>
+                  <div className="min-w-0">
+                    <p className={`text-[12px] font-bold truncate ${isCurrent ? 'text-white' : 'text-slate-800'}`}>
+                      {wf.label}
+                    </p>
+                    <p className={`text-[10px] truncate ${isCurrent ? 'text-[#E8F5F7]' : isPassed ? 'text-[#4D8F3D]' : 'text-slate-400'}`}>
+                      {wf.sublabel}
+                    </p>
+                  </div>
+                </button>
+              );
+            })}
+          </div>
         </div>
 
         <div>
@@ -805,24 +918,42 @@ export function MeetingDetailView({
       )}
 
       {/* Tabs Navigation */}
-      <div className="flex items-center gap-2 border-b border-slate-200 pb-0">
+      <div className="flex items-center gap-2 border-b border-slate-200 pb-0 overflow-x-auto">
         <button
           type="button"
-          onClick={() => setActiveTab('overview')}
-          className={`flex items-center gap-2 px-5 py-3 font-bold text-[13px] border-b-2 transition-all cursor-pointer ${
-            activeTab === 'overview'
+          onClick={() => handleTabChange('minutes')}
+          className={`flex items-center gap-2 px-5 py-3 font-bold text-[13px] border-b-2 transition-all cursor-pointer whitespace-nowrap ${
+            activeTab === 'minutes'
               ? 'border-[#31889C] text-[#31889C] bg-[#F0F9FA] rounded-t-lg'
               : 'border-transparent text-slate-600 hover:text-[#31889C] hover:bg-[#F0F9FA]/50'
           }`}
         >
-          <Layers className="w-4 h-4" />
-          <span>Informasi Rapat</span>
+          <FileText className="w-4 h-4" />
+          <span>Notulen / Nota Dinas</span>
+          {meeting.minutes ? (
+            <span className="w-2 h-2 rounded-full bg-[#7CC563]" title="Naskah rapat telah terisi" />
+          ) : (
+            <span className="text-[10px] px-1.5 py-0.5 bg-amber-50 text-amber-700 border border-amber-200 rounded font-semibold">Kosong</span>
+          )}
         </button>
 
         <button
           type="button"
-          onClick={() => setActiveTab('participants')}
-          className={`flex items-center gap-2 px-5 py-3 font-bold text-[13px] border-b-2 transition-all cursor-pointer ${
+          onClick={() => handleTabChange('actionItems')}
+          className={`flex items-center gap-2 px-5 py-3 font-bold text-[13px] border-b-2 transition-all cursor-pointer whitespace-nowrap ${
+            activeTab === 'actionItems'
+              ? 'border-[#31889C] text-[#31889C] bg-[#F0F9FA] rounded-t-lg'
+              : 'border-transparent text-slate-600 hover:text-[#31889C] hover:bg-[#F0F9FA]/50'
+          }`}
+        >
+          <CheckSquare className="w-4 h-4" />
+          <span>Tindak Lanjut ({meeting.actionItems ? meeting.actionItems.length : 0})</span>
+        </button>
+
+        <button
+          type="button"
+          onClick={() => handleTabChange('participants')}
+          className={`flex items-center gap-2 px-5 py-3 font-bold text-[13px] border-b-2 transition-all cursor-pointer whitespace-nowrap ${
             activeTab === 'participants'
               ? 'border-[#31889C] text-[#31889C] bg-[#F0F9FA] rounded-t-lg'
               : 'border-transparent text-slate-600 hover:text-[#31889C] hover:bg-[#F0F9FA]/50'
@@ -834,36 +965,21 @@ export function MeetingDetailView({
 
         <button
           type="button"
-          onClick={() => setActiveTab('minutes')}
-          className={`flex items-center gap-2 px-5 py-3 font-bold text-[13px] border-b-2 transition-all cursor-pointer ${
-            activeTab === 'minutes'
+          onClick={() => handleTabChange('overview')}
+          className={`flex items-center gap-2 px-5 py-3 font-bold text-[13px] border-b-2 transition-all cursor-pointer whitespace-nowrap ${
+            activeTab === 'overview'
               ? 'border-[#31889C] text-[#31889C] bg-[#F0F9FA] rounded-t-lg'
               : 'border-transparent text-slate-600 hover:text-[#31889C] hover:bg-[#F0F9FA]/50'
           }`}
         >
-          <FileText className="w-4 h-4" />
-          <span>Notulen / Nota Dinas</span>
-          {meeting.minutes && (
-            <span className="w-2 h-2 rounded-full bg-[#7CC563]" title="Naskah rapat telah terisi" />
-          )}
+          <Layers className="w-4 h-4" />
+          <span>Informasi Rapat</span>
         </button>
 
         <button
           type="button"
-          onClick={() => setActiveTab('actionItems')}
-          className={`flex items-center gap-2 px-5 py-3 font-bold text-[13px] border-b-2 transition-all cursor-pointer ${
-            activeTab === 'actionItems'
-              ? 'border-[#31889C] text-[#31889C] bg-[#F0F9FA] rounded-t-lg'
-              : 'border-transparent text-slate-600 hover:text-[#31889C] hover:bg-[#F0F9FA]/50'
-          }`}
-        >
-          <CheckSquare className="w-4 h-4" />
-          <span>Tindak Lanjut ({meeting.actionItems ? meeting.actionItems.length : 0})</span>
-        </button>
-        <button
-          type="button"
-          onClick={() => setActiveTab('comments')}
-          className={`flex items-center gap-2 px-5 py-3 font-bold text-[13px] border-b-2 transition-all cursor-pointer ${
+          onClick={() => handleTabChange('comments')}
+          className={`flex items-center gap-2 px-5 py-3 font-bold text-[13px] border-b-2 transition-all cursor-pointer whitespace-nowrap ${
             activeTab === 'comments'
               ? 'border-[#31889C] text-[#31889C] bg-[#F0F9FA] rounded-t-lg'
               : 'border-transparent text-slate-600 hover:text-[#31889C] hover:bg-[#F0F9FA]/50'
@@ -875,15 +991,15 @@ export function MeetingDetailView({
 
         <button
           type="button"
-          onClick={() => setActiveTab('history')}
-          className={`flex items-center gap-2 px-5 py-3 font-bold text-[13px] border-b-2 transition-all cursor-pointer ${
+          onClick={() => handleTabChange('history')}
+          className={`flex items-center gap-2 px-5 py-3 font-bold text-[13px] border-b-2 transition-all cursor-pointer whitespace-nowrap ${
             activeTab === 'history'
               ? 'border-[#31889C] text-[#31889C] bg-[#F0F9FA] rounded-t-lg'
               : 'border-transparent text-slate-600 hover:text-[#31889C] hover:bg-[#F0F9FA]/50'
           }`}
         >
           <History className="w-4 h-4" />
-          <span>Riwayat</span>
+          <span>Riwayat Perubahan</span>
         </button>
       </div>
 
@@ -909,7 +1025,7 @@ export function MeetingDetailView({
               </div>
               <button
                 type="button"
-                onClick={() => setActiveTab('minutes')}
+                onClick={() => handleTabChange('minutes')}
                 className="px-4 py-2 rounded-lg bg-[#31889C] hover:bg-[#266F80] text-white font-semibold text-[12px] transition-all shrink-0 cursor-pointer shadow-xs"
               >
                 {meeting.minutes ? 'Buka Notulen Rapat' : '+ Buat Notulen Sekarang'}
@@ -930,7 +1046,7 @@ export function MeetingDetailView({
               </div>
               <button
                 type="button"
-                onClick={() => setActiveTab('actionItems')}
+                onClick={() => handleTabChange('actionItems')}
                 className="px-4 py-2 rounded-lg bg-white border border-[#BCE3EB] hover:bg-[#E8F5F7] text-[#215865] font-semibold text-[12px] transition-all shrink-0 cursor-pointer shadow-xs"
               >
                 {meeting.actionItems && meeting.actionItems.length > 0
