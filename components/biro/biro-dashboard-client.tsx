@@ -6,12 +6,19 @@ import { useRouter } from 'next/navigation';
 import {
   Building2,
   Calendar,
+  CalendarDays,
   ArrowLeft,
   Users,
   ShieldAlert,
   ArrowRight,
   Sparkles,
+  PlusCircle,
+  CheckSquare,
+  Download,
+  Loader2,
 } from 'lucide-react';
+import { useSession } from 'next-auth/react';
+import { toast } from '@/components/providers/toast-provider';
 import { BiroCode, Meeting, DashboardMetric, FollowUpStatusMetric, MonthlyActivity } from '@/lib/types';
 import { BIRO_LIST } from '@/lib/mock-data';
 import { StatsOverview } from '@/components/dashboard/stats-overview';
@@ -82,8 +89,71 @@ export function BiroDashboardClient({
   deniedNotice = false,
 }: BiroDashboardClientProps) {
   const router = useRouter();
+  const { data: session } = useSession();
   const [selectedYear, setSelectedYear] = useState<number>(2026);
   const [selectedMonth, setSelectedMonth] = useState<string | null>(null);
+  const [isDownloadingReport, setIsDownloadingReport] = useState(false);
+
+  const currentUser = session?.user;
+  const userName = currentUser?.name || 'Pejabat Biro';
+  const userRole = (currentUser?.role as string) || (isPrivileged ? 'ADMIN' : 'STAFF');
+
+  const roleLabelMap: Record<string, { label: string; badgeClass: string }> = {
+    SUPER_ADMIN: {
+      label: 'Super Admin Dewan',
+      badgeClass: 'bg-[#E8F5F7] text-[#31889C] border-[#BCE3EB]',
+    },
+    ADMIN: {
+      label: 'Administrator Biro',
+      badgeClass: 'bg-blue-100 text-blue-900 border-blue-300',
+    },
+    NOTULIS: {
+      label: 'Notulis Sidang',
+      badgeClass: 'bg-[#ECF8E9] text-[#4D8F3D] border-[#D2EFCA]',
+    },
+    STAFF: {
+      label: 'Staf Pelaksana Teknis',
+      badgeClass: 'bg-purple-100 text-purple-900 border-purple-300',
+    },
+    VIEWER: {
+      label: 'Tamu / Viewer',
+      badgeClass: 'bg-slate-100 text-slate-800 border-slate-300',
+    },
+  };
+
+  const roleConfig = roleLabelMap[userRole] || roleLabelMap.STAFF;
+  const canCreate = userRole === 'SUPER_ADMIN' || userRole === 'ADMIN' || userRole === 'NOTULIS';
+
+  const todayFormatted = new Date().toLocaleDateString('id-ID', {
+    weekday: 'long',
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric',
+  });
+
+  const handleDownloadReport = async () => {
+    try {
+      setIsDownloadingReport(true);
+      const res = await fetch(`/api/reports/summary/pdf?biro=${biro.code}`);
+      if (!res.ok) {
+        throw new Error('Gagal mengunduh ringkasan eksekutif');
+      }
+      const blob = await res.blob();
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `Laporan-Eksekutif-Biro-${biro.code}-${new Date().toISOString().slice(0, 10)}.pdf`;
+      document.body.appendChild(link);
+      link.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(link);
+      toast.success(`Ringkasan Eksekutif Biro ${biro.code} berhasil diunduh.`);
+    } catch (e: any) {
+      toast.error(e?.message || 'Terjadi kesalahan saat mengunduh dokumen.');
+    } finally {
+      setIsDownloadingReport(false);
+    }
+  };
 
   // Discover available years from meetings
   const availableYears = useMemo(() => {
@@ -358,54 +428,102 @@ export function BiroDashboardClient({
         )}
       </div>
 
-      {/* 3. Bureau Executive Profile Card */}
-      <div className="p-6 bg-white rounded-2xl border border-slate-200 shadow-xs flex flex-col lg:flex-row lg:items-center justify-between gap-6">
-        <div className="space-y-2">
-          <div className="flex items-center gap-2">
-            <span className="px-3 py-1 rounded-lg bg-[#31889C] text-white font-extrabold text-[12px] uppercase tracking-wider shadow-xs">
-              BIRO {biro.code}
-            </span>
-            <span className="font-semibold text-[#215865] text-[13px]">
-              • Unit Kerja Dewan Nasional Kawasan Ekonomi Khusus
-            </span>
-          </div>
+      {/* 3. Bureau Welcome & Executive Profile Banner */}
+      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-teal-50/70 via-white to-slate-50 text-slate-800 shadow-xs border border-slate-200 p-6 md:p-8">
+        {/* Decorative blur backgrounds */}
+        <div className="absolute -right-16 -top-16 w-80 h-80 rounded-full bg-[#31889C]/5 blur-3xl pointer-events-none" />
+        <div className="absolute right-48 -bottom-20 w-64 h-64 rounded-full bg-[#7CC563]/10 blur-2xl pointer-events-none" />
 
-          <h1 className="text-[26px] font-extrabold text-slate-900 tracking-tight">
-            {biro.name}
-          </h1>
-          <p className="text-[13.5px] text-slate-600 max-w-3xl leading-relaxed">
-            {biro.description}
-          </p>
+        <div className="relative z-10 flex flex-col lg:flex-row lg:items-center justify-between gap-6">
+          <div className="space-y-2.5 max-w-3xl">
+            {/* Metadata Badges */}
+            <div className="flex flex-wrap items-center gap-2">
+              <span className={`inline-flex items-center gap-1.5 px-3 py-0.5 rounded-full border font-bold text-[11px] uppercase tracking-wider ${roleConfig.badgeClass}`}>
+                <span className="w-2 h-2 rounded-full bg-current" />
+                {roleConfig.label}
+              </span>
 
-          <div className="pt-2 flex flex-wrap items-center gap-4 text-[12px] text-slate-500">
-            <span className="flex items-center gap-1 font-medium">
-              <Users className="w-3.5 h-3.5 text-[#31889C]" />
-              <strong className="text-slate-700">{biro.users.length}</strong> Personel Terdaftar
-            </span>
-            <span>•</span>
-            <span className="font-medium">
-              Nomor Registrasi Terakhir:{' '}
-              <strong className="text-[#215865]">
-                {biro.sequence
-                  ? `${biro.code}-${String(biro.sequence.currentNumber).padStart(3, '0')}`
-                  : `${biro.code}-000`}
-              </strong>
-            </span>
-          </div>
-        </div>
+              <span className="text-slate-300 font-semibold">•</span>
 
-        {/* Bureau Status Badge */}
-        <div className="flex items-center gap-4 bg-[#F0F9FA] p-4 rounded-xl border border-[#BCE3EB] shrink-0 self-start lg:self-center">
-          <div className="w-12 h-12 rounded-xl bg-[#E8F5F7] text-[#31889C] flex items-center justify-center border border-[#BCE3EB]">
-            <Building2 className="w-6 h-6" />
-          </div>
-          <div>
-            <div className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">
-              Total Rapat Diselenggarakan
+              <span className="inline-flex items-center gap-1.5 text-[#31889C] font-semibold text-[12.5px]">
+                <CalendarDays className="w-3.5 h-3.5 text-[#31889C]" />
+                {todayFormatted}
+              </span>
+
+              <span className="text-slate-300 font-semibold">•</span>
+
+              <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-[#E8F5F7] border border-[#BCE3EB] text-[#215865] font-bold text-[11px] uppercase tracking-wider">
+                <Building2 className="w-3.5 h-3.5 text-[#31889C]" />
+                Unit: Biro {biro.code}
+              </span>
             </div>
-            <div className="text-[26px] font-extrabold text-[#31889C] leading-tight">
-              {initialMeetings.length} <span className="text-[13px] text-slate-500 font-semibold">Agenda</span>
+
+            {/* Personalized Welcome Heading */}
+            <h1 className="text-[24px] md:text-[28px] text-slate-900 font-bold tracking-tight">
+              Selamat Datang di Dashboard {biro.name}, {userName}!
+            </h1>
+
+            {/* Subtitle / Description */}
+            <p className="text-[13.5px] text-slate-600 max-w-3xl leading-relaxed">
+              {biro.description || 'Pusat pemantauan agenda rapat koordinasi resmi, risalah keputusan sidang, serta realisasi tindak lanjut komitmen penugasan unit kerja Sekretariat Dewan Nasional Kawasan Ekonomi Khusus.'}
+            </p>
+
+            {/* Quick stats strip */}
+            <div className="pt-2 flex flex-wrap items-center gap-4 text-[12px] text-slate-500">
+              <span className="flex items-center gap-1 font-medium">
+                <Users className="w-3.5 h-3.5 text-[#31889C]" />
+                <strong className="text-slate-700">{biro.users.length}</strong> Personel Terdaftar
+              </span>
+              <span>•</span>
+              <span className="font-medium">
+                Registrasi Surat Terakhir:{' '}
+                <strong className="text-[#215865]">
+                  {biro.sequence
+                    ? `${biro.code}-${String(biro.sequence.currentNumber).padStart(3, '0')}`
+                    : `${biro.code}-000`}
+                </strong>
+              </span>
+              <span>•</span>
+              <span className="font-medium">
+                Total Rapat Diselenggarakan:{' '}
+                <strong className="text-[#31889C]">{initialMeetings.length} Agenda</strong>
+              </span>
             </div>
+          </div>
+
+          {/* Action Buttons */}
+          <div className="flex flex-col sm:flex-row lg:flex-col gap-2.5 shrink-0 self-start lg:self-center min-w-[200px]">
+            {canCreate && (
+              <Link
+                href={`/buat-rapat?biro=${biro.code}`}
+                className="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-[#31889C] text-white hover:bg-[#266F80] transition-all shadow-xs font-semibold text-[12.5px] cursor-pointer"
+              >
+                <PlusCircle className="w-4 h-4" />
+                <span>+ Jadwalkan Rapat</span>
+              </Link>
+            )}
+
+            <Link
+              href={`/tindak-lanjut?biro=${biro.code}`}
+              className="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-white border border-slate-300 text-slate-700 hover:bg-slate-50 hover:border-slate-400 transition-all shadow-xs font-semibold text-[12.5px] cursor-pointer"
+            >
+              <CheckSquare className="w-4 h-4 text-[#31889C]" />
+              <span>Matriks Tindak Lanjut</span>
+            </Link>
+
+            <button
+              type="button"
+              onClick={handleDownloadReport}
+              disabled={isDownloadingReport}
+              className="inline-flex items-center justify-center gap-2 px-4 py-2 rounded-xl bg-[#F0F9FA] border border-[#BCE3EB] text-[#215865] hover:bg-[#E8F5F7] transition-all shadow-xs font-semibold text-[12px] cursor-pointer disabled:opacity-50"
+            >
+              {isDownloadingReport ? (
+                <Loader2 className="w-3.5 h-3.5 animate-spin" />
+              ) : (
+                <Download className="w-3.5 h-3.5 text-[#31889C]" />
+              )}
+              <span>{isDownloadingReport ? 'Membuat PDF...' : 'Unduh Laporan Eksekutif'}</span>
+            </button>
           </div>
         </div>
       </div>
