@@ -23,8 +23,9 @@ export const dynamic = 'force-dynamic';
  */
 export async function GET(request: NextRequest) {
   // ── 1. Authentication ──────────────────────────────────────────────────────
+  let authUser;
   try {
-    await requireAuth();
+    authUser = await requireAuth();
   } catch {
     return NextResponse.json(
       { error: 'Unauthorized: Anda harus masuk ke sistem terlebih dahulu.' },
@@ -32,11 +33,14 @@ export async function GET(request: NextRequest) {
     );
   }
 
+  const isPrivileged =
+    authUser.role === 'SUPER_ADMIN' || authUser.role === 'ADMIN';
+
   // ── 2. Parse & validate query parameters ──────────────────────────────────
   const { searchParams } = new URL(request.url);
 
   const rawParams = {
-    biro: searchParams.get('biro') ?? 'ALL',
+    biro: !isPrivileged && authUser.biroCode ? authUser.biroCode : (searchParams.get('biro') ?? 'ALL'),
     status: searchParams.get('status') ?? 'ALL',
     priority: searchParams.get('priority') ?? 'ALL',
     startDate: searchParams.get('startDate') ?? undefined,

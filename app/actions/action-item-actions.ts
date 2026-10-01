@@ -33,7 +33,20 @@ function safeRevalidate(paths: string[]) {
  */
 export async function getActionItemsAction(meetingId?: string) {
   try {
-    const where = meetingId ? { meetingId } : {};
+    let currentUser = null;
+    try {
+      currentUser = await getCurrentUser();
+    } catch {}
+
+    const isPrivileged =
+      currentUser?.role === 'SUPER_ADMIN' || currentUser?.role === 'ADMIN';
+
+    const where: any = meetingId ? { meetingId } : {};
+
+    // Bureau Scoping: Non-admin users are strictly restricted to action items of their own bureau
+    if (!isPrivileged && currentUser?.biroId) {
+      where.picBiroId = currentUser.biroId;
+    }
 
     const items = await prisma.actionItem.findMany({
       where,
@@ -87,9 +100,27 @@ export async function getActionItemsAction(meetingId?: string) {
  */
 export async function getActionItemFormOptionsAction() {
   try {
+    let currentUser = null;
+    try {
+      currentUser = await getCurrentUser();
+    } catch {}
+
+    const isPrivileged =
+      currentUser?.role === 'SUPER_ADMIN' || currentUser?.role === 'ADMIN';
+
+    const biroWhere: any = { isActive: true };
+    const teamWhere: any = { isActive: true };
+    const userWhere: any = { isActive: true };
+
+    if (!isPrivileged && currentUser?.biroCode) {
+      biroWhere.code = currentUser.biroCode.toUpperCase();
+      teamWhere.biro = { code: currentUser.biroCode.toUpperCase() };
+      userWhere.biro = { code: currentUser.biroCode.toUpperCase() };
+    }
+
     const [biros, users, teams] = await Promise.all([
       prisma.biro.findMany({
-        where: { isActive: true },
+        where: biroWhere,
         select: {
           id: true,
           code: true,
@@ -99,7 +130,7 @@ export async function getActionItemFormOptionsAction() {
         orderBy: { code: 'asc' },
       }),
       prisma.user.findMany({
-        where: { isActive: true },
+        where: userWhere,
         select: {
           id: true,
           name: true,
@@ -109,7 +140,7 @@ export async function getActionItemFormOptionsAction() {
         orderBy: { name: 'asc' },
       }),
       prisma.biroTeam.findMany({
-        where: { isActive: true },
+        where: teamWhere,
         select: {
           id: true,
           biroId: true,
@@ -144,9 +175,6 @@ export async function getActionItemFormOptionsAction() {
  */
 export async function createActionItemAction(input: ActionItemInput) {
   try {
-    // Authorization Check: Must have 'create:action_item' permission (SUPER_ADMIN, ADMIN, NOTULIS)
-    await requirePermission('create:action_item');
-
     // 1. Zod Validation
     const parsed = actionItemSchema.safeParse(input);
     if (!parsed.success) {
@@ -181,6 +209,19 @@ export async function createActionItemAction(input: ActionItemInput) {
     });
     if (!biro) {
       return { success: false, error: 'Biro penanggung jawab tidak ditemukan.' };
+    }
+
+    // Authorization Check: Must have 'create:action_item' permission (SUPER_ADMIN, ADMIN, NOTULIS)
+    const currentUser = await requirePermission('create:action_item');
+    const isPrivileged =
+      currentUser.role === 'SUPER_ADMIN' || currentUser.role === 'ADMIN';
+
+    // Bureau Scoping: Non-admin users can only create action items assigned to their own bureau
+    if (!isPrivileged && currentUser.biroId && picBiroId !== currentUser.biroId) {
+      return {
+        success: false,
+        error: 'Anda hanya dapat menugaskan tindak lanjut ke biro Anda sendiri.',
+      };
     }
 
     // 4. Validate picUser if provided
@@ -281,9 +322,21 @@ export async function updateActionItemAction(input: UpdateActionItemInput) {
 
     // Authorization Check: Must have 'edit:action_item' permission
     // For STAFF, ownership check is applied: user can only edit if assigned to them
-    await requirePermission('edit:action_item', {
+    const currentUser = await requirePermission('edit:action_item', {
       actionItemPicUserId: existing.picUserId,
     });
+    const isPrivileged =
+      currentUser.role === 'SUPER_ADMIN' || currentUser.role === 'ADMIN';
+
+    // Bureau Scoping: Non-admin users cannot edit action items of another bureau, nor reassign outside their bureau
+    if (!isPrivileged && currentUser.biroId) {
+      if (existing.picBiroId !== currentUser.biroId || picBiroId !== currentUser.biroId) {
+        return {
+          success: false,
+          error: 'Anda hanya dapat mengelola tindak lanjut untuk biro Anda sendiri.',
+        };
+      }
+    }
 
     // 3. Ensure Meeting exists
     const meeting = await prisma.meeting.findUnique({
@@ -395,9 +448,19 @@ export async function updateActionItemStatusAction(input: UpdateActionItemStatus
     }
 
     // Authorization Check: Must have 'edit:action_item' permission
-    await requirePermission('edit:action_item', {
+    const currentUser = await requirePermission('edit:action_item', {
       actionItemPicUserId: existing.picUserId,
     });
+    const isPrivileged =
+      currentUser.role === 'SUPER_ADMIN' || currentUser.role === 'ADMIN';
+
+    // Bureau Scoping: Non-admin users can only update status of their own bureau's action items
+    if (!isPrivileged && currentUser.biroId && existing.picBiroId !== currentUser.biroId) {
+      return {
+        success: false,
+        error: 'Anda hanya dapat memperbarui status tindak lanjut milik biro Anda sendiri.',
+      };
+    }
 
     let completedAt: Date | null = existing.completedAt;
     if (status === 'COMPLETED' && existing.status !== 'COMPLETED') {
@@ -446,7 +509,9 @@ export async function updateActionItemStatusAction(input: UpdateActionItemStatus
 export async function deleteActionItemAction(id: string) {
   try {
     // Authorization Check: Must have 'delete:action_item' permission (SUPER_ADMIN, ADMIN, NOTULIS)
-    await requirePermission('delete:action_item');
+    const currentUser = await requirePermission('delete:action_item');
+    const isPrivileged =
+      currentUser.role === 'SUPER_ADMIN' || currentUser.role === 'ADMIN';
 
     if (!id) {
       return { success: false, error: 'ID tindak lanjut tidak valid.' };
@@ -462,6 +527,14 @@ export async function deleteActionItemAction(id: string) {
 
     if (!existing) {
       return { success: false, error: 'Tindak lanjut tidak ditemukan.' };
+    }
+
+    // Bureau Scoping: Non-admin users can only delete action items belonging to their own bureau
+    if (!isPrivileged && currentUser.biroId && existing.picBiroId !== currentUser.biroId) {
+      return {
+        success: false,
+        error: 'Anda hanya dapat menghapus tindak lanjut milik biro Anda sendiri.',
+      };
     }
 
     await prisma.actionItem.delete({
@@ -561,11 +634,18 @@ export async function addActionItemLogAction(input: AddActionItemLogInput) {
     }
 
     // Authorization check
-    await requirePermission('edit:action_item', {
+    const currentUser = await requirePermission('edit:action_item', {
       actionItemPicUserId: existing.picUserId,
     });
+    const isPrivileged =
+      currentUser.role === 'SUPER_ADMIN' || currentUser.role === 'ADMIN';
 
-    const currentUser = await getCurrentUser();
+    if (!isPrivileged && currentUser.biroId && existing.picBiroId !== currentUser.biroId) {
+      return {
+        success: false,
+        error: 'Anda hanya dapat menambahkan catatan progres pada tindak lanjut biro Anda sendiri.',
+      };
+    }
 
     // Determine target status
     const targetStatus = newStatus || existing.status;

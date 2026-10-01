@@ -24,6 +24,7 @@ interface ActionItemFormDialogProps {
   actionItem?: ActionItem | null;
   availableBiros?: { id: string; code: string; shortName: string; name: string }[];
   availableUsers?: { id: string; name: string; email?: string; biroId?: string }[];
+  lockedBiroCode?: string;
   onClose: () => void;
   onSuccess?: (item: any) => void;
 }
@@ -34,6 +35,7 @@ export function ActionItemFormDialog({
   actionItem,
   availableBiros = [],
   availableUsers = [],
+  lockedBiroCode,
   onClose,
   onSuccess,
 }: ActionItemFormDialogProps) {
@@ -132,7 +134,10 @@ export function ActionItemFormDialog({
         setTitle('');
         setDescription('');
         setDriveLink('');
-        setPicBiroId(birosList[0]?.id || '');
+        const matchingBiro = lockedBiroCode
+          ? birosList.find((b) => b.code.toUpperCase() === lockedBiroCode.toUpperCase())
+          : null;
+        setPicBiroId(matchingBiro?.id || birosList[0]?.id || '');
         setPicTeamId('');
         setPicUserId('');
         setDueDate(`${yyyy}-${mm}-${dd}`);
@@ -140,7 +145,7 @@ export function ActionItemFormDialog({
         setStatus('PENDING');
       }
     }
-  }, [isOpen, actionItem, birosList]);
+  }, [isOpen, actionItem, birosList, lockedBiroCode]);
 
   if (!isOpen) return null;
 
@@ -316,23 +321,30 @@ export function ActionItemFormDialog({
                 <label className="block font-bold text-slate-800 mb-1">
                   Biro Penanggung Jawab <span className="text-red-500">*</span>
                 </label>
-                <select
-                  value={picBiroId}
-                  onChange={(e) => {
-                    setPicBiroId(e.target.value);
-                    setPicTeamId('');
-                  }}
-                  className="w-full px-3 py-2 rounded-lg border border-slate-200 focus:outline-none focus:ring-2 focus:ring-[#31889C]/30 focus:border-[#31889C] bg-white font-medium text-slate-800 text-[13px] cursor-pointer"
-                >
-                  <option value="">
-                    {isLoadingOptions ? '-- Memuat Biro... --' : '-- Pilih Biro --'}
-                  </option>
-                  {birosList.map((b) => (
-                    <option key={b.id} value={b.id}>
-                      {b.code} — {b.shortName || b.name}
+                {lockedBiroCode ? (
+                  <div className="w-full px-3 py-2 rounded-lg border border-[#BCE3EB] bg-[#F0F9FA] text-[#215865] font-semibold text-[13px] flex items-center justify-between">
+                    <span>Biro {lockedBiroCode}</span>
+                    <span className="text-[11px] text-slate-500 font-normal">(Terkunci sesuai akun)</span>
+                  </div>
+                ) : (
+                  <select
+                    value={picBiroId}
+                    onChange={(e) => {
+                      setPicBiroId(e.target.value);
+                      setPicTeamId('');
+                    }}
+                    className="w-full px-3 py-2 rounded-lg border border-slate-200 focus:outline-none focus:ring-2 focus:ring-[#31889C]/30 focus:border-[#31889C] bg-white font-medium text-slate-800 text-[13px] cursor-pointer"
+                  >
+                    <option value="">
+                      {isLoadingOptions ? '-- Memuat Biro... --' : '-- Pilih Biro --'}
                     </option>
-                  ))}
-                </select>
+                    {birosList.map((b) => (
+                      <option key={b.id} value={b.id}>
+                        {b.code} — {b.shortName || b.name}
+                      </option>
+                    ))}
+                  </select>
+                )}
                 {fieldErrors.picBiroId && (
                   <p className="mt-1 text-[11px] text-red-600 font-semibold">{fieldErrors.picBiroId}</p>
                 )}

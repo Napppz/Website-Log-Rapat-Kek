@@ -40,6 +40,9 @@ interface ActionItemMatrixViewProps {
   availableMeetings: { id: string; meetingNumber: string; title: string }[];
   availableBiros: { id: string; code: string; shortName: string; name: string }[];
   availableUsers: { id: string; name: string; email?: string; biroId?: string }[];
+  lockedBiroCode?: string;
+  currentUserRole?: string;
+  currentUserBiroName?: string;
 }
 
 export function ActionItemMatrixView({
@@ -47,15 +50,26 @@ export function ActionItemMatrixView({
   availableMeetings = [],
   availableBiros = [],
   availableUsers = [],
+  lockedBiroCode,
+  currentUserRole,
+  currentUserBiroName,
 }: ActionItemMatrixViewProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const statusParam = searchParams.get('status') || 'ALL';
+  const rawStatus = searchParams.get('status') || 'ALL';
+  const statusParam = useMemo(() => {
+    const s = rawStatus.toUpperCase();
+    if (s === 'SEDANG-BERJALAN' || s === 'IN_PROGRESS') return 'IN_PROGRESS';
+    if (s === 'SELESAI' || s === 'COMPLETED') return 'COMPLETED';
+    if (s === 'BELUM-DIMULAI' || s === 'PENDING') return 'PENDING';
+    if (s === 'TERLAMBAT' || s === 'OVERDUE') return 'OVERDUE';
+    return s;
+  }, [rawStatus]);
   const biroParam = searchParams.get('biro') || 'ALL';
 
   const [items, setItems] = useState<any[]>(initialItems);
   const [search, setSearch] = useState('');
-  const [selectedBiro, setSelectedBiro] = useState(biroParam);
+  const [selectedBiro, setSelectedBiro] = useState(lockedBiroCode || biroParam);
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [selectedMeetingIdForCreate, setSelectedMeetingIdForCreate] = useState<string>(
     availableMeetings[0]?.id || ''
@@ -75,7 +89,8 @@ export function ActionItemMatrixView({
       setIsExporting(true);
       const params = new URLSearchParams();
       if (statusParam && statusParam !== 'ALL') params.set('status', statusParam);
-      if (selectedBiro && selectedBiro !== 'ALL') params.set('biro', selectedBiro);
+      const effectiveBiro = lockedBiroCode || selectedBiro;
+      if (effectiveBiro && effectiveBiro !== 'ALL') params.set('biro', effectiveBiro);
       if (search.trim()) params.set('search', search.trim());
 
       const url = `/api/action-items/export?${params.toString()}`;
@@ -139,6 +154,7 @@ export function ActionItemMatrixView({
   };
 
   const handleBiroFilter = (code: string) => {
+    if (lockedBiroCode) return; // Locked to user's own bureau
     setSelectedBiro(code);
     const params = new URLSearchParams(searchParams.toString());
     if (code === 'ALL') {
@@ -230,14 +246,25 @@ export function ActionItemMatrixView({
       {/* Header Card */}
       <div className="p-6 bg-white rounded-xl border border-slate-200 shadow-xs flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div>
-          <span className="font-semibold text-[12px] text-[#31889C] uppercase tracking-wider">
-            Matriks Disposisi &amp; Pemantauan
+          <span className="font-semibold text-[12px] text-[#31889C] uppercase tracking-wider flex items-center gap-1.5">
+            {lockedBiroCode ? (
+              <>
+                <Building2 className="w-3.5 h-3.5" />
+                Matriks Disposisi Biro {lockedBiroCode}
+              </>
+            ) : (
+              'Matriks Disposisi & Pemantauan Dewan'
+            )}
           </span>
           <h1 className="text-[24px] font-bold text-slate-900 mt-0.5">
-            Monitoring &amp; Evaluasi Tindak Lanjut
+            {lockedBiroCode
+              ? `Tindak Lanjut — ${currentUserBiroName || `Biro ${lockedBiroCode}`}`
+              : 'Monitoring & Evaluasi Tindak Lanjut'}
           </h1>
           <p className="text-[13px] text-slate-500 mt-1">
-            Pantau realisasi komitmen keputusan rapat dewan KEK lintas biro resmi dan kementerian.
+            {lockedBiroCode
+              ? `Pantau dan laporkan realisasi komitmen keputusan rapat khusus untuk penugasan ${currentUserBiroName || `Biro ${lockedBiroCode}`}.`
+              : 'Pantau realisasi komitmen keputusan rapat dewan KEK lintas biro resmi dan kementerian.'}
           </p>
         </div>
 
@@ -302,19 +329,26 @@ export function ActionItemMatrixView({
 
         {/* Biro Filter & Search & Add Button */}
         <div className="flex flex-wrap items-center gap-3">
-          {/* Biro Select */}
-          <select
-            value={selectedBiro}
-            onChange={(e) => handleBiroFilter(e.target.value)}
-            className="px-3 py-1.5 rounded-lg bg-white border border-slate-200 text-slate-800 text-[12px] font-semibold focus:outline-none focus:ring-2 focus:ring-[#31889C]/30 focus:border-[#31889C] shadow-xs cursor-pointer"
-          >
-            <option value="ALL">Semua 5 Biro KEK</option>
-            {availableBiros.map((b) => (
-              <option key={b.code} value={b.code}>
-                {b.code} — {b.shortName}
-              </option>
-            ))}
-          </select>
+          {/* Biro Select / Locked Badge */}
+          {lockedBiroCode ? (
+            <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#E8F5F7] border border-[#BCE3EB] text-[#215865] text-[12px] font-bold shadow-2xs">
+              <Building2 className="w-3.5 h-3.5 text-[#31889C]" />
+              <span>Unit: Biro {lockedBiroCode}</span>
+            </div>
+          ) : (
+            <select
+              value={selectedBiro}
+              onChange={(e) => handleBiroFilter(e.target.value)}
+              className="px-3 py-1.5 rounded-lg bg-white border border-slate-200 text-slate-800 text-[12px] font-semibold focus:outline-none focus:ring-2 focus:ring-[#31889C]/30 focus:border-[#31889C] shadow-xs cursor-pointer"
+            >
+              <option value="ALL">Semua 5 Biro KEK</option>
+              {availableBiros.map((b) => (
+                <option key={b.code} value={b.code}>
+                  {b.code} — {b.shortName}
+                </option>
+              ))}
+            </select>
+          )}
 
           {/* Search Input */}
           <div className="relative w-full sm:w-60">
@@ -578,6 +612,7 @@ export function ActionItemMatrixView({
         actionItem={editingItem}
         availableBiros={availableBiros}
         availableUsers={availableUsers}
+        lockedBiroCode={lockedBiroCode}
         onClose={() => {
           setIsFormOpen(false);
           setEditingItem(null);
