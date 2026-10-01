@@ -192,129 +192,150 @@ export function MeetingMinutesPreview({
   return (
     <div className="space-y-4">
       {/* Top Controls Toolbar */}
-      <div className="p-3.5 bg-white rounded-xl border border-slate-200 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-3">
-        <div className="flex items-center gap-2.5">
-          <div className="w-8 h-8 rounded-lg bg-[#F0F9FA] border border-[#BCE3EB] flex items-center justify-center text-[#31889C] shrink-0">
-            <FileText className="w-4 h-4" />
-          </div>
-          <div>
-            <div className="flex items-center gap-2">
-              <h4 className="font-bold text-[14px] text-slate-900">
-                Pratinjau {docType === 'NOTA_DINAS' ? 'Nota Dinas Resmi' : 'Lembar Notula Resmi'}
-              </h4>
-              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-[#ECF8E9] text-[#4D8F3D] border border-[#D2EFCA]">
-                <CheckCircle2 className="w-3 h-3" />
-                Sesuai Format PDF
-              </span>
+      <div className="bg-white rounded-2xl border border-slate-200 shadow-xs divide-y divide-slate-100 overflow-hidden">
+        {/* ROW 1: Header Info & Document Format Switcher */}
+        <div className="p-4 sm:px-5 sm:py-3.5 flex flex-col md:flex-row md:items-center justify-between gap-3 bg-white">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-[#F0F9FA] border border-[#BCE3EB] flex items-center justify-center text-[#31889C] shrink-0 shadow-2xs">
+              <FileText className="w-5 h-5" />
             </div>
-            <p className="text-[11px] text-slate-500">
-              Format tata naskah dinas Sekretariat Jenderal Dewan KEK RI — identik dengan hasil unduhan PDF.
-            </p>
+            <div>
+              <div className="flex items-center gap-2 flex-wrap">
+                <h4 className="font-bold text-[15px] text-slate-900">
+                  Pratinjau {docType === 'NOTA_DINAS' ? 'Nota Dinas Resmi' : 'Risalah Notula Resmi'}
+                </h4>
+                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10.5px] font-semibold bg-[#ECF8E9] text-[#2E7D32] border border-[#C8E6C9]">
+                  <CheckCircle2 className="w-3 h-3" />
+                  Sesuai Standar KEK
+                </span>
+              </div>
+              <p className="text-[12px] text-slate-500 mt-0.5">
+                Tata naskah dinas resmi Sekretariat Jenderal Dewan Nasional KEK RI.
+              </p>
+            </div>
+          </div>
+
+          {/* Document Type Switcher Tabs (Risalah Rapat vs Nota Dinas) */}
+          <div className="flex items-center gap-1.5 self-start md:self-auto">
+            <span className="text-[11.5px] font-bold text-slate-400 uppercase tracking-wider hidden lg:inline mr-1">
+              Jenis Dokumen:
+            </span>
+            <div className="flex items-center bg-slate-100/90 p-1 rounded-xl border border-slate-200/80 shadow-2xs">
+              <button
+                type="button"
+                onClick={() => handleDocTypeToggle('NOTULA')}
+                className={`inline-flex items-center gap-2 px-3.5 py-1.5 rounded-lg text-[12px] font-bold transition-all cursor-pointer ${
+                  docType === 'NOTULA'
+                    ? 'bg-white text-[#215865] shadow-xs border border-slate-200/60'
+                    : 'text-slate-600 hover:text-slate-900'
+                }`}
+                title="Tampilkan lembar Risalah / Notula Rapat"
+              >
+                <FileText className={`w-3.5 h-3.5 ${docType === 'NOTULA' ? 'text-[#31889C]' : 'text-slate-500'}`} />
+                <span>Risalah Rapat</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => handleDocTypeToggle('NOTA_DINAS')}
+                className={`inline-flex items-center gap-2 px-3.5 py-1.5 rounded-lg text-[12px] font-bold transition-all cursor-pointer ${
+                  docType === 'NOTA_DINAS'
+                    ? 'bg-[#31889C] text-white shadow-xs'
+                    : 'text-slate-600 hover:text-slate-900'
+                }`}
+                title="Tampilkan lembar Nota Dinas resmi"
+              >
+                <FileEdit className="w-3.5 h-3.5" />
+                <span>Nota Dinas</span>
+              </button>
+            </div>
           </div>
         </div>
 
-        {/* View Switcher & Action Buttons */}
-        <div className="flex flex-wrap items-center gap-2">
-          {/* Document Type Toggle (Notula vs Nota Dinas) */}
-          <div className="flex items-center bg-slate-100 p-0.5 rounded-lg border border-slate-200 text-[12px] font-medium">
-            <button
-              type="button"
-              onClick={() => handleDocTypeToggle('NOTULA')}
-              className={`inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-md transition-all cursor-pointer ${
-                docType === 'NOTULA'
-                  ? 'bg-white text-slate-900 font-bold shadow-xs'
-                  : 'text-slate-600 hover:text-slate-900'
-              }`}
-              title="Lihat format Notula / Risalah Rapat"
-            >
-              <FileText className="w-3.5 h-3.5 text-[#31889C]" />
-              <span>Risalah Rapat</span>
-            </button>
-            <button
-              type="button"
-              onClick={() => handleDocTypeToggle('NOTA_DINAS')}
-              className={`inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-md transition-all cursor-pointer ${
-                docType === 'NOTA_DINAS'
-                  ? 'bg-[#31889C] text-white font-bold shadow-xs'
-                  : 'text-slate-600 hover:text-slate-900'
-              }`}
-              title="Lihat format Nota Dinas resmi"
-            >
-              <FileEdit className="w-3.5 h-3.5" />
-              <span>Nota Dinas</span>
-            </button>
+        {/* ROW 2: View Controls (Left) & Actions (Right) */}
+        <div className="px-4 py-2.5 sm:px-5 bg-[#F8FAFC] flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          {/* Left: View Mode (Lembar A4 vs PDF Langsung) */}
+          <div className="flex items-center gap-2">
+            <span className="text-[11.5px] font-bold text-slate-500 uppercase tracking-wider hidden sm:inline">
+              Tampilan:
+            </span>
+            <div className="flex items-center bg-white p-0.5 rounded-lg border border-slate-200 shadow-2xs text-[12px]">
+              <button
+                type="button"
+                onClick={() => setViewMode('paper')}
+                className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-[12px] font-medium transition-all cursor-pointer ${
+                  viewMode === 'paper'
+                    ? 'bg-[#F0F9FA] text-[#215865] font-bold border border-[#BCE3EB] shadow-2xs'
+                    : 'text-slate-600 hover:text-slate-900'
+                }`}
+                title="Tampilkan format kertas naskah dinas A4"
+              >
+                <FileText className="w-3.5 h-3.5 text-[#31889C]" />
+                <span>Lembar (A4)</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setViewMode('raw_pdf')}
+                className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-[12px] font-medium transition-all cursor-pointer ${
+                  viewMode === 'raw_pdf'
+                    ? 'bg-[#F0F9FA] text-[#215865] font-bold border border-[#BCE3EB] shadow-2xs'
+                    : 'text-slate-600 hover:text-slate-900'
+                }`}
+                title="Tampilkan pratinjau stream PDF asli"
+              >
+                <Eye className="w-3.5 h-3.5 text-[#31889C]" />
+                <span>PDF Langsung</span>
+              </button>
+            </div>
           </div>
 
-          {/* View mode toggle */}
-          <div className="flex items-center bg-slate-100 p-0.5 rounded-lg border border-slate-200 text-[12px] font-medium">
-            <button
-              type="button"
-              onClick={() => setViewMode('paper')}
-              className={`inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-md transition-all cursor-pointer ${
-                viewMode === 'paper'
-                  ? 'bg-white text-slate-900 font-semibold shadow-xs'
-                  : 'text-slate-600 hover:text-slate-900'
-              }`}
-            >
-              <FileText className="w-3.5 h-3.5 text-[#31889C]" />
-              <span>Lembar (A4)</span>
-            </button>
-            <button
-              type="button"
-              onClick={() => setViewMode('raw_pdf')}
-              className={`inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-md transition-all cursor-pointer ${
-                viewMode === 'raw_pdf'
-                  ? 'bg-white text-slate-900 font-semibold shadow-xs'
-                  : 'text-slate-600 hover:text-slate-900'
-              }`}
-            >
-              <Eye className="w-3.5 h-3.5 text-[#31889C]" />
-              <span>PDF Langsung</span>
-            </button>
+          {/* Right: Actions Group (Edit Button + Export Group) */}
+          <div className="flex flex-wrap items-center gap-2 self-start sm:self-auto">
+            {canEdit && onEditClick && (
+              <button
+                type="button"
+                onClick={onEditClick}
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-slate-300 bg-white hover:bg-slate-50 text-slate-700 font-semibold text-[12px] transition-all cursor-pointer shadow-2xs"
+                title={`Edit isi ${docType === 'NOTA_DINAS' ? 'nota dinas' : 'notula'}`}
+              >
+                <FileEdit className="w-3.5 h-3.5 text-[#31889C]" />
+                <span>Edit {docType === 'NOTA_DINAS' ? 'Nota Dinas' : 'Notula'}</span>
+              </button>
+            )}
+
+            {canEdit && onEditClick && (onDownloadPdf || onDownloadDocx) && (
+              <div className="h-5 w-[1px] bg-slate-300 mx-1 hidden sm:block" />
+            )}
+
+            {/* Export Buttons: PDF & Word side-by-side */}
+            {onDownloadPdf && (
+              <button
+                type="button"
+                onClick={() => onDownloadPdf(docType === 'NOTA_DINAS' ? 'nota-dinas' : 'notula')}
+                className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg bg-[#31889C] hover:bg-[#266F80] text-white font-semibold text-[12px] transition-all shadow-xs cursor-pointer"
+                title={`Unduh ${docType === 'NOTA_DINAS' ? 'Nota Dinas' : 'Risalah Rapat'} dalam format PDF`}
+              >
+                <Download className="w-3.5 h-3.5" />
+                <span>Unduh PDF</span>
+              </button>
+            )}
+
+            {onDownloadDocx && (
+              <button
+                type="button"
+                disabled={isDownloadingDocx}
+                onClick={() => onDownloadDocx(docType === 'NOTA_DINAS' ? 'nota-dinas' : 'notula')}
+                className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg bg-[#2B579A] hover:bg-[#1E3E6D] text-white font-semibold text-[12px] transition-all shadow-xs cursor-pointer disabled:opacity-50"
+                title={`Unduh ${docType === 'NOTA_DINAS' ? 'Nota Dinas' : 'Risalah Rapat'} dalam format Word (.docx)`}
+              >
+                {isDownloadingDocx ? (
+                  <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                ) : (
+                  <FileText className="w-3.5 h-3.5" />
+                )}
+                <span>Unduh Word (.docx)</span>
+              </button>
+            )}
           </div>
-
-          {/* Action buttons */}
-          {onDownloadPdf && (
-            <button
-              type="button"
-              onClick={() => onDownloadPdf(docType === 'NOTA_DINAS' ? 'nota-dinas' : 'notula')}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#31889C] hover:bg-[#266F80] text-white font-semibold text-[12px] transition-colors shadow-xs cursor-pointer"
-              title={`Unduh dokumen ${docType === 'NOTA_DINAS' ? 'Nota Dinas' : 'Notula'} dalam format PDF`}
-            >
-              <Download className="w-3.5 h-3.5" />
-              <span>Unduh {docType === 'NOTA_DINAS' ? 'Nota Dinas' : 'PDF'}</span>
-            </button>
-          )}
-
-          {/* Unduh Word (.docx) */}
-          {onDownloadDocx && (
-            <button
-              type="button"
-              disabled={isDownloadingDocx}
-              onClick={() => onDownloadDocx(docType === 'NOTA_DINAS' ? 'nota-dinas' : 'notula')}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#2B579A] hover:bg-[#1E3E6D] text-white font-semibold text-[12px] transition-colors shadow-xs cursor-pointer disabled:opacity-50"
-              title={`Unduh dokumen ${docType === 'NOTA_DINAS' ? 'Nota Dinas' : 'Notula'} dalam format Word (.docx)`}
-            >
-              {isDownloadingDocx ? (
-                <Loader2 className="w-3.5 h-3.5 animate-spin" />
-              ) : (
-                <FileText className="w-3.5 h-3.5" />
-              )}
-              <span>Unduh Word (.docx)</span>
-            </button>
-          )}
-
-          {canEdit && onEditClick && (
-            <button
-              type="button"
-              onClick={onEditClick}
-              className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg border border-[#BCE3EB] bg-[#F0F9FA] hover:bg-[#E8F5F7] text-[#215865] font-semibold text-[12px] transition-colors cursor-pointer"
-              title={`Edit isi ${docType === 'NOTA_DINAS' ? 'nota dinas' : 'notula'}`}
-            >
-              <FileEdit className="w-3.5 h-3.5 text-[#31889C]" />
-              <span>Edit {docType === 'NOTA_DINAS' ? 'Nota Dinas' : 'Notula'}</span>
-            </button>
-          )}
         </div>
       </div>
 
