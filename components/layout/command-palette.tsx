@@ -211,7 +211,8 @@ export function CommandPalette({ isOpen, onClose, onCreateMeeting }: CommandPale
         m.title.toLowerCase().includes(q) ||
         m.code.toLowerCase().includes(q) ||
         (m.location && m.location.toLowerCase().includes(q)) ||
-        (m.primaryBiro && m.primaryBiro.toLowerCase().includes(q))
+        (m.biroName && m.biroName.toLowerCase().includes(q)) ||
+        (m.biroCode && m.biroCode.toLowerCase().includes(q))
     ).slice(0, 15);
   }, [query, meetings]);
 

@@ -349,14 +349,14 @@ export function MeetingDetailView({
       setIsDeleting(true);
       const res = await deleteMeetingAction(meeting.id);
       if (res.success) {
-        toast.success(`Rapat ${meeting.meetingNumber} berhasil dihapus dari database.`);
-        router.push('/semua-rapat');
+        toast.flash('success', `Rapat ${meeting.meetingNumber} berhasil dihapus dari database.`, 'Berhasil Dihapus');
+        window.location.href = '/semua-rapat';
       } else {
         toast.error(res.error || 'Gagal menghapus rapat');
+        setIsDeleting(false);
       }
     } catch (err: any) {
       toast.error(`Terjadi kesalahan: ${err?.message || 'Gagal menghapus rapat'}`);
-    } finally {
       setIsDeleting(false);
     }
   };

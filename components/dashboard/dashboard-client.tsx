@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { WelcomeBanner } from '@/components/dashboard/welcome-banner';
 import { StatsOverview } from '@/components/dashboard/stats-overview';
 import { ActivityTrendChart } from '@/components/dashboard/activity-trend-chart';
@@ -48,26 +48,33 @@ export function DashboardClient({
   totalResolutions,
 }: DashboardClientProps) {
   const router = useRouter();
+  const [deletedIds, setDeletedIds] = useState<Set<string>>(new Set());
+  const [meetingsList, setMeetingsList] = useState<Meeting[]>(initialMeetings);
+
+  useEffect(() => {
+    setMeetingsList(initialMeetings.filter((m) => !deletedIds.has(m.id)));
+  }, [initialMeetings, deletedIds]);
+
   const [selectedYear, setSelectedYear] = useState<number>(2026);
   const [selectedMonth, setSelectedMonth] = useState<string | null>(null);
 
   // Dynamically discover all years present in meetings (guaranteeing at least 2026 and 2027)
   const availableYears = useMemo(() => {
     const yearsSet = new Set<number>([2026, 2027]);
-    initialMeetings.forEach((m) => {
+    meetingsList.forEach((m) => {
       const y = new Date(m.date).getFullYear();
       if (!isNaN(y) && y > 2000) yearsSet.add(y);
     });
     return Array.from(yearsSet).sort((a, b) => a - b);
-  }, [initialMeetings]);
+  }, [meetingsList]);
 
   // Meetings filtered by the selected year
   const yearMeetings = useMemo(() => {
-    return initialMeetings.filter((m) => {
+    return meetingsList.filter((m) => {
       const d = new Date(m.date);
       return d.getFullYear() === selectedYear;
     });
-  }, [initialMeetings, selectedYear]);
+  }, [meetingsList, selectedYear]);
 
   // Compute monthly activity trend dynamically for the selected year
   const yearMonthlyActivity: MonthlyActivity[] = useMemo(() => {
@@ -296,6 +303,10 @@ export function DashboardClient({
         initialMeetings={yearMeetings}
         filterMonth={selectedMonth}
         onViewAllMeetings={() => router.push('/semua-rapat')}
+        onMeetingDeleted={(deletedId) => {
+          setDeletedIds((prev) => new Set(prev).add(deletedId));
+          setMeetingsList((prev) => prev.filter((m) => m.id !== deletedId));
+        }}
       />
     </div>
   );

@@ -1,7 +1,8 @@
 'use client';
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import {
   Filter,
   ArrowRight,
@@ -39,6 +40,7 @@ interface MeetingTableProps {
   isLoading?: boolean;
   initialMeetings?: Meeting[];
   pageSize?: number;
+  onMeetingDeleted?: (meetingId: string) => void;
 }
 
 export function MeetingTable({
@@ -49,8 +51,18 @@ export function MeetingTable({
   isLoading = false,
   initialMeetings,
   pageSize = 8,
+  onMeetingDeleted,
 }: MeetingTableProps) {
+  const router = useRouter();
+  const [deletedMeetingIds, setDeletedMeetingIds] = useState<Set<string>>(new Set());
   const [meetings, setMeetings] = useState<Meeting[]>(initialMeetings !== undefined ? initialMeetings : MOCK_MEETINGS);
+
+  // Synchronize state when initialMeetings changes (e.g., from server revalidation or parent state update)
+  useEffect(() => {
+    if (initialMeetings !== undefined) {
+      setMeetings(initialMeetings.filter((m) => !deletedMeetingIds.has(m.id)));
+    }
+  }, [initialMeetings, deletedMeetingIds]);
   const [fetching, setFetching] = useState(false);
   const [searchFilter, setSearchFilter] = useState('');
   const [selectedMeeting, setSelectedMeeting] = useState<Meeting | null>(null);
@@ -198,8 +210,13 @@ export function MeetingTable({
       setDeletingRowId(m.id);
       const res = await deleteMeetingAction(m.id);
       if (res.success) {
+        setDeletedMeetingIds((prev) => new Set(prev).add(m.id));
         setMeetings((prev) => prev.filter((item) => item.id !== m.id));
         toast.success(`Rapat ${m.code} berhasil dihapus dari database.`);
+        if (onMeetingDeleted) {
+          onMeetingDeleted(m.id);
+        }
+        router.refresh();
       } else {
         toast.error(res.error || 'Gagal menghapus rapat.');
       }
@@ -235,12 +252,9 @@ export function MeetingTable({
     }
   };
 
-  // Sync with initialMeetings or fetch from Neon API
-  React.useEffect(() => {
-    if (initialMeetings !== undefined) {
-      setMeetings(initialMeetings);
-      return;
-    }
+  // Fallback fetch from Neon API if initialMeetings is not provided
+  useEffect(() => {
+    if (initialMeetings !== undefined) return;
 
     let isMounted = true;
     const loadFromDb = async () => {
@@ -250,7 +264,7 @@ export function MeetingTable({
         if (res.ok) {
           const data = await res.json();
           if (isMounted && Array.isArray(data)) {
-            setMeetings(data);
+            setMeetings(data.filter((m: Meeting) => !deletedMeetingIds.has(m.id)));
           }
         }
       } catch (e) {
@@ -264,7 +278,7 @@ export function MeetingTable({
     return () => {
       isMounted = false;
     };
-  }, [initialMeetings]);
+  }, [initialMeetings, deletedMeetingIds]);
 
   // Biro icon mapping
   const getBiroIcon = (code: BiroCode) => {
@@ -296,8 +310,8 @@ export function MeetingTable({
 
   // Filter & sort meetings (Guarantee: Tanggal terbaru -> tanggal terlama)
   const filteredMeetings = useMemo(() => {
-    // Clone and ensure newest date order
-    const list = [...meetings];
+    // Clone and ensure newest date order, excluding any deleted meetings
+    const list = meetings.filter((m) => !deletedMeetingIds.has(m.id));
     const monthIdx = parseMonthFilterIndex(filterMonth);
 
     return list.filter((m) => {
@@ -322,7 +336,7 @@ export function MeetingTable({
         m.location.toLowerCase().includes(q)
       );
     });
-  }, [searchFilter, filterBiro, filterStatus, filterMonth]);
+  }, [meetings, deletedMeetingIds, searchFilter, filterBiro, filterStatus, filterMonth]);
 
   const handleResetFilter = () => {
     setSearchFilter('');
@@ -703,12 +717,14 @@ export function MeetingTable({
           setIsSeriesModalOpen(true);
         }}
         onMeetingUpdated={() => {
-          fetch('/api/meetings', { cache: 'no-store' })
-            .then((r) => r.json())
-            .then((data) => {
-              if (Array.isArray(data)) setMeetings(data);
-            })
-            .catch((e) => console.error(e));
+          if (selectedMeeting) {
+            setDeletedMeetingIds((prev) => new Set(prev).add(selectedMeeting.id));
+            setMeetings((prev) => prev.filter((m) => m.id !== selectedMeeting.id));
+            if (onMeetingDeleted) {
+              onMeetingDeleted(selectedMeeting.id);
+            }
+          }
+          router.refresh();
         }}
       />
 

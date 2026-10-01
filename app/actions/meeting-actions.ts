@@ -28,7 +28,9 @@ function safeRevalidate(paths: string[]) {
   try {
     for (const p of paths) {
       revalidatePath(p);
+      revalidatePath(p, 'page');
     }
+    revalidatePath('/', 'layout');
   } catch {
     // Suppress Next.js static store missing errors when run in scripts
   }

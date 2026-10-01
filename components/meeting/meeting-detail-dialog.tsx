@@ -2,6 +2,7 @@
 
 import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import {
   X,
   Calendar,
@@ -42,6 +43,7 @@ export function MeetingDetailDialog({
   onMeetingUpdated,
   onOpenSeriesModal,
 }: MeetingDetailDialogProps) {
+  const router = useRouter();
   const { data: session } = useSession();
   const userRole = session?.user?.role || 'VIEWER';
   const canDeleteMeeting = userRole === 'SUPER_ADMIN' || userRole === 'ADMIN';
@@ -182,8 +184,11 @@ export function MeetingDetailDialog({
       if (res.success) {
         toast.success(`Rapat ${meeting.code} berhasil dihapus dari database.`);
         onClose();
-        if (onMeetingUpdated) onMeetingUpdated();
-        window.location.reload();
+        if (onMeetingUpdated) {
+          onMeetingUpdated();
+        } else {
+          router.refresh();
+        }
       } else {
         toast.error(res.error || 'Gagal menghapus rapat');
       }
@@ -202,8 +207,11 @@ export function MeetingDetailDialog({
       if (res.success) {
         toast.success(`Status rapat ${meeting.code} berhasil diubah ke ${newStatus}.`);
         onClose();
-        if (onMeetingUpdated) onMeetingUpdated();
-        window.location.reload();
+        if (onMeetingUpdated) {
+          onMeetingUpdated();
+        } else {
+          router.refresh();
+        }
       } else {
         toast.error(res.error || 'Gagal memperbarui status');
       }

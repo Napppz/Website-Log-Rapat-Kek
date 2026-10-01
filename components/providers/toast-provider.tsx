@@ -75,6 +75,20 @@ export const toast = {
       console.info('[Toast:info]', message);
     }
   },
+  flash: (type: ToastType, message: string, title?: string, duration = 4000) => {
+    if (typeof window !== 'undefined') {
+      try {
+        sessionStorage.setItem(
+          'simrapat_flash_toast',
+          JSON.stringify({ type, message, title, duration })
+        );
+      } catch {
+        if (globalToastListener) {
+          globalToastListener(type, message, title, duration);
+        }
+      }
+    }
+  },
 };
 
 export const confirmModal = (options: ConfirmOptions): Promise<boolean> => {
@@ -117,6 +131,24 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
       });
     });
   }, []);
+
+  // Listen for pending flash toasts in sessionStorage (for hard navigations or cross-page redirects)
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      try {
+        const stored = sessionStorage.getItem('simrapat_flash_toast');
+        if (stored) {
+          sessionStorage.removeItem('simrapat_flash_toast');
+          const parsed = JSON.parse(stored);
+          if (parsed && parsed.message) {
+            showToast(parsed.type || 'success', parsed.message, parsed.title, parsed.duration);
+          }
+        }
+      } catch {
+        // Ignore JSON or storage errors
+      }
+    }
+  }, [showToast]);
 
   useEffect(() => {
     globalToastListener = showToast;

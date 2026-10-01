@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { MeetingTable } from '@/components/meeting/meeting-table';
 import { MeetingStatus, BiroCode, Meeting } from '@/lib/types';
@@ -31,6 +31,13 @@ export function SemuaRapatClient({
   const userRole = currentUserRole || session?.user?.role || 'VIEWER';
   const canCreate = userRole === 'SUPER_ADMIN' || userRole === 'ADMIN' || userRole === 'NOTULIS';
   const canDeleteAll = userRole === 'SUPER_ADMIN' || userRole === 'ADMIN';
+
+  const [deletedIds, setDeletedIds] = useState<Set<string>>(new Set());
+  const [meetingsList, setMeetingsList] = useState<Meeting[]>(initialMeetings);
+
+  useEffect(() => {
+    setMeetingsList(initialMeetings.filter((m) => !deletedIds.has(m.id)));
+  }, [initialMeetings, deletedIds]);
 
   const [isUploadDialogOpen, setIsUploadDialogOpen] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
@@ -70,6 +77,7 @@ export function SemuaRapatClient({
       if (res.success) {
         setIsDeleteModalOpen(false);
         setConfirmInput('');
+        setMeetingsList([]);
         toast.success(
           `Berhasil menghapus seluruh data rapat (${res.count ?? initialMeetings.length} rapat telah dibersihkan).`
         );
@@ -125,7 +133,7 @@ export function SemuaRapatClient({
 
         <div className="flex flex-wrap items-center gap-2.5 shrink-0 self-start sm:self-center">
           {/* Hapus Semua Rapat Button (SUPER_ADMIN / ADMIN only) */}
-          {canDeleteAll && initialMeetings.length > 0 && (
+          {canDeleteAll && meetingsList.length > 0 && (
             <button
               type="button"
               onClick={() => setIsDeleteModalOpen(true)}
@@ -212,10 +220,14 @@ export function SemuaRapatClient({
 
       {/* Meeting Table */}
       <MeetingTable
-        initialMeetings={initialMeetings}
+        initialMeetings={meetingsList}
         filterStatus={statusParam}
         filterBiro={lockedBiroCode ? (lockedBiroCode as BiroCode) : biroParam}
         filterMonth={monthParam}
+        onMeetingDeleted={(deletedId) => {
+          setDeletedIds((prev) => new Set(prev).add(deletedId));
+          setMeetingsList((prev) => prev.filter((m) => m.id !== deletedId));
+        }}
       />
 
       {/* Danger Modal: Konfirmasi Hapus Semua Rapat */}

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import {
@@ -90,6 +90,13 @@ export function BiroDashboardClient({
 }: BiroDashboardClientProps) {
   const router = useRouter();
   const { data: session } = useSession();
+  const [deletedIds, setDeletedIds] = useState<Set<string>>(new Set());
+  const [meetingsList, setMeetingsList] = useState<Meeting[]>(initialMeetings);
+
+  useEffect(() => {
+    setMeetingsList(initialMeetings.filter((m) => !deletedIds.has(m.id)));
+  }, [initialMeetings, deletedIds]);
+
   const [selectedYear, setSelectedYear] = useState<number>(2026);
   const [selectedMonth, setSelectedMonth] = useState<string | null>(null);
   const [isDownloadingReport, setIsDownloadingReport] = useState(false);
@@ -158,20 +165,20 @@ export function BiroDashboardClient({
   // Discover available years from meetings
   const availableYears = useMemo(() => {
     const yearsSet = new Set<number>([2026, 2027]);
-    initialMeetings.forEach((m) => {
+    meetingsList.forEach((m) => {
       const y = new Date(m.date).getFullYear();
       if (!isNaN(y) && y > 2000) yearsSet.add(y);
     });
     return Array.from(yearsSet).sort((a, b) => a - b);
-  }, [initialMeetings]);
+  }, [meetingsList]);
 
   // Meetings filtered by selected year
   const yearMeetings = useMemo(() => {
-    return initialMeetings.filter((m) => {
+    return meetingsList.filter((m) => {
       const d = new Date(m.date);
       return d.getFullYear() === selectedYear;
     });
-  }, [initialMeetings, selectedYear]);
+  }, [meetingsList, selectedYear]);
 
   // Monthly trend activity for this biro
   const yearMonthlyActivity: MonthlyActivity[] = useMemo(() => {
@@ -599,6 +606,10 @@ export function BiroDashboardClient({
           initialMeetings={yearMeetings}
           filterMonth={selectedMonth}
           onViewAllMeetings={() => router.push(`/semua-rapat?biro=${biro.code.toLowerCase()}`)}
+          onMeetingDeleted={(deletedId) => {
+            setDeletedIds((prev) => new Set(prev).add(deletedId));
+            setMeetingsList((prev) => prev.filter((m) => m.id !== deletedId));
+          }}
         />
       </div>
     </div>
