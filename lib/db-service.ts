@@ -97,6 +97,15 @@ export async function getBiroDetail(code: string) {
               secretary: true,
             },
           },
+          actionItems: {
+            select: {
+              id: true,
+              title: true,
+              status: true,
+              dueDate: true,
+              priority: true,
+            },
+          },
           sequence: true,
         },
       });

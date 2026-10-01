@@ -366,6 +366,35 @@ export function Sidebar({
                 </div>
               )}
 
+              {/* Biro for Non-Admin: Direct link to their dedicated Biro Dashboard */}
+              {!isSuperAdmin && !isAdmin && session?.user?.biroCode && (
+                <Link
+                  href={`/biro/${session.user.biroCode.toLowerCase()}`}
+                  onClick={handleLinkClick}
+                  className={cn(
+                    "flex items-center gap-3 px-3 py-2 rounded-lg transition-all font-medium text-[14px]",
+                    pathname === `/biro/${session.user.biroCode.toLowerCase()}`
+                      ? "bg-[#F0F9FA] text-[#31889C] font-bold border-l-4 border-[#31889C] shadow-xs"
+                      : "text-slate-600 hover:bg-[#F0F9FA] hover:text-[#31889C]"
+                  )}
+                  title={`Dashboard Biro ${session.user.biroCode}`}
+                >
+                  <Building2
+                    className={cn(
+                      "w-5 h-5 shrink-0",
+                      pathname === `/biro/${session.user.biroCode.toLowerCase()}`
+                        ? "text-[#31889C]"
+                        : "text-slate-400"
+                    )}
+                  />
+                  {!collapsed && (
+                    <span className="truncate">
+                      Biro {session.user.biroCode}
+                    </span>
+                  )}
+                </Link>
+              )}
+
               {/* Dokumen (SUPER_ADMIN, ADMIN) */}
               {(isSuperAdmin || isAdmin) && (
                 <Link
