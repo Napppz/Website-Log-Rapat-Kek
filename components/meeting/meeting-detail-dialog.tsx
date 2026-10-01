@@ -54,11 +54,11 @@ export function MeetingDetailDialog({
   const [availableUsers, setAvailableUsers] = useState<any[]>([]);
   const [isLoadingItems, setIsLoadingItems] = useState(false);
 
-  const handleExportPdf = async () => {
+  const handleExportPdf = async (type: 'notula' | 'nota-dinas' = 'notula') => {
     if (!meeting?.id) return;
     try {
       setIsExporting(true);
-      const res = await fetch(`/api/meetings/${meeting.id}/pdf`);
+      const res = await fetch(`/api/meetings/${meeting.id}/pdf?type=${type}`);
       if (!res.ok) {
         const errJson = await res.json().catch(() => null);
         throw new Error(errJson?.error || 'Gagal mengunduh dokumen PDF.');
@@ -67,11 +67,17 @@ export function MeetingDetailDialog({
       const url = window.URL.createObjectURL(blob);
       const link = document.createElement('a');
       link.href = url;
-      link.download = `Risalah-Rapat-${meeting.code || 'KEK'}.pdf`;
+      link.download = type === 'nota-dinas'
+        ? `Nota-Dinas-${meeting.code || 'KEK'}.pdf`
+        : `Risalah-Rapat-${meeting.code || 'KEK'}.pdf`;
       document.body.appendChild(link);
       link.click();
       window.URL.revokeObjectURL(url);
-      toast.success(`Risalah rapat ${meeting.code || 'KEK'} berhasil diunduh (PDF).`);
+      toast.success(
+        type === 'nota-dinas'
+          ? `Nota Dinas rapat ${meeting.code || 'KEK'} berhasil diunduh (PDF).`
+          : `Risalah rapat ${meeting.code || 'KEK'} berhasil diunduh (PDF).`
+      );
     } catch (err: any) {
       toast.error(err?.message || 'Terjadi kesalahan saat mengunduh PDF.');
     } finally {
@@ -267,7 +273,7 @@ export function MeetingDetailDialog({
             }`}
           >
             <FileText className="w-3.5 h-3.5" />
-            <span>Notulen &amp; Hasil Rapat</span>
+            <span>Notulen / Nota Dinas</span>
           </button>
 
           <button
@@ -462,16 +468,53 @@ export function MeetingDetailDialog({
               Tutup
             </button>
 
-            <button
-              type="button"
-              disabled={isExporting}
-              onClick={() => onDownloadPdf ? onDownloadPdf(meeting) : handleExportPdf()}
-              className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-[#31889C] text-white font-semibold text-[13px] hover:bg-[#266F80] shadow-sm transition-all cursor-pointer disabled:opacity-50"
-              title="Unduh Risalah Rapat Resmi Format PDF"
-            >
-              <FileDown className="w-4 h-4" />
-              <span>{isExporting ? 'Membuat PDF...' : 'Unduh Notulen PDF'}</span>
-            </button>
+            {((meeting?.minutes?.conclusion as any)?.docType === 'NOTA_DINAS') ? (
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  disabled={isExporting}
+                  onClick={() => handleExportPdf('nota-dinas')}
+                  className="inline-flex items-center gap-2 px-3.5 py-2 rounded-lg bg-[#31889C] text-white font-semibold text-[12.5px] hover:bg-[#266F80] shadow-sm transition-all cursor-pointer disabled:opacity-50"
+                  title="Unduh Nota Dinas Resmi Format PDF"
+                >
+                  <FileDown className="w-4 h-4" />
+                  <span>{isExporting ? 'Membuat PDF...' : 'Unduh Nota Dinas PDF'}</span>
+                </button>
+                <button
+                  type="button"
+                  disabled={isExporting}
+                  onClick={() => handleExportPdf('notula')}
+                  className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg border border-slate-300 bg-white text-slate-700 font-semibold text-[12px] hover:bg-slate-50 transition-all cursor-pointer disabled:opacity-50"
+                  title="Unduh Risalah Notula Format PDF"
+                >
+                  <FileDown className="w-3.5 h-3.5 text-slate-500" />
+                  <span>Notula PDF</span>
+                </button>
+              </div>
+            ) : (
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  disabled={isExporting}
+                  onClick={() => onDownloadPdf ? onDownloadPdf(meeting) : handleExportPdf('notula')}
+                  className="inline-flex items-center gap-2 px-3.5 py-2 rounded-lg bg-[#31889C] text-white font-semibold text-[12.5px] hover:bg-[#266F80] shadow-sm transition-all cursor-pointer disabled:opacity-50"
+                  title="Unduh Risalah Rapat Resmi Format PDF"
+                >
+                  <FileDown className="w-4 h-4" />
+                  <span>{isExporting ? 'Membuat PDF...' : 'Unduh Notulen PDF'}</span>
+                </button>
+                <button
+                  type="button"
+                  disabled={isExporting}
+                  onClick={() => handleExportPdf('nota-dinas')}
+                  className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg border border-slate-300 bg-white text-slate-700 font-semibold text-[12px] hover:bg-slate-50 transition-all cursor-pointer disabled:opacity-50"
+                  title="Unduh Nota Dinas Resmi Format PDF"
+                >
+                  <FileDown className="w-3.5 h-3.5 text-slate-500" />
+                  <span>Nota Dinas PDF</span>
+                </button>
+              </div>
+            )}
           </div>
         </div>
       </div>

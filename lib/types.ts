@@ -176,3 +176,19 @@ export interface BureauWorkload {
   percentage: number;
   barColor: string;
 }
+
+export type MeetingDocumentType = 'NOTULA' | 'NOTA_DINAS';
+
+export interface NotaDinasData {
+  recipient?: string;      // Yth. (e.g. Plt. Kepala Biro Investasi, Kerja Sama, dan Komunikasi)
+  sender?: string;         // Dari (e.g. Kepala Bagian Program dan Tata Kelola)
+  subject?: string;        // Hal (e.g. Laporan Kegiatan Forum Analisis...)
+  dateText?: string;       // Tanggal (e.g. 27 Agustus 2026)
+  attachments?: string;    // Lampiran (e.g. 1 (satu) berkas / -)
+  introText?: string;      // Kalimat Pengantar / Pembuka
+  biroName?: string;       // Nama Biro pada Kop Surat
+  signerRole?: string;     // Jabatan Penandatangan
+  signerName?: string;     // Nama Lengkap Penandatangan
+  signatureImage?: string | null;
+  documentNumber?: string; // NOMOR: ND-...
+}

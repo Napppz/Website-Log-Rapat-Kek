@@ -25,6 +25,7 @@ import {
   Trash2,
   Check,
   FileText,
+  FileEdit,
 } from 'lucide-react';
 import { SignatureDialog } from './signature-dialog';
 import { updateMeetingNumberAction } from '@/app/actions/meeting-actions';
@@ -39,6 +40,8 @@ interface MeetingMinutesEditorProps {
     date?: Date | string;
     startTime?: string;
     endTime?: string;
+    location?: string;
+    primaryBiro?: { name?: string; code?: string } | null;
     chairperson?: { name: string } | null;
     secretary?: { name: string } | null;
   } | null;
@@ -48,6 +51,7 @@ interface MeetingMinutesEditorProps {
     decisions?: JSONContent | null;
     conclusion?: JSONContent | null;
   } | null;
+  defaultDocType?: 'NOTULA' | 'NOTA_DINAS';
   onSaved?: (savedData: any) => void;
   onPreviewClick?: () => void;
 }
@@ -56,10 +60,17 @@ export function MeetingMinutesEditor({
   meetingId,
   meeting,
   initialMinutes,
+  defaultDocType,
   onSaved,
   onPreviewClick,
 }: MeetingMinutesEditorProps) {
   const { data: session } = useSession();
+
+  const initialDocType =
+    (initialMinutes?.conclusion as any)?.docType ||
+    defaultDocType ||
+    'NOTULA';
+  const [docType, setDocType] = useState<'NOTULA' | 'NOTA_DINAS'>(initialDocType);
 
   const [agenda, setAgenda] = useState<JSONContent | null>(initialMinutes?.agenda || null);
   const [discussion, setDiscussion] = useState<JSONContent | null>(initialMinutes?.discussion || null);
@@ -120,6 +131,46 @@ export function MeetingMinutesEditor({
   const [isSignatureModalOpen, setIsSignatureModalOpen] = useState(false);
   const [isUploadDocOpen, setIsUploadDocOpen] = useState(false);
 
+  // Inisialisasi Data Naskah Dinas: Nota Dinas
+  const initialNota = (initialMinutes?.conclusion as any)?.notaDinas || {};
+
+  const defaultBiro = meeting?.primaryBiro?.name
+    ? meeting.primaryBiro.name.toUpperCase()
+    : 'BIRO INVESTASI, KERJA SAMA, DAN KOMUNIKASI';
+  const [ndBiroName, setNdBiroName] = useState<string>(initialNota.biroName || defaultBiro);
+
+  const [ndRecipient, setNdRecipient] = useState<string>(
+    initialNota.recipient || `Plt. Kepala ${meeting?.primaryBiro?.name || 'Biro Investasi, Kerja Sama, dan Komunikasi'}`
+  );
+  const [ndSender, setNdSender] = useState<string>(
+    initialNota.sender || 'Kepala Bagian Program dan Tata Kelola'
+  );
+  const [ndSubject, setNdSubject] = useState<string>(
+    initialNota.subject || (meeting?.title ? `Laporan Kegiatan ${meeting.title}` : 'Laporan Kegiatan Rapat')
+  );
+
+  const rawDate = meeting?.date ? new Date(meeting.date) : null;
+  let defaultDateText = '27 Agustus 2026';
+  if (rawDate && !isNaN(rawDate.getTime())) {
+    const months = [
+      'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
+      'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember',
+    ];
+    defaultDateText = `${rawDate.getDate()} ${months[rawDate.getMonth()]} ${rawDate.getFullYear()}`;
+  }
+  const [ndDateText, setNdDateText] = useState<string>(initialNota.dateText || defaultDateText);
+  const [ndAttachments, setNdAttachments] = useState<string>(initialNota.attachments || '1 (satu) berkas');
+
+  const defaultIntro = `Menindaklanjuti pelaksanaan rapat ${meeting?.title || ''} yang dilaksanakan pada ${ndDateText}${meeting?.location ? ` bertempat di ${meeting.location}` : ''}, bersama ini kami sampaikan laporan pokok-pokok pembahasan sebagai berikut:`;
+  const [ndIntroText, setNdIntroText] = useState<string>(initialNota.introText || defaultIntro);
+
+  const [ndSignerRole, setNdSignerRole] = useState<string>(
+    initialNota.signerRole || ndSender || 'Kepala Bagian Program dan Tata Kelola'
+  );
+  const [ndSignerName, setNdSignerName] = useState<string>(
+    initialNota.signerName || meeting?.chairperson?.name || 'Noviar Iskandar'
+  );
+
   const handleApplyExtractedDocToEditor = (extractedData: any) => {
     if (extractedData.agendaJson) {
       setAgenda(extractedData.agendaJson);
@@ -173,10 +224,26 @@ export function MeetingMinutesEditor({
           }
         }
 
+        const notaDinasPayload = {
+          recipient: ndRecipient.trim(),
+          sender: ndSender.trim(),
+          subject: ndSubject.trim(),
+          dateText: ndDateText.trim(),
+          attachments: ndAttachments.trim(),
+          introText: ndIntroText.trim(),
+          biroName: ndBiroName.trim(),
+          signerRole: ndSignerRole.trim(),
+          signerName: ndSignerName.trim(),
+          signatureImage: signatureImage || null,
+          documentNumber: finalDocNum || meeting?.meetingNumber,
+        };
+
         const conclusionPayload = {
           ...(conclusion || { type: 'doc', content: [] }),
-          signerName: signerName.trim(),
-          signerRole: signerRole.trim(),
+          docType,
+          notaDinas: notaDinasPayload,
+          signerName: docType === 'NOTA_DINAS' ? ndSignerName.trim() : signerName.trim(),
+          signerRole: docType === 'NOTA_DINAS' ? ndSignerRole.trim() : signerRole.trim(),
           chairpersonName: chairpersonName.trim(),
           signatureImage: signatureImage || null,
           documentNumber: finalDocNum || meeting?.meetingNumber,
@@ -186,8 +253,10 @@ export function MeetingMinutesEditor({
         const decisionsPayload = decisions
           ? {
               ...decisions,
-              signerName: signerName.trim(),
-              signerRole: signerRole.trim(),
+              docType,
+              notaDinas: notaDinasPayload,
+              signerName: docType === 'NOTA_DINAS' ? ndSignerName.trim() : signerName.trim(),
+              signerRole: docType === 'NOTA_DINAS' ? ndSignerRole.trim() : signerRole.trim(),
               chairpersonName: chairpersonName.trim(),
               signatureImage: signatureImage || null,
               documentNumber: finalDocNum || meeting?.meetingNumber,
@@ -201,6 +270,8 @@ export function MeetingMinutesEditor({
           discussion: discussion ?? undefined,
           decisions: decisionsPayload,
           conclusion: conclusionPayload,
+          docType,
+          notaDinas: notaDinasPayload,
         };
 
         const res = await upsertMeetingMinutesAction(payload);
@@ -220,7 +291,31 @@ export function MeetingMinutesEditor({
         setStatusMessage('Gagal menyimpan');
       }
     },
-    [meetingId, agenda, discussion, decisions, conclusion, signerName, signerRole, chairpersonName, signatureImage, documentNumber, invitationNumber, meeting?.meetingNumber, onSaved]
+    [
+      meetingId,
+      agenda,
+      discussion,
+      decisions,
+      conclusion,
+      docType,
+      ndBiroName,
+      ndRecipient,
+      ndSender,
+      ndSubject,
+      ndDateText,
+      ndAttachments,
+      ndIntroText,
+      ndSignerRole,
+      ndSignerName,
+      signerName,
+      signerRole,
+      chairpersonName,
+      signatureImage,
+      documentNumber,
+      invitationNumber,
+      meeting?.meetingNumber,
+      onSaved,
+    ]
   );
 
   // Autosave trigger with 2.5s debounce
@@ -243,7 +338,28 @@ export function MeetingMinutesEditor({
         clearTimeout(debounceTimerRef.current);
       }
     };
-  }, [agenda, discussion, decisions, conclusion, signerName, signerRole, signatureImage, documentNumber, invitationNumber, executeSave]);
+  }, [
+    agenda,
+    discussion,
+    decisions,
+    conclusion,
+    docType,
+    ndBiroName,
+    ndRecipient,
+    ndSender,
+    ndSubject,
+    ndDateText,
+    ndAttachments,
+    ndIntroText,
+    ndSignerRole,
+    ndSignerName,
+    signerName,
+    signerRole,
+    signatureImage,
+    documentNumber,
+    invitationNumber,
+    executeSave,
+  ]);
 
   const handleFieldChange = (setter: React.Dispatch<React.SetStateAction<JSONContent | null>>) => {
     return (json: JSONContent) => {
@@ -415,26 +531,570 @@ export function MeetingMinutesEditor({
     hasChangesRef.current = true;
   };
 
+  // Muat draf template resmi naskah dinas Nota Dinas (Contoh Resmi Gov-CSIRT Setjen KEK)
+  const handleLoadOfficialNotaDinasTemplate = () => {
+    const isConfirmed = window.confirm(
+      'Gunakan format baku Nota Dinas KEK (sesuai contoh resmi Gov-CSIRT)? Data kepala naskah, pokok pembahasan, kesimpulan, dan tindak lanjut akan diisikan ke editor.'
+    );
+    if (!isConfirmed) return;
+
+    setNdBiroName('BIRO INVESTASI, KERJA SAMA, DAN KOMUNIKASI');
+    setNdRecipient('Plt. Kepala Biro Investasi, Kerja Sama, dan Komunikasi');
+    setNdSender('Kepala Bagian Program dan Tata Kelola');
+    setNdSubject(`Laporan Kegiatan ${meeting?.title || 'Forum Analisis dan Berbagi Informasi Gov-CSIRT T.A. 2026'}`);
+    setNdAttachments('1 (satu) berkas');
+    setNdIntroText(
+      `Menindaklanjuti Surat Undangan terkait kegiatan ${meeting?.title || 'Forum Analisis dan Berbagi Informasi Gov-CSIRT T.A. 2026'}, bersama ini kami sampaikan laporan pokok-pokok pembahasan sebagai berikut:`
+    );
+    setNdSignerRole('Kepala Bagian Program dan Tata Kelola');
+    setNdSignerName('Noviar Iskandar');
+
+    const sampleDiscussion: JSONContent = {
+      type: 'doc',
+      content: [
+        {
+          type: 'paragraph',
+          content: [
+            {
+              type: 'text',
+              text: '1. Forum Analisis dan Berbagi Informasi Gov-CSIRT dihadiri oleh perwakilan tim CSIRT dari berbagai daerah dan tim Gov-CSIRT dari Direktorat Keamanan Siber dan Sandi Pemerintah Pusat.',
+            },
+          ],
+        },
+        {
+          type: 'paragraph',
+          content: [
+            {
+              type: 'text',
+              text: '2. Forum ini dihadiri oleh pembicara dan narasumber ahli di bidang penanganan insiden siber.',
+            },
+          ],
+        },
+        {
+          type: 'paragraph',
+          content: [
+            {
+              type: 'text',
+              text: '3. Dalam pemaparan narasumber terdapat beberapa pokok penting yang disampaikan mengenai ketahanan layanan melalui pendekatan reaktif dan proaktif.',
+            },
+          ],
+        },
+      ],
+    };
+
+    const sampleConclusion: JSONContent = {
+      type: 'doc',
+      content: [
+        {
+          type: 'paragraph',
+          content: [
+            {
+              type: 'text',
+              text: `Berdasarkan hasil pembahasan pada kegiatan ini, kami menarik kesimpulan bahwa pengamanan siber dan tata kelola sistem harus dibangun secara berkelanjutan melalui monitoring berkala terhadap seluruh aktivitas sistem serta penataan data yang terkoordinasi.`,
+            },
+          ],
+        },
+      ],
+    };
+
+    const sampleDecisions: JSONContent = {
+      type: 'doc',
+      content: [
+        {
+          type: 'paragraph',
+          content: [
+            {
+              type: 'text',
+              text: 'Sebagai tindak lanjut, dapat disampaikan rekomendasi langkah prioritas sebagai berikut:',
+            },
+          ],
+        },
+        {
+          type: 'orderedList',
+          content: [
+            {
+              type: 'listItem',
+              content: [
+                {
+                  type: 'paragraph',
+                  content: [
+                    {
+                      type: 'text',
+                      text: 'Penguatan tata kelola dan akses infrastruktur pemantauan secara real-time.',
+                    },
+                  ],
+                },
+              ],
+            },
+            {
+              type: 'listItem',
+              content: [
+                {
+                  type: 'paragraph',
+                  content: [
+                    {
+                      type: 'text',
+                      text: 'Penerapan prosedur validasi berkas dan peningkatan keamanan aplikasi instansi.',
+                    },
+                  ],
+                },
+              ],
+            },
+            {
+              type: 'listItem',
+              content: [
+                {
+                  type: 'paragraph',
+                  content: [
+                    {
+                      type: 'text',
+                      text: 'Menetapkan batasan penggunaan dan verifikasi manual terhadap pengolahan AI.',
+                    },
+                  ],
+                },
+              ],
+            },
+          ],
+        },
+      ],
+    };
+
+    setDiscussion(sampleDiscussion);
+    setConclusion(sampleConclusion);
+    setDecisions(sampleDecisions);
+    hasChangesRef.current = true;
+  };
+
   return (
     <div className="flex flex-col gap-6">
-      {/* Top Helper Header: Form Info Sesuai Naskah Dinas */}
-      <div className="bg-[#F8FAFC] border border-slate-200 rounded-2xl p-4 sm:p-5 flex flex-col md:flex-row md:items-center justify-between gap-4">
+      {/* 0. Pilihan Jenis Dokumen Rapat (Notula vs Nota Dinas) */}
+      <div className="bg-white border border-slate-200 rounded-2xl p-4 sm:p-5 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <div className="flex items-center gap-2">
-            <span className="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-bold bg-[#31889C] text-white">
-              FORMAT NOTULA RESMI
+          <label className="text-[14px] font-bold text-slate-900 flex items-center gap-2">
+            <span>Pilihan Jenis Dokumen Rapat</span>
+            <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-[#E8F5F7] text-[#215865] border border-[#BCE3EB]">
+              Tersedia 2 Format Resmi
             </span>
-            <span className="text-[12px] font-semibold text-slate-700">
-              NOMOR: {documentNumber || meeting?.meetingNumber || (meeting as any)?.code || 'KEK/ND/2026'}
-            </span>
-          </div>
-          <h3 className="font-bold text-[16px] text-slate-900 mt-1">
-            {meeting?.title || 'Pengisian Notula Rapat'}
-          </h3>
-          <p className="text-[12px] text-slate-600 mt-0.5">
-            Pimpinan: <span className="font-semibold text-slate-800">{chairpersonName || 'Belum Ditugaskan'}</span> • Notulis: <span className="font-semibold text-slate-800">{signerName || 'Pranata Hubungan Masyarakat Terampil'}</span>
+          </label>
+          <p className="text-[12px] text-slate-500 mt-1">
+            Pilih format dokumen naskah dinas yang ingin dibuat untuk rapat ini:
           </p>
         </div>
+
+        <div className="flex items-center bg-slate-100 p-1 rounded-xl border border-slate-200 gap-1.5 shrink-0">
+          <button
+            type="button"
+            onClick={() => {
+              setDocType('NOTULA');
+              hasChangesRef.current = true;
+            }}
+            className={`flex items-center gap-2 px-4 py-2 rounded-lg text-[12.5px] font-semibold transition-all cursor-pointer ${
+              docType === 'NOTULA'
+                ? 'bg-white text-slate-900 shadow-xs font-bold border border-slate-200/80'
+                : 'text-slate-600 hover:text-slate-900'
+            }`}
+          >
+            <FileText className="w-4 h-4 text-[#31889C]" />
+            <span>Notula / Risalah</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => {
+              setDocType('NOTA_DINAS');
+              hasChangesRef.current = true;
+            }}
+            className={`flex items-center gap-2 px-4 py-2 rounded-lg text-[12.5px] font-semibold transition-all cursor-pointer ${
+              docType === 'NOTA_DINAS'
+                ? 'bg-[#31889C] text-white shadow-xs font-bold'
+                : 'text-slate-600 hover:text-slate-900'
+            }`}
+          >
+            <FileEdit className="w-4 h-4" />
+            <span>Nota Dinas Resmi</span>
+          </button>
+        </div>
+      </div>
+
+      {docType === 'NOTA_DINAS' ? (
+        /* ================= FORM NOTA DINAS RESMI ================= */
+        <div className="space-y-6">
+          {/* Header Card Nota Dinas */}
+          <div className="bg-[#F8FAFC] border border-slate-200 rounded-2xl p-4 sm:p-5 flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <div>
+              <div className="flex items-center gap-2">
+                <span className="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-bold bg-[#31889C] text-white">
+                  NOTA DINAS RESMI KEK
+                </span>
+                <span className="text-[12px] font-semibold text-slate-700">
+                  NOMOR: {documentNumber || '${nomor_naskah}'}
+                </span>
+              </div>
+              <h3 className="font-bold text-[16px] text-slate-900 mt-1">
+                {ndSubject || meeting?.title || 'Laporan Kegiatan Rapat'}
+              </h3>
+              <p className="text-[12px] text-slate-600 mt-0.5">
+                Pengirim: <span className="font-semibold text-slate-800">{ndSender}</span> ({ndSignerName}) &bull; Kepada: <span className="font-semibold text-slate-800">{ndRecipient}</span>
+              </p>
+            </div>
+
+            <div className="flex flex-wrap items-center gap-2 shrink-0">
+              <button
+                type="button"
+                onClick={handleLoadOfficialNotaDinasTemplate}
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-[#BCE3EB] bg-[#F0F9FA] hover:bg-[#E8F5F7] text-[#215865] font-semibold text-[12px] transition-colors cursor-pointer shadow-xs"
+                title="Muat struktur baku Nota Dinas (contoh Gov-CSIRT)"
+              >
+                <Sparkles className="w-3.5 h-3.5 text-[#31889C]" />
+                <span>Gunakan Contoh Nota Dinas</span>
+              </button>
+
+              {onPreviewClick && (
+                <button
+                  type="button"
+                  onClick={onPreviewClick}
+                  className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg border border-slate-300 bg-white hover:bg-slate-50 text-slate-800 font-semibold text-[12px] transition-colors cursor-pointer shadow-xs"
+                >
+                  <Eye className="w-3.5 h-3.5 text-[#31889C]" />
+                  <span>Lihat Pratinjau Nota Dinas</span>
+                </button>
+              )}
+            </div>
+          </div>
+
+          {/* Section 1: Kop & Nomor Naskah */}
+          <div className="bg-white rounded-xl border border-slate-200 p-5 shadow-xs space-y-4">
+            <h4 className="font-bold text-[14px] text-slate-900 uppercase tracking-wide border-b border-slate-100 pb-2">
+              1. Kop Surat &amp; Nomor Nota Dinas
+            </h4>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-1.5">
+                <label className="text-[12.5px] font-bold text-slate-800">
+                  Nama Biro pada Kop Surat (Baris Ke-3)
+                </label>
+                <input
+                  type="text"
+                  value={ndBiroName}
+                  onChange={(e) => {
+                    setNdBiroName(e.target.value);
+                    hasChangesRef.current = true;
+                  }}
+                  placeholder="Contoh: BIRO INVESTASI, KERJA SAMA, DAN KOMUNIKASI"
+                  className="w-full px-3.5 py-2 text-[13px] bg-slate-50 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#31889C]/20 focus:border-[#31889C] font-medium"
+                />
+                <p className="text-[11px] text-slate-500">
+                  Dicetak di bawah tulisan DEWAN NASIONAL KAWASAN EKONOMI KHUSUS / SEKRETARIAT JENDERAL.
+                </p>
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="text-[12.5px] font-bold text-slate-800">
+                  Nomor Nota Dinas (NOMOR: ...)
+                </label>
+                <input
+                  type="text"
+                  value={documentNumber}
+                  onChange={(e) => {
+                    setDocumentNumber(e.target.value);
+                    hasChangesRef.current = true;
+                  }}
+                  placeholder="Contoh: ND-01/D.KEK/2026 atau ${nomor_naskah}"
+                  className="w-full px-3.5 py-2 text-[13px] bg-slate-50 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#31889C]/20 focus:border-[#31889C] font-mono font-medium"
+                />
+                <p className="text-[11px] text-slate-500">
+                  Nomor register naskah dinas resmi.
+                </p>
+              </div>
+            </div>
+          </div>
+
+          {/* Section 2: Informasi Tabel Naskah (Yth, Dari, Hal, Tanggal, Lampiran) */}
+          <div className="bg-white rounded-xl border border-slate-200 p-5 shadow-xs space-y-4">
+            <h4 className="font-bold text-[14px] text-slate-900 uppercase tracking-wide border-b border-slate-100 pb-2">
+              2. Kepala Naskah Nota Dinas (Tabel Informasi)
+            </h4>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-1.5">
+                <label className="text-[12.5px] font-bold text-slate-800">
+                  Yth. (Penerima)
+                </label>
+                <input
+                  type="text"
+                  value={ndRecipient}
+                  onChange={(e) => {
+                    setNdRecipient(e.target.value);
+                    hasChangesRef.current = true;
+                  }}
+                  placeholder="Contoh: Plt. Kepala Biro Investasi, Kerja Sama, dan Komunikasi"
+                  className="w-full px-3.5 py-2 text-[13px] bg-slate-50 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#31889C]/20 focus:border-[#31889C] font-medium"
+                />
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="text-[12.5px] font-bold text-slate-800">
+                  Dari (Pengirim)
+                </label>
+                <input
+                  type="text"
+                  value={ndSender}
+                  onChange={(e) => {
+                    setNdSender(e.target.value);
+                    if (!ndSignerRole || ndSignerRole === 'Kepala Bagian Program dan Tata Kelola') {
+                      setNdSignerRole(e.target.value);
+                    }
+                    hasChangesRef.current = true;
+                  }}
+                  placeholder="Contoh: Kepala Bagian Program dan Tata Kelola"
+                  className="w-full px-3.5 py-2 text-[13px] bg-slate-50 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#31889C]/20 focus:border-[#31889C] font-medium"
+                />
+              </div>
+
+              <div className="space-y-1.5 md:col-span-2">
+                <label className="text-[12.5px] font-bold text-slate-800">
+                  Hal (Perihal Laporan)
+                </label>
+                <input
+                  type="text"
+                  value={ndSubject}
+                  onChange={(e) => {
+                    setNdSubject(e.target.value);
+                    hasChangesRef.current = true;
+                  }}
+                  placeholder="Contoh: Laporan Kegiatan Forum Analisis dan Berbagi Informasi Gov-CSIRT T.A. 2026"
+                  className="w-full px-3.5 py-2 text-[13px] bg-slate-50 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#31889C]/20 focus:border-[#31889C] font-medium"
+                />
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="text-[12.5px] font-bold text-slate-800">
+                  Tanggal
+                </label>
+                <input
+                  type="text"
+                  value={ndDateText}
+                  onChange={(e) => {
+                    setNdDateText(e.target.value);
+                    hasChangesRef.current = true;
+                  }}
+                  placeholder="Contoh: 27 Agustus 2026"
+                  className="w-full px-3.5 py-2 text-[13px] bg-slate-50 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#31889C]/20 focus:border-[#31889C] font-medium"
+                />
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="text-[12.5px] font-bold text-slate-800">
+                  Lampiran
+                </label>
+                <input
+                  type="text"
+                  value={ndAttachments}
+                  onChange={(e) => {
+                    setNdAttachments(e.target.value);
+                    hasChangesRef.current = true;
+                  }}
+                  placeholder="Contoh: 1 (satu) berkas atau -"
+                  className="w-full px-3.5 py-2 text-[13px] bg-slate-50 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#31889C]/20 focus:border-[#31889C] font-medium"
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* Section 3: Kalimat Pengantar / Pembuka */}
+          <div className="bg-white rounded-xl border border-slate-200 p-5 shadow-xs space-y-3">
+            <div className="flex items-center justify-between pb-2 border-b border-slate-100">
+              <h4 className="font-bold text-[14px] text-slate-900 uppercase tracking-wide">
+                3. Kalimat Pengantar / Pembuka
+              </h4>
+              <button
+                type="button"
+                onClick={() => {
+                  setNdIntroText(
+                    `Menindaklanjuti pelaksanaan kegiatan ${meeting?.title || 'rapat'} yang dilaksanakan pada ${ndDateText}${meeting?.location ? ` bertempat di ${meeting.location}` : ''}, bersama ini kami sampaikan laporan pokok-pokok pembahasan sebagai berikut:`
+                  );
+                  hasChangesRef.current = true;
+                }}
+                className="text-[11px] font-semibold text-[#31889C] hover:text-[#266F80] hover:underline cursor-pointer"
+              >
+                + Buat Kalimat Otomatis
+              </button>
+            </div>
+            <textarea
+              rows={3}
+              value={ndIntroText}
+              onChange={(e) => {
+                setNdIntroText(e.target.value);
+                hasChangesRef.current = true;
+              }}
+              placeholder="Contoh: Menindaklanjuti Surat Undangan dari Kepala Badan Siber dan Sandi Pemerintah Pusat... bersama ini kami sampaikan laporan pokok-pokok pembahasan sebagai berikut:"
+              className="w-full p-3.5 text-[13px] bg-white border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#31889C]/20 focus:border-[#31889C] leading-relaxed text-slate-900"
+            />
+            <p className="text-[11px] text-slate-500">
+              Paragraf pembuka sebelum butir pokok pembahasan. Ditampilkan dengan perataan kiri-kanan (justified) dan indentasi baris pertama.
+            </p>
+          </div>
+
+          {/* Section 4: Pokok-pokok Pembahasan */}
+          <div className="bg-white rounded-xl border border-slate-200 p-5 shadow-xs space-y-3">
+            <h4 className="font-bold text-[14px] text-slate-900 uppercase tracking-wide border-b border-slate-100 pb-2">
+              4. Pokok-pokok Pembahasan
+            </h4>
+            <p className="text-[11.5px] text-slate-500">
+              Isi poin 1, 2, 3, dan seterusnya beserta sub-poin (a, b, c). Gunakan toolbar penomoran di editor.
+            </p>
+            <TiptapEditor
+              content={discussion}
+              onChange={handleFieldChange(setDiscussion)}
+              placeholder="Ketikkan butir-butir pokok pembahasan rapat di sini..."
+            />
+          </div>
+
+          {/* Section 5: Kesimpulan (Seksi 4) */}
+          <div className="bg-white rounded-xl border border-slate-200 p-5 shadow-xs space-y-3">
+            <h4 className="font-bold text-[14px] text-slate-900 uppercase tracking-wide border-b border-slate-100 pb-2">
+              5. Kesimpulan (Dicetak sebagai Seksi 4)
+            </h4>
+            <TiptapEditor
+              content={conclusion}
+              onChange={handleFieldChange(setConclusion)}
+              placeholder="Ketikkan kesimpulan pembahasan rapat di sini..."
+            />
+          </div>
+
+          {/* Section 6: Tindak Lanjut (Seksi 5) */}
+          <div className="bg-white rounded-xl border border-slate-200 p-5 shadow-xs space-y-3">
+            <h4 className="font-bold text-[14px] text-slate-900 uppercase tracking-wide border-b border-slate-100 pb-2">
+              6. Tindak Lanjut (Dicetak sebagai Seksi 5)
+            </h4>
+            <TiptapEditor
+              content={decisions}
+              onChange={handleFieldChange(setDecisions)}
+              placeholder="Ketikkan butir tindak lanjut / rekomendasi aksi di sini..."
+            />
+          </div>
+
+          {/* Section 7: Penandatangan Nota Dinas */}
+          <div className="bg-white rounded-xl border border-slate-200 p-5 shadow-xs space-y-4">
+            <h4 className="font-bold text-[14px] text-slate-900 uppercase tracking-wide border-b border-slate-100 pb-2">
+              7. Penandatangan Nota Dinas
+            </h4>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-1.5">
+                <label className="text-[12.5px] font-bold text-slate-800">
+                  Jabatan Pengirim (Atas Tanda Tangan)
+                </label>
+                <input
+                  type="text"
+                  value={ndSignerRole}
+                  onChange={(e) => {
+                    setNdSignerRole(e.target.value);
+                    hasChangesRef.current = true;
+                  }}
+                  placeholder="Contoh: Kepala Bagian Program dan Tata Kelola"
+                  className="w-full px-3.5 py-2 text-[13px] bg-slate-50 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#31889C]/20 focus:border-[#31889C] font-medium"
+                />
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="text-[12.5px] font-bold text-slate-800">
+                  Nama Lengkap Pengirim (Bawah Tanda Tangan)
+                </label>
+                <input
+                  type="text"
+                  value={ndSignerName}
+                  onChange={(e) => {
+                    setNdSignerName(e.target.value);
+                    hasChangesRef.current = true;
+                  }}
+                  placeholder="Contoh: Noviar Iskandar"
+                  className="w-full px-3.5 py-2 text-[13px] bg-slate-50 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#31889C]/20 focus:border-[#31889C] font-medium"
+                />
+              </div>
+            </div>
+
+            {/* Signature Area */}
+            <div className="pt-2">
+              <label className="text-[12.5px] font-bold text-slate-800 block mb-2">
+                Tanda Tangan Digital Pengirim
+              </label>
+              {signatureImage ? (
+                <div className="p-3 bg-white rounded-xl border border-[#BCE3EB] flex items-center justify-between gap-3 shadow-2xs max-w-md">
+                  <div className="flex items-center gap-3">
+                    <img
+                      src={signatureImage}
+                      alt="Tanda Tangan Pengirim"
+                      className="max-h-14 max-w-[130px] object-contain drop-shadow-2xs"
+                    />
+                    <div className="text-[11px] text-slate-600">
+                      <p className="font-semibold text-[#4D8F3D] flex items-center gap-1">
+                        <Check className="w-3.5 h-3.5" />
+                        <span>Tanda tangan terpasang</span>
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-1.5">
+                    <button
+                      type="button"
+                      onClick={() => setIsSignatureModalOpen(true)}
+                      className="px-2.5 py-1.5 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 text-[11px] font-semibold transition-colors cursor-pointer"
+                    >
+                      Ubah
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setSignatureImage(null);
+                        hasChangesRef.current = true;
+                      }}
+                      className="p-1.5 rounded-lg border border-red-200 text-red-600 hover:bg-red-50 transition-colors cursor-pointer"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <div className="p-3.5 rounded-xl border border-dashed border-[#BCE3EB] bg-[#F0F9FA]/40 hover:bg-[#F0F9FA] transition-all flex flex-col sm:flex-row items-center justify-between gap-3 max-w-md">
+                  <div className="text-left space-y-0.5">
+                    <p className="font-semibold text-[11.5px] text-slate-700 flex items-center gap-1.5">
+                      <PenTool className="w-3.5 h-3.5 text-[#31889C]" />
+                      <span>Tanda Tangan (Opsional)</span>
+                    </p>
+                    <p className="text-[10.5px] text-slate-500">
+                      Jika kosong, dicetak placeholder {'${ttd_pengirim}'}
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setIsSignatureModalOpen(true)}
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[#31889C] hover:bg-[#266F80] text-white font-semibold text-[11.5px] shadow-xs cursor-pointer"
+                  >
+                    <Upload className="w-3.5 h-3.5" />
+                    <span>+ Atur Tanda Tangan</span>
+                  </button>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      ) : (
+        /* ================= FORM NOTULA / RISALAH RAPAT ================= */
+        <div className="space-y-6">
+          {/* Top Helper Header: Form Info Sesuai Naskah Dinas */}
+          <div className="bg-[#F8FAFC] border border-slate-200 rounded-2xl p-4 sm:p-5 flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <div>
+              <div className="flex items-center gap-2">
+                <span className="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-bold bg-[#31889C] text-white">
+                  FORMAT NOTULA RESMI
+                </span>
+                <span className="text-[12px] font-semibold text-slate-700">
+                  NOMOR: {documentNumber || meeting?.meetingNumber || (meeting as any)?.code || 'KEK/ND/2026'}
+                </span>
+              </div>
+              <h3 className="font-bold text-[16px] text-slate-900 mt-1">
+                {meeting?.title || 'Pengisian Notula Rapat'}
+              </h3>
+              <p className="text-[12px] text-slate-600 mt-0.5">
+                Pimpinan: <span className="font-semibold text-slate-800">{chairpersonName || 'Belum Ditugaskan'}</span> • Notulis: <span className="font-semibold text-slate-800">{signerName || 'Pranata Hubungan Masyarakat Terampil'}</span>
+              </p>
+            </div>
 
         <div className="flex flex-wrap items-center gap-2 shrink-0">
           <button
@@ -973,6 +1633,8 @@ export function MeetingMinutesEditor({
         </div>
       )}
     </div>
+  </div>
+)}
 
       {/* Signature Modal */}
       <SignatureDialog

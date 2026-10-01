@@ -32,6 +32,19 @@ export function MeetingMinutesSection({
   const [mode, setMode] = useState<'edit' | 'preview'>(defaultMode);
   const [isDownloadingPdf, setIsDownloadingPdf] = useState(false);
 
+  const initialDocType: 'NOTULA' | 'NOTA_DINAS' =
+    (minutes?.conclusion as any)?.docType ||
+    (minutes?.decisions as any)?.docType ||
+    'NOTULA';
+  const [docType, setDocType] = useState<'NOTULA' | 'NOTA_DINAS'>(initialDocType);
+
+  useEffect(() => {
+    const concl = minutes?.conclusion as any;
+    if (concl?.docType) {
+      setDocType(concl.docType);
+    }
+  }, [minutes]);
+
   // Check if current meeting object contains full relational records
   const isMeetingComplete = useCallback((m: any) => {
     return (
@@ -59,6 +72,10 @@ export function MeetingMinutesSection({
             setCurrentMeeting(detailRes.data);
             if (detailRes.data.minutes) {
               setMinutes(detailRes.data.minutes);
+              const concl = detailRes.data.minutes.conclusion as any;
+              if (concl?.docType) {
+                setDocType(concl.docType);
+              }
             }
           }
         } else {
@@ -69,6 +86,10 @@ export function MeetingMinutesSection({
           const minRes = await getMeetingMinutesAction(meetingId);
           if (isMounted && minRes.success && minRes.data) {
             setMinutes(minRes.data);
+            const concl = minRes.data.conclusion as any;
+            if (concl?.docType) {
+              setDocType(concl.docType);
+            }
           }
         }
       } catch (err) {
@@ -85,14 +106,15 @@ export function MeetingMinutesSection({
     };
   }, [meetingId, propMeeting, propMinutes, isMeetingComplete]);
 
-  // Handler Download PDF Notula
-  const handleDownloadPdf = async () => {
+  // Handler Download PDF (Mendukung Notula & Nota Dinas)
+  const handleDownloadPdf = async (type?: 'notula' | 'nota-dinas') => {
+    const targetType = type || (docType === 'NOTA_DINAS' ? 'nota-dinas' : 'notula');
     try {
       setIsDownloadingPdf(true);
-      const res = await fetch(`/api/meetings/${meetingId}/pdf`);
+      const res = await fetch(`/api/meetings/${meetingId}/pdf?type=${targetType}`);
       if (!res.ok) {
         const errJson = await res.json().catch(() => null);
-        throw new Error(errJson?.error || 'Gagal mengunduh dokumen Notula PDF.');
+        throw new Error(errJson?.error || `Gagal mengunduh dokumen ${targetType === 'nota-dinas' ? 'Nota Dinas' : 'Notula'} PDF.`);
       }
 
       const blob = await res.blob();
@@ -100,14 +122,22 @@ export function MeetingMinutesSection({
       const link = document.createElement('a');
       link.href = url;
       const code = currentMeeting?.meetingNumber || currentMeeting?.code || meetingId;
-      link.download = `Risalah-Rapat-${code.replace(/[^a-zA-Z0-9_-]/g, '_')}.pdf`;
+      const cleanCode = code.replace(/[^a-zA-Z0-9_-]/g, '_');
+      link.download = targetType === 'nota-dinas'
+        ? `Nota-Dinas-${cleanCode}.pdf`
+        : `Risalah-Rapat-${cleanCode}.pdf`;
+
       document.body.appendChild(link);
       link.click();
       link.remove();
       window.URL.revokeObjectURL(url);
-      toast.success('Notula Rapat resmi berhasil diunduh (PDF).');
+      toast.success(
+        targetType === 'nota-dinas'
+          ? 'Nota Dinas resmi berhasil diunduh (PDF).'
+          : 'Risalah Rapat resmi berhasil diunduh (PDF).'
+      );
     } catch (err: any) {
-      toast.error(err?.message || 'Terjadi kesalahan saat mengunduh Notula PDF.');
+      toast.error(err?.message || 'Terjadi kesalahan saat mengunduh PDF.');
     } finally {
       setIsDownloadingPdf(false);
     }
@@ -118,9 +148,9 @@ export function MeetingMinutesSection({
     return (
       <div className="p-12 text-center bg-white rounded-xl border border-slate-200 shadow-xs flex flex-col items-center justify-center">
         <Loader2 className="w-8 h-8 text-[#31889C] animate-spin mb-3" />
-        <p className="text-[14px] font-semibold text-slate-800">Menyiapkan Lembar Notula Rapat...</p>
+        <p className="text-[14px] font-semibold text-slate-800">Menyiapkan Lembar Naskah Rapat...</p>
         <p className="text-[12px] text-slate-500 mt-1">
-          Menyusun naskah dinas resmi, daftar peserta, dan butir pembahasan dari basis data
+          Menyusun format resmi Notula / Nota Dinas dan butir pembahasan dari basis data
         </p>
       </div>
     );
@@ -138,9 +168,12 @@ export function MeetingMinutesSection({
           meetingId={meetingId}
           meeting={currentMeeting}
           initialMinutes={minutes}
+          defaultDocType={docType}
           onSaved={(savedData) => {
             setMinutes(savedData);
-            // Optionally update currentMeeting.minutes as well
+            if (savedData.conclusion?.docType) {
+              setDocType(savedData.conclusion.docType);
+            }
             if (currentMeeting) {
               setCurrentMeeting({ ...currentMeeting, minutes: savedData });
             }
@@ -160,7 +193,7 @@ export function MeetingMinutesSection({
           <div className="flex items-center gap-2 text-[#215865]">
             <Info className="w-4 h-4 text-[#31889C] shrink-0" />
             <span>
-              <strong>Draf Standar Naskah Dinas:</strong> Belum ada catatan khusus yang disimpan. Lembar pratinjau di bawah menampilkan format lengkap naskah dinas dan peserta persis seperti hasil unduh PDF.
+              <strong>Draf Standar Naskah Dinas:</strong> Belum ada catatan khusus yang disimpan. Anda dapat memilih pratinjau antara <strong>Risalah Rapat</strong> atau <strong>Nota Dinas</strong> resmi, atau klik tombol tulis untuk mengisi catatan rapat.
             </span>
           </div>
           {canEditMinutes && (
@@ -170,7 +203,7 @@ export function MeetingMinutesSection({
               className="inline-flex items-center gap-1 px-3 py-1 rounded-lg bg-[#31889C] hover:bg-[#266F80] text-white font-semibold text-[11px] shrink-0 transition-colors shadow-xs cursor-pointer self-start sm:self-auto"
             >
               <FileEdit className="w-3 h-3" />
-              <span>Tulis Notula Khusus</span>
+              <span>Tulis Notula / Nota Dinas</span>
             </button>
           )}
         </div>
@@ -184,6 +217,8 @@ export function MeetingMinutesSection({
         conclusion={minutes?.conclusion}
         updatedAt={minutes?.updatedAt}
         meeting={currentMeeting}
+        documentType={docType}
+        onDocumentTypeChange={(type) => setDocType(type)}
         onDownloadPdf={handleDownloadPdf}
         onEditClick={canEditMinutes ? () => setMode('edit') : undefined}
         canEdit={canEditMinutes}

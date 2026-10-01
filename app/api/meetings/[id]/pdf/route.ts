@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { requireAuth } from '@/lib/auth/authorization';
-import { generateMeetingPdf } from '@/lib/pdf/meeting-pdf-generator';
+import { generateMeetingPdf, generateNotaDinasPdf } from '@/lib/pdf/meeting-pdf-generator';
 
 export async function GET(
   request: NextRequest,
@@ -65,12 +65,27 @@ export async function GET(
       return NextResponse.json({ error: 'Data rapat tidak ditemukan.' }, { status: 404 });
     }
 
-    // 4. Generate PDF buffer
-    const pdfBuffer = await generateMeetingPdf(meeting as any);
+    // 4. Determine document type (Notula vs Nota Dinas)
+    const typeParam = request.nextUrl.searchParams.get('type')?.toLowerCase();
+    const storedDocType =
+      (meeting.minutes?.conclusion as any)?.docType ||
+      (meeting.minutes?.decisions as any)?.docType;
+
+    const isNotaDinas =
+      typeParam === 'nota-dinas' ||
+      typeParam === 'notadinas' ||
+      (!typeParam && storedDocType === 'NOTA_DINAS');
+
+    // Generate PDF buffer
+    const pdfBuffer = isNotaDinas
+      ? await generateNotaDinasPdf(meeting as any)
+      : await generateMeetingPdf(meeting as any);
 
     // 5. Sanitize filename
-    const safeMeetingNumber = (meeting.meetingNumber || 'Dokumen').replace(/[^a-zA-Z0-9_-]/g, '_');
-    const filename = `Risalah-Rapat-${safeMeetingNumber}.pdf`;
+    const safeMeetingNumber = (meeting.meetingNumber || (meeting as any).code || 'Dokumen').replace(/[^a-zA-Z0-9_-]/g, '_');
+    const filename = isNotaDinas
+      ? `Nota-Dinas-${safeMeetingNumber}.pdf`
+      : `Risalah-Rapat-${safeMeetingNumber}.pdf`;
 
     const isInline =
       request.nextUrl.searchParams.get('inline') === 'true' ||

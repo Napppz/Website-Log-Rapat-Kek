@@ -21,6 +21,7 @@ import {
   normalizeTime,
   extractPlainText,
   resolveMeetingSignerInfo,
+  resolveNotaDinasData,
   DEFAULT_DISCUSSION_FALLBACK,
   DEFAULT_CONCLUSION_FALLBACK,
   DEFAULT_ACTION_ITEM_FALLBACK,
@@ -33,7 +34,9 @@ interface MeetingMinutesPreviewProps {
   conclusion?: JSONContent | null;
   updatedAt?: string | Date;
   meeting?: any;
-  onDownloadPdf?: () => void;
+  documentType?: 'NOTULA' | 'NOTA_DINAS';
+  onDocumentTypeChange?: (type: 'NOTULA' | 'NOTA_DINAS') => void;
+  onDownloadPdf?: (type?: 'notula' | 'nota-dinas') => void;
   onEditClick?: () => void;
   canEdit?: boolean;
 }
@@ -90,12 +93,31 @@ export function MeetingMinutesPreview({
   conclusion,
   updatedAt,
   meeting,
+  documentType: propDocType,
+  onDocumentTypeChange,
   onDownloadPdf,
   onEditClick,
   canEdit = false,
 }: MeetingMinutesPreviewProps) {
   const [viewMode, setViewMode] = useState<'paper' | 'raw_pdf'>('paper');
   const [iframeKey, setIframeKey] = useState(0);
+
+  const initialDocType: 'NOTULA' | 'NOTA_DINAS' =
+    propDocType || (conclusion as any)?.docType || 'NOTULA';
+  const [docType, setDocType] = useState<'NOTULA' | 'NOTA_DINAS'>(initialDocType);
+
+  React.useEffect(() => {
+    if (propDocType) {
+      setDocType(propDocType);
+    }
+  }, [propDocType]);
+
+  const handleDocTypeToggle = (type: 'NOTULA' | 'NOTA_DINAS') => {
+    setDocType(type);
+    if (onDocumentTypeChange) {
+      onDocumentTypeChange(type);
+    }
+  };
 
   const meetingId = meeting?.id;
   const meetingNumber =
@@ -116,6 +138,9 @@ export function MeetingMinutesPreview({
     secretaryMetaText,
     signatureImage,
   } = resolveMeetingSignerInfo(meeting, { agenda, discussion, decisions, conclusion });
+
+  // Nota Dinas data resolution
+  const notaData = resolveNotaDinasData(meeting, { agenda, discussion, decisions, conclusion });
 
   // Agenda text resolution
   const agendaRaw = extractPlainText(agenda);
@@ -150,7 +175,9 @@ export function MeetingMinutesPreview({
   const actionItems: any[] = Array.isArray(meeting?.actionItems) ? meeting.actionItems : [];
 
   // PDF direct stream URL
-  const pdfUrl = meetingId ? `/api/meetings/${meetingId}/pdf?inline=true` : '';
+  const pdfUrl = meetingId
+    ? `/api/meetings/${meetingId}/pdf?type=${docType === 'NOTA_DINAS' ? 'nota-dinas' : 'notula'}&inline=true`
+    : '';
 
   return (
     <div className="space-y-4">
@@ -163,7 +190,7 @@ export function MeetingMinutesPreview({
           <div>
             <div className="flex items-center gap-2">
               <h4 className="font-bold text-[14px] text-slate-900">
-                Pratinjau Lembar Notula Resmi
+                Pratinjau {docType === 'NOTA_DINAS' ? 'Nota Dinas Resmi' : 'Lembar Notula Resmi'}
               </h4>
               <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-[#ECF8E9] text-[#4D8F3D] border border-[#D2EFCA]">
                 <CheckCircle2 className="w-3 h-3" />
@@ -178,31 +205,61 @@ export function MeetingMinutesPreview({
 
         {/* View Switcher & Action Buttons */}
         <div className="flex flex-wrap items-center gap-2">
+          {/* Document Type Toggle (Notula vs Nota Dinas) */}
+          <div className="flex items-center bg-slate-100 p-0.5 rounded-lg border border-slate-200 text-[12px] font-medium">
+            <button
+              type="button"
+              onClick={() => handleDocTypeToggle('NOTULA')}
+              className={`inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-md transition-all cursor-pointer ${
+                docType === 'NOTULA'
+                  ? 'bg-white text-slate-900 font-bold shadow-xs'
+                  : 'text-slate-600 hover:text-slate-900'
+              }`}
+              title="Lihat format Notula / Risalah Rapat"
+            >
+              <FileText className="w-3.5 h-3.5 text-[#31889C]" />
+              <span>Risalah Rapat</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => handleDocTypeToggle('NOTA_DINAS')}
+              className={`inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-md transition-all cursor-pointer ${
+                docType === 'NOTA_DINAS'
+                  ? 'bg-[#31889C] text-white font-bold shadow-xs'
+                  : 'text-slate-600 hover:text-slate-900'
+              }`}
+              title="Lihat format Nota Dinas resmi"
+            >
+              <FileEdit className="w-3.5 h-3.5" />
+              <span>Nota Dinas</span>
+            </button>
+          </div>
+
           {/* View mode toggle */}
           <div className="flex items-center bg-slate-100 p-0.5 rounded-lg border border-slate-200 text-[12px] font-medium">
             <button
               type="button"
               onClick={() => setViewMode('paper')}
-              className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md transition-all cursor-pointer ${
+              className={`inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-md transition-all cursor-pointer ${
                 viewMode === 'paper'
                   ? 'bg-white text-slate-900 font-semibold shadow-xs'
                   : 'text-slate-600 hover:text-slate-900'
               }`}
             >
               <FileText className="w-3.5 h-3.5 text-[#31889C]" />
-              <span>Lembar Dokumen (A4)</span>
+              <span>Lembar (A4)</span>
             </button>
             <button
               type="button"
               onClick={() => setViewMode('raw_pdf')}
-              className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md transition-all cursor-pointer ${
+              className={`inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-md transition-all cursor-pointer ${
                 viewMode === 'raw_pdf'
                   ? 'bg-white text-slate-900 font-semibold shadow-xs'
                   : 'text-slate-600 hover:text-slate-900'
               }`}
             >
               <Eye className="w-3.5 h-3.5 text-[#31889C]" />
-              <span>Dokumen PDF Langsung</span>
+              <span>PDF Langsung</span>
             </button>
           </div>
 
@@ -210,12 +267,12 @@ export function MeetingMinutesPreview({
           {onDownloadPdf && (
             <button
               type="button"
-              onClick={onDownloadPdf}
-              className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg bg-[#31889C] hover:bg-[#266F80] text-white font-semibold text-[12px] transition-colors shadow-xs cursor-pointer"
-              title="Unduh dokumen resmi dalam format PDF"
+              onClick={() => onDownloadPdf(docType === 'NOTA_DINAS' ? 'nota-dinas' : 'notula')}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#31889C] hover:bg-[#266F80] text-white font-semibold text-[12px] transition-colors shadow-xs cursor-pointer"
+              title={`Unduh dokumen ${docType === 'NOTA_DINAS' ? 'Nota Dinas' : 'Notula'} dalam format PDF`}
             >
               <Download className="w-3.5 h-3.5" />
-              <span>Unduh PDF</span>
+              <span>Unduh {docType === 'NOTA_DINAS' ? 'Nota Dinas' : 'PDF'}</span>
             </button>
           )}
 
@@ -224,10 +281,10 @@ export function MeetingMinutesPreview({
               type="button"
               onClick={onEditClick}
               className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg border border-[#BCE3EB] bg-[#F0F9FA] hover:bg-[#E8F5F7] text-[#215865] font-semibold text-[12px] transition-colors cursor-pointer"
-              title="Edit isi notula rapat"
+              title={`Edit isi ${docType === 'NOTA_DINAS' ? 'nota dinas' : 'notula'}`}
             >
               <FileEdit className="w-3.5 h-3.5 text-[#31889C]" />
-              <span>Edit Notula</span>
+              <span>Edit {docType === 'NOTA_DINAS' ? 'Nota Dinas' : 'Notula'}</span>
             </button>
           )}
         </div>
@@ -236,15 +293,182 @@ export function MeetingMinutesPreview({
       {/* VIEW MODE 1: LEMBAR DOKUMEN (A4 REALISTIC REPLICA) */}
       {viewMode === 'paper' && (
         <div className="bg-slate-100/70 p-3 sm:p-6 rounded-2xl border border-slate-200">
-          <div
-            id="notula-printable-paper"
-            className="bg-white max-w-[850px] mx-auto p-8 sm:p-14 text-black font-['Arial',sans-serif] text-[11pt] shadow-xl ring-1 ring-slate-900/5 transition-all print:p-0 print:shadow-none print:ring-0 print:max-w-none"
-            style={{
-              fontFamily: 'Arial, Helvetica, sans-serif',
-              fontSize: '11pt',
-              lineHeight: 1.45,
-            }}
-          >
+          {docType === 'NOTA_DINAS' ? (
+            /* NOTA DINAS PAPER LAYOUT (1:1 Sesuai Standar Resmi Dewan Nasional KEK RI) */
+            <div
+              id="notadinas-printable-paper"
+              className="bg-white max-w-[850px] mx-auto p-8 sm:p-14 text-black font-['Arial',sans-serif] text-[11pt] shadow-xl ring-1 ring-slate-900/5 transition-all print:p-0 print:shadow-none print:ring-0 print:max-w-none"
+              style={{
+                fontFamily: 'Arial, Helvetica, sans-serif',
+                fontSize: '11pt',
+                lineHeight: 1.45,
+              }}
+            >
+              {/* 1. KOP RESMI NOTA DINAS (3 Baris Tengah + Garis Tebal) */}
+              <div className="pb-1 text-center">
+                <div className="font-bold text-[11pt] sm:text-[12pt] text-black tracking-normal leading-tight">
+                  DEWAN NASIONAL KAWASAN EKONOMI KHUSUS
+                </div>
+                <div className="font-bold text-[11pt] sm:text-[12pt] text-black tracking-normal leading-tight mt-0.5">
+                  SEKRETARIAT JENDERAL
+                </div>
+                <div className="font-bold text-[11pt] sm:text-[12pt] text-black tracking-normal leading-tight mt-0.5 uppercase">
+                  {notaData.biroName}
+                </div>
+                <div className="w-full h-[1.75px] bg-black mt-3 mb-4"></div>
+              </div>
+
+              {/* 2. JUDUL DOKUMEN: NOTA DINAS & NOMOR */}
+              <div className="text-center mb-5">
+                <div className="font-bold text-[11pt] text-black tracking-wider">
+                  NOTA DINAS
+                </div>
+                <div className="text-[11pt] text-black mt-0.5">
+                  NOMOR: {notaData.documentNumber}
+                </div>
+              </div>
+
+              {/* 3. TABEL INFORMASI KEPALA NASKAH */}
+              <div className="space-y-1 text-[11pt] mb-5">
+                <div className="grid grid-cols-[85px_16px_1fr] items-start">
+                  <span className="text-black">Yth.</span>
+                  <span className="text-black">:</span>
+                  <span className="text-black leading-relaxed">{notaData.recipient}</span>
+                </div>
+                <div className="grid grid-cols-[85px_16px_1fr] items-start">
+                  <span className="text-black">Dari</span>
+                  <span className="text-black">:</span>
+                  <span className="text-black leading-relaxed">{notaData.sender}</span>
+                </div>
+                <div className="grid grid-cols-[85px_16px_1fr] items-start">
+                  <span className="text-black">Hal</span>
+                  <span className="text-black">:</span>
+                  <span className="text-black leading-relaxed">{notaData.subject}</span>
+                </div>
+                <div className="grid grid-cols-[85px_16px_1fr] items-start">
+                  <span className="text-black">Tanggal</span>
+                  <span className="text-black">:</span>
+                  <span className="text-black">{notaData.dateText}</span>
+                </div>
+                <div className="grid grid-cols-[85px_16px_1fr] items-start">
+                  <span className="text-black">Lampiran</span>
+                  <span className="text-black">:</span>
+                  <span className="text-black">{notaData.attachments}</span>
+                </div>
+              </div>
+
+              {/* 4. KALIMAT PENGANTAR / PEMBUKA */}
+              {notaData.introText && (
+                <div className="text-justify text-black leading-relaxed indent-8 mb-4">
+                  {notaData.introText}
+                </div>
+              )}
+
+              {/* 5. POKOK-POKOK PEMBAHASAN */}
+              <div className="space-y-1.5 mb-4 text-justify">
+                {discussionBlocks.length === 0 ? (
+                  <div className="leading-relaxed text-black">
+                    1. {DEFAULT_DISCUSSION_FALLBACK}
+                  </div>
+                ) : (
+                  discussionBlocks.map((b, idx) => {
+                    let prefix: string | undefined;
+                    if (b.type === 'ordered') {
+                      prefix = `${b.number}. `;
+                    } else if (b.type === 'paragraph') {
+                      const raw = b.segments.map((s) => s.text).join('').trim();
+                      if (!/^\d+[\.\)]/i.test(raw) && !/^[a-z][\.\)]/i.test(raw)) {
+                        prefix = `${idx + 1}. `;
+                      }
+                    }
+                    return renderBlock(b, idx, prefix);
+                  })
+                )}
+              </div>
+
+              {/* 6. KESIMPULAN (SEKSI 4) */}
+              <div className="mb-4">
+                <div className="font-bold text-black mb-1">
+                  4. Kesimpulan
+                </div>
+                <div className="text-justify leading-relaxed text-black">
+                  {conclusionBlocks.length === 0 ? (
+                    <p>{DEFAULT_CONCLUSION_FALLBACK}</p>
+                  ) : (
+                    conclusionBlocks.map((b, idx) => renderBlock(b, idx))
+                  )}
+                </div>
+              </div>
+
+              {/* 7. TINDAK LANJUT (SEKSI 5) */}
+              <div className="mb-8">
+                <div className="font-bold text-black mb-1">
+                  5. Tindak Lanjut
+                </div>
+                <div className="text-justify leading-relaxed text-black">
+                  {decisionsBlocks.length > 0 ? (
+                    decisionsBlocks.map((b, idx) => renderBlock(b, idx))
+                  ) : actionItems.length > 0 ? (
+                    actionItems.map((ai: any, idx: number) => {
+                      const letter = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h'][idx % 8];
+                      const pic = ai.picBiro?.shortName || ai.picUser?.name || 'Tim Kerja';
+                      return (
+                        <div key={ai.id || idx} className="pl-4 mb-1">
+                          <span className="font-medium mr-1">{letter}.</span>
+                          <span>{ai.title} (PIC: {pic})</span>
+                        </div>
+                      );
+                    })
+                  ) : (
+                    <p>{DEFAULT_ACTION_ITEM_FALLBACK}</p>
+                  )}
+                </div>
+              </div>
+
+              {/* 8. TANDA TANGAN PENGIRIM (KANAN BAWAH) */}
+              <div className="pt-4 flex justify-end text-[11pt]">
+                <div className="w-[260px] space-y-0.5 text-left text-black">
+                  <p className="leading-tight whitespace-pre-line">
+                    {notaData.signerRole.endsWith(',') ? notaData.signerRole : `${notaData.signerRole},`}
+                  </p>
+
+                  {notaData.signatureImage ? (
+                    <div className="py-1">
+                      <img
+                        src={notaData.signatureImage}
+                        alt="Tanda Tangan Pengirim"
+                        className="max-h-20 max-w-[180px] object-contain drop-shadow-2xs"
+                      />
+                    </div>
+                  ) : (
+                    <div className="h-16 flex items-center text-slate-400 text-[10pt] italic">
+                      {'${ttd_pengirim}'}
+                    </div>
+                  )}
+
+                  <p className="font-normal leading-tight">
+                    {notaData.signerName}
+                  </p>
+                </div>
+              </div>
+
+              {/* Footer update stamp */}
+              {updatedAt && (
+                <div className="text-right text-[10px] text-slate-400 pt-6 mt-8 border-t border-slate-200 print:hidden">
+                  Pembaruan terakhir: {new Date(updatedAt).toLocaleString('id-ID', { dateStyle: 'long', timeStyle: 'short' })} WIB
+                </div>
+              )}
+            </div>
+          ) : (
+            <div
+              id="notula-printable-paper"
+              className="bg-white max-w-[850px] mx-auto p-8 sm:p-14 text-black font-['Arial',sans-serif] text-[11pt] shadow-xl ring-1 ring-slate-900/5 transition-all print:p-0 print:shadow-none print:ring-0 print:max-w-none"
+              style={{
+                fontFamily: 'Arial, Helvetica, sans-serif',
+                fontSize: '11pt',
+                lineHeight: 1.45,
+              }}
+            >
             {/* 1. KOP SURAT RESMI */}
             <div className="pb-1">
               {/* Header Row: Logo di Kiri, Teks di Tengah, Spacer di Kanan */}
@@ -505,8 +729,9 @@ export function MeetingMinutesPreview({
               </div>
             )}
           </div>
-        </div>
-      )}
+        )}
+      </div>
+    )}
 
       {/* VIEW MODE 2: DOKUMEN PDF LANGSUNG (LIVE STREAM) */}
       {viewMode === 'raw_pdf' && (

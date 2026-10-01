@@ -6,6 +6,8 @@ export const meetingMinutesSchema = z.object({
   discussion: z.any().optional().nullable(),
   decisions: z.any().optional().nullable(),
   conclusion: z.any().optional().nullable(),
+  docType: z.enum(['NOTULA', 'NOTA_DINAS']).optional(),
+  notaDinas: z.any().optional(),
 });
 
 export type MeetingMinutesInput = z.infer<typeof meetingMinutesSchema>;

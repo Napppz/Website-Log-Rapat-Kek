@@ -41,7 +41,7 @@ export async function upsertMeetingMinutesAction(input: MeetingMinutesInput) {
       return { success: false, error: `Validasi gagal: ${errorMsg}` };
     }
 
-    const { meetingId, agenda, discussion, decisions, conclusion } = parsed.data;
+    const { meetingId, agenda, discussion, decisions, conclusion, docType, notaDinas } = parsed.data;
 
     // 2. Validate that the meeting actually exists
     const meeting = await prisma.meeting.findUnique({
@@ -53,6 +53,17 @@ export async function upsertMeetingMinutesAction(input: MeetingMinutesInput) {
       return { success: false, error: 'Rapat tidak ditemukan.' };
     }
 
+    // Merge docType and notaDinas into conclusion JSON payload if provided
+    let finalConclusion = conclusion;
+    if (docType || notaDinas) {
+      const baseObj = typeof finalConclusion === 'object' && finalConclusion !== null ? finalConclusion : {};
+      finalConclusion = {
+        ...baseObj,
+        ...(docType ? { docType } : {}),
+        ...(notaDinas ? { notaDinas } : {}),
+      };
+    }
+
     // 3. Atomically upsert minutes
     const minutes = await prisma.meetingMinutes.upsert({
       where: { meetingId },
@@ -61,13 +72,13 @@ export async function upsertMeetingMinutesAction(input: MeetingMinutesInput) {
         agenda: agenda ?? undefined,
         discussion: discussion ?? undefined,
         decisions: decisions ?? undefined,
-        conclusion: conclusion ?? undefined,
+        conclusion: finalConclusion ?? undefined,
       },
       update: {
         agenda: agenda ?? undefined,
         discussion: discussion ?? undefined,
         decisions: decisions ?? undefined,
-        conclusion: conclusion ?? undefined,
+        conclusion: finalConclusion ?? undefined,
       },
     });
 

@@ -784,9 +784,9 @@ export function MeetingDetailView({
           }`}
         >
           <FileText className="w-4 h-4" />
-          <span>Notulen &amp; Hasil Rapat</span>
+          <span>Notulen / Nota Dinas</span>
           {meeting.minutes && (
-            <span className="w-2 h-2 rounded-full bg-[#7CC563]" title="Notulen telah terisi" />
+            <span className="w-2 h-2 rounded-full bg-[#7CC563]" title="Naskah rapat telah terisi" />
           )}
         </button>
 

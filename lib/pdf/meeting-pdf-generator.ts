@@ -7,6 +7,7 @@ import {
   normalizeTime,
   extractPlainText,
   resolveMeetingSignerInfo,
+  resolveNotaDinasData,
   DEFAULT_DISCUSSION_FALLBACK,
   DEFAULT_CONCLUSION_FALLBACK,
   DEFAULT_ACTION_ITEM_FALLBACK,
@@ -579,6 +580,334 @@ export async function generateMeetingPdf(meeting: MeetingPdfData): Promise<Buffe
       }
 
       // Selesai membuat dokumen PDF
+      doc.end();
+    } catch (error) {
+      reject(error);
+    }
+  });
+}
+
+/**
+ * Generator PDF Format Nota Dinas Resmi Naskah Dinas
+ * Sesuai Standar Tata Naskah Dinas Nota Dinas Dewan Nasional Kawasan Ekonomi Khusus
+ */
+export async function generateNotaDinasPdf(meeting: MeetingPdfData): Promise<Buffer> {
+  return new Promise((resolve, reject) => {
+    try {
+      const leftMargin = 70.87; // Standar ~2.5 cm naskah dinas
+      const rightMargin = 56.7; // ~2.0 cm
+      const topMargin = 56.7; // ~2.0 cm
+      const bottomMargin = 56.7;
+      const pageWidth = 595.28; // Kertas A4
+      const printableWidth = pageWidth - leftMargin - rightMargin;
+
+      const notaData = resolveNotaDinasData(meeting, meeting.minutes);
+
+      const doc = new PDFDocument({
+        size: 'A4',
+        margins: {
+          top: topMargin,
+          bottom: bottomMargin,
+          left: leftMargin,
+          right: rightMargin,
+        },
+        bufferPages: true,
+        info: {
+          Title: `Nota Dinas - ${notaData.documentNumber}`,
+          Author: 'Sekretariat Jenderal Dewan Nasional KEK RI',
+          Subject: `Nota Dinas ${notaData.subject}`,
+          Creator: 'SIM-RAPAT KEK RI',
+        },
+      });
+
+      const fonts = registerAppFonts(doc);
+
+      const chunks: Buffer[] = [];
+      doc.on('data', (chunk) => chunks.push(chunk));
+      doc.on('end', () => resolve(Buffer.concat(chunks)));
+      doc.on('error', (err) => reject(err));
+
+      // -------------------------------------------------------------
+      // 1. KOP RESMI NOTA DINAS (3 BARIS RATA TENGAH + GARIS PEMISAH)
+      // -------------------------------------------------------------
+      doc
+        .font(fonts.arialBold)
+        .fontSize(12)
+        .fillColor('#000000')
+        .text('DEWAN NASIONAL KAWASAN EKONOMI KHUSUS', leftMargin, topMargin, {
+          width: printableWidth,
+          align: 'center',
+        })
+        .moveDown(0.25)
+        .text('SEKRETARIAT JENDERAL', {
+          width: printableWidth,
+          align: 'center',
+        })
+        .moveDown(0.25)
+        .text(notaData.biroName, {
+          width: printableWidth,
+          align: 'center',
+        });
+
+      // Garis Pemisah Tebal Hitam Standar Nota Dinas
+      const lineY = doc.y + 8;
+      doc
+        .strokeColor('#000000')
+        .lineWidth(1.75)
+        .moveTo(leftMargin, lineY)
+        .lineTo(leftMargin + printableWidth, lineY)
+        .stroke();
+
+      // -------------------------------------------------------------
+      // 2. JUDUL DOKUMEN: NOTA DINAS & NOMOR
+      // -------------------------------------------------------------
+      doc.y = lineY + 16;
+
+      doc
+        .font(fonts.arialBold)
+        .fontSize(11)
+        .fillColor('#000000')
+        .text('NOTA DINAS', leftMargin, doc.y, {
+          width: printableWidth,
+          align: 'center',
+        });
+
+      doc
+        .font(fonts.arial)
+        .fontSize(11)
+        .fillColor('#000000')
+        .text(`NOMOR: ${notaData.documentNumber}`, leftMargin, doc.y + 3, {
+          width: printableWidth,
+          align: 'center',
+        });
+
+      doc.y = doc.y + 16;
+
+      // -------------------------------------------------------------
+      // 3. TABEL INFORMASI KEPALA NASKAH (Yth., Dari, Hal, Tanggal, Lampiran)
+      // -------------------------------------------------------------
+      const colLabelW = 75;
+      const colColonW = 15;
+      const colValW = printableWidth - colLabelW - colColonW;
+
+      const renderHeaderRow = (label: string, value: string) => {
+        const startY = doc.y;
+        doc.font(fonts.arial).fontSize(11).fillColor('#000000');
+        doc.text(label, leftMargin, startY, { width: colLabelW });
+        doc.text(':', leftMargin + colLabelW, startY, { width: colColonW });
+        doc.text(value, leftMargin + colLabelW + colColonW, startY, {
+          width: colValW,
+          lineGap: 2,
+        });
+
+        const valH = doc.heightOfString(value, { width: colValW, lineGap: 2 });
+        doc.y = Math.max(doc.y, startY + valH + 3.5);
+      };
+
+      renderHeaderRow('Yth.', notaData.recipient);
+      renderHeaderRow('Dari', notaData.sender);
+      renderHeaderRow('Hal', notaData.subject);
+      renderHeaderRow('Tanggal', notaData.dateText);
+      renderHeaderRow('Lampiran', notaData.attachments);
+
+      doc.moveDown(0.9);
+
+      // -------------------------------------------------------------
+      // 4. KALIMAT PENGANTAR / PEMBUKA
+      // -------------------------------------------------------------
+      if (notaData.introText) {
+        doc
+          .font(fonts.arial)
+          .fontSize(11)
+          .fillColor('#000000')
+          .text(notaData.introText, leftMargin + 25, doc.y, {
+            width: printableWidth - 25,
+            align: 'justify',
+            lineGap: 3.5,
+          });
+
+        doc.moveDown(0.7);
+      }
+
+      // -------------------------------------------------------------
+      // 5. POKOK-POKOK PEMBAHASAN
+      // -------------------------------------------------------------
+      const discussionBlocks = parseRichText(meeting.minutes?.discussion);
+
+      if (discussionBlocks.length > 0) {
+        let blockIndex = 1;
+        discussionBlocks.forEach((block) => {
+          let numberPrefix: string | undefined;
+          if (block.type === 'ordered') {
+            numberPrefix = `${block.number}. `;
+          } else if (block.type === 'paragraph') {
+            const raw = block.segments.map((s) => s.text).join('').trim();
+            // Cek apakah paragraf belum dimulai angka penomoran
+            if (!/^\d+[\.\)]/i.test(raw) && !/^[a-z][\.\)]/i.test(raw)) {
+              numberPrefix = `${blockIndex}. `;
+              blockIndex++;
+            }
+          }
+          renderFormattedBlock(doc, block, leftMargin, printableWidth, fonts, numberPrefix);
+        });
+      } else {
+        // Fallback pokok pembahasan jika belum diisi khusus
+        const fallbackText =
+          extractPlainText(meeting.minutes?.agenda) ||
+          meeting.title ||
+          DEFAULT_DISCUSSION_FALLBACK;
+
+        doc.font(fonts.arial).fontSize(11).fillColor('#000000').text(
+          `1. ${fallbackText}`,
+          leftMargin,
+          doc.y,
+          { width: printableWidth, align: 'justify', lineGap: 3.5 }
+        );
+        doc.moveDown(0.4);
+      }
+
+      // -------------------------------------------------------------
+      // 6. KESIMPULAN (SEKSI 4)
+      // -------------------------------------------------------------
+      doc.moveDown(0.6);
+      doc
+        .font(fonts.arialBold)
+        .fontSize(11)
+        .fillColor('#000000')
+        .text('4. Kesimpulan', leftMargin, doc.y, { width: printableWidth });
+
+      doc.moveDown(0.3);
+
+      const conclusionBlocks = parseRichText(meeting.minutes?.conclusion);
+      if (conclusionBlocks.length > 0) {
+        conclusionBlocks.forEach((block) => {
+          renderFormattedBlock(doc, block, leftMargin, printableWidth, fonts);
+        });
+      } else {
+        doc.font(fonts.arial).fontSize(11).fillColor('#000000').text(
+          DEFAULT_CONCLUSION_FALLBACK,
+          leftMargin,
+          doc.y,
+          { width: printableWidth, align: 'justify', lineGap: 3.5 }
+        );
+        doc.moveDown(0.4);
+      }
+
+      // -------------------------------------------------------------
+      // 7. TINDAK LANJUT (SEKSI 5)
+      // -------------------------------------------------------------
+      doc.moveDown(0.6);
+      doc
+        .font(fonts.arialBold)
+        .fontSize(11)
+        .fillColor('#000000')
+        .text('5. Tindak Lanjut', leftMargin, doc.y, { width: printableWidth });
+
+      doc.moveDown(0.3);
+
+      const decisionsBlocks = parseRichText(meeting.minutes?.decisions);
+      const actionItems = meeting.actionItems || [];
+
+      if (decisionsBlocks.length > 0) {
+        decisionsBlocks.forEach((block) => {
+          renderFormattedBlock(doc, block, leftMargin, printableWidth, fonts);
+        });
+      } else if (actionItems.length > 0) {
+        const letters = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h'];
+        actionItems.forEach((item, idx) => {
+          const letter = letters[idx % letters.length];
+          const pic = item.picBiro?.shortName || item.picUser?.name || 'Tim Kerja';
+          const tText = `${letter}. ${item.title} (PIC: ${pic})`;
+          doc.font(fonts.arial).fontSize(11).fillColor('#000000').text(
+            tText,
+            leftMargin + 10,
+            doc.y,
+            { width: printableWidth - 10, align: 'justify', lineGap: 3.5 }
+          );
+          doc.moveDown(0.3);
+        });
+      } else {
+        doc.font(fonts.arial).fontSize(11).fillColor('#000000').text(
+          DEFAULT_ACTION_ITEM_FALLBACK,
+          leftMargin,
+          doc.y,
+          { width: printableWidth, align: 'justify', lineGap: 3.5 }
+        );
+        doc.moveDown(0.4);
+      }
+
+      // -------------------------------------------------------------
+      // 8. TANDA TANGAN PENGIRIM NOTA DINAS (SEBELAH KANAN BAWAH)
+      // -------------------------------------------------------------
+      if (doc.y + 130 > 790) {
+        doc.addPage();
+      }
+
+      doc.moveDown(1.5);
+
+      const sigColW = 240;
+      const sigX = leftMargin + printableWidth - sigColW;
+
+      doc.font(fonts.arial).fontSize(11).fillColor('#000000');
+      const roleWithComma = notaData.signerRole.endsWith(',')
+        ? notaData.signerRole
+        : `${notaData.signerRole},`;
+      doc.text(roleWithComma, sigX, doc.y, {
+        width: sigColW,
+        align: 'left',
+        lineGap: 2,
+      });
+
+      let hasRenderedSignature = false;
+      if (
+        notaData.signatureImage &&
+        typeof notaData.signatureImage === 'string' &&
+        notaData.signatureImage.startsWith('data:image')
+      ) {
+        try {
+          const base64Data = notaData.signatureImage.replace(/^data:image\/\w+;base64,/, '');
+          const imageBuffer = Buffer.from(base64Data, 'base64');
+          const maxW = 140;
+          const maxH = 50;
+          doc.moveDown(0.4);
+          const sigY = doc.y;
+          doc.image(imageBuffer, sigX, sigY, { fit: [maxW, maxH] });
+          doc.y = sigY + maxH + 4;
+          hasRenderedSignature = true;
+        } catch (err) {
+          console.warn('Gagal memuat tanda tangan pada Nota Dinas:', err);
+        }
+      }
+
+      if (!hasRenderedSignature) {
+        doc.moveDown(4.5);
+      }
+
+      doc.font(fonts.arial).fontSize(11).fillColor('#000000');
+      doc.text(notaData.signerName, sigX, doc.y, {
+        width: sigColW,
+        align: 'left',
+        lineGap: 2,
+      });
+
+      // -------------------------------------------------------------
+      // 9. PENOMORAN HALAMAN NASKAH DINAS (- 2 -, - 3 -, ...)
+      // -------------------------------------------------------------
+      const range = doc.bufferedPageRange();
+      const totalPages = range.count;
+
+      for (let i = 1; i < totalPages; i++) {
+        doc.switchToPage(i);
+        doc
+          .font(fonts.arial)
+          .fontSize(11)
+          .fillColor('#000000')
+          .text(`- ${i + 1} -`, leftMargin, 36, {
+            width: printableWidth,
+            align: 'center',
+          });
+      }
+
       doc.end();
     } catch (error) {
       reject(error);

@@ -196,3 +196,91 @@ export function resolveMeetingSignerInfo(meeting?: any, minutes?: any) {
     signatureImage,
   };
 }
+
+/**
+ * Resolusi data naskah dinas Nota Dinas sesuai format resmi Dewan Nasional KEK RI
+ */
+export function resolveNotaDinasData(meeting?: any, minutes?: any) {
+  const notaObj =
+    minutes?.conclusion?.notaDinas ||
+    minutes?.decisions?.notaDinas ||
+    minutes?.notaDinas ||
+    {};
+
+  const customDocNumber =
+    notaObj.documentNumber ||
+    (minutes?.conclusion as any)?.documentNumber ||
+    (minutes?.decisions as any)?.documentNumber;
+  const documentNumber =
+    customDocNumber ||
+    meeting?.meetingNumber ||
+    (meeting as any)?.code ||
+    '${nomor_naskah}';
+
+  const defaultBiro = meeting?.primaryBiro?.name
+    ? meeting.primaryBiro.name.toUpperCase()
+    : 'BIRO INVESTASI, KERJA SAMA, DAN KOMUNIKASI';
+  const biroName = (notaObj.biroName || defaultBiro).trim();
+
+  const recipient = (
+    notaObj.recipient ||
+    `Plt. Kepala ${meeting?.primaryBiro?.name || 'Biro Investasi, Kerja Sama, dan Komunikasi'}`
+  ).trim();
+
+  const defaultSender =
+    meeting?.chairperson?.name
+      ? `Ketua Sidang (${meeting.chairperson.name})`
+      : 'Kepala Bagian Program dan Tata Kelola';
+  const sender = (notaObj.sender || defaultSender).trim();
+
+  const subject = (
+    notaObj.subject ||
+    (meeting?.title ? `Laporan Kegiatan ${meeting.title}` : 'Laporan Kegiatan Rapat')
+  ).trim();
+
+  const rawDate = meeting?.date ? new Date(meeting.date) : null;
+  let defaultDateText = '';
+  if (rawDate && !isNaN(rawDate.getTime())) {
+    const months = [
+      'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
+      'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember',
+    ];
+    defaultDateText = `${rawDate.getDate()} ${months[rawDate.getMonth()]} ${rawDate.getFullYear()}`;
+  } else {
+    defaultDateText = '27 Agustus 2026';
+  }
+  const dateText = (notaObj.dateText || defaultDateText).trim();
+
+  const attachments = (notaObj.attachments || '1 (satu) berkas').trim();
+
+  const defaultIntro = `Menindaklanjuti pelaksanaan rapat ${meeting?.title || ''} yang diselenggarakan pada ${formatIndonesianDate(meeting?.date)}${meeting?.location ? ` bertempat di ${meeting.location}` : ''}, bersama ini kami sampaikan laporan pokok-pokok pembahasan sebagai berikut:`;
+  const introText = (notaObj.introText || defaultIntro).trim();
+
+  const signerRole = (notaObj.signerRole || sender || 'Kepala Bagian Program dan Tata Kelola').trim();
+
+  const defaultSignerName =
+    meeting?.chairperson?.name ||
+    meeting?.secretary?.name ||
+    'Noviar Iskandar';
+  const signerName = (notaObj.signerName || defaultSignerName).trim();
+
+  const signatureImage =
+    notaObj.signatureImage ||
+    (minutes?.conclusion as any)?.signatureImage ||
+    (minutes?.decisions as any)?.signatureImage ||
+    null;
+
+  return {
+    recipient,
+    sender,
+    subject,
+    dateText,
+    attachments,
+    introText,
+    biroName,
+    signerRole,
+    signerName,
+    signatureImage,
+    documentNumber,
+  };
+}
