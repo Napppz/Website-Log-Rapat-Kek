@@ -4,6 +4,7 @@ import "./globals.css";
 import { DashboardShell } from "@/components/layout/dashboard-shell";
 import { AuthProvider } from "@/components/providers/auth-provider";
 import { ToastProvider } from "@/components/providers/toast-provider";
+import { NotificationProvider } from "@/components/providers/notification-provider";
 
 const publicSans = Public_Sans({
   variable: "--font-public-sans",
@@ -34,7 +35,9 @@ export default function RootLayout({
       <body className="bg-[#F8FAFC] text-slate-800 antialiased selection:bg-[#E8F5F7] selection:text-[#215865]">
         <AuthProvider>
           <ToastProvider>
-            <DashboardShell>{children}</DashboardShell>
+            <NotificationProvider>
+              <DashboardShell>{children}</DashboardShell>
+            </NotificationProvider>
           </ToastProvider>
         </AuthProvider>
       </body>

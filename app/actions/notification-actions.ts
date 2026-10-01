@@ -312,3 +312,32 @@ export async function clearAllReadNotificationsAction() {
   }
 }
 
+/**
+ * Fast helper to query total unread notification count
+ */
+export async function getUnreadNotificationCountAction() {
+  try {
+    let currentUser = null;
+    try {
+      currentUser = await getCurrentUser();
+    } catch {}
+
+    const count = await prisma.notification.count({
+      where: {
+        isRead: false,
+        ...(currentUser?.id
+          ? {
+              OR: [{ userId: currentUser.id }, { userId: null }],
+            }
+          : {}),
+      },
+    });
+
+    return { success: true, count };
+  } catch (error: any) {
+    console.error('Error counting unread notifications:', error);
+    return { success: false, count: 0 };
+  }
+}
+
+

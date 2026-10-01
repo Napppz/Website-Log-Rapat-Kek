@@ -23,6 +23,7 @@ import Image from 'next/image';
 import { useSession } from 'next-auth/react';
 import { BIRO_LIST } from '@/lib/mock-data';
 import { cn } from '@/lib/utils';
+import { useNotifications } from '@/components/providers/notification-provider';
 
 interface SidebarProps {
   isOpenMobile?: boolean;
@@ -38,6 +39,7 @@ export function Sidebar({
   onToggleCollapse,
 }: SidebarProps) {
   const pathname = usePathname();
+  const { unreadCount } = useNotifications();
   const { data: session } = useSession();
   const userRole = session?.user?.role || 'VIEWER';
 
@@ -425,9 +427,9 @@ export function Sidebar({
                   )} />
                   {!collapsed && <span>Notifikasi</span>}
                 </div>
-                {!collapsed && (
+                {!collapsed && unreadCount > 0 && (
                   <span className="px-2 py-0.5 rounded-full bg-[#F99D1C] text-white font-bold text-[11px] shadow-xs">
-                    6
+                    {unreadCount > 99 ? '99+' : unreadCount}
                   </span>
                 )}
               </Link>

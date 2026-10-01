@@ -25,6 +25,7 @@ import {
   clearAllReadNotificationsAction,
 } from '@/app/actions/notification-actions';
 import { toast } from '@/components/providers/toast-provider';
+import { useNotifications } from '@/components/providers/notification-provider';
 
 export interface NotificationItem {
   id: string;
@@ -47,6 +48,7 @@ export function NotifikasiClient({
   initialUnreadCount = 0,
   initialError = null,
 }: NotifikasiClientProps) {
+  const { setUnreadCount: setGlobalUnreadCount } = useNotifications();
   const [notifications, setNotifications] = useState<NotificationItem[]>(initialNotifications);
   const [unreadCount, setUnreadCount] = useState<number>(initialUnreadCount);
   const [activeTab, setActiveTab] = useState<'ALL' | 'UNREAD' | 'DANGER' | 'INFO'>('ALL');
@@ -56,6 +58,11 @@ export function NotifikasiClient({
   const [isClearingRead, setIsClearingRead] = useState(false);
   const [actionLoadingId, setActionLoadingId] = useState<string | null>(null);
 
+  // Sync initial unread count on mount
+  React.useEffect(() => {
+    setGlobalUnreadCount(initialUnreadCount);
+  }, [initialUnreadCount, setGlobalUnreadCount]);
+
   // Manual refresh / retry handler with robust error catching
   const handleRetry = async () => {
     try {
@@ -64,6 +71,7 @@ export function NotifikasiClient({
       if (res.success && res.data) {
         setNotifications(res.data.notifications);
         setUnreadCount(res.data.unreadCount);
+        setGlobalUnreadCount(res.data.unreadCount);
         setErrorMessage(null);
         toast.success('Daftar notifikasi berhasil diperbarui.');
       } else {
@@ -90,6 +98,7 @@ export function NotifikasiClient({
       // Optimistic update
       setNotifications((prev) => prev.map((n) => ({ ...n, isRead: true })));
       setUnreadCount(0);
+      setGlobalUnreadCount(0);
 
       const res = await markAllNotificationsAsReadAction();
       if (res.success) {
@@ -98,12 +107,14 @@ export function NotifikasiClient({
         // Rollback
         setNotifications(previousNotifications);
         setUnreadCount(previousUnread);
+        setGlobalUnreadCount(previousUnread);
         toast.error(res.error || 'Gagal memperbarui notifikasi.');
       }
     } catch {
       // Rollback
       setNotifications(previousNotifications);
       setUnreadCount(previousUnread);
+      setGlobalUnreadCount(previousUnread);
       toast.error('Terjadi kendala saat menandai semua dibaca.');
     } finally {
       setIsMarkingAll(false);
@@ -118,6 +129,7 @@ export function NotifikasiClient({
         prev.map((n) => (n.id === notif.id ? { ...n, isRead: true } : n))
       );
       setUnreadCount((prev) => Math.max(0, prev - 1));
+      setGlobalUnreadCount((prev) => Math.max(0, prev - 1));
 
       try {
         const res = await markNotificationAsReadAction(notif.id);
@@ -127,6 +139,7 @@ export function NotifikasiClient({
             prev.map((n) => (n.id === notif.id ? { ...n, isRead: false } : n))
           );
           setUnreadCount((prev) => prev + 1);
+          setGlobalUnreadCount((prev) => prev + 1);
           toast.error(res.error || 'Gagal memperbarui status notifikasi.');
         }
       } catch {
@@ -135,6 +148,7 @@ export function NotifikasiClient({
           prev.map((n) => (n.id === notif.id ? { ...n, isRead: false } : n))
         );
         setUnreadCount((prev) => prev + 1);
+        setGlobalUnreadCount((prev) => prev + 1);
         toast.error('Gagal memperbarui notifikasi.');
       }
     }
@@ -153,6 +167,7 @@ export function NotifikasiClient({
     setNotifications((prev) => prev.filter((n) => n.id !== id));
     if (!itemToDelete.isRead) {
       setUnreadCount((prev) => Math.max(0, prev - 1));
+      setGlobalUnreadCount((prev) => Math.max(0, prev - 1));
     }
     setActionLoadingId(id);
 
@@ -164,12 +179,18 @@ export function NotifikasiClient({
         // Rollback
         setNotifications(previousNotifications);
         setUnreadCount(previousUnread);
+        if (!itemToDelete.isRead) {
+          setGlobalUnreadCount(previousUnread);
+        }
         toast.error(res.error || 'Gagal menghapus notifikasi.');
       }
     } catch {
       // Rollback
       setNotifications(previousNotifications);
       setUnreadCount(previousUnread);
+      if (!itemToDelete.isRead) {
+        setGlobalUnreadCount(previousUnread);
+      }
       toast.error('Gagal menghapus notifikasi.');
     } finally {
       setActionLoadingId(null);

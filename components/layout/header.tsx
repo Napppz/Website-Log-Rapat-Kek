@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { Search, Plus, Bell, ChevronDown, Menu, LogOut, User as UserIcon } from 'lucide-react';
 import { useSession, signOut } from 'next-auth/react';
 import { cn } from '@/lib/utils';
+import { useNotifications } from '@/components/providers/notification-provider';
 
 interface HeaderProps {
   onOpenMobile?: () => void;
@@ -37,6 +38,7 @@ export function Header({
   onCreateMeetingClick,
 }: HeaderProps) {
   const { data: session } = useSession();
+  const { unreadCount } = useNotifications();
   const [profileDropdownOpen, setProfileDropdownOpen] = useState(false);
   const [notifDropdownOpen, setNotifDropdownOpen] = useState(false);
 
@@ -93,16 +95,24 @@ export function Header({
             title="Notifikasi"
           >
             <Bell className="w-5 h-5" />
-            <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-[#F99D1C] ring-2 ring-white"></span>
+            {unreadCount > 0 && (
+              <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-[#F99D1C] ring-2 ring-white"></span>
+            )}
           </button>
 
           {notifDropdownOpen && (
             <div className="absolute right-0 mt-2 w-80 bg-white rounded-xl shadow-lg border border-slate-200 p-3 z-50 text-[13px]">
               <div className="flex items-center justify-between pb-2 border-b border-slate-100">
                 <span className="font-bold text-slate-900">Notifikasi Rapat</span>
-                <span className="text-[11px] font-semibold text-[#31889C] bg-[#E8F5F7] px-2 py-0.5 rounded-full">
-                  6 Baru
-                </span>
+                {unreadCount > 0 ? (
+                  <span className="text-[11px] font-semibold text-[#31889C] bg-[#E8F5F7] px-2 py-0.5 rounded-full">
+                    {unreadCount} Baru
+                  </span>
+                ) : (
+                  <span className="text-[11px] font-semibold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full">
+                    Semua Terbaca
+                  </span>
+                )}
               </div>
               <div className="divide-y divide-slate-100 mt-2">
                 <div className="py-2">
