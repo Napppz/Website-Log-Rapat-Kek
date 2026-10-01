@@ -32,13 +32,18 @@ import {
   Eye,
   ExternalLink,
   Edit3,
+  MessageCircle,
+  History,
 } from 'lucide-react';
+
 import { MeetingStatusBadge } from '@/components/meeting/meeting-status-badge';
 import { MeetingMinutesSection } from '@/components/meeting/meeting-minutes/meeting-minutes-section';
 import { ActionItemList } from '@/components/action-items/action-item-list';
 import { PreviousMeetingModal } from '@/components/meeting/previous-meeting-modal';
 import { LinkMeetingDialog } from '@/components/meeting/link-meeting-dialog';
 import { AgendaSeriesModal } from '@/components/meeting/agenda-series-modal';
+import { MeetingCommentsSection } from '@/components/meeting/meeting-comments/meeting-comments-section';
+import { MinutesHistorySection } from '@/components/meeting/meeting-history/minutes-history-section';
 import { MeetingStatus } from '@/lib/types';
 import { AttendanceStatus } from '@prisma/client';
 import {
@@ -113,7 +118,7 @@ export function MeetingDetailView({
   const canManageParticipants =
     userRole === 'SUPER_ADMIN' || userRole === 'ADMIN' || userRole === 'NOTULIS';
 
-  const [activeTab, setActiveTab] = useState<'overview' | 'participants' | 'minutes' | 'actionItems'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview' | 'participants' | 'minutes' | 'actionItems' | 'comments' | 'history'>('overview');
   const [isDeleting, setIsDeleting] = useState(false);
   const [isUpdatingStatus, setIsUpdatingStatus] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
@@ -802,6 +807,31 @@ export function MeetingDetailView({
           <CheckSquare className="w-4 h-4" />
           <span>Tindak Lanjut ({meeting.actionItems ? meeting.actionItems.length : 0})</span>
         </button>
+        <button
+          type="button"
+          onClick={() => setActiveTab('comments')}
+          className={`flex items-center gap-2 px-5 py-3 font-bold text-[13px] border-b-2 transition-all cursor-pointer ${
+            activeTab === 'comments'
+              ? 'border-[#31889C] text-[#31889C] bg-[#F0F9FA] rounded-t-lg'
+              : 'border-transparent text-slate-600 hover:text-[#31889C] hover:bg-[#F0F9FA]/50'
+          }`}
+        >
+          <MessageCircle className="w-4 h-4" />
+          <span>Komentar</span>
+        </button>
+
+        <button
+          type="button"
+          onClick={() => setActiveTab('history')}
+          className={`flex items-center gap-2 px-5 py-3 font-bold text-[13px] border-b-2 transition-all cursor-pointer ${
+            activeTab === 'history'
+              ? 'border-[#31889C] text-[#31889C] bg-[#F0F9FA] rounded-t-lg'
+              : 'border-transparent text-slate-600 hover:text-[#31889C] hover:bg-[#F0F9FA]/50'
+          }`}
+        >
+          <History className="w-4 h-4" />
+          <span>Riwayat</span>
+        </button>
       </div>
 
       {/* Tab 1: Informasi Rapat / Overview */}
@@ -1127,6 +1157,20 @@ export function MeetingDetailView({
             availableBiros={availableBiros}
             availableUsers={availableUsers}
           />
+        </div>
+      )}
+
+      {/* Tab 5: Komentar Notulen */}
+      {activeTab === 'comments' && (
+        <div className="space-y-4">
+          <MeetingCommentsSection meetingId={meeting.id} />
+        </div>
+      )}
+
+      {/* Tab 6: Riwayat Perubahan (Audit Trail) */}
+      {activeTab === 'history' && (
+        <div className="space-y-4">
+          <MinutesHistorySection meetingId={meeting.id} />
         </div>
       )}
 

@@ -3,7 +3,7 @@
 import { prisma } from '@/lib/prisma';
 import { meetingMinutesSchema, MeetingMinutesInput } from '@/lib/validations/minutes';
 import { revalidatePath } from 'next/cache';
-import { requirePermission } from '@/lib/auth/authorization';
+import { requirePermission, requireAuth } from '@/lib/auth/authorization';
 
 /**
  * Server Action: Get MeetingMinutes by meetingId
@@ -64,7 +64,11 @@ export async function upsertMeetingMinutesAction(input: MeetingMinutesInput) {
       };
     }
 
-    // 3. Atomically upsert minutes
+    // 3. Check if minutes already exist (to determine CREATED vs UPDATED)
+    const existing = await prisma.meetingMinutes.findUnique({ where: { meetingId } });
+    const isNew = !existing;
+
+    // 4. Atomically upsert minutes
     const minutes = await prisma.meetingMinutes.upsert({
       where: { meetingId },
       create: {
@@ -82,7 +86,37 @@ export async function upsertMeetingMinutesAction(input: MeetingMinutesInput) {
       },
     });
 
-    // 4. Revalidate routes
+    // 5. Record audit trail history
+    try {
+      const currentUser = await requireAuth();
+      await prisma.minutesHistory.create({
+        data: {
+          meetingId,
+          userId: currentUser.id,
+          changeType: isNew ? 'CREATED' : 'UPDATED',
+          fieldName: null,
+          oldValue: isNew
+            ? undefined
+            : {
+                agenda: existing?.agenda ?? undefined,
+                discussion: existing?.discussion ?? undefined,
+                decisions: existing?.decisions ?? undefined,
+              },
+          newValue: {
+            agenda: agenda ?? undefined,
+            discussion: discussion ?? undefined,
+            decisions: decisions ?? undefined,
+          },
+          summary: isNew
+            ? `Notulen rapat dibuat pertama kali oleh ${currentUser.name}`
+            : `Notulen rapat diperbarui oleh ${currentUser.name}`,
+        },
+      });
+    } catch {
+      // History recording is non-critical, don't fail the main action
+    }
+
+    // 6. Revalidate routes
     try {
       revalidatePath('/');
       revalidatePath('/semua-rapat');

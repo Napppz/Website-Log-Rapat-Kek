@@ -85,6 +85,8 @@ model User {
   notifications       Notification[]
   accounts            Account[]
   sessions            Session[]
+  minutesComments     MinutesComment[]
+  minutesHistories    MinutesHistory[]
 
   @@index([email])
   @@index([biroId])
@@ -119,6 +121,8 @@ model Meeting {
   participants     MeetingParticipant[]
   minutes          MeetingMinutes?
   actionItems      ActionItem[]
+  comments         MinutesComment[]
+  history          MinutesHistory[]
 
   @@index([meetingNumber])
   @@index([primaryBiroId])
@@ -300,6 +304,51 @@ model Notification {
   @@index([isRead])
   @@index([createdAt])
   @@map("notifikasi")
+}
+
+model MinutesComment {
+  id          String              @id @default(uuid()) @map("id_komentar")
+  meetingId   String              @map("id_rapat")
+  userId      String?             @map("id_pengguna")
+  parentId    String?             @map("id_induk")
+  content     String              @map("isi_komentar")
+  section     String?             @map("seksi") // e.g. 'agenda', 'discussion', 'decisions'
+  isResolved  Boolean             @default(false) @map("sudah_diselesaikan")
+  resolvedBy  String?             @map("diselesaikan_oleh")
+  resolvedAt  DateTime?           @map("diselesaikan_pada")
+  createdAt   DateTime            @default(now()) @map("dibuat_pada")
+  updatedAt   DateTime            @updatedAt @map("diperbarui_pada")
+
+  meeting  Meeting          @relation(fields: [meetingId], references: [id], onDelete: Cascade)
+  user     User?            @relation(fields: [userId], references: [id], onDelete: SetNull)
+  parent   MinutesComment?  @relation("CommentReplies", fields: [parentId], references: [id], onDelete: Cascade)
+  replies  MinutesComment[] @relation("CommentReplies")
+
+  @@index([meetingId])
+  @@index([userId])
+  @@index([parentId])
+  @@index([isResolved])
+  @@map("komentar_notulen")
+}
+
+model MinutesHistory {
+  id          String   @id @default(uuid()) @map("id_riwayat")
+  meetingId   String   @map("id_rapat")
+  userId      String?  @map("id_pengguna")
+  changeType  String   @map("tipe_perubahan") // e.g. 'CREATED', 'UPDATED', 'STATUS_CHANGED'
+  fieldName   String?  @map("nama_kolom")
+  oldValue    Json?    @map("nilai_lama")
+  newValue    Json?    @map("nilai_baru")
+  summary     String?  @map("ringkasan_perubahan")
+  createdAt   DateTime @default(now()) @map("dibuat_pada")
+
+  meeting  Meeting @relation(fields: [meetingId], references: [id], onDelete: Cascade)
+  user     User?   @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([meetingId])
+  @@index([userId])
+  @@index([createdAt])
+  @@map("riwayat_notulen")
 }
 
 model BiroTeam {
