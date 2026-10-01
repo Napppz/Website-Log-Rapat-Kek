@@ -109,10 +109,11 @@ export function MeetingMinutesEditor({
     null;
 
   const initialDocumentNumber =
-    (initialMinutes?.conclusion as any)?.documentNumber ||
-    (initialMinutes?.decisions as any)?.documentNumber ||
-    meeting?.meetingNumber ||
-    '';
+    (initialMinutes?.conclusion as any)?.documentNumber !== undefined
+      ? (initialMinutes?.conclusion as any)?.documentNumber
+      : (initialMinutes?.decisions as any)?.documentNumber !== undefined
+      ? (initialMinutes?.decisions as any)?.documentNumber
+      : (meeting?.meetingNumber || '');
 
   const initialInvitationNumber =
     (initialMinutes?.conclusion as any)?.invitationNumber ||
@@ -133,6 +134,13 @@ export function MeetingMinutesEditor({
 
   // Inisialisasi Data Naskah Dinas: Nota Dinas
   const initialNota = (initialMinutes?.conclusion as any)?.notaDinas || {};
+  const initialNdDocNumber =
+    initialNota.documentNumber !== undefined
+      ? initialNota.documentNumber
+      : (initialMinutes?.conclusion as any)?.docType === 'NOTA_DINAS'
+      ? ((initialMinutes?.conclusion as any)?.documentNumber || '')
+      : '';
+  const [ndDocumentNumber, setNdDocumentNumber] = useState<string>(initialNdDocNumber);
 
   const defaultBiro = meeting?.primaryBiro?.name
     ? meeting.primaryBiro.name.toUpperCase()
@@ -192,6 +200,8 @@ export function MeetingMinutesEditor({
     }
     if (extractedData.meetingNumber) {
       setInvitationNumber(extractedData.meetingNumber);
+      setDocumentNumber(extractedData.meetingNumber);
+      setNdDocumentNumber(extractedData.meetingNumber);
     }
     hasChangesRef.current = true;
   };
@@ -212,13 +222,14 @@ export function MeetingMinutesEditor({
 
       try {
         // Sematkan signerName, signerRole, chairpersonName, signatureImage, documentNumber, dan invitationNumber
-        const finalDocNum = documentNumber.trim() || undefined;
+        const finalNotulaDocNum = documentNumber.trim();
+        const finalNdDocNum = ndDocumentNumber.trim();
         const finalInvitationNum = invitationNumber.trim() || undefined;
 
-        // Jika nomor surat diubah dan berbeda dari nomor rapat asli di DB, sinkronkan ke tabel Meeting
-        if (finalDocNum && meeting?.meetingNumber && finalDocNum !== meeting.meetingNumber) {
+        // Jika nomor surat notula diubah dan berbeda dari nomor rapat asli di DB, sinkronkan ke tabel Meeting (hanya jika diisi resmi)
+        if (docType === 'NOTULA' && finalNotulaDocNum && finalNotulaDocNum !== '-' && meeting?.meetingNumber && finalNotulaDocNum !== meeting.meetingNumber) {
           try {
-            await updateMeetingNumberAction(meetingId, finalDocNum);
+            await updateMeetingNumberAction(meetingId, finalNotulaDocNum);
           } catch (numErr) {
             console.warn('Could not sync meeting number to meeting table:', numErr);
           }
@@ -235,7 +246,7 @@ export function MeetingMinutesEditor({
           signerRole: ndSignerRole.trim(),
           signerName: ndSignerName.trim(),
           signatureImage: signatureImage || null,
-          documentNumber: finalDocNum || meeting?.meetingNumber,
+          documentNumber: finalNdDocNum, // Opsional / bisa kosong
         };
 
         const conclusionPayload = {
@@ -246,7 +257,7 @@ export function MeetingMinutesEditor({
           signerRole: docType === 'NOTA_DINAS' ? ndSignerRole.trim() : signerRole.trim(),
           chairpersonName: chairpersonName.trim(),
           signatureImage: signatureImage || null,
-          documentNumber: finalDocNum || meeting?.meetingNumber,
+          documentNumber: docType === 'NOTA_DINAS' ? finalNdDocNum : finalNotulaDocNum,
           invitationNumber: finalInvitationNum,
         };
 
@@ -259,7 +270,7 @@ export function MeetingMinutesEditor({
               signerRole: docType === 'NOTA_DINAS' ? ndSignerRole.trim() : signerRole.trim(),
               chairpersonName: chairpersonName.trim(),
               signatureImage: signatureImage || null,
-              documentNumber: finalDocNum || meeting?.meetingNumber,
+              documentNumber: docType === 'NOTA_DINAS' ? finalNdDocNum : finalNotulaDocNum,
               invitationNumber: finalInvitationNum,
             }
           : undefined;
@@ -307,6 +318,7 @@ export function MeetingMinutesEditor({
       ndIntroText,
       ndSignerRole,
       ndSignerName,
+      ndDocumentNumber,
       signerName,
       signerRole,
       chairpersonName,
@@ -353,6 +365,7 @@ export function MeetingMinutesEditor({
     ndIntroText,
     ndSignerRole,
     ndSignerName,
+    ndDocumentNumber,
     signerName,
     signerRole,
     signatureImage,
@@ -539,6 +552,7 @@ export function MeetingMinutesEditor({
     if (!isConfirmed) return;
 
     setNdBiroName('BIRO INVESTASI, KERJA SAMA, DAN KOMUNIKASI');
+    setNdDocumentNumber('${nomor_naskah}');
     setNdRecipient('Plt. Kepala Biro Investasi, Kerja Sama, dan Komunikasi');
     setNdSender('Kepala Bagian Program dan Tata Kelola');
     setNdSubject(`Laporan Kegiatan ${meeting?.title || 'Forum Analisis dan Berbagi Informasi Gov-CSIRT T.A. 2026'}`);
@@ -726,7 +740,7 @@ export function MeetingMinutesEditor({
                   NOTA DINAS RESMI KEK
                 </span>
                 <span className="text-[12px] font-semibold text-slate-700">
-                  NOMOR: {documentNumber || '${nomor_naskah}'}
+                  NOMOR: {ndDocumentNumber || '${nomor_naskah}'}
                 </span>
               </div>
               <h3 className="font-bold text-[16px] text-slate-900 mt-1">
@@ -787,21 +801,52 @@ export function MeetingMinutesEditor({
               </div>
 
               <div className="space-y-1.5">
-                <label className="text-[12.5px] font-bold text-slate-800">
-                  Nomor Nota Dinas (NOMOR: ...)
-                </label>
+                <div className="flex items-center justify-between">
+                  <label className="text-[12.5px] font-bold text-slate-800 flex items-center gap-1.5">
+                    <span>Nomor Nota Dinas (NOMOR: ...)</span>
+                    <span className="text-[10px] font-semibold text-slate-500 bg-slate-100 px-1.5 py-0.5 rounded border border-slate-200">
+                      Opsional
+                    </span>
+                  </label>
+                  <div className="flex items-center gap-2">
+                    {ndDocumentNumber && ndDocumentNumber.trim() !== '' && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setNdDocumentNumber('');
+                          hasChangesRef.current = true;
+                        }}
+                        className="text-[11px] font-semibold text-slate-500 hover:text-red-600 hover:underline cursor-pointer"
+                      >
+                        Kosongkan / Format &apos;${'{nomor_naskah}'}&apos;
+                      </button>
+                    )}
+                    {meeting?.meetingNumber && ndDocumentNumber !== meeting.meetingNumber && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setNdDocumentNumber(meeting.meetingNumber || '');
+                          hasChangesRef.current = true;
+                        }}
+                        className="text-[11px] font-semibold text-[#31889C] hover:underline cursor-pointer"
+                      >
+                        Salin dari Kode Rapat ({meeting.meetingNumber})
+                      </button>
+                    )}
+                  </div>
+                </div>
                 <input
                   type="text"
-                  value={documentNumber}
+                  value={ndDocumentNumber}
                   onChange={(e) => {
-                    setDocumentNumber(e.target.value);
+                    setNdDocumentNumber(e.target.value);
                     hasChangesRef.current = true;
                   }}
-                  placeholder="Contoh: ND-01/D.KEK/2026 atau ${nomor_naskah}"
-                  className="w-full px-3.5 py-2 text-[13px] bg-slate-50 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#31889C]/20 focus:border-[#31889C] font-mono font-medium"
+                  placeholder="Opsional (contoh: ND-01/D.KEK/2026 atau biarkan kosong untuk ${nomor_naskah})"
+                  className="w-full px-3.5 py-2 text-[13px] bg-slate-50 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#31889C]/20 focus:border-[#31889C] font-mono font-medium text-slate-900"
                 />
                 <p className="text-[11px] text-slate-500">
-                  Nomor register naskah dinas resmi.
+                  Nomor register naskah dinas resmi (opsional). Jika dikosongkan, naskah dinas &amp; PDF otomatis mencetak placeholder standar dinas <strong>NOMOR: ${'{nomor_naskah}'}</strong>.
                 </p>
               </div>
             </div>
@@ -1186,7 +1231,7 @@ export function MeetingMinutesEditor({
                   FORMAT NOTULA RESMI
                 </span>
                 <span className="text-[12px] font-semibold text-slate-700">
-                  NOMOR: {documentNumber || meeting?.meetingNumber || (meeting as any)?.code || 'KEK/ND/2026'}
+                  NOMOR: {documentNumber || '-'}
                 </span>
               </div>
               <h3 className="font-bold text-[16px] text-slate-900 mt-1">
@@ -1489,8 +1534,23 @@ export function MeetingMinutesEditor({
               <label className="text-[12.5px] font-bold text-slate-800 flex items-center gap-1.5">
                 <FileText className="w-4 h-4 text-[#31889C]" />
                 <span>Nomor Registrasi Notula (NOMOR: ...)</span>
+                <span className="text-[10px] font-semibold text-slate-500 bg-slate-100 px-1.5 py-0.5 rounded border border-slate-200">
+                  Opsional
+                </span>
               </label>
               <div className="flex items-center gap-2">
+                {documentNumber && documentNumber.trim() !== '' && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setDocumentNumber('');
+                      hasChangesRef.current = true;
+                    }}
+                    className="text-[11px] font-semibold text-slate-500 hover:text-red-600 hover:underline cursor-pointer"
+                  >
+                    Kosongkan / Tanda &apos;-&apos;
+                  </button>
+                )}
                 {meeting?.meetingNumber && documentNumber !== meeting.meetingNumber && (
                   <button
                     type="button"
@@ -1500,7 +1560,7 @@ export function MeetingMinutesEditor({
                     }}
                     className="text-[11px] font-semibold text-[#31889C] hover:underline cursor-pointer"
                   >
-                    Kembalikan ke {meeting.meetingNumber}
+                    Gunakan Kode Rapat ({meeting.meetingNumber})
                   </button>
                 )}
               </div>
@@ -1512,11 +1572,11 @@ export function MeetingMinutesEditor({
                 setDocumentNumber(e.target.value);
                 hasChangesRef.current = true;
               }}
-              placeholder={`Contoh: ${meeting?.meetingNumber || 'IKK-015'}`}
+              placeholder={`Opsional (contoh: ${meeting?.meetingNumber || 'IKK-015'} atau biarkan kosong untuk tanda '-')`}
               className="w-full px-4 py-2.5 text-[13.5px] bg-white border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#31889C]/20 focus:border-[#31889C] transition-all text-slate-900 font-medium placeholder:text-slate-400"
             />
             <p className="text-[11px] text-slate-500">
-              Dicetak tebal pada judul naskah notula dinas (<strong>NOMOR: {documentNumber || meeting?.meetingNumber}</strong>).
+              Dicetak tebal pada judul naskah notula dinas (<strong>NOMOR: {documentNumber || '-'}</strong>). Bersifat opsional — jika dikosongkan, naskah dinas &amp; PDF otomatis mencetak tanda <strong>&apos;-&apos;</strong>.
             </p>
           </div>
 

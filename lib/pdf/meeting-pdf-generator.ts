@@ -246,9 +246,16 @@ export async function generateMeetingPdf(meeting: MeetingPdfData): Promise<Buffe
         });
 
       const customDocNumber =
-        (meeting.minutes?.conclusion as any)?.documentNumber ||
-        (meeting.minutes?.decisions as any)?.documentNumber;
-      const nomorNaskah = customDocNumber || meeting.meetingNumber || (meeting as any).code || 'KEK/ND/2026';
+        (meeting.minutes?.conclusion as any)?.documentNumber !== undefined
+          ? (meeting.minutes?.conclusion as any)?.documentNumber
+          : (meeting.minutes?.decisions as any)?.documentNumber;
+      let nomorNaskah = '-';
+      if (customDocNumber !== undefined && customDocNumber !== null) {
+        const trimmed = String(customDocNumber).trim();
+        nomorNaskah = trimmed !== '' ? trimmed : '-';
+      } else if (meeting.meetingNumber || (meeting as any).code) {
+        nomorNaskah = meeting.meetingNumber || (meeting as any).code;
+      }
       doc
         .font(fonts.arial)
         .fontSize(11)

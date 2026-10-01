@@ -208,14 +208,19 @@ export function resolveNotaDinasData(meeting?: any, minutes?: any) {
     {};
 
   const customDocNumber =
-    notaObj.documentNumber ||
-    (minutes?.conclusion as any)?.documentNumber ||
-    (minutes?.decisions as any)?.documentNumber;
-  const documentNumber =
-    customDocNumber ||
-    meeting?.meetingNumber ||
-    (meeting as any)?.code ||
-    '${nomor_naskah}';
+    notaObj.documentNumber !== undefined
+      ? notaObj.documentNumber
+      : (minutes?.conclusion as any)?.documentNumber !== undefined
+      ? (minutes?.conclusion as any)?.documentNumber
+      : (minutes?.decisions as any)?.documentNumber;
+
+  let documentNumber = '${nomor_naskah}';
+  if (customDocNumber !== undefined && customDocNumber !== null) {
+    const trimmed = String(customDocNumber).trim();
+    documentNumber = trimmed !== '' ? trimmed : '${nomor_naskah}';
+  } else if (meeting?.meetingNumber) {
+    documentNumber = meeting.meetingNumber;
+  }
 
   const defaultBiro = meeting?.primaryBiro?.name
     ? meeting.primaryBiro.name.toUpperCase()

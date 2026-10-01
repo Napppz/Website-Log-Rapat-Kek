@@ -120,12 +120,17 @@ export function MeetingMinutesPreview({
   };
 
   const meetingId = meeting?.id;
-  const meetingNumber =
-    (conclusion as any)?.documentNumber ||
-    (decisions as any)?.documentNumber ||
-    meeting?.meetingNumber ||
-    meeting?.code ||
-    'KEK/ND/2026';
+  const rawDocumentNumber =
+    (conclusion as any)?.documentNumber !== undefined
+      ? (conclusion as any)?.documentNumber
+      : (decisions as any)?.documentNumber;
+  let meetingNumber = '-';
+  if (rawDocumentNumber !== undefined && rawDocumentNumber !== null) {
+    const trimmed = String(rawDocumentNumber).trim();
+    meetingNumber = trimmed !== '' ? trimmed : '-';
+  } else if (meeting?.meetingNumber || meeting?.code) {
+    meetingNumber = meeting.meetingNumber || meeting.code;
+  }
   const meetingTitle = meeting?.title || '-';
   const meetingDate = formatIndonesianDate(meeting?.date);
   const meetingTime = normalizeTime(meeting?.startTime, meeting?.endTime);
