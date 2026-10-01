@@ -96,6 +96,20 @@
   --color-emerald-800: #3D7231;
   --color-emerald-900: #2E5525;
 
+  /* Meeting Status Lifecycle Tokens */
+  --color-status-draft: #F1F5F9;
+  --color-status-draft-text: #475569;
+  --color-status-draft-border: #CBD5E1;
+  --color-status-review: #FEF9C3;
+  --color-status-review-text: #854D0E;
+  --color-status-review-border: #FDE047;
+  --color-status-approved: #E0F2FE;
+  --color-status-approved-text: #0369A1;
+  --color-status-approved-border: #BAE6FD;
+  --color-status-final: #DCFCE7;
+  --color-status-final-text: #15803D;
+  --color-status-final-border: #86EFAC;
+
   --spacing-space-xs: 0.25rem;
   --spacing-space-sm: 0.5rem;
   --spacing-space-md: 1rem;
@@ -107,6 +121,7 @@
   --font-sans: var(--font-public-sans), var(--font-plus-jakarta), system-ui, sans-serif;
   --font-headline: var(--font-public-sans), system-ui, sans-serif;
   --font-body: var(--font-public-sans), var(--font-plus-jakarta), system-ui, sans-serif;
+  --font-mono: ui-monospace, SFMono-Regular, "JetBrains Mono", Menlo, Consolas, monospace;
 }
 
 :root {
