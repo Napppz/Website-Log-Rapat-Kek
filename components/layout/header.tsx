@@ -2,10 +2,11 @@
 
 import React, { useState } from 'react';
 import Link from 'next/link';
-import { Search, Plus, Bell, ChevronDown, Menu, LogOut, User as UserIcon } from 'lucide-react';
+import { Search, Plus, Bell, ChevronDown, Menu, LogOut, User as UserIcon, Users } from 'lucide-react';
 import { useSession, signOut } from 'next-auth/react';
 import { cn } from '@/lib/utils';
 import { useNotifications } from '@/components/providers/notification-provider';
+import { MultiSessionDialog } from '@/components/auth/multi-session-dialog';
 
 interface HeaderProps {
   onOpenMobile?: () => void;
@@ -41,6 +42,7 @@ export function Header({
   const { unreadCount } = useNotifications();
   const [profileDropdownOpen, setProfileDropdownOpen] = useState(false);
   const [notifDropdownOpen, setNotifDropdownOpen] = useState(false);
+  const [multiSessionOpen, setMultiSessionOpen] = useState(false);
 
   const currentUser = session?.user;
   const userName = currentUser?.name || 'Pengguna Sistem';
@@ -86,6 +88,17 @@ export function Header({
 
       {/* Right: Actions, Notifications & Profile */}
       <div className="flex items-center gap-2 sm:gap-4 shrink-0 ml-3">
+        {/* Multi-Session / Dual-Role Button */}
+        <button
+          type="button"
+          onClick={() => setMultiSessionOpen(true)}
+          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#E8F5F7] border border-[#BCE3EB] text-[#215865] hover:bg-[#d5eff4] transition-all font-semibold text-[11.5px] cursor-pointer shadow-2xs"
+          title="Buka 2 Sesi Akun Simultan (Dual Role) atau Beralih Akun"
+        >
+          <Users className="w-3.5 h-3.5 text-[#31889C]" />
+          <span>Multi-Sesi (2 Akun)</span>
+        </button>
+
         {/* Notification Bell */}
         <div className="relative">
           <button
@@ -188,6 +201,17 @@ export function Header({
               </Link>
               <button
                 type="button"
+                onClick={() => {
+                  setProfileDropdownOpen(false);
+                  setMultiSessionOpen(true);
+                }}
+                className="w-full flex items-center gap-2 text-left px-3 py-1.5 rounded-md hover:bg-[#F0F9FA] text-[#215865] font-semibold transition-colors cursor-pointer"
+              >
+                <Users className="w-3.5 h-3.5 text-[#31889C]" />
+                <span>Dual Sesi / Ganti Role</span>
+              </button>
+              <button
+                type="button"
                 onClick={() => signOut({ callbackUrl: '/login' })}
                 className="w-full flex items-center gap-2 text-left px-3 py-1.5 rounded-md hover:bg-red-50 text-red-600 transition-colors mt-1 border-t border-slate-100 pt-1.5 cursor-pointer font-medium"
               >
@@ -198,6 +222,12 @@ export function Header({
           )}
         </div>
       </div>
+
+      {/* Global Multi-Session Dialog */}
+      <MultiSessionDialog
+        isOpen={multiSessionOpen}
+        onClose={() => setMultiSessionOpen(false)}
+      />
     </header>
   );
 }

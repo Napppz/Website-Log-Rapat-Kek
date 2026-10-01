@@ -320,6 +320,23 @@ function LoginForm() {
                     );
                   })}
                 </div>
+
+                {/* Dual Session Tip */}
+                <div className="p-2.5 rounded-lg bg-[#E8F5F7]/80 border border-[#BCE3EB] text-[11px] text-[#215865] flex items-start gap-2 mt-2">
+                  <span className="text-[13px] shrink-0">💡</span>
+                  <div className="leading-snug">
+                    <strong>Uji Coba 2 Akun Bersamaan:</strong> Buka sesi kedua di{' '}
+                    <a
+                      href="http://127.0.0.1:3000/login"
+                      target="_blank"
+                      rel="noreferrer"
+                      className="font-bold underline text-[#215865] hover:text-[#31889C]"
+                    >
+                      127.0.0.1:3000
+                    </a>{' '}
+                    atau jendela Incognito (<em>Ctrl+Shift+N</em>) agar sesi login kedua akun tidak saling menimpa!
+                  </div>
+                </div>
               </div>
             )}
           </div>
