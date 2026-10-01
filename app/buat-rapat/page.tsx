@@ -89,6 +89,19 @@ export default function BuatRapatPage() {
     if (searchParams.get('upload') === 'true') {
       setIsUploadDialogOpen(true);
     }
+    const prevId = searchParams.get('previousMeetingId');
+    const paramTitle = searchParams.get('title');
+    const paramBiro = searchParams.get('biro');
+
+    if (prevId) {
+      setPreviousMeetingId(prevId);
+    }
+    if (paramTitle) {
+      setTitle(paramTitle);
+    }
+    if (paramBiro && ['BPPK', 'PKKEK', 'IKK', 'HSDMO', 'UK'].includes(paramBiro.toUpperCase())) {
+      setSelectedBiro(paramBiro.toUpperCase() as BiroCode);
+    }
   }, [searchParams]);
 
   // Handle data applied from uploaded meeting document

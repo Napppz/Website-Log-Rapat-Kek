@@ -320,6 +320,7 @@ export async function getMeetingsFromDb(filters?: {
           biroName: m.primaryBiro.shortName,
           primaryTeamId: m.primaryTeamId,
           primaryTeamName: m.primaryTeam?.name || null,
+          previousMeetingId: m.previousMeetingId || null,
           status: m.status as MeetingStatus,
           // Rapat dianggap 'BARU' jika baru dibuat dalam 3 hari terakhir (72 jam)
           isNew: m.createdAt ? (Date.now() - new Date(m.createdAt).getTime()) <= 3 * 24 * 60 * 60 * 1000 : false,

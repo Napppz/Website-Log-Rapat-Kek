@@ -31,6 +31,7 @@ interface MeetingDetailDialogProps {
   onClose: () => void;
   onDownloadPdf?: (meeting: Meeting) => void;
   onMeetingUpdated?: () => void;
+  onOpenSeriesModal?: (meetingId: string) => void;
 }
 
 export function MeetingDetailDialog({
@@ -38,6 +39,7 @@ export function MeetingDetailDialog({
   onClose,
   onDownloadPdf,
   onMeetingUpdated,
+  onOpenSeriesModal,
 }: MeetingDetailDialogProps) {
   const { data: session } = useSession();
   const userRole = session?.user?.role || 'VIEWER';
@@ -191,6 +193,21 @@ export function MeetingDetailDialog({
           </div>
 
           <div className="flex items-center gap-2">
+            {onOpenSeriesModal && (
+              <button
+                type="button"
+                onClick={() => {
+                  onClose();
+                  onOpenSeriesModal(meeting.id);
+                }}
+                className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[12px] font-semibold text-[#215865] bg-[#E8F5F7] hover:bg-[#BCE3EB] transition-colors cursor-pointer"
+                title="Lihat Linimasa Semua Rapat Terkait Agenda Ini"
+              >
+                <Layers className="w-3.5 h-3.5 text-[#31889C]" />
+                <span>Rangkaian Agenda</span>
+              </button>
+            )}
+
             <Link
               href={`/semua-rapat/${meeting.id}`}
               onClick={onClose}

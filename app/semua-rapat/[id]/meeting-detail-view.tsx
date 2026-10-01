@@ -38,6 +38,7 @@ import { MeetingMinutesSection } from '@/components/meeting/meeting-minutes/meet
 import { ActionItemList } from '@/components/action-items/action-item-list';
 import { PreviousMeetingModal } from '@/components/meeting/previous-meeting-modal';
 import { LinkMeetingDialog } from '@/components/meeting/link-meeting-dialog';
+import { AgendaSeriesModal } from '@/components/meeting/agenda-series-modal';
 import { MeetingStatus } from '@/lib/types';
 import { AttendanceStatus } from '@prisma/client';
 import {
@@ -128,6 +129,7 @@ export function MeetingDetailView({
   const [previousMeeting, setPreviousMeeting] = useState<any>(meeting.previousMeeting || null);
   const [showPreviousMeetingModal, setShowPreviousMeetingModal] = useState<boolean>(false);
   const [showLinkMeetingModal, setShowLinkMeetingModal] = useState<boolean>(false);
+  const [showSeriesModal, setShowSeriesModal] = useState<boolean>(false);
 
   // Participant attendance states
   const [participants, setParticipants] = useState<any[]>(meeting.participants || []);
@@ -679,7 +681,17 @@ export function MeetingDetailView({
             </div>
           </div>
 
-          <div className="flex items-center gap-2 shrink-0 self-start md:self-center">
+          <div className="flex items-center gap-2 shrink-0 self-start md:self-center flex-wrap">
+            <button
+              type="button"
+              onClick={() => setShowSeriesModal(true)}
+              className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-white border border-[#BCE3EB] hover:bg-[#E8F5F7] text-[#215865] font-semibold text-[12px] transition-colors cursor-pointer shadow-2xs"
+              title="Lihat seluruh sesi rapat terkait dalam agenda ini"
+            >
+              <Layers className="w-4 h-4 text-[#31889C]" />
+              <span>Rangkaian Rapat Terkait</span>
+            </button>
+
             <button
               type="button"
               onClick={() => setShowPreviousMeetingModal(true)}
@@ -702,24 +714,37 @@ export function MeetingDetailView({
             )}
           </div>
         </div>
-      ) : canEditMeeting ? (
+      ) : (
         <div className="bg-[#F0F9FA] rounded-xl border border-dashed border-[#BCE3EB] p-3.5 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-[12px]">
           <div className="flex items-center gap-2.5 text-slate-700">
             <Link2 className="w-4 h-4 text-[#31889C] shrink-0" />
             <span>
-              Apakah rapat ini merupakan <strong>rapat lanjutan</strong> dari rapat sebelumnya?
+              Pantau seluruh rangkaian sesi atau hubungkan sebagai tindak lanjut rapat terdahulu.
             </span>
           </div>
-          <button
-            type="button"
-            onClick={() => setShowLinkMeetingModal(true)}
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white border border-[#BCE3EB] hover:bg-[#E8F5F7] text-[#215865] font-semibold text-[12px] transition-all shadow-2xs cursor-pointer self-start sm:self-auto shrink-0"
-          >
-            <Link2 className="w-3.5 h-3.5 text-[#31889C]" />
-            <span>+ Tautkan Rapat Sebelumnya</span>
-          </button>
+          <div className="flex items-center gap-2 flex-wrap">
+            <button
+              type="button"
+              onClick={() => setShowSeriesModal(true)}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white border border-[#BCE3EB] hover:bg-[#E8F5F7] text-[#215865] font-semibold text-[12px] transition-all shadow-2xs cursor-pointer"
+              title="Periksa apakah ada rapat lain dengan topik agenda serupa"
+            >
+              <Layers className="w-3.5 h-3.5 text-[#31889C]" />
+              <span>Cek Rangkaian Rapat Terkait</span>
+            </button>
+            {canEditMeeting && (
+              <button
+                type="button"
+                onClick={() => setShowLinkMeetingModal(true)}
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#31889C] hover:bg-[#266F80] text-white font-semibold text-[12px] transition-all shadow-2xs cursor-pointer"
+              >
+                <Link2 className="w-3.5 h-3.5" />
+                <span>+ Tautkan Rapat Sebelumnya</span>
+              </button>
+            )}
+          </div>
         </div>
-      ) : null}
+      )}
 
       {/* Tabs Navigation */}
       <div className="flex items-center gap-2 border-b border-slate-200 pb-0">
@@ -1326,6 +1351,19 @@ export function MeetingDetailView({
           setPreviousMeeting(updated.previousMeeting || null);
           setShowLinkMeetingModal(false);
           router.refresh();
+        }}
+      />
+
+      {/* Modal: Linimasa Rangkaian Rapat Terkait */}
+      <AgendaSeriesModal
+        isOpen={showSeriesModal}
+        onClose={() => setShowSeriesModal(false)}
+        meetingId={meeting.id}
+        onSelectMeeting={(selectedId) => {
+          setShowSeriesModal(false);
+          if (selectedId !== meeting.id) {
+            router.push(`/semua-rapat/${selectedId}`);
+          }
         }}
       />
     </div>

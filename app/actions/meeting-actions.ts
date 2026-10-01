@@ -6,6 +6,7 @@ import { getMeetingByIdFromDb } from '@/lib/db-service';
 import { MeetingStatus, AttendanceStatus } from '@prisma/client';
 import { revalidatePath } from 'next/cache';
 import { requirePermission, requireAuth } from '@/lib/auth/authorization';
+import { extractPlainText } from '@/lib/pdf/pdf-utils';
 
 export interface CreateMeetingInput {
   title: string;
@@ -687,5 +688,204 @@ export async function getBiroTeamsAction(biroCode: string) {
     return { success: false, data: [] };
   }
 }
+
+/**
+ * Normalizes agenda title for smart grouping:
+ * - strips session suffixes like " - Sesi 1", " (Rapat ke-2)", " Rapat Ke 2", "(Lanjutan)", etc.
+ * - removes extra punctuation and lowercase
+ */
+function normalizeAgendaTitle(title: string): string {
+  if (!title) return '';
+  return title
+    .toLowerCase()
+    .replace(/\s*[\(\[\-–—]\s*(sesi|rapat|pertemuan|lanjutan|part|bagian)\s*\w*[\)\]]?/gi, '')
+    .replace(/\s*-\s*lanjutan\b/gi, '')
+    .replace(/\s*rapat\s*ke\s*\d+\b/gi, '')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+/**
+ * Server action to get the full series of related meetings for an agenda.
+ * Groups meetings by:
+ * 1. Direct follow-up links (previousMeetingId hierarchy chain)
+ * 2. Identical or normalized agenda title match
+ * Returns all sessions chronologically labeled (Rapat Ke-1, Rapat Ke-2, dst.)
+ */
+export async function getAgendaSeriesAction(meetingId: string) {
+  try {
+    if (!meetingId) {
+      return { success: false, error: 'ID Rapat tidak valid' };
+    }
+
+    // 1. Fetch current target meeting
+    const target = await prisma.meeting.findUnique({
+      where: { id: meetingId },
+      include: {
+        primaryBiro: true,
+        primaryTeam: true,
+      },
+    });
+
+    if (!target) {
+      return { success: false, error: 'Rapat tidak ditemukan' };
+    }
+
+    // 2. Fetch all meetings for linkage and title analysis
+    const allMeetings = await prisma.meeting.findMany({
+      include: {
+        primaryBiro: true,
+        primaryTeam: true,
+        chairperson: true,
+        secretary: true,
+        minutes: true,
+        actionItems: true,
+      },
+      orderBy: [{ date: 'asc' }, { startTime: 'asc' }, { createdAt: 'asc' }],
+    });
+
+    const targetNormalized = normalizeAgendaTitle(target.title);
+
+    // 3. Build undirected graph for previousMeetingId hierarchy
+    const adj = new Map<string, Set<string>>();
+    for (const m of allMeetings) {
+      if (!adj.has(m.id)) adj.set(m.id, new Set());
+      if (m.previousMeetingId) {
+        if (!adj.has(m.previousMeetingId)) adj.set(m.previousMeetingId, new Set());
+        adj.get(m.id)!.add(m.previousMeetingId);
+        adj.get(m.previousMeetingId)!.add(m.id);
+      }
+    }
+
+    // BFS to find all meetings connected in the link graph
+    const seriesMeetingIds = new Set<string>();
+    const queue = [target.id];
+    seriesMeetingIds.add(target.id);
+    while (queue.length > 0) {
+      const curr = queue.shift()!;
+      const neighbors = adj.get(curr) || new Set();
+      for (const n of neighbors) {
+        if (!seriesMeetingIds.has(n)) {
+          seriesMeetingIds.add(n);
+          queue.push(n);
+        }
+      }
+    }
+
+    // 4. Also find meetings that match identical/normalized agenda title
+    for (const m of allMeetings) {
+      const mNorm = normalizeAgendaTitle(m.title);
+      const isTitleMatch =
+        m.title.toLowerCase().trim() === target.title.toLowerCase().trim() ||
+        (targetNormalized.length >= 6 &&
+          mNorm.length >= 6 &&
+          (mNorm === targetNormalized ||
+            mNorm.includes(targetNormalized) ||
+            targetNormalized.includes(mNorm)));
+
+      if (isTitleMatch) {
+        seriesMeetingIds.add(m.id);
+        const subQueue = [m.id];
+        while (subQueue.length > 0) {
+          const c = subQueue.shift()!;
+          const neighbors = adj.get(c) || new Set();
+          for (const n of neighbors) {
+            if (!seriesMeetingIds.has(n)) {
+              seriesMeetingIds.add(n);
+              subQueue.push(n);
+            }
+          }
+        }
+      }
+    }
+
+    // 5. Filter and sort matched meetings chronologically
+    const seriesMeetings = allMeetings
+      .filter((m) => seriesMeetingIds.has(m.id))
+      .sort((a, b) => {
+        const timeA = new Date(a.date).getTime();
+        const timeB = new Date(b.date).getTime();
+        if (timeA !== timeB) return timeA - timeB;
+        return new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
+      });
+
+    // 6. Map to rich AgendaSessionItem
+    const totalSessions = seriesMeetings.length;
+    const sessions = seriesMeetings.map((m, idx) => {
+      const totalItems = m.actionItems.length;
+      const completed = m.actionItems.filter((a) => a.status === 'COMPLETED').length;
+      const inProgress = m.actionItems.filter((a) => a.status === 'IN_PROGRESS').length;
+      const pending = m.actionItems.filter((a) => a.status === 'PENDING').length;
+      const overdue = m.actionItems.filter(
+        (a) => a.status !== 'COMPLETED' && a.dueDate && new Date(a.dueDate).getTime() < Date.now()
+      ).length;
+
+      let minutesSummary: string | null = null;
+      let conclusionSnippet: string | null = null;
+      if (m.minutes) {
+        try {
+          const rawAgenda = extractPlainText(m.minutes.agenda);
+          const rawConclusion = extractPlainText(m.minutes.conclusion);
+          conclusionSnippet = rawConclusion ? rawConclusion.replace(/\s+/g, ' ').trim().slice(0, 160) : null;
+          minutesSummary = rawAgenda ? rawAgenda.replace(/\s+/g, ' ').trim().slice(0, 160) : null;
+        } catch {
+          // ignore parsing error
+        }
+      }
+
+      return {
+        id: m.id,
+        code: m.meetingNumber,
+        title: m.title,
+        sessionNumber: idx + 1,
+        sessionLabel: `Rapat Ke-${idx + 1}`,
+        isCurrent: m.id === meetingId,
+        isFirst: idx === 0,
+        isLatest: idx === totalSessions - 1,
+        date: m.date.toISOString().slice(0, 10),
+        rawDate: m.date.toISOString(),
+        time: `${m.startTime} - ${m.endTime} WIB`,
+        location: m.location,
+        status: m.status as any,
+        biroCode: m.primaryBiro.code as any,
+        biroName: m.primaryBiro.shortName,
+        primaryTeamName: m.primaryTeam?.name || null,
+        chairpersonName: m.chairperson?.name || null,
+        secretaryName: m.secretary?.name || null,
+        previousMeetingId: m.previousMeetingId,
+        actionItems: {
+          total: totalItems,
+          completed,
+          inProgress,
+          pending,
+          overdue,
+          summaryText:
+            totalItems > 0
+              ? `${completed}/${totalItems} Tindak Lanjut Selesai`
+              : 'Belum ada tindak lanjut',
+        },
+        minutesSummary,
+        conclusionSnippet,
+        hasMinutes: !!m.minutes,
+      };
+    });
+
+    return {
+      success: true,
+      data: {
+        agendaTitle: target.title,
+        totalSessions,
+        currentMeetingId: meetingId,
+        primaryBiroCode: target.primaryBiro.code as any,
+        primaryBiroName: target.primaryBiro.shortName,
+        sessions,
+      },
+    };
+  } catch (error: any) {
+    console.error('Error fetching agenda series:', error);
+    return { success: false, error: error?.message || 'Gagal memuat rangkaian rapat' };
+  }
+}
+
 
 

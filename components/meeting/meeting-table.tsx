@@ -16,12 +16,14 @@ import {
   RotateCcw,
   Trash2,
   Loader2,
+  Layers,
 } from 'lucide-react';
 import { Meeting, BiroCode, MeetingStatus } from '@/lib/types';
 import { MOCK_MEETINGS } from '@/lib/mock-data';
 import { MeetingStatusBadge } from './meeting-status-badge';
 import { ActionItemProgress } from '../action-items/action-item-progress';
 import { MeetingDetailDialog } from './meeting-detail-dialog';
+import { AgendaSeriesModal } from './agenda-series-modal';
 import { useSession } from 'next-auth/react';
 import { deleteMeetingAction } from '@/app/actions/meeting-actions';
 import { toast, confirmModal } from '@/components/providers/toast-provider';
@@ -50,12 +52,133 @@ export function MeetingTable({
   const [fetching, setFetching] = useState(false);
   const [searchFilter, setSearchFilter] = useState('');
   const [selectedMeeting, setSelectedMeeting] = useState<Meeting | null>(null);
+  const [seriesModalMeetingId, setSeriesModalMeetingId] = useState<string | null>(null);
+  const [isSeriesModalOpen, setIsSeriesModalOpen] = useState<boolean>(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [downloadingId, setDownloadingId] = useState<string | null>(null);
   const [deletingRowId, setDeletingRowId] = useState<string | null>(null);
   const { data: session } = useSession();
   const userRole = session?.user?.role || 'VIEWER';
   const canDeleteMeeting = userRole === 'SUPER_ADMIN' || userRole === 'ADMIN';
+
+  // Group meetings into series to compute total sessions & session index
+  const meetingSeriesMap = useMemo(() => {
+    const map = new Map<string, { total: number; index: number }>();
+    if (!meetings || meetings.length === 0) return map;
+
+    const norm = (str: string) =>
+      (str || '')
+        .toLowerCase()
+        .replace(/\s*[\(\[\-–—]\s*(sesi|rapat|pertemuan|lanjutan|part|bagian)\s*\w*[\)\]]?/gi, '')
+        .replace(/\s*-\s*lanjutan\b/gi, '')
+        .replace(/\s*rapat\s*ke\s*\d+\b/gi, '')
+        .replace(/\s+/g, ' ')
+        .trim();
+
+    // Adjacency graph
+    const adj = new Map<string, Set<string>>();
+    for (const m of meetings) {
+      if (!adj.has(m.id)) adj.set(m.id, new Set());
+      if (m.previousMeetingId) {
+        if (!adj.has(m.previousMeetingId)) adj.set(m.previousMeetingId, new Set());
+        adj.get(m.id)!.add(m.previousMeetingId);
+        adj.get(m.previousMeetingId)!.add(m.id);
+      }
+    }
+
+    for (let i = 0; i < meetings.length; i++) {
+      for (let j = i + 1; j < meetings.length; j++) {
+        const m1 = meetings[i];
+        const m2 = meetings[j];
+        const n1 = norm(m1.title);
+        const n2 = norm(m2.title);
+        const isMatch =
+          m1.title.toLowerCase().trim() === m2.title.toLowerCase().trim() ||
+          (n1.length >= 6 && n2.length >= 6 && (n1 === n2 || n1.includes(n2) || n2.includes(n1)));
+        if (isMatch) {
+          if (!adj.has(m1.id)) adj.set(m1.id, new Set());
+          if (!adj.has(m2.id)) adj.set(m2.id, new Set());
+          adj.get(m1.id)!.add(m2.id);
+          adj.get(m2.id)!.add(m1.id);
+        }
+      }
+    }
+
+    const visited = new Set<string>();
+    for (const m of meetings) {
+      if (visited.has(m.id)) continue;
+      const group: Meeting[] = [];
+      const queue = [m.id];
+      visited.add(m.id);
+      while (queue.length > 0) {
+        const curr = queue.shift()!;
+        const foundM = meetings.find((x) => x.id === curr);
+        if (foundM) group.push(foundM);
+        const neighbors = adj.get(curr) || new Set();
+        for (const n of neighbors) {
+          if (!visited.has(n)) {
+            visited.add(n);
+            queue.push(n);
+          }
+        }
+      }
+
+      // Sort group chronologically
+      group.sort((a, b) => {
+        const timeA = new Date(a.date).getTime();
+        const timeB = new Date(b.date).getTime();
+        if (timeA !== timeB) return timeA - timeB;
+        return (a.time || '').localeCompare(b.time || '');
+      });
+
+      const total = group.length;
+      group.forEach((item, idx) => {
+        map.set(item.id, { total, index: idx + 1 });
+      });
+    }
+
+    return map;
+  }, [meetings]);
+
+  const handleSelectMeetingFromSeries = async (sessionId: string) => {
+    setIsSeriesModalOpen(false);
+    const existing = meetings.find((m) => m.id === sessionId);
+    if (existing) {
+      setSelectedMeeting(existing);
+      return;
+    }
+    try {
+      const { getMeetingDetailAction } = await import('@/app/actions/meeting-actions');
+      const res = await getMeetingDetailAction(sessionId);
+      if (res.success && res.data) {
+        const m = res.data;
+        setSelectedMeeting({
+          id: m.id,
+          code: m.meetingNumber,
+          title: m.title,
+          date: new Date(m.date).toISOString().slice(0, 10),
+          time: `${m.startTime} - ${m.endTime} WIB`,
+          location: m.location,
+          biroCode: m.primaryBiro.code as BiroCode,
+          biroName: m.primaryBiro.shortName,
+          primaryTeamId: m.primaryTeamId,
+          primaryTeamName: m.primaryTeam?.name || null,
+          previousMeetingId: m.previousMeetingId || null,
+          status: m.status as MeetingStatus,
+          isNew: false,
+          actionItems: {
+            total: m.actionItems?.length || 0,
+            completed: m.actionItems?.filter((a: any) => a.status === 'COMPLETED').length || 0,
+            inProgress: m.actionItems?.filter((a: any) => a.status === 'IN_PROGRESS').length || 0,
+            summaryText: `${m.actionItems?.filter((a: any) => a.status === 'COMPLETED').length || 0}/${m.actionItems?.length || 0} Tindak Lanjut Selesai`,
+          },
+          attendees: m.participants?.map((p: any) => p.user.name) || [],
+        });
+      }
+    } catch (e) {
+      console.error('Error selecting meeting from series:', e);
+    }
+  };
 
   const handleDeleteSingleMeeting = async (m: Meeting) => {
     const confirmed = await confirmModal({
@@ -370,19 +493,45 @@ export function MeetingTable({
 
                     {/* Agenda Rapat & Lokasi */}
                     <td className="py-3.5 px-4 align-top max-w-md">
-                      <div className="flex flex-col gap-1">
-                        <button
-                          type="button"
-                          onClick={() => setSelectedMeeting(meeting)}
-                          className="text-left font-bold text-[14px] text-slate-900 hover:text-[#31889C] transition-colors line-clamp-2 cursor-pointer"
-                        >
-                          {meeting.title}
-                        </button>
-                        <div className="flex items-center gap-1.5 text-slate-500">
-                          <MapPin className="w-3.5 h-3.5 text-[#31889C] shrink-0" />
-                          <span className="text-[12px] line-clamp-1">{meeting.location}</span>
-                        </div>
-                      </div>
+                      {(() => {
+                        const seriesInfo = meetingSeriesMap.get(meeting.id);
+                        return (
+                          <div className="flex flex-col gap-1.5">
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setSeriesModalMeetingId(meeting.id);
+                                setIsSeriesModalOpen(true);
+                              }}
+                              className="text-left font-bold text-[14px] text-slate-900 hover:text-[#31889C] transition-colors line-clamp-2 cursor-pointer group-hover:text-[#31889C]"
+                              title="Klik untuk melihat seluruh rangkaian rapat terkait agenda ini"
+                            >
+                              {meeting.title}
+                            </button>
+                            <div className="flex items-center gap-2 flex-wrap text-slate-500">
+                              <div className="flex items-center gap-1 text-[12px]">
+                                <MapPin className="w-3.5 h-3.5 text-[#31889C] shrink-0" />
+                                <span className="line-clamp-1">{meeting.location}</span>
+                              </div>
+                              {seriesInfo && seriesInfo.total > 1 && (
+                                <button
+                                  type="button"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    setSeriesModalMeetingId(meeting.id);
+                                    setIsSeriesModalOpen(true);
+                                  }}
+                                  className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-bold bg-[#E8F5F7] text-[#215865] border border-[#BCE3EB] hover:bg-[#BCE3EB] transition-colors cursor-pointer"
+                                  title="Klik untuk membuka linimasa rangkaian rapat agenda ini"
+                                >
+                                  <Layers className="w-3 h-3 text-[#31889C]" />
+                                  <span>Rapat Ke-{seriesInfo.index} dari {seriesInfo.total} Sesi</span>
+                                </button>
+                              )}
+                            </div>
+                          </div>
+                        );
+                      })()}
                     </td>
 
                     {/* Biro Pelaksana */}
@@ -532,6 +681,10 @@ export function MeetingTable({
       <MeetingDetailDialog
         meeting={selectedMeeting}
         onClose={() => setSelectedMeeting(null)}
+        onOpenSeriesModal={(mId) => {
+          setSeriesModalMeetingId(mId);
+          setIsSeriesModalOpen(true);
+        }}
         onMeetingUpdated={() => {
           fetch('/api/meetings', { cache: 'no-store' })
             .then((r) => r.json())
@@ -540,6 +693,18 @@ export function MeetingTable({
             })
             .catch((e) => console.error(e));
         }}
+      />
+
+      {/* Agenda Series Modal (Linimasa Rapat Terkait) */}
+      <AgendaSeriesModal
+        isOpen={isSeriesModalOpen}
+        onClose={() => {
+          setIsSeriesModalOpen(false);
+          setSeriesModalMeetingId(null);
+        }}
+        meetingId={seriesModalMeetingId}
+        onSelectMeeting={handleSelectMeetingFromSeries}
+        onDownloadPdf={handleDownloadPdf}
       />
     </div>
   );

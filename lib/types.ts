@@ -90,8 +90,53 @@ export interface Meeting {
   isNew?: boolean;
   involvedBiros?: string;
   actionItems: ActionItemProgressData;
+  previousMeetingId?: string | null;
+  seriesCount?: number;
+  sessionNumber?: number;
   attendees?: string[];
   agendaSummary?: string;
+}
+
+export interface AgendaSessionItem {
+  id: string;
+  code: string;
+  title: string;
+  sessionNumber: number;
+  sessionLabel: string;
+  isCurrent: boolean;
+  isFirst: boolean;
+  isLatest: boolean;
+  date: string;
+  rawDate: string;
+  time: string;
+  location: string;
+  status: MeetingStatus;
+  biroCode: BiroCode;
+  biroName: string;
+  primaryTeamName?: string | null;
+  chairpersonName?: string | null;
+  secretaryName?: string | null;
+  previousMeetingId?: string | null;
+  actionItems: {
+    total: number;
+    completed: number;
+    inProgress: number;
+    pending: number;
+    overdue: number;
+    summaryText: string;
+  };
+  minutesSummary?: string | null;
+  conclusionSnippet?: string | null;
+  hasMinutes: boolean;
+}
+
+export interface AgendaSeriesResult {
+  agendaTitle: string;
+  totalSessions: number;
+  currentMeetingId: string;
+  primaryBiroCode: BiroCode;
+  primaryBiroName: string;
+  sessions: AgendaSessionItem[];
 }
 
 export interface DashboardMetric {
