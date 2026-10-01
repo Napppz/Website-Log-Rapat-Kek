@@ -9,6 +9,7 @@ import {
   Eye,
   RefreshCw,
   CheckCircle2,
+  Loader2,
 } from 'lucide-react';
 import { JSONContent } from '@tiptap/react';
 import {
@@ -37,6 +38,8 @@ interface MeetingMinutesPreviewProps {
   documentType?: 'NOTULA' | 'NOTA_DINAS';
   onDocumentTypeChange?: (type: 'NOTULA' | 'NOTA_DINAS') => void;
   onDownloadPdf?: (type?: 'notula' | 'nota-dinas') => void;
+  onDownloadDocx?: (type?: 'notula' | 'nota-dinas') => void;
+  isDownloadingDocx?: boolean;
   onEditClick?: () => void;
   canEdit?: boolean;
 }
@@ -96,6 +99,8 @@ export function MeetingMinutesPreview({
   documentType: propDocType,
   onDocumentTypeChange,
   onDownloadPdf,
+  onDownloadDocx,
+  isDownloadingDocx,
   onEditClick,
   canEdit = false,
 }: MeetingMinutesPreviewProps) {
@@ -278,6 +283,24 @@ export function MeetingMinutesPreview({
             >
               <Download className="w-3.5 h-3.5" />
               <span>Unduh {docType === 'NOTA_DINAS' ? 'Nota Dinas' : 'PDF'}</span>
+            </button>
+          )}
+
+          {/* Unduh Word (.docx) */}
+          {onDownloadDocx && (
+            <button
+              type="button"
+              disabled={isDownloadingDocx}
+              onClick={() => onDownloadDocx(docType === 'NOTA_DINAS' ? 'nota-dinas' : 'notula')}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#2B579A] hover:bg-[#1E3E6D] text-white font-semibold text-[12px] transition-colors shadow-xs cursor-pointer disabled:opacity-50"
+              title={`Unduh dokumen ${docType === 'NOTA_DINAS' ? 'Nota Dinas' : 'Notula'} dalam format Word (.docx)`}
+            >
+              {isDownloadingDocx ? (
+                <Loader2 className="w-3.5 h-3.5 animate-spin" />
+              ) : (
+                <FileText className="w-3.5 h-3.5" />
+              )}
+              <span>Unduh Word (.docx)</span>
             </button>
           )}
 

@@ -16,6 +16,7 @@ import {
   Layers,
   CheckSquare,
   FileDown,
+  Loader2,
 } from 'lucide-react';
 import { Meeting, MeetingStatus } from '@/lib/types';
 import { MeetingStatusBadge } from './meeting-status-badge';
@@ -49,6 +50,7 @@ export function MeetingDetailDialog({
   const [isDeleting, setIsDeleting] = useState(false);
   const [isUpdatingStatus, setIsUpdatingStatus] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
+  const [isExportingDocx, setIsExportingDocx] = useState(false);
   const [actionItems, setActionItems] = useState<any[]>([]);
   const [availableBiros, setAvailableBiros] = useState<any[]>([]);
   const [availableUsers, setAvailableUsers] = useState<any[]>([]);
@@ -82,6 +84,38 @@ export function MeetingDetailDialog({
       toast.error(err?.message || 'Terjadi kesalahan saat mengunduh PDF.');
     } finally {
       setIsExporting(false);
+    }
+  };
+
+  const handleExportDocx = async (type: 'notula' | 'nota-dinas' = 'notula') => {
+    if (!meeting?.id) return;
+    try {
+      setIsExportingDocx(true);
+      const res = await fetch(`/api/meetings/${meeting.id}/docx?type=${type}`);
+      if (!res.ok) {
+        const errJson = await res.json().catch(() => null);
+        throw new Error(errJson?.error || 'Gagal mengunduh dokumen Word (.docx).');
+      }
+      const blob = await res.blob();
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      const cleanCode = (meeting.code || 'KEK').replace(/[^a-zA-Z0-9_-]/g, '_');
+      link.download = type === 'nota-dinas'
+        ? `Nota-Dinas-${cleanCode}.docx`
+        : `Risalah-Rapat-${cleanCode}.docx`;
+      document.body.appendChild(link);
+      link.click();
+      window.URL.revokeObjectURL(url);
+      toast.success(
+        type === 'nota-dinas'
+          ? `Nota Dinas rapat ${meeting.code || 'KEK'} berhasil diunduh (Word .docx).`
+          : `Risalah rapat ${meeting.code || 'KEK'} berhasil diunduh (Word .docx).`
+      );
+    } catch (err: any) {
+      toast.error(err?.message || 'Terjadi kesalahan saat mengunduh Word.');
+    } finally {
+      setIsExportingDocx(false);
     }
   };
 
@@ -469,49 +503,97 @@ export function MeetingDetailDialog({
             </button>
 
             {(((meeting as any)?.minutes?.conclusion as any)?.docType === 'NOTA_DINAS') ? (
-              <div className="flex items-center gap-2">
+              <div className="flex flex-wrap items-center gap-2">
                 <button
                   type="button"
                   disabled={isExporting}
                   onClick={() => handleExportPdf('nota-dinas')}
-                  className="inline-flex items-center gap-2 px-3.5 py-2 rounded-lg bg-[#31889C] text-white font-semibold text-[12.5px] hover:bg-[#266F80] shadow-sm transition-all cursor-pointer disabled:opacity-50"
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#31889C] text-white font-semibold text-[12px] hover:bg-[#266F80] shadow-sm transition-all cursor-pointer disabled:opacity-50"
                   title="Unduh Nota Dinas Resmi Format PDF"
                 >
-                  <FileDown className="w-4 h-4" />
-                  <span>{isExporting ? 'Membuat PDF...' : 'Unduh Nota Dinas PDF'}</span>
+                  <FileDown className="w-3.5 h-3.5" />
+                  <span>{isExporting ? 'Membuat PDF...' : 'Nota Dinas PDF'}</span>
+                </button>
+                <button
+                  type="button"
+                  disabled={isExportingDocx}
+                  onClick={() => handleExportDocx('nota-dinas')}
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#2B579A] text-white font-semibold text-[12px] hover:bg-[#1E3E6D] shadow-sm transition-all cursor-pointer disabled:opacity-50"
+                  title="Unduh Nota Dinas Resmi Format Word (.docx)"
+                >
+                  {isExportingDocx ? (
+                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                  ) : (
+                    <FileText className="w-3.5 h-3.5" />
+                  )}
+                  <span>Word (.docx)</span>
                 </button>
                 <button
                   type="button"
                   disabled={isExporting}
                   onClick={() => handleExportPdf('notula')}
-                  className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg border border-slate-300 bg-white text-slate-700 font-semibold text-[12px] hover:bg-slate-50 transition-all cursor-pointer disabled:opacity-50"
+                  className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border border-slate-300 bg-white text-slate-700 font-semibold text-[11.5px] hover:bg-slate-50 transition-all cursor-pointer disabled:opacity-50"
                   title="Unduh Risalah Notula Format PDF"
                 >
-                  <FileDown className="w-3.5 h-3.5 text-slate-500" />
+                  <FileDown className="w-3 h-3 text-slate-500" />
                   <span>Notula PDF</span>
+                </button>
+                <button
+                  type="button"
+                  disabled={isExportingDocx}
+                  onClick={() => handleExportDocx('notula')}
+                  className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border border-[#2B579A]/30 bg-blue-50/50 text-[#2B579A] font-semibold text-[11.5px] hover:bg-blue-100/50 transition-all cursor-pointer disabled:opacity-50"
+                  title="Unduh Risalah Notula Format Word (.docx)"
+                >
+                  <FileText className="w-3 h-3 text-[#2B579A]" />
+                  <span>Notula Word</span>
                 </button>
               </div>
             ) : (
-              <div className="flex items-center gap-2">
+              <div className="flex flex-wrap items-center gap-2">
                 <button
                   type="button"
                   disabled={isExporting}
                   onClick={() => onDownloadPdf ? onDownloadPdf(meeting) : handleExportPdf('notula')}
-                  className="inline-flex items-center gap-2 px-3.5 py-2 rounded-lg bg-[#31889C] text-white font-semibold text-[12.5px] hover:bg-[#266F80] shadow-sm transition-all cursor-pointer disabled:opacity-50"
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#31889C] text-white font-semibold text-[12px] hover:bg-[#266F80] shadow-sm transition-all cursor-pointer disabled:opacity-50"
                   title="Unduh Risalah Rapat Resmi Format PDF"
                 >
-                  <FileDown className="w-4 h-4" />
-                  <span>{isExporting ? 'Membuat PDF...' : 'Unduh Notulen PDF'}</span>
+                  <FileDown className="w-3.5 h-3.5" />
+                  <span>{isExporting ? 'Membuat PDF...' : 'Notulen PDF'}</span>
+                </button>
+                <button
+                  type="button"
+                  disabled={isExportingDocx}
+                  onClick={() => handleExportDocx('notula')}
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#2B579A] text-white font-semibold text-[12px] hover:bg-[#1E3E6D] shadow-sm transition-all cursor-pointer disabled:opacity-50"
+                  title="Unduh Risalah Rapat Resmi Format Word (.docx)"
+                >
+                  {isExportingDocx ? (
+                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                  ) : (
+                    <FileText className="w-3.5 h-3.5" />
+                  )}
+                  <span>Word (.docx)</span>
                 </button>
                 <button
                   type="button"
                   disabled={isExporting}
                   onClick={() => handleExportPdf('nota-dinas')}
-                  className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg border border-slate-300 bg-white text-slate-700 font-semibold text-[12px] hover:bg-slate-50 transition-all cursor-pointer disabled:opacity-50"
+                  className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border border-slate-300 bg-white text-slate-700 font-semibold text-[11.5px] hover:bg-slate-50 transition-all cursor-pointer disabled:opacity-50"
                   title="Unduh Nota Dinas Resmi Format PDF"
                 >
-                  <FileDown className="w-3.5 h-3.5 text-slate-500" />
+                  <FileDown className="w-3 h-3 text-slate-500" />
                   <span>Nota Dinas PDF</span>
+                </button>
+                <button
+                  type="button"
+                  disabled={isExportingDocx}
+                  onClick={() => handleExportDocx('nota-dinas')}
+                  className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border border-[#2B579A]/30 bg-blue-50/50 text-[#2B579A] font-semibold text-[11.5px] hover:bg-blue-100/50 transition-all cursor-pointer disabled:opacity-50"
+                  title="Unduh Nota Dinas Resmi Format Word (.docx)"
+                >
+                  <FileText className="w-3 h-3 text-[#2B579A]" />
+                  <span>Nota Dinas Word</span>
                 </button>
               </div>
             )}

@@ -31,6 +31,7 @@ export function MeetingMinutesSection({
   const [isLoading, setIsLoading] = useState(!propMinutes && !propMeeting);
   const [mode, setMode] = useState<'edit' | 'preview'>(defaultMode);
   const [isDownloadingPdf, setIsDownloadingPdf] = useState(false);
+  const [isDownloadingDocx, setIsDownloadingDocx] = useState(false);
 
   const initialDocType: 'NOTULA' | 'NOTA_DINAS' =
     (minutes?.conclusion as any)?.docType ||
@@ -143,6 +144,43 @@ export function MeetingMinutesSection({
     }
   };
 
+  // Handler Download Word (.docx) (Mendukung Notula & Nota Dinas)
+  const handleDownloadDocx = async (type?: 'notula' | 'nota-dinas') => {
+    const targetType = type || (docType === 'NOTA_DINAS' ? 'nota-dinas' : 'notula');
+    try {
+      setIsDownloadingDocx(true);
+      const res = await fetch(`/api/meetings/${meetingId}/docx?type=${targetType}`);
+      if (!res.ok) {
+        const errJson = await res.json().catch(() => null);
+        throw new Error(errJson?.error || `Gagal mengunduh dokumen ${targetType === 'nota-dinas' ? 'Nota Dinas' : 'Notula'} Word.`);
+      }
+
+      const blob = await res.blob();
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      const code = currentMeeting?.meetingNumber || currentMeeting?.code || meetingId;
+      const cleanCode = code.replace(/[^a-zA-Z0-9_-]/g, '_');
+      link.download = targetType === 'nota-dinas'
+        ? `Nota-Dinas-${cleanCode}.docx`
+        : `Risalah-Rapat-${cleanCode}.docx`;
+
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(url);
+      toast.success(
+        targetType === 'nota-dinas'
+          ? 'Nota Dinas resmi berhasil diunduh (Word .docx).'
+          : 'Risalah Rapat resmi berhasil diunduh (Word .docx).'
+      );
+    } catch (err: any) {
+      toast.error(err?.message || 'Terjadi kesalahan saat mengunduh file Word (.docx).');
+    } finally {
+      setIsDownloadingDocx(false);
+    }
+  };
+
   // Loading state
   if (isLoading && !currentMeeting) {
     return (
@@ -220,6 +258,8 @@ export function MeetingMinutesSection({
         documentType={docType}
         onDocumentTypeChange={(type) => setDocType(type)}
         onDownloadPdf={handleDownloadPdf}
+        onDownloadDocx={handleDownloadDocx}
+        isDownloadingDocx={isDownloadingDocx}
         onEditClick={canEditMinutes ? () => setMode('edit') : undefined}
         canEdit={canEditMinutes}
       />

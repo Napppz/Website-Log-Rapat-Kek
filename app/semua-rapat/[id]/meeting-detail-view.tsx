@@ -122,6 +122,7 @@ export function MeetingDetailView({
   const [isDeleting, setIsDeleting] = useState(false);
   const [isUpdatingStatus, setIsUpdatingStatus] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
+  const [isExportingDocx, setIsExportingDocx] = useState(false);
   const [status, setStatus] = useState<MeetingStatus>(meeting.status);
 
   // Custom Meeting Number state
@@ -175,6 +176,42 @@ export function MeetingDetailView({
       toast.error(err?.message || 'Terjadi kesalahan saat mengekspor PDF.');
     } finally {
       setIsExporting(false);
+    }
+  };
+
+  const handleExportDocx = async (type?: 'notula' | 'nota-dinas') => {
+    try {
+      setIsExportingDocx(true);
+      const isNota =
+        type === 'nota-dinas' ||
+        (!type && (meeting.minutes?.conclusion as any)?.docType === 'NOTA_DINAS');
+      const targetType = isNota ? 'nota-dinas' : 'notula';
+      const res = await fetch(`/api/meetings/${meeting.id}/docx?type=${targetType}`);
+      if (!res.ok) {
+        const errJson = await res.json().catch(() => null);
+        throw new Error(errJson?.error || 'Gagal mengunduh dokumen Word (.docx).');
+      }
+      const blob = await res.blob();
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      const cleanNum = (meeting.meetingNumber || 'KEK').replace(/[^a-zA-Z0-9_-]/g, '_');
+      link.download = isNota
+        ? `Nota-Dinas-${cleanNum}.docx`
+        : `Risalah-Rapat-${cleanNum}.docx`;
+      document.body.appendChild(link);
+      link.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(link);
+      toast.success(
+        isNota
+          ? `Nota Dinas rapat ${meeting.meetingNumber} berhasil diunduh (Word .docx).`
+          : `Risalah rapat ${meeting.meetingNumber} berhasil diunduh (Word .docx).`
+      );
+    } catch (err: any) {
+      toast.error(err?.message || 'Terjadi kesalahan saat mengekspor Word.');
+    } finally {
+      setIsExportingDocx(false);
     }
   };
 
@@ -439,6 +476,22 @@ export function MeetingDetailView({
           >
             <FileDown className="w-3.5 h-3.5" />
             <span>{isExporting ? 'Membuat PDF...' : 'Export PDF'}</span>
+          </button>
+
+          {/* Export Word (.docx) Button (All roles) */}
+          <button
+            type="button"
+            disabled={isExportingDocx}
+            onClick={() => handleExportDocx()}
+            className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg bg-[#2B579A] hover:bg-[#1E3E6D] text-white text-[12px] font-semibold transition-all shadow-xs cursor-pointer disabled:opacity-50"
+            title="Unduh Risalah Rapat Resmi Format Word (.docx)"
+          >
+            {isExportingDocx ? (
+              <Loader2 className="w-3.5 h-3.5 animate-spin" />
+            ) : (
+              <FileText className="w-3.5 h-3.5" />
+            )}
+            <span>{isExportingDocx ? 'Membuat Word...' : 'Export Word'}</span>
           </button>
 
           {/* Delete button (SUPER_ADMIN, ADMIN) */}
