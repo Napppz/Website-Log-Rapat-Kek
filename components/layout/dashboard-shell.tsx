@@ -1,9 +1,10 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { usePathname } from 'next/navigation';
 import { Sidebar } from './sidebar';
 import { Header } from './header';
+import { CommandPalette } from './command-palette';
 import { CreateMeetingDialog } from '../meeting/create-meeting-dialog';
 import { cn } from '@/lib/utils';
 
@@ -16,7 +17,20 @@ export function DashboardShell({ children }: DashboardShellProps) {
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const [isCreateMeetingOpen, setIsCreateMeetingOpen] = useState(false);
+  const [isCommandPaletteOpen, setIsCommandPaletteOpen] = useState(false);
   const [globalSearch, setGlobalSearch] = useState('');
+
+  // Global Ctrl + K / Cmd + K listener
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') {
+        e.preventDefault();
+        setIsCommandPaletteOpen((prev) => !prev);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
 
   // If on login page, render full screen without dashboard chrome
   if (pathname === '/login') {
@@ -40,13 +54,14 @@ export function DashboardShell({ children }: DashboardShellProps) {
           isSidebarCollapsed ? "pl-0 lg:pl-20" : "pl-0 lg:pl-72"
         )}
       >
-        {/* Sticky Header */}
+        {/* Sticky Header with Quick Search */}
         <Header
           collapsed={isSidebarCollapsed}
           onOpenMobile={() => setIsMobileSidebarOpen(true)}
           searchQuery={globalSearch}
           onSearchChange={setGlobalSearch}
           onCreateMeetingClick={() => setIsCreateMeetingOpen(true)}
+          onOpenSearch={() => setIsCommandPaletteOpen(true)}
         />
 
         {/* Dynamic Route Content */}
@@ -59,6 +74,13 @@ export function DashboardShell({ children }: DashboardShellProps) {
       <CreateMeetingDialog
         isOpen={isCreateMeetingOpen}
         onClose={() => setIsCreateMeetingOpen(false)}
+      />
+
+      {/* Global Command Palette (Ctrl + K) */}
+      <CommandPalette
+        isOpen={isCommandPaletteOpen}
+        onClose={() => setIsCommandPaletteOpen(false)}
+        onCreateMeeting={() => setIsCreateMeetingOpen(true)}
       />
     </div>
   );

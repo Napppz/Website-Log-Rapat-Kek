@@ -115,10 +115,13 @@ export function StatsOverview({
               opacity: isAnimated ? 1 : 0,
             }}
             className={cn(
-              'group relative rounded-2xl bg-white p-4 shadow-xs hover:-translate-y-1 hover:shadow-md transition-all duration-200 cursor-pointer block',
-              isDanger
-                ? 'border border-red-200 hover:border-red-400 hover:bg-red-50/20'
-                : 'border border-slate-200 hover:border-slate-300 hover:bg-slate-50/30'
+              'group relative rounded-2xl bg-white p-4 shadow-2xs hover:-translate-y-1 hover:shadow-md transition-all duration-200 cursor-pointer block overflow-hidden border border-slate-200/90',
+              // KEK 4-Quadrant Accent Top Stripes
+              metric.id === 'total-rapat' && 'border-t-[3px] border-t-[#1E6B7B] hover:border-[#1E6B7B]/40 hover:bg-[#F0F8FA]/30',
+              metric.id === 'rapat-bulan-ini' && 'border-t-[3px] border-t-[#7CC563] hover:border-[#7CC563]/40 hover:bg-[#ECF8E9]/30',
+              metric.id === 'tindak-lanjut-aktif' && 'border-t-[3px] border-t-[#F99D1C] hover:border-[#F99D1C]/40 hover:bg-[#FFF0DC]/30',
+              metric.id === 'perlu-atensi' && 'border-t-[3px] border-t-[#DC2626] hover:border-red-400 hover:bg-red-50/20',
+              metric.id === 'tindak-lanjut-selesai' && 'border-t-[3px] border-t-[#16A34A] hover:border-[#16A34A]/40 hover:bg-[#DCFCE7]/30'
             )}
             title={`Klik untuk membuka data: ${metric.label}`}
           >
@@ -134,16 +137,18 @@ export function StatsOverview({
               </span>
               <div
                 className={cn(
-                  'w-8 h-8 rounded-xl flex items-center justify-center shrink-0 transition-transform group-hover:scale-110',
+                  'w-8 h-8 rounded-xl flex items-center justify-center shrink-0 transition-transform group-hover:scale-110 shadow-2xs',
                   isDanger
-                    ? 'bg-red-100 text-red-600'
+                    ? 'bg-red-100 text-red-600 border border-red-200'
                     : metric.id === 'total-rapat'
-                    ? 'bg-[#E8F5F7] text-[#31889C]'
-                    : metric.id === 'rapat-bulan-ini' || isSuccess
-                    ? 'bg-[#ECF8E9] text-[#4D8F3D]'
+                    ? 'bg-[#F0F8FA] text-[#1E6B7B] border border-[#BCE3EB]'
+                    : metric.id === 'rapat-bulan-ini'
+                    ? 'bg-[#ECF8E9] text-[#15803D] border border-[#D2EFCA]'
                     : metric.id === 'tindak-lanjut-aktif'
-                    ? 'bg-[#FFF0DC] text-[#B96800]'
-                    : 'bg-[#E8F5F7] text-[#31889C]'
+                    ? 'bg-[#FFF0DC] text-[#C2410C] border border-[#FEDEBE]'
+                    : metric.id === 'tindak-lanjut-selesai' || isSuccess
+                    ? 'bg-[#DCFCE7] text-[#15803D] border border-[#86EFAC]'
+                    : 'bg-[#F0F8FA] text-[#1E6B7B] border border-[#BCE3EB]'
                 )}
               >
                 {metric.id === 'total-rapat' && <CalendarCheck className="w-4 h-4" />}
@@ -155,16 +160,18 @@ export function StatsOverview({
             </div>
 
             {/* Value & Unit */}
-            <div className="mt-2 flex items-baseline gap-1.5">
+            <div className="mt-2.5 flex items-baseline gap-1.5">
               <span
                 className={cn(
-                  'font-extrabold text-[28px] leading-none tabular-nums',
+                  'font-black text-[30px] leading-none font-mono tracking-tight',
                   isDanger
                     ? 'text-red-600'
                     : metric.id === 'tindak-lanjut-aktif'
-                    ? 'text-[#B96800]'
+                    ? 'text-[#C2410C]'
                     : metric.id === 'total-rapat'
-                    ? 'text-[#31889C]'
+                    ? 'text-[#1E6B7B]'
+                    : metric.id === 'tindak-lanjut-selesai'
+                    ? 'text-[#15803D]'
                     : 'text-slate-900'
                 )}
               >

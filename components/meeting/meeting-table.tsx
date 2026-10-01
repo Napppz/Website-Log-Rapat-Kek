@@ -485,11 +485,11 @@ export function MeetingTable({
                         className="group/link inline-flex flex-col cursor-pointer"
                         title={`Buka Risalah Rapat ${meeting.code}`}
                       >
-                        <span className="font-bold text-[13px] text-[#31889C] group-hover/link:text-[#215865] group-hover/link:underline inline-flex items-center gap-1 transition-colors">
+                        <span className="font-bold text-[12.5px] font-mono tracking-tight text-[#1E6B7B] group-hover/link:text-[#174853] group-hover/link:underline inline-flex items-center gap-1 transition-colors">
                           {meeting.code}
-                          <ExternalLink className="w-3 h-3 opacity-0 group-hover/link:opacity-100 transition-opacity text-[#31889C]" />
+                          <ExternalLink className="w-3 h-3 opacity-0 group-hover/link:opacity-100 transition-opacity text-[#1E6B7B]" />
                         </span>
-                        <span className="text-slate-500 text-[12px] font-medium group-hover/link:text-[#31889C] group-hover/link:underline transition-colors">
+                        <span className="text-slate-600 text-[12px] font-medium group-hover/link:text-[#1E6B7B] group-hover/link:underline transition-colors mt-0.5">
                           {meeting.date}
                         </span>
                         <span className="text-[11px] text-slate-400">

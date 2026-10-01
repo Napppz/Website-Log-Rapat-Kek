@@ -13,6 +13,7 @@ interface HeaderProps {
   searchQuery?: string;
   onSearchChange?: (query: string) => void;
   onCreateMeetingClick?: () => void;
+  onOpenSearch?: () => void;
 }
 
 const ROLE_LABELS: Record<string, string> = {
@@ -36,6 +37,7 @@ export function Header({
   searchQuery = '',
   onSearchChange,
   onCreateMeetingClick,
+  onOpenSearch,
 }: HeaderProps) {
   const { data: session } = useSession();
   const { unreadCount } = useNotifications();
@@ -61,27 +63,29 @@ export function Header({
         collapsed ? "left-0 lg:left-20" : "left-0 lg:left-72"
       )}
     >
-      {/* Left: Mobile Toggle & Search Input */}
+      {/* Left: Mobile Toggle & Quick Search Trigger */}
       <div className="flex items-center gap-3 w-full max-w-md">
         <button
           type="button"
           onClick={onOpenMobile}
-          className="p-2 -ml-2 rounded-lg text-slate-600 hover:text-[#31889C] hover:bg-[#F0F9FA] lg:hidden"
+          className="p-2 -ml-2 rounded-lg text-slate-600 hover:text-[#1E6B7B] hover:bg-[#F0F9FA] lg:hidden cursor-pointer"
           title="Buka Navigasi"
         >
           <Menu className="w-5 h-5" />
         </button>
 
-        <div className="relative flex items-center w-full">
-          <Search className="w-4 h-4 absolute left-3.5 text-[#31889C] pointer-events-none" />
-          <input
-            type="text"
-            value={searchQuery}
-            onChange={(e) => onSearchChange?.(e.target.value)}
-            placeholder="Cari nomor rapat, agenda, tindak lanjut, atau Biro..."
-            className="w-full pl-10 pr-4 py-2 rounded-lg bg-slate-50 border border-slate-200 text-slate-800 placeholder:text-slate-400 text-[13px] shadow-2xs focus:outline-none focus:ring-2 focus:ring-[#31889C]/25 focus:border-[#31889C] focus:bg-white transition-all"
-          />
-        </div>
+        <button
+          type="button"
+          onClick={onOpenSearch}
+          className="relative flex items-center justify-between w-full pl-10 pr-3 py-2 rounded-xl bg-slate-50 hover:bg-slate-100/90 border border-slate-200 text-slate-500 hover:text-slate-700 text-[13px] shadow-2xs transition-all cursor-pointer group text-left"
+          title="Buka Pencarian Cepat (Ctrl + K)"
+        >
+          <Search className="w-4 h-4 absolute left-3.5 text-[#1E6B7B] group-hover:scale-105 transition-transform" />
+          <span className="truncate pr-2">Cari nomor rapat, agenda, biro...</span>
+          <kbd className="hidden sm:inline-flex items-center gap-0.5 px-2 py-0.5 text-[10.5px] font-mono font-semibold text-slate-500 bg-white border border-slate-200 rounded-md shadow-2xs shrink-0 group-hover:border-[#1E6B7B]/40 group-hover:text-[#1E6B7B] transition-colors">
+            <span className="text-[9px]">Ctrl</span> K
+          </kbd>
+        </button>
       </div>
 
       {/* Right: Actions, Notifications & Profile */}
