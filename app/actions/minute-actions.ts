@@ -86,39 +86,72 @@ export async function upsertMeetingMinutesAction(input: MeetingMinutesInput) {
       },
     });
 
-    // 5. Record audit trail history
+    // 5. Record audit trail history & create notification
+    let currentUser: any = null;
     try {
-      const currentUser = await requireAuth();
-      await prisma.minutesHistory.create({
-        data: {
-          meetingId,
-          userId: currentUser.id,
-          changeType: isNew ? 'CREATED' : 'UPDATED',
-          fieldName: null,
-          oldValue: isNew
-            ? undefined
-            : {
-                agenda: existing?.agenda ?? undefined,
-                discussion: existing?.discussion ?? undefined,
-                decisions: existing?.decisions ?? undefined,
-              },
-          newValue: {
-            agenda: agenda ?? undefined,
-            discussion: discussion ?? undefined,
-            decisions: decisions ?? undefined,
-          },
-          summary: isNew
-            ? `Notulen rapat dibuat pertama kali oleh ${currentUser.name}`
-            : `Notulen rapat diperbarui oleh ${currentUser.name}`,
-        },
-      });
+      currentUser = await requireAuth();
     } catch {
-      // History recording is non-critical, don't fail the main action
+      // Safe fallback if called in automated contexts
+    }
+
+    if (currentUser) {
+      const isNotaDinas = docType === 'NOTA_DINAS';
+      const docLabel = isNotaDinas ? 'Nota Dinas' : 'Notulen Rapat';
+
+      // 5a. Audit trail
+      try {
+        await prisma.minutesHistory.create({
+          data: {
+            meetingId,
+            userId: currentUser.id,
+            changeType: isNew ? 'CREATED' : 'UPDATED',
+            fieldName: null,
+            oldValue: isNew
+              ? undefined
+              : {
+                  agenda: existing?.agenda ?? undefined,
+                  discussion: existing?.discussion ?? undefined,
+                  decisions: decisions ?? undefined,
+                },
+            newValue: {
+              agenda: agenda ?? undefined,
+              discussion: discussion ?? undefined,
+              decisions: decisions ?? undefined,
+            },
+            summary: isNew
+              ? `${docLabel} dibuat pertama kali oleh ${currentUser.name}`
+              : `${docLabel} diperbarui oleh ${currentUser.name}`,
+          },
+        });
+      } catch (histErr) {
+        console.warn('[upsertMeetingMinutesAction] history recording skipped:', histErr);
+      }
+
+      // 5b. In-App Notification for Dewan / Team members
+      try {
+        const actionText = isNew ? 'Dibuat' : 'Diperbarui';
+        const notifTitle = `${docLabel} ${actionText}: ${meeting.meetingNumber}`;
+        const notifMessage = `${currentUser.name || 'Pengguna'} telah ${isNew ? 'membuat' : 'memperbarui'} ${docLabel.toLowerCase()} untuk "${meeting.title}".`;
+
+        await prisma.notification.create({
+          data: {
+            title: notifTitle,
+            message: notifMessage,
+            type: 'info',
+            link: `/semua-rapat/${meetingId}`,
+            isRead: false,
+            userId: null, // Broadcast to Dewan KEK team
+          },
+        });
+      } catch (notifErr) {
+        console.warn('[upsertMeetingMinutesAction] notification creation skipped:', notifErr);
+      }
     }
 
     // 6. Revalidate routes
     try {
       revalidatePath('/');
+      revalidatePath('/notifikasi');
       revalidatePath('/semua-rapat');
       revalidatePath(`/semua-rapat/${meetingId}`);
       if (meeting.primaryBiro?.code) {
