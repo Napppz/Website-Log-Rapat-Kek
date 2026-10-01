@@ -1758,26 +1758,24 @@ export function MeetingMinutesEditor({
       {/* Bottom Save Bar */}
       <div className="p-4 bg-[#F8FAFC] rounded-xl border border-slate-200 flex flex-col sm:flex-row items-center justify-between gap-3">
         <span className="text-[12px] text-slate-600">
-          💡 Setiap ketikan otomatis disimpan (Autosave aktif). Klik tombol <strong>Simpan Notulen</strong> untuk konfirmasi data final.
+          💡 Setiap ketikan otomatis disimpan (Autosave aktif). Klik tombol <strong>Simpan {docType === 'NOTA_DINAS' ? 'Nota Dinas' : 'Notulen'}</strong> untuk konfirmasi data final.
         </span>
 
         <div className="flex items-center gap-2 shrink-0 self-end sm:self-center">
           <button
             type="button"
             disabled={isManualSaving}
-            onClick={() => handleManualSave(true)}
-            className="px-4 py-2 rounded-lg border border-slate-300 bg-white hover:bg-slate-50 text-slate-700 font-semibold text-[13px] transition-colors cursor-pointer shadow-xs disabled:opacity-50"
-          >
-            Simpan Draft
-          </button>
-          <button
-            type="button"
-            disabled={isManualSaving}
             onClick={() => handleManualSave(false)}
-            className="inline-flex items-center gap-1.5 px-5 py-2 rounded-lg bg-[#31889C] hover:bg-[#266F80] text-white font-semibold text-[13px] transition-all shadow-md shadow-[#31889C]/20 cursor-pointer disabled:opacity-50"
+            className="inline-flex items-center gap-1.5 px-5 py-2.5 rounded-xl bg-[#31889C] hover:bg-[#266F80] text-white font-semibold text-[13px] transition-all shadow-md shadow-[#31889C]/20 cursor-pointer disabled:opacity-50"
           >
             <FileCheck className="w-4 h-4" />
-            <span>Simpan Notulen</span>
+            <span>
+              {isManualSaving
+                ? 'Menyimpan...'
+                : docType === 'NOTA_DINAS'
+                ? 'Simpan Nota Dinas'
+                : 'Simpan Notulen'}
+            </span>
           </button>
         </div>
       </div>
