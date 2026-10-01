@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useMemo } from 'react';
+import Link from 'next/link';
 import {
   Filter,
   ArrowRight,
@@ -17,6 +18,7 @@ import {
   Trash2,
   Loader2,
   Layers,
+  ExternalLink,
 } from 'lucide-react';
 import { Meeting, BiroCode, MeetingStatus } from '@/lib/types';
 import { MOCK_MEETINGS } from '@/lib/mock-data';
@@ -478,17 +480,22 @@ export function MeetingTable({
                   >
                     {/* Nomor & Tanggal */}
                     <td className="py-3.5 px-4 align-top whitespace-nowrap">
-                      <div className="flex flex-col">
-                        <span className="font-bold text-[13px] text-[#31889C]">
+                      <Link
+                        href={`/semua-rapat/${meeting.id}`}
+                        className="group/link inline-flex flex-col cursor-pointer"
+                        title={`Buka Risalah Rapat ${meeting.code}`}
+                      >
+                        <span className="font-bold text-[13px] text-[#31889C] group-hover/link:text-[#215865] group-hover/link:underline inline-flex items-center gap-1 transition-colors">
                           {meeting.code}
+                          <ExternalLink className="w-3 h-3 opacity-0 group-hover/link:opacity-100 transition-opacity text-[#31889C]" />
                         </span>
-                        <span className="text-slate-500 text-[12px] font-medium">
+                        <span className="text-slate-500 text-[12px] font-medium group-hover/link:text-[#31889C] group-hover/link:underline transition-colors">
                           {meeting.date}
                         </span>
                         <span className="text-[11px] text-slate-400">
                           {meeting.time}
                         </span>
-                      </div>
+                      </Link>
                     </td>
 
                     {/* Agenda Rapat & Lokasi */}

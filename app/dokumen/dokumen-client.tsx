@@ -336,9 +336,13 @@ export function DokumenClient({ initialMeetings, biros }: DokumenClientProps) {
 
                     <div className="space-y-1">
                       <div className="flex flex-wrap items-center gap-2">
-                        <span className="font-bold text-[12px] text-[#215865] bg-[#F0F9FA] px-2.5 py-0.5 rounded-lg border border-[#BCE3EB]">
+                        <Link
+                          href={`/semua-rapat/${m.id}`}
+                          className="font-bold text-[12px] text-[#215865] bg-[#F0F9FA] hover:bg-[#E8F5F7] hover:underline px-2.5 py-0.5 rounded-lg border border-[#BCE3EB] transition-colors"
+                          title={`Buka Risalah Rapat ${m.code}`}
+                        >
                           {m.code}
-                        </span>
+                        </Link>
                         <span
                           className={cn(
                             'text-[11px] font-bold px-2.5 py-0.5 rounded-lg border',
@@ -347,15 +351,23 @@ export function DokumenClient({ initialMeetings, biros }: DokumenClientProps) {
                         >
                           {statusCfg.label}
                         </span>
-                        <span className="text-[12px] text-slate-500 font-medium flex items-center gap-1">
+                        <Link
+                          href={`/semua-rapat/${m.id}`}
+                          className="text-[12px] text-slate-500 hover:text-[#31889C] hover:underline font-medium flex items-center gap-1 transition-colors"
+                          title={`Buka Risalah Rapat ${m.code}`}
+                        >
                           <Calendar className="w-3.5 h-3.5 text-slate-400" />
                           <span>{m.date}</span>
-                        </span>
+                        </Link>
                       </div>
 
-                      <h3 className="font-bold text-[15px] text-slate-900 group-hover:text-[#31889C] transition-colors">
+                      <Link
+                        href={`/semua-rapat/${m.id}`}
+                        className="font-bold text-[15px] text-slate-900 group-hover:text-[#31889C] hover:underline transition-colors block"
+                        title={`Buka Risalah Rapat ${m.code}`}
+                      >
                         {m.title}
-                      </h3>
+                      </Link>
 
                       <div className="flex flex-wrap items-center gap-3 text-[12px] text-slate-500">
                         <span className="flex items-center gap-1 font-semibold text-slate-700">
