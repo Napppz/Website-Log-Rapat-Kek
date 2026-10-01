@@ -175,7 +175,7 @@ async function runAllTests() {
   });
 
   await runTest(9, 'Invalid period preset rejected with 400', async () => {
-    const req = buildSummaryRequest('period=YEAR&biro=ALL');
+    const req = buildSummaryRequest('period=INVALID_PERIOD&biro=ALL');
     const res = await GET_summary(req);
     assert(res.status === 400, `Expected 400, got ${res.status}`);
   });

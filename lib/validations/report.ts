@@ -1,6 +1,6 @@
 import { z } from 'zod';
 
-export const reportPeriodEnum = z.enum(['WEEK', 'MONTH', 'QUARTER', 'CUSTOM']);
+export const reportPeriodEnum = z.enum(['WEEK', 'MONTH', 'QUARTER', 'YEAR', 'ALL', 'CUSTOM']);
 export type ReportPeriod = z.infer<typeof reportPeriodEnum>;
 
 export const reportBiroEnum = z.enum([
@@ -23,7 +23,7 @@ function isValidIsoDate(val: string): boolean {
 
 export const reportQuerySchema = z
   .object({
-    period: reportPeriodEnum.default('MONTH'),
+    period: reportPeriodEnum.default('YEAR'),
     biro: reportBiroEnum.default('ALL'),
     startDate: z.string().trim().optional(),
     endDate: z.string().trim().optional(),

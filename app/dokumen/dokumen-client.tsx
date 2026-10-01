@@ -112,15 +112,21 @@ export function DokumenClient({ initialMeetings, biros }: DokumenClientProps) {
   const handleDownloadExecutiveSummary = async () => {
     try {
       setIsDownloadingSummary(true);
-      const res = await fetch('/api/reports/summary/pdf');
+      const res = await fetch('/api/reports/summary/pdf?period=YEAR');
       if (!res.ok) {
         throw new Error('Gagal mengunduh ringkasan eksekutif');
       }
       const blob = await res.blob();
+      const disposition = res.headers.get('Content-Disposition') || '';
+      const match = disposition.match(/filename="?([^"]+)"?/);
+      const filename = match
+        ? match[1]
+        : `Laporan-Eksekutif-Dewan-KEK-${new Date().toISOString().slice(0, 10)}.pdf`;
+
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `Laporan-Eksekutif-Dewan-KEK-${new Date().toISOString().slice(0, 10)}.pdf`;
+      a.download = filename;
       document.body.appendChild(a);
       a.click();
       window.URL.revokeObjectURL(url);

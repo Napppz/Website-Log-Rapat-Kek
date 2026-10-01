@@ -84,7 +84,7 @@ function LoginForm() {
       <div className="relative w-full max-w-md">
         {/* Main Card Container */}
         <div className="bg-white/95 backdrop-blur-md rounded-2xl border border-slate-200/90 shadow-2xl shadow-slate-300/40 overflow-hidden transition-all duration-300">
-          
+
           {/* Card Top Accent Bar */}
           <div className="w-full h-1.5 bg-gradient-to-r from-[#31889C] via-[#7CC563] to-[#266F80]" />
 
@@ -100,7 +100,7 @@ function LoginForm() {
                 priority
               />
             </div>
-            
+
             <div className="inline-block px-3 py-0.5 rounded-full bg-[#EBF6F8] border border-[#31889C]/20 mb-2">
               <span className="text-[10.5px] font-bold tracking-wider text-[#266F80] uppercase">
                 Sekretariat Dewan Nasional KEK RI
@@ -159,11 +159,10 @@ function LoginForm() {
                     setEmail(e.target.value);
                     if (selectedDemoRole) setSelectedDemoRole(null);
                   }}
-                  className={`w-full pl-9 pr-3.5 py-2.5 rounded-xl border text-[13px] font-medium transition-all shadow-xs outline-none ${
-                    errorMessage
+                  className={`w-full pl-9 pr-3.5 py-2.5 rounded-xl border text-[13px] font-medium transition-all shadow-xs outline-none ${errorMessage
                       ? 'border-red-300 bg-red-50/15 focus:border-red-500 focus:ring-2 focus:ring-red-200 text-slate-900'
                       : 'border-slate-200 bg-white hover:border-slate-300 focus:border-[#31889C] focus:ring-2 focus:ring-[#31889C]/25 text-slate-900'
-                  }`}
+                    }`}
                 />
                 <Mail className="w-4 h-4 text-[#31889C] absolute left-3 top-3 pointer-events-none" />
               </div>
@@ -211,11 +210,10 @@ function LoginForm() {
                     setPassword(e.target.value);
                     if (selectedDemoRole) setSelectedDemoRole(null);
                   }}
-                  className={`w-full pl-9 pr-10 py-2.5 rounded-xl border text-[13px] font-medium transition-all shadow-xs outline-none ${
-                    errorMessage
+                  className={`w-full pl-9 pr-10 py-2.5 rounded-xl border text-[13px] font-medium transition-all shadow-xs outline-none ${errorMessage
                       ? 'border-red-300 bg-red-50/15 focus:border-red-500 focus:ring-2 focus:ring-red-200 text-slate-900'
                       : 'border-slate-200 bg-white hover:border-slate-300 focus:border-[#31889C] focus:ring-2 focus:ring-[#31889C]/25 text-slate-900'
-                  }`}
+                    }`}
                 />
                 <Lock className="w-4 h-4 text-[#31889C] absolute left-3 top-3 pointer-events-none" />
                 <button
@@ -301,13 +299,11 @@ function LoginForm() {
                         key={acc.email}
                         type="button"
                         onClick={() => handleFillDemo(acc.email, acc.label)}
-                        className={`p-2 text-left rounded-xl border transition-all cursor-pointer flex items-center justify-between ${
-                          isLastOdd ? 'col-span-2' : ''
-                        } ${
-                          isSelected
+                        className={`p-2 text-left rounded-xl border transition-all cursor-pointer flex items-center justify-between ${isLastOdd ? 'col-span-2' : ''
+                          } ${isSelected
                             ? 'bg-[#EBF6F8] border-[#31889C] text-[#266F80] font-bold shadow-xs ring-1 ring-[#31889C]'
                             : 'bg-white border-slate-200/90 hover:border-[#31889C]/60 hover:bg-[#F6FBFC] text-slate-700 font-semibold'
-                        }`}
+                          }`}
                       >
                         <div className="flex items-center gap-1.5 truncate">
                           <span className="text-[13px]">{acc.icon}</span>
@@ -319,23 +315,6 @@ function LoginForm() {
                       </button>
                     );
                   })}
-                </div>
-
-                {/* Dual Session Tip */}
-                <div className="p-2.5 rounded-lg bg-[#E8F5F7]/80 border border-[#BCE3EB] text-[11px] text-[#215865] flex items-start gap-2 mt-2">
-                  <span className="text-[13px] shrink-0">💡</span>
-                  <div className="leading-snug">
-                    <strong>Uji Coba 2 Akun Bersamaan:</strong> Buka sesi kedua di{' '}
-                    <a
-                      href="http://127.0.0.1:3000/login"
-                      target="_blank"
-                      rel="noreferrer"
-                      className="font-bold underline text-[#215865] hover:text-[#31889C]"
-                    >
-                      127.0.0.1:3000
-                    </a>{' '}
-                    atau jendela Incognito (<em>Ctrl+Shift+N</em>) agar sesi login kedua akun tidak saling menimpa!
-                  </div>
                 </div>
               </div>
             )}

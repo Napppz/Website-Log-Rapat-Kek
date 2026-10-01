@@ -8,7 +8,7 @@ import {
 } from '@/lib/validations/report';
 
 export interface PeriodResolution {
-  period: 'WEEK' | 'MONTH' | 'QUARTER' | 'CUSTOM';
+  period: 'WEEK' | 'MONTH' | 'QUARTER' | 'YEAR' | 'ALL' | 'CUSTOM';
   startDate: Date;
   endDate: Date;
   startDateIso: string; // YYYY-MM-DD in WIB
@@ -148,7 +148,7 @@ export function formatWibDateIndo(date: Date, withDay = false): string {
  */
 export function resolvePeriodDates(
   params: {
-    period: 'WEEK' | 'MONTH' | 'QUARTER' | 'CUSTOM';
+    period: 'WEEK' | 'MONTH' | 'QUARTER' | 'YEAR' | 'ALL' | 'CUSTOM';
     startDate?: string;
     endDate?: string;
   },
@@ -231,6 +231,41 @@ export function resolvePeriodDates(
       startDateIso: startIso,
       endDateIso: endIso,
       label,
+    };
+  }
+
+  if (period === 'YEAR') {
+    const startWibUtc = Date.UTC(refYear, 0, 1, 0, 0, 0, 0);
+    const endWibUtc = Date.UTC(refYear, 11, 31, 23, 59, 59, 999);
+
+    const startUtc = new Date(startWibUtc - 7 * 60 * 60 * 1000);
+    const endUtc = new Date(endWibUtc - 7 * 60 * 60 * 1000);
+
+    const startIso = formatWibDateIso(startUtc);
+    const endIso = formatWibDateIso(endUtc);
+    const label = `Tahun ${refYear} (1 Jan – 31 Des ${refYear})`;
+
+    return {
+      period: 'YEAR',
+      startDate: startUtc,
+      endDate: endUtc,
+      startDateIso: startIso,
+      endDateIso: endIso,
+      label,
+    };
+  }
+
+  if (period === 'ALL') {
+    const startUtc = new Date(Date.UTC(2025, 0, 1, 0, 0, 0, 0));
+    const endUtc = new Date(Date.UTC(2027, 11, 31, 23, 59, 59, 999));
+
+    return {
+      period: 'ALL',
+      startDate: startUtc,
+      endDate: endUtc,
+      startDateIso: '2025-01-01',
+      endDateIso: '2027-12-31',
+      label: 'Seluruh Periode Database (Kumulatif)',
     };
   }
 
@@ -395,6 +430,63 @@ export function buildTrendPoints(
         key: `Q-M${mIdx + 1}`,
         label: mName,
         subLabel: `${year}`,
+        totalMeetings: matched.length,
+        totalActionItems: items.length,
+        completed,
+        overdue,
+      });
+    }
+
+    return points;
+  }
+
+  if (period === 'YEAR') {
+    const startWib = new Date(startDate.getTime() + 7 * 60 * 60 * 1000);
+    const year = startWib.getUTCFullYear();
+    const points: TrendPoint[] = [];
+
+    for (let mIdx = 0; mIdx < 12; mIdx++) {
+      const matched = meetingsWithWib.filter(
+        (m) =>
+          m.meetingDateWib.getUTCFullYear() === year &&
+          m.meetingDateWib.getUTCMonth() === mIdx
+      );
+
+      const items = matched.flatMap((m) => m.actionItems);
+      const completed = items.filter((a) => a.computedStatus === 'COMPLETED').length;
+      const overdue = items.filter((a) => a.computedStatus === 'OVERDUE').length;
+
+      points.push({
+        key: `Y-M${mIdx + 1}`,
+        label: INDO_MONTHS_SHORT[mIdx],
+        subLabel: `${year}`,
+        totalMeetings: matched.length,
+        totalActionItems: items.length,
+        completed,
+        overdue,
+      });
+    }
+
+    return points;
+  }
+
+  if (period === 'ALL') {
+    const points: TrendPoint[] = [];
+    for (let mIdx = 0; mIdx < 12; mIdx++) {
+      const matched = meetingsWithWib.filter(
+        (m) =>
+          m.meetingDateWib.getUTCFullYear() === 2026 &&
+          m.meetingDateWib.getUTCMonth() === mIdx
+      );
+
+      const items = matched.flatMap((m) => m.actionItems);
+      const completed = items.filter((a) => a.computedStatus === 'COMPLETED').length;
+      const overdue = items.filter((a) => a.computedStatus === 'OVERDUE').length;
+
+      points.push({
+        key: `ALL-M${mIdx + 1}`,
+        label: INDO_MONTHS_SHORT[mIdx],
+        subLabel: '2026',
         totalMeetings: matched.length,
         totalActionItems: items.length,
         completed,
@@ -598,6 +690,7 @@ export async function getReportSummary(
       const computed = computeActionItemStatus(a);
       return {
         ...a,
+        meetingBiroCode: m.primaryBiro.code,
         computedStatus: computed.computedStatus,
         isOverdue: computed.isOverdue,
       };
@@ -678,7 +771,9 @@ export async function getReportSummary(
     const biroMeetings = augmentedMeetings.filter(
       (m) => m.primaryBiro.code === biro.code
     );
-    const biroItems = biroMeetings.flatMap((m) => m.actionItems);
+    const biroItems = allActionItems.filter((a) =>
+      a.picBiro ? a.picBiro.code === biro.code : (a as any).meetingBiroCode === biro.code
+    );
 
     const bCompleted = biroItems.filter(
       (a) => a.computedStatus === 'COMPLETED'

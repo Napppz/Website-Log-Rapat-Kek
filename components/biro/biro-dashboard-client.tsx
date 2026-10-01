@@ -134,7 +134,7 @@ export function BiroDashboardClient({
   const handleDownloadReport = async () => {
     try {
       setIsDownloadingReport(true);
-      const res = await fetch(`/api/reports/summary/pdf?biro=${biro.code}`);
+      const res = await fetch(`/api/reports/summary/pdf?period=YEAR&biro=${biro.code}`);
       if (!res.ok) {
         throw new Error('Gagal mengunduh ringkasan eksekutif');
       }

@@ -10,6 +10,8 @@ const PERIOD_SLUG_MAP: Record<string, string> = {
   WEEK: 'Mingguan',
   MONTH: 'Bulanan',
   QUARTER: 'Kuartal',
+  YEAR: 'Tahunan-2026',
+  ALL: 'Kumulatif',
   CUSTOM: 'Kustom',
 };
 
@@ -28,7 +30,7 @@ export async function GET(request: NextRequest) {
     // 2. Parse & validate query parameters
     const { searchParams } = new URL(request.url);
     const rawParams = {
-      period: searchParams.get('period') || 'MONTH',
+      period: searchParams.get('period') || 'YEAR',
       biro: searchParams.get('biro') || 'ALL',
       startDate: searchParams.get('startDate') || undefined,
       endDate: searchParams.get('endDate') || undefined,

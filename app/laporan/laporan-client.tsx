@@ -26,7 +26,7 @@ import { ReportPeriod, ReportBiro } from '@/lib/validations/report';
 import { toast } from '@/components/providers/toast-provider';
 
 export function LaporanClient() {
-  const [period, setPeriod] = useState<ReportPeriod>('MONTH');
+  const [period, setPeriod] = useState<ReportPeriod>('YEAR');
   const [biro, setBiro] = useState<ReportBiro>('ALL');
   const [startDate, setStartDate] = useState<string>('');
   const [endDate, setEndDate] = useState<string>('');
@@ -234,14 +234,25 @@ export function LaporanClient() {
           <div className="inline-flex p-1 bg-slate-100 rounded-lg border border-slate-200">
             <button
               type="button"
-              onClick={() => setPeriod('WEEK')}
+              onClick={() => setPeriod('YEAR')}
               className={`px-3 py-1.5 rounded-md text-xs font-semibold transition-all ${
-                period === 'WEEK'
+                period === 'YEAR'
                   ? 'bg-white text-[#31889C] shadow-xs'
                   : 'text-slate-600 hover:text-slate-900'
               }`}
             >
-              Minggu Ini
+              Tahun 2026 (YTD)
+            </button>
+            <button
+              type="button"
+              onClick={() => setPeriod('QUARTER')}
+              className={`px-3 py-1.5 rounded-md text-xs font-semibold transition-all ${
+                period === 'QUARTER'
+                  ? 'bg-white text-[#31889C] shadow-xs'
+                  : 'text-slate-600 hover:text-slate-900'
+              }`}
+            >
+              Kuartal Ini
             </button>
             <button
               type="button"
@@ -256,14 +267,25 @@ export function LaporanClient() {
             </button>
             <button
               type="button"
-              onClick={() => setPeriod('QUARTER')}
+              onClick={() => setPeriod('WEEK')}
               className={`px-3 py-1.5 rounded-md text-xs font-semibold transition-all ${
-                period === 'QUARTER'
+                period === 'WEEK'
                   ? 'bg-white text-[#31889C] shadow-xs'
                   : 'text-slate-600 hover:text-slate-900'
               }`}
             >
-              Kuartal Ini
+              Minggu Ini
+            </button>
+            <button
+              type="button"
+              onClick={() => setPeriod('ALL')}
+              className={`px-3 py-1.5 rounded-md text-xs font-semibold transition-all ${
+                period === 'ALL'
+                  ? 'bg-white text-[#31889C] shadow-xs'
+                  : 'text-slate-600 hover:text-slate-900'
+              }`}
+            >
+              Semua Waktu
             </button>
             <button
               type="button"

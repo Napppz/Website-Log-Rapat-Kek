@@ -64,15 +64,23 @@ export function WelcomeBanner({
 
     try {
       setIsDownloading(true);
-      const res = await fetch('/api/reports/summary/pdf');
+      const isBiroUser = userRole !== 'SUPER_ADMIN' && userRole !== 'ADMIN' && currentUser?.biroCode;
+      const biroParam = isBiroUser ? `&biro=${currentUser?.biroCode}` : '';
+      const res = await fetch(`/api/reports/summary/pdf?period=YEAR${biroParam}`);
       if (!res.ok) {
         throw new Error('Gagal mengunduh ringkasan eksekutif');
       }
       const blob = await res.blob();
+      const disposition = res.headers.get('Content-Disposition') || '';
+      const match = disposition.match(/filename="?([^"]+)"?/);
+      const filename = match
+        ? match[1]
+        : `Laporan-Eksekutif-Dewan-KEK-${new Date().toISOString().slice(0, 10)}.pdf`;
+
       const url = window.URL.createObjectURL(blob);
       const link = document.createElement('a');
       link.href = url;
-      link.download = `Laporan-Eksekutif-Dewan-KEK-${new Date().toISOString().slice(0, 10)}.pdf`;
+      link.download = filename;
       document.body.appendChild(link);
       link.click();
       window.URL.revokeObjectURL(url);

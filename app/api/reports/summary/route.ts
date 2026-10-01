@@ -20,7 +20,7 @@ export async function GET(request: NextRequest) {
     // 2. Parse & Validate query parameters
     const { searchParams } = new URL(request.url);
     const rawParams = {
-      period: searchParams.get('period') || 'MONTH',
+      period: searchParams.get('period') || 'YEAR',
       biro: searchParams.get('biro') || 'ALL',
       startDate: searchParams.get('startDate') || undefined,
       endDate: searchParams.get('endDate') || undefined,
