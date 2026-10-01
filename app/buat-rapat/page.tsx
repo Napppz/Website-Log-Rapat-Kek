@@ -390,16 +390,17 @@ export default function BuatRapatPage() {
         {/* Form Content */}
         <form onSubmit={handleSubmit} className="p-6 space-y-5 text-xs">
           {/* Biro Penyelenggara, Tim Kerja, Sifat Pertemuan & Pimpinan Rapat */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 items-start">
             <div>
-              <label className="block font-semibold text-slate-700 mb-1 flex items-center gap-1.5">
-                <Building2 className="w-4 h-4 text-[#31889C]" />
-                Biro Penyelenggara <span className="text-red-500">*</span>
+              <label className="font-semibold text-slate-700 mb-1.5 flex items-center gap-1.5 h-5 text-xs whitespace-nowrap">
+                <Building2 className="w-4 h-4 text-[#31889C] shrink-0" />
+                <span>Biro Penyelenggara</span>
+                <span className="text-red-500">*</span>
               </label>
               <select
                 value={selectedBiro}
                 onChange={(e) => setSelectedBiro(e.target.value as BiroCode)}
-                className="w-full px-3 py-2 rounded-lg border border-slate-200 bg-white text-slate-800 focus:outline-none focus:ring-2 focus:ring-[#31889C]/25 focus:border-[#31889C]"
+                className="w-full px-3 py-2 h-[38px] rounded-lg border border-slate-200 bg-white text-slate-800 text-xs focus:outline-none focus:ring-2 focus:ring-[#31889C]/25 focus:border-[#31889C]"
               >
                 {BIRO_LIST.map((biro) => (
                   <option key={biro.code} value={biro.code}>
@@ -410,14 +411,14 @@ export default function BuatRapatPage() {
             </div>
 
             <div>
-              <label className="block font-semibold text-slate-700 mb-1 flex items-center justify-between">
-                <span className="flex items-center gap-1.5">
-                  <Layers className="w-4 h-4 text-[#31889C]" />
-                  <span>Tim Kerja Biro</span>
-                  <span className="text-slate-400 font-normal">(Opsional)</span>
+              <label className="font-semibold text-slate-700 mb-1.5 flex items-center justify-between h-5 text-xs whitespace-nowrap">
+                <span className="flex items-center gap-1.5 min-w-0">
+                  <Layers className="w-4 h-4 text-[#31889C] shrink-0" />
+                  <span>Tim Kerja</span>
+                  <span className="text-slate-400 font-normal text-[11px]">(Opsional)</span>
                 </span>
                 {availableTeams.length > 0 && (
-                  <span className="text-[10px] font-bold text-[#215865] bg-[#F0F9FA] px-1.5 py-0.2 rounded border border-[#BCE3EB]">
+                  <span className="text-[10px] font-bold text-[#215865] bg-[#E8F5F7] px-1.5 py-0.5 rounded border border-[#BCE3EB] shrink-0 ml-1">
                     {availableTeams.length} Tim
                   </span>
                 )}
@@ -425,12 +426,12 @@ export default function BuatRapatPage() {
               <select
                 value={selectedTeamId}
                 onChange={(e) => setSelectedTeamId(e.target.value)}
-                className="w-full px-3 py-2 rounded-lg border border-slate-200 bg-white text-slate-800 focus:outline-none focus:ring-2 focus:ring-[#31889C]/25 focus:border-[#31889C]"
+                className="w-full px-3 py-2 h-[38px] rounded-lg border border-slate-200 bg-white text-slate-800 text-xs focus:outline-none focus:ring-2 focus:ring-[#31889C]/25 focus:border-[#31889C]"
               >
                 <option value="">
                   {availableTeams.length > 0
                     ? '-- Bebas / Tingkat Biro Utama --'
-                    : '-- Tim biro ini menyusul --'}
+                    : '-- Belum ada tim terdaftar --'}
                 </option>
                 {availableTeams.map((t) => (
                   <option key={t.id} value={t.id}>
@@ -441,14 +442,14 @@ export default function BuatRapatPage() {
             </div>
 
             <div>
-              <label className="block font-semibold text-slate-700 mb-1 flex items-center gap-1.5">
-                <Shield className="w-4 h-4 text-[#31889C]" />
-                Sifat Pertemuan
+              <label className="font-semibold text-slate-700 mb-1.5 flex items-center gap-1.5 h-5 text-xs whitespace-nowrap">
+                <Shield className="w-4 h-4 text-[#31889C] shrink-0" />
+                <span>Sifat Pertemuan</span>
               </label>
               <select
                 value={classification}
                 onChange={(e) => setClassification(e.target.value)}
-                className="w-full px-3 py-2 rounded-lg border border-slate-200 bg-white text-slate-800 focus:outline-none focus:ring-2 focus:ring-[#31889C]/25 focus:border-[#31889C]"
+                className="w-full px-3 py-2 h-[38px] rounded-lg border border-slate-200 bg-white text-slate-800 text-xs focus:outline-none focus:ring-2 focus:ring-[#31889C]/25 focus:border-[#31889C]"
               >
                 <option value="STRATEGIS">Prioritas Strategis Nasional</option>
                 <option value="REGULER">Koordinasi Berkala (Reguler)</option>
@@ -457,14 +458,14 @@ export default function BuatRapatPage() {
             </div>
 
             <div>
-              <label className="block font-semibold text-slate-700 mb-1 flex items-center gap-1.5">
-                <UserCheck className="w-4 h-4 text-[#31889C]" />
-                Ketua / Pimpinan Sidang
+              <label className="font-semibold text-slate-700 mb-1.5 flex items-center gap-1.5 h-5 text-xs whitespace-nowrap">
+                <UserCheck className="w-4 h-4 text-[#31889C] shrink-0" />
+                <span>Ketua / Pimpinan Sidang</span>
               </label>
               <select
                 value={chairpersonId}
                 onChange={(e) => setChairpersonId(e.target.value)}
-                className="w-full px-3 py-2 rounded-lg border border-slate-200 bg-white text-slate-800 focus:outline-none focus:ring-2 focus:ring-[#31889C]/25 focus:border-[#31889C]"
+                className="w-full px-3 py-2 h-[38px] rounded-lg border border-slate-200 bg-white text-slate-800 text-xs focus:outline-none focus:ring-2 focus:ring-[#31889C]/25 focus:border-[#31889C]"
               >
                 <option value="">-- Bebas / Diatur di Notula --</option>
                 {availableUsers.map((u) => (
