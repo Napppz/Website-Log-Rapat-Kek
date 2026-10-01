@@ -302,20 +302,28 @@ export function BiroDashboardClient({
     fullMonthName,
   ]);
 
-  // Compute follow-up status donut data
+  // Compute follow-up status donut data with mutually exclusive categorization
   const followUpData: FollowUpStatusMetric[] = useMemo(() => {
     const now = new Date();
     const total = actionItems.length;
-    const completed = actionItems.filter((a) => a.status === 'COMPLETED').length;
-    const inProgress = actionItems.filter((a) => a.status === 'IN_PROGRESS').length;
-    const pending = actionItems.filter((a) => a.status === 'PENDING').length;
-    const overdue = actionItems.filter((a) => {
-      if (a.status === 'OVERDUE') return true;
-      if (a.status !== 'COMPLETED' && a.dueDate) {
-        return new Date(a.dueDate).getTime() < now.getTime();
+
+    let completed = 0;
+    let overdue = 0;
+    let inProgress = 0;
+    let pending = 0;
+
+    actionItems.forEach((a) => {
+      const isPastDue = a.dueDate && new Date(a.dueDate).getTime() < now.getTime();
+      if (a.status === 'COMPLETED') {
+        completed++;
+      } else if (a.status === 'OVERDUE' || isPastDue) {
+        overdue++;
+      } else if (a.status === 'IN_PROGRESS') {
+        inProgress++;
+      } else {
+        pending++;
       }
-      return false;
-    }).length;
+    });
 
     const rawMetrics = [
       { label: 'Selesai', count: completed, color: '#10B981' },
@@ -537,7 +545,7 @@ export function BiroDashboardClient({
       />
 
       {/* 5. Analytics Charts Grid (Grafik Rapat Bulanan + Donut Status + Beban Tim) */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch">
         <ActivityTrendChart
           data={yearMonthlyActivity}
           selectedMonth={selectedMonth}
@@ -553,7 +561,7 @@ export function BiroDashboardClient({
         <FollowUpStatusChart
           followUpData={followUpData}
           totalResolutions={actionItems.length}
-          onManageMatrixClick={() => router.push(`/tindak-lanjut?search=${encodeURIComponent(biro.code)}`)}
+          onManageMatrixClick={() => router.push(`/tindak-lanjut?biro=${encodeURIComponent(biro.code)}`)}
         />
 
         <TeamWorkloadDistribution
@@ -578,7 +586,7 @@ export function BiroDashboardClient({
           </div>
 
           <Link
-            href={`/tindak-lanjut?search=${encodeURIComponent(biro.code)}`}
+            href={`/tindak-lanjut?biro=${encodeURIComponent(biro.code)}`}
             className="inline-flex items-center gap-1.5 text-[12px] font-bold text-[#31889C] hover:text-[#215865] hover:underline shrink-0"
           >
             <span>Matriks Tindak Lanjut {biro.code}</span>

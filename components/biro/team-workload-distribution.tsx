@@ -53,7 +53,7 @@ export function TeamWorkloadDistribution({
   const hasTeams = teams && teams.length > 0;
 
   return (
-    <div className="bg-white rounded-2xl p-5 border border-slate-200/90 shadow-sm flex flex-col justify-between col-span-1 lg:col-span-4">
+    <div className="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm flex flex-col justify-between col-span-1 lg:col-span-3 h-full hover:shadow-md transition-all duration-300">
       <div>
         {/* Header */}
         <div className="flex items-center justify-between pb-3 border-b border-slate-100">
@@ -62,13 +62,13 @@ export function TeamWorkloadDistribution({
               <Layers className="w-4 h-4 text-[#31889C]" />
               {hasTeams ? `Beban Rapat Tim Kerja` : `Distribusi Status Rapat`}
             </h3>
-            <p className="text-[11.5px] text-slate-500 mt-0.5">
+            <p className="text-[11.5px] text-slate-500 mt-0.5 truncate max-w-[200px]" title={biroShortName}>
               {hasTeams
-                ? `Alokasi sesi rapat per divisi di ${biroShortName}`
-                : `Status pengesahan rapat di lingkungan ${biroShortName}`}
+                ? `Alokasi sesi rapat di ${biroShortName}`
+                : `Status pengesahan rapat ${biroShortName}`}
             </p>
           </div>
-          <span className="text-[11px] font-bold text-[#31889C] bg-[#E8F5F7] px-2 py-0.5 rounded-full border border-[#BCE3EB]">
+          <span className="text-[11px] font-bold text-[#31889C] bg-[#E8F5F7] px-2 py-0.5 rounded-full border border-[#BCE3EB] shrink-0">
             {totalMeetings} Agenda
           </span>
         </div>
@@ -80,21 +80,18 @@ export function TeamWorkloadDistribution({
               const pct = totalMeetings > 0 ? Math.round((t.meetingCount / totalMeetings) * 100) : 0;
               return (
                 <div key={t.id} className="space-y-1.5">
-                  <div className="flex items-center justify-between text-[12.5px]">
-                    <div className="flex items-center gap-2 min-w-0">
-                      <div className="w-6 h-6 rounded-md bg-[#F0F9FA] border border-[#BCE3EB] flex items-center justify-center shrink-0">
+                  <div className="flex items-center justify-between text-[12px]">
+                    <div className="flex items-center gap-1.5 min-w-0 flex-1 mr-2">
+                      <div className="w-5 h-5 rounded-md bg-[#F0F9FA] border border-[#BCE3EB] flex items-center justify-center shrink-0">
                         {getTeamIcon(t.code)}
                       </div>
-                      <span className="font-bold text-slate-800 truncate">
-                        Tim {t.name}
-                      </span>
-                      <span className="text-[10px] font-bold px-1.5 py-0.2 rounded bg-slate-100 text-slate-600 border border-slate-200">
-                        {t.code}
+                      <span className="font-bold text-slate-800 truncate text-[12px]" title={t.name}>
+                        {t.name.startsWith('Tim ') ? t.name : `Tim ${t.name}`}
                       </span>
                     </div>
 
-                    <div className="flex items-center gap-2 shrink-0">
-                      <span className="font-bold text-slate-900">
+                    <div className="flex items-center gap-1.5 shrink-0">
+                      <span className="font-bold text-slate-900 text-[12px]">
                         <AnimatedCounter value={t.meetingCount} />
                       </span>
                       <span className="text-[11px] text-slate-400 font-medium w-8 text-right">
@@ -104,7 +101,7 @@ export function TeamWorkloadDistribution({
                   </div>
 
                   {/* Progress Bar */}
-                  <div className="w-full h-2 bg-slate-100 rounded-full overflow-hidden">
+                  <div className="w-full h-1.5 bg-slate-100 rounded-full overflow-hidden">
                     <div
                       className="h-full bg-gradient-to-r from-[#31889C] to-[#266F80] rounded-full transition-all duration-700 ease-out"
                       style={{
