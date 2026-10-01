@@ -16,11 +16,13 @@ export default async function NotifikasiPage() {
   const res = await getNotificationsAction();
   const notifications = res.success && res.data ? res.data.notifications : [];
   const unreadCount = res.success && res.data ? res.data.unreadCount : 0;
+  const initialError = !res.success ? (res.error || 'Gagal memuat daftar notifikasi sistem.') : null;
 
   return (
     <NotifikasiClient
       initialNotifications={notifications}
       initialUnreadCount={unreadCount}
+      initialError={initialError}
     />
   );
 }
