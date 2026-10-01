@@ -468,7 +468,7 @@ export function MeetingDetailDialog({
               Tutup
             </button>
 
-            {((meeting?.minutes?.conclusion as any)?.docType === 'NOTA_DINAS') ? (
+            {(((meeting as any)?.minutes?.conclusion as any)?.docType === 'NOTA_DINAS') ? (
               <div className="flex items-center gap-2">
                 <button
                   type="button"

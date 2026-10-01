@@ -432,10 +432,10 @@ export function MeetingMinutesPreview({
                     {notaData.signerRole.endsWith(',') ? notaData.signerRole : `${notaData.signerRole},`}
                   </p>
 
-                  {notaData.signatureImage ? (
+                  {(notaData.signatureImage || signatureImage) ? (
                     <div className="py-1">
                       <img
-                        src={notaData.signatureImage}
+                        src={notaData.signatureImage || signatureImage}
                         alt="Tanda Tangan Pengirim"
                         className="max-h-20 max-w-[180px] object-contain drop-shadow-2xs"
                       />
