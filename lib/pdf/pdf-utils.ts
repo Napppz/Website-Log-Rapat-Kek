@@ -148,7 +148,8 @@ export function resolveMeetingSignerInfo(meeting?: any, minutes?: any) {
 
   const chairpersonName =
     customChairpersonName.trim() ||
-    'Wakil Ketua II, Tim Pelaksana Dewan Nasional KEK, Budi Santoso';
+    meeting?.chairperson?.name ||
+    '-';
 
   const customSignerName =
     (minutes?.conclusion as any)?.signerName ||
@@ -168,14 +169,14 @@ export function resolveMeetingSignerInfo(meeting?: any, minutes?: any) {
   const finalSignerName =
     customSignerName.trim() ||
     meeting?.secretary?.name ||
-    'Sri Aurelia Rosyana Hari Habyby';
+    '-';
 
   const finalSignerRole =
     customSignerRole.trim() ||
-    'Pranata Hubungan Masyarakat Terampil';
+    'Notulis';
 
   const roleClean = finalSignerRole.replace(/[\r\n]+/g, ' ').replace(/,\s*$/, '').trim();
-  const secretaryMetaText = `${roleClean}, ${finalSignerName}`;
+  const secretaryMetaText = finalSignerName === '-' ? '-' : `${roleClean}, ${finalSignerName}`;
 
   const signatureImage: string | null =
     (minutes?.conclusion as any)?.signatureImage ||
@@ -263,7 +264,7 @@ export function resolveNotaDinasData(meeting?: any, minutes?: any) {
   const defaultSignerName =
     meeting?.chairperson?.name ||
     meeting?.secretary?.name ||
-    'Noviar Iskandar';
+    '-';
   const signerName = (notaObj.signerName || defaultSignerName).trim();
 
   const signatureImage =

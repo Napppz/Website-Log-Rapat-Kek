@@ -74,9 +74,9 @@ export async function createMeetingAction(input: CreateMeetingInput) {
     await requirePermission('create:meeting');
 
     const result = await prisma.$transaction(async (tx) => {
-      // 1. Generate sequence atomically or use custom meetingNumber if provided
+      // 1. Generate sequence atomically or use custom meetingNumber if provided (and not '-' or empty)
       let finalMeetingNumber = input.meetingNumber?.trim();
-      if (finalMeetingNumber) {
+      if (finalMeetingNumber && finalMeetingNumber !== '-' && finalMeetingNumber !== '—') {
         const existing = await tx.meeting.findUnique({
           where: { meetingNumber: finalMeetingNumber },
         });

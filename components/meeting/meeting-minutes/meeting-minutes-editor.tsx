@@ -84,7 +84,7 @@ export function MeetingMinutesEditor({
     (initialMinutes?.discussion as any)?.chairpersonName ||
     (initialMinutes?.agenda as any)?.chairpersonName ||
     meeting?.chairperson?.name ||
-    'Wakil Ketua II, Tim Pelaksana Dewan Nasional KEK, Budi Santoso';
+    '';
 
   const [chairpersonName, setChairpersonName] = useState<string>(initialChairpersonName);
 
@@ -94,12 +94,12 @@ export function MeetingMinutesEditor({
     (initialMinutes?.decisions as any)?.signerName ||
     meeting?.secretary?.name ||
     session?.user?.name ||
-    'Sri Aurelia Rosyana Hari Habyby';
+    '';
 
   const initialSignerRole =
     (initialMinutes?.conclusion as any)?.signerRole ||
     (initialMinutes?.decisions as any)?.signerRole ||
-    'Pranata Hubungan Masyarakat Terampil';
+    'Notulis';
 
   const initialSignatureImage =
     (initialMinutes?.conclusion as any)?.signatureImage ||
@@ -176,7 +176,7 @@ export function MeetingMinutesEditor({
     initialNota.signerRole || ndSender || 'Kepala Bagian Program dan Tata Kelola'
   );
   const [ndSignerName, setNdSignerName] = useState<string>(
-    initialNota.signerName || meeting?.chairperson?.name || 'Noviar Iskandar'
+    initialNota.signerName || meeting?.chairperson?.name || ''
   );
 
   const handleApplyExtractedDocToEditor = (extractedData: any) => {
@@ -1588,6 +1588,18 @@ export function MeetingMinutesEditor({
                 <span>Ketua / Pimpinan Rapat (Pejabat yang Memimpin Sidang)</span>
               </label>
               <div className="flex flex-wrap items-center gap-2">
+                {chairpersonName && chairpersonName.trim() !== '' && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setChairpersonName('');
+                      hasChangesRef.current = true;
+                    }}
+                    className="text-[11px] font-semibold text-slate-500 hover:text-red-600 hover:underline cursor-pointer"
+                  >
+                    Kosongkan (Tanda &apos;-&apos;)
+                  </button>
+                )}
                 {meeting?.chairperson?.name && (
                   <button
                     type="button"
@@ -1600,16 +1612,6 @@ export function MeetingMinutesEditor({
                     + Pimpinan Rapat ({meeting.chairperson.name})
                   </button>
                 )}
-                <button
-                  type="button"
-                  onClick={() => {
-                    setChairpersonName('Wakil Ketua II, Tim Pelaksana Dewan Nasional KEK, Budi Santoso');
-                    hasChangesRef.current = true;
-                  }}
-                  className="text-[11px] font-semibold text-slate-600 hover:text-slate-800 hover:underline cursor-pointer"
-                >
-                  Gunakan Standar KEK
-                </button>
               </div>
             </div>
             <input
@@ -1635,18 +1637,32 @@ export function MeetingMinutesEditor({
                   <User className="w-3.5 h-3.5 text-slate-500" />
                   <span>Nama Lengkap Notulis (Pencatat)</span>
                 </label>
-                {session?.user?.name && (
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setSignerName(session.user.name || '');
-                      hasChangesRef.current = true;
-                    }}
-                    className="text-[11px] font-semibold text-[#31889C] hover:text-[#266F80] hover:underline cursor-pointer"
-                  >
-                    + Gunakan Nama Saya ({session.user.name})
-                  </button>
-                )}
+                <div className="flex items-center gap-2">
+                  {signerName && signerName.trim() !== '' && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setSignerName('');
+                        hasChangesRef.current = true;
+                      }}
+                      className="text-[11px] font-semibold text-slate-500 hover:text-red-600 hover:underline cursor-pointer"
+                    >
+                      Kosongkan (Tanda &apos;-&apos;)
+                    </button>
+                  )}
+                  {session?.user?.name && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setSignerName(session.user.name || '');
+                        hasChangesRef.current = true;
+                      }}
+                      className="text-[11px] font-semibold text-[#31889C] hover:text-[#266F80] hover:underline cursor-pointer"
+                    >
+                      + Gunakan Nama Saya ({session.user.name})
+                    </button>
+                  )}
+                </div>
               </div>
               <input
                 type="text"

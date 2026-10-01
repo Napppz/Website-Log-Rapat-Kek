@@ -339,7 +339,8 @@ export async function generateMeetingPdf(meeting: MeetingPdfData): Promise<Buffe
 
       const chairpersonName =
         customChairpersonName.trim() ||
-        'Wakil Ketua II, Tim Pelaksana Dewan Nasional KEK, Budi Santoso';
+        meeting.chairperson?.name ||
+        '-';
 
       renderMetaRow('Ketua/Pimpinan Rapat', chairpersonName);
 
@@ -362,11 +363,11 @@ export async function generateMeetingPdf(meeting: MeetingPdfData): Promise<Buffe
       const finalSignerName =
         customSignerName.trim() ||
         meeting.secretary?.name ||
-        'Sri Aurelia Rosyana Hari Habyby';
+        '-';
 
       const finalSignerRole =
         customSignerRole.trim() ||
-        'Pranata Hubungan Masyarakat Terampil';
+        'Notulis';
 
       const signatureImage: string | null =
         (meeting.minutes?.conclusion as any)?.signatureImage ||

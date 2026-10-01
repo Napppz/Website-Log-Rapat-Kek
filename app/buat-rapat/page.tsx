@@ -267,6 +267,12 @@ export default function BuatRapatPage() {
       const startTime = parts[0] || '09:00';
       const endTime = parts[1] || '12:00';
 
+      const trimmedCustomNumber = customMeetingNumber.trim();
+      const validMeetingNumber =
+        trimmedCustomNumber && trimmedCustomNumber !== '-' && trimmedCustomNumber !== '—'
+          ? trimmedCustomNumber
+          : undefined;
+
       const res = await createMeetingAction({
         title,
         biroCode: selectedBiro,
@@ -279,7 +285,7 @@ export default function BuatRapatPage() {
         participantUserIds: selectedUserIds,
         previousMeetingId: previousMeetingId || undefined,
         chairpersonId: chairpersonId || undefined,
-        meetingNumber: customMeetingNumber.trim() || undefined,
+        meetingNumber: validMeetingNumber,
       });
 
       if (res.success && res.data) {
@@ -493,11 +499,11 @@ export default function BuatRapatPage() {
               type="text"
               value={customMeetingNumber}
               onChange={(e) => setCustomMeetingNumber(e.target.value)}
-              placeholder="Contoh: UND-014/SET.KEK/IX/2026 atau biarkan kosong (tanda '-')"
+              placeholder="Contoh: UND-014/SET.KEK/IX/2026 atau tanda '-' jika tanpa surat undangan"
               className="w-full px-3 py-2 rounded-lg border border-slate-300 bg-white text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-[#31889C]/25 focus:border-[#31889C]"
             />
             <p className="text-[11px] text-slate-500">
-              Jika diisi, nomor ini akan dicantumkan pada baris <strong>Nomor Surat Undangan</strong> di notula &amp; PDF resmi. Jika dikosongkan, sistem otomatis memberikan tanda <strong>&apos;-&apos;</strong> sesuai kaidah tata naskah dinas jika rapat tidak memakai surat undangan tersendiri.
+              Jika diisi nomor surat (misal <strong>UND-014/...</strong>), nomor ini akan dicantumkan pada baris <strong>Nomor Surat Undangan</strong> di notula &amp; PDF. Jika diisi tanda <strong>&apos;-&apos;</strong> atau dikosongkan, sistem otomatis memberikan tanda <strong>&apos;-&apos;</strong> untuk rapat internal tanpa undangan.
             </p>
           </div>
 
