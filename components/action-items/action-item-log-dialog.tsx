@@ -13,6 +13,7 @@ import {
   CheckCircle2,
   AlertCircle,
   TrendingUp,
+  ExternalLink,
 } from 'lucide-react';
 import { ActionItem, ActionItemStatus } from '@/lib/types';
 import { ActionItemStatusBadge } from './action-item-status-badge';
@@ -22,6 +23,8 @@ import {
   extractDriveLink,
   extractAnyLink,
   cleanTextWithoutLink,
+  normalizeUrl,
+  RenderTextWithLinks,
 } from './google-drive-link-badge';
 import {
   getActionItemLogsAction,
@@ -97,10 +100,7 @@ export function ActionItemLogDialog({
       setIsSubmitting(true);
       let finalNotes = notes.trim();
       if (driveLink.trim()) {
-        let formattedLink = driveLink.trim();
-        if (!/^https?:\/\//i.test(formattedLink)) {
-          formattedLink = `https://${formattedLink}`;
-        }
+        const formattedLink = normalizeUrl(driveLink);
         finalNotes = `${finalNotes}\n\n📎 Tautan Google Drive: ${formattedLink}`;
       }
 
@@ -265,6 +265,27 @@ export function ActionItemLogDialog({
                   <GoogleDriveIcon className="w-4 h-4" />
                 </div>
               </div>
+              {driveLink.trim() && (
+                <div className="mt-2 flex items-center justify-between gap-2 p-2 rounded-lg bg-[#E8F5F7] border border-[#BCE3EB]">
+                  <div className="flex items-center gap-1.5 min-w-0 flex-1">
+                    <GoogleDriveIcon className="w-3.5 h-3.5 shrink-0" />
+                    <span className="text-[11.5px] text-[#215865] truncate font-mono">
+                      {normalizeUrl(driveLink)}
+                    </span>
+                  </div>
+                  <a
+                    href={normalizeUrl(driveLink)}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    onClick={(e) => e.stopPropagation()}
+                    className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md bg-[#31889C] hover:bg-[#266F80] text-white text-[11px] font-bold shrink-0 transition-colors shadow-2xs cursor-pointer"
+                    title="Buka langsung tautan Google Drive di tab baru"
+                  >
+                    <span>Uji / Buka Langsung</span>
+                    <ExternalLink className="w-3 h-3" />
+                  </a>
+                </div>
+              )}
               <p className="text-[11px] text-slate-400 mt-1">
                 Lampirkan tautan Google Drive untuk membagikan berkas bukti, foto kegiatan, atau dokumen hasil tindak lanjut.
               </p>
@@ -460,7 +481,7 @@ export function ActionItemLogDialog({
                           <div className="mt-3 space-y-2">
                             {cleanNotes ? (
                               <p className="text-[13px] text-slate-700 leading-relaxed bg-[#F8FAFC] p-3 rounded-lg border border-slate-100 whitespace-pre-wrap">
-                                {cleanNotes}
+                                <RenderTextWithLinks text={cleanNotes} />
                               </p>
                             ) : null}
 

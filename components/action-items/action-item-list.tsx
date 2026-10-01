@@ -25,7 +25,9 @@ import { ActionItemLogDialog } from './action-item-log-dialog';
 import {
   GoogleDriveLinkCard,
   extractDriveLink,
+  extractAnyLink,
   cleanTextWithoutLink,
+  RenderTextWithLinks,
 } from './google-drive-link-badge';
 import { updateActionItemStatusAction } from '@/app/actions/action-item-actions';
 import { useSession } from 'next-auth/react';
@@ -248,14 +250,14 @@ export function ActionItemList({
                       {item.title}
                     </h4>
                     {(() => {
-                      const driveUrl = extractDriveLink(item.description);
+                      const driveUrl = extractDriveLink(item.description) || extractAnyLink(item.description);
                       const cleanDesc = driveUrl ? cleanTextWithoutLink(item.description) : item.description;
 
                       return (
                         <div className="space-y-1.5 pt-0.5">
                           {cleanDesc ? (
                             <p className="text-[13px] text-slate-600 leading-relaxed">
-                              {cleanDesc}
+                              <RenderTextWithLinks text={cleanDesc} />
                             </p>
                           ) : null}
                           {driveUrl ? (

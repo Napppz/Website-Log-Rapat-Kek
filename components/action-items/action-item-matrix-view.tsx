@@ -30,7 +30,9 @@ import { ActionItemLogDialog } from './action-item-log-dialog';
 import {
   GoogleDriveLinkCard,
   extractDriveLink,
+  extractAnyLink,
   cleanTextWithoutLink,
+  RenderTextWithLinks,
 } from './google-drive-link-badge';
 import { updateActionItemStatusAction } from '@/app/actions/action-item-actions';
 import { toast } from '@/components/providers/toast-provider';
@@ -466,14 +468,14 @@ export function ActionItemMatrixView({
                       <td className="py-3.5 px-4 align-top">
                         <p className="font-bold text-slate-900 leading-snug">{task.title}</p>
                         {(() => {
-                          const driveUrl = extractDriveLink(task.description);
+                          const driveUrl = extractDriveLink(task.description) || extractAnyLink(task.description);
                           const cleanDesc = driveUrl ? cleanTextWithoutLink(task.description) : task.description;
 
                           return (
                             <div className="space-y-1 mt-0.5">
                               {cleanDesc ? (
                                 <p className="text-[12px] text-slate-500 line-clamp-2">
-                                  {cleanDesc}
+                                  <RenderTextWithLinks text={cleanDesc} />
                                 </p>
                               ) : null}
                               {driveUrl ? (

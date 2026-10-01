@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { X, AlertCircle, Save } from 'lucide-react';
+import { X, AlertCircle, Save, ExternalLink } from 'lucide-react';
 import {
   actionItemSchema,
   ActionItemInput,
@@ -16,6 +16,7 @@ import {
   GoogleDriveIcon,
   extractDriveLink,
   cleanTextWithoutLink,
+  normalizeUrl,
 } from './google-drive-link-badge';
 
 interface ActionItemFormDialogProps {
@@ -156,10 +157,7 @@ export function ActionItemFormDialog({
 
     let finalDescription = description.trim();
     if (driveLink.trim()) {
-      let formattedLink = driveLink.trim();
-      if (!/^https?:\/\//i.test(formattedLink)) {
-        formattedLink = `https://${formattedLink}`;
-      }
+      const formattedLink = normalizeUrl(driveLink);
       finalDescription = finalDescription
         ? `${finalDescription}\n\n📎 Tautan Google Drive: ${formattedLink}`
         : `📎 Tautan Google Drive: ${formattedLink}`;
@@ -309,6 +307,27 @@ export function ActionItemFormDialog({
                   <GoogleDriveIcon className="w-4 h-4" />
                 </div>
               </div>
+              {driveLink.trim() && (
+                <div className="mt-2 flex items-center justify-between gap-2 p-2.5 rounded-lg bg-[#E8F5F7] border border-[#BCE3EB]">
+                  <div className="flex items-center gap-1.5 min-w-0 flex-1">
+                    <GoogleDriveIcon className="w-3.5 h-3.5 shrink-0" />
+                    <span className="text-[11.5px] text-[#215865] truncate font-mono">
+                      {normalizeUrl(driveLink)}
+                    </span>
+                  </div>
+                  <a
+                    href={normalizeUrl(driveLink)}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    onClick={(e) => e.stopPropagation()}
+                    className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md bg-[#31889C] hover:bg-[#266F80] text-white text-[11px] font-bold shrink-0 transition-colors shadow-2xs cursor-pointer"
+                    title="Klik untuk langsung membuka dan menguji tautan di Google Drive"
+                  >
+                    <span>Uji / Buka Langsung</span>
+                    <ExternalLink className="w-3 h-3" />
+                  </a>
+                </div>
+              )}
               <p className="mt-1 text-[11px] text-slate-400">
                 Tautkan Google Drive bahan rujukan agar PIC biro dapat langsung mengakses dokumen pendukung tugas ini.
               </p>
