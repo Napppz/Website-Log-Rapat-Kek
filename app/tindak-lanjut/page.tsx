@@ -19,16 +19,8 @@ export default async function TindakLanjutPage() {
     Promise.all([
       getActionItemsFromDb(userBiroCode ? { biroCode: userBiroCode } : undefined),
       prisma.meeting.findMany({
-        where: userBiroCode
-          ? {
-              OR: [
-                { primaryBiro: { code: userBiroCode } },
-                { meetingBiros: { some: { biro: { code: userBiroCode } } } },
-              ],
-            }
-          : undefined,
-        select: { id: true, meetingNumber: true, title: true },
-        orderBy: { meetingNumber: 'asc' },
+        select: { id: true, meetingNumber: true, title: true, date: true },
+        orderBy: { date: 'desc' },
       }),
       prisma.biro.findMany({
         where: userBiroCode ? { code: userBiroCode, isActive: true } : { isActive: true },

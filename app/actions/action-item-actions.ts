@@ -123,7 +123,7 @@ export async function getActionItemFormOptionsAction() {
       userWhere.biro = { code: currentUser.biroCode.toUpperCase() };
     }
 
-    const [biros, users, teams] = await Promise.all([
+    const [biros, users, teams, meetings] = await Promise.all([
       prisma.biro.findMany({
         where: biroWhere,
         select: {
@@ -155,6 +155,19 @@ export async function getActionItemFormOptionsAction() {
         },
         orderBy: { code: 'asc' },
       }),
+      prisma.meeting.findMany({
+        select: {
+          id: true,
+          meetingNumber: true,
+          title: true,
+          date: true,
+          primaryBiro: {
+            select: { code: true, name: true },
+          },
+        },
+        orderBy: { date: 'desc' },
+        take: 100,
+      }),
     ]);
 
     return {
@@ -162,6 +175,7 @@ export async function getActionItemFormOptionsAction() {
       biros,
       users,
       teams,
+      meetings,
     };
   } catch (error: any) {
     console.error('Error fetching action item form options:', error);
@@ -170,6 +184,7 @@ export async function getActionItemFormOptionsAction() {
       biros: [],
       users: [],
       teams: [],
+      meetings: [],
       error: 'Gagal memuat daftar biro & pengguna.',
     };
   }

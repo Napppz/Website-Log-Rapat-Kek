@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useSession } from 'next-auth/react';
-import { X, AlertCircle, Save, ExternalLink } from 'lucide-react';
+import { X, AlertCircle, Save, ExternalLink, Layers, Calendar } from 'lucide-react';
 import {
   actionItemSchema,
   ActionItemInput,
@@ -22,8 +22,14 @@ import {
 
 interface ActionItemFormDialogProps {
   isOpen: boolean;
-  meetingId: string;
+  meetingId?: string;
   actionItem?: ActionItem | null;
+  availableMeetings?: Array<{
+    id: string;
+    meetingNumber: string;
+    title: string;
+    date?: Date | string;
+  }>;
   availableBiros?: { id: string; code: string; shortName: string; name: string }[];
   availableUsers?: { id: string; name: string; email?: string; biroId?: string }[];
   lockedBiroCode?: string;
@@ -35,6 +41,7 @@ export function ActionItemFormDialog({
   isOpen,
   meetingId,
   actionItem,
+  availableMeetings = [],
   availableBiros = [],
   availableUsers = [],
   lockedBiroCode,
@@ -51,10 +58,14 @@ export function ActionItemFormDialog({
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const isEditing = Boolean(actionItem);
 
-  // Resilient biros, users, and teams state with auto-fetch
+  // Resilient biros, users, teams & meetings state with auto-fetch
   const [birosList, setBirosList] = useState(availableBiros);
   const [usersList, setUsersList] = useState(availableUsers);
   const [teamsList, setTeamsList] = useState<Array<{ id: string; biroId: string; code: string; name: string; description?: string | null }>>([]);
+  const [meetingsList, setMeetingsList] = useState<Array<{ id: string; meetingNumber: string; title: string; date?: Date | string }>>(availableMeetings);
+  const [selectedMeetingId, setSelectedMeetingId] = useState<string>(
+    actionItem?.meetingId || meetingId || availableMeetings[0]?.id || ''
+  );
   const [isLoadingOptions, setIsLoadingOptions] = useState(false);
 
   // Sync state if props change
@@ -70,6 +81,15 @@ export function ActionItemFormDialog({
     }
   }, [availableUsers]);
 
+  useEffect(() => {
+    if (availableMeetings.length > 0) {
+      setMeetingsList(availableMeetings);
+      if (!selectedMeetingId && !actionItem?.meetingId && !meetingId) {
+        setSelectedMeetingId(availableMeetings[0].id);
+      }
+    }
+  }, [availableMeetings, selectedMeetingId, actionItem?.meetingId, meetingId]);
+
   // Form State
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
@@ -81,17 +101,17 @@ export function ActionItemFormDialog({
   const [priority, setPriority] = useState<ActionItemPriority>('MEDIUM');
   const [status, setStatus] = useState<ActionItemStatus>('PENDING');
 
-  // Auto-fetch biros, users & teams if not passed via props or currently empty
+  // Auto-fetch biros, users, teams & meetings if not passed via props or currently empty
   useEffect(() => {
-    if (isOpen && (birosList.length === 0 || teamsList.length === 0)) {
+    if (isOpen && (birosList.length === 0 || teamsList.length === 0 || meetingsList.length === 0)) {
       setIsLoadingOptions(true);
       getActionItemFormOptionsAction()
-        .then((res) => {
+        .then((res: any) => {
           if (res.success) {
             if (res.biros && res.biros.length > 0) {
               setBirosList(res.biros);
               const matched = effectiveLockedBiroCode
-                ? res.biros.find((b) => b.code.toUpperCase() === effectiveLockedBiroCode.toUpperCase())
+                ? res.biros.find((b: any) => b.code.toUpperCase() === effectiveLockedBiroCode.toUpperCase())
                 : null;
               setPicBiroId((prev) => (matched ? matched.id : prev ? prev : res.biros[0]?.id || ''));
             }
@@ -101,13 +121,17 @@ export function ActionItemFormDialog({
             if (res.teams && res.teams.length > 0) {
               setTeamsList(res.teams);
             }
+            if (res.meetings && res.meetings.length > 0) {
+              setMeetingsList((prev) => (prev.length > 0 ? prev : res.meetings));
+              setSelectedMeetingId((prev) => (prev ? prev : res.meetings[0]?.id || ''));
+            }
           }
         })
         .finally(() => {
           setIsLoadingOptions(false);
         });
     }
-  }, [isOpen, birosList.length, teamsList.length, effectiveLockedBiroCode]);
+  }, [isOpen, birosList.length, teamsList.length, meetingsList.length, effectiveLockedBiroCode]);
 
   useEffect(() => {
     if (isOpen) {
@@ -120,6 +144,7 @@ export function ActionItemFormDialog({
         const mm = String(due.getMonth() + 1).padStart(2, '0');
         const dd = String(due.getDate()).padStart(2, '0');
 
+        setSelectedMeetingId(actionItem.meetingId || meetingId || '');
         setTitle(actionItem.title || '');
         const foundDrive = extractDriveLink(actionItem.description);
         if (foundDrive) {
@@ -141,6 +166,7 @@ export function ActionItemFormDialog({
         const mm = String(nextWeek.getMonth() + 1).padStart(2, '0');
         const dd = String(nextWeek.getDate()).padStart(2, '0');
 
+        setSelectedMeetingId(meetingId || availableMeetings[0]?.id || meetingsList[0]?.id || '');
         setTitle('');
         setDescription('');
         setDriveLink('');
@@ -155,7 +181,7 @@ export function ActionItemFormDialog({
         setStatus('PENDING');
       }
     }
-  }, [isOpen, actionItem, birosList, effectiveLockedBiroCode, session?.user?.role, session?.user?.id]);
+  }, [isOpen, actionItem, meetingId, availableMeetings, meetingsList, birosList, effectiveLockedBiroCode, session?.user?.role, session?.user?.id]);
 
   if (!isOpen) return null;
 
@@ -172,9 +198,19 @@ export function ActionItemFormDialog({
         : `📎 Tautan Google Drive: ${formattedLink}`;
     }
 
+    const finalMeetingId = selectedMeetingId || meetingId;
+    if (!finalMeetingId) {
+      setFieldErrors((prev) => ({
+        ...prev,
+        meetingId: 'Silakan pilih rapat yang terkoneksi dengan tindak lanjut ini.',
+      }));
+      setErrorMessage('Rapat terkait wajib dipilih.');
+      return;
+    }
+
     // Zod client validation
     const rawData = {
-      meetingId,
+      meetingId: finalMeetingId,
       title,
       description: finalDescription || null,
       picBiroId,
@@ -261,6 +297,64 @@ export function ActionItemFormDialog({
                 <span>{errorMessage}</span>
               </div>
             )}
+
+            {/* Rapat Terkait / Agenda Sumber (Required) */}
+            <div>
+              <div className="flex items-center justify-between mb-1">
+                <label className="block font-bold text-slate-800 flex items-center gap-1.5 text-[13px]">
+                  <Layers className="w-4 h-4 text-[#31889C]" />
+                  <span>Rapat Terkait / Agenda Sumber</span>
+                  <span className="text-red-500">*</span>
+                </label>
+                {(() => {
+                  const currM = meetingsList.find((m) => m.id === (selectedMeetingId || meetingId));
+                  return currM ? (
+                    <span className="text-[11px] font-semibold text-[#215865] bg-[#E8F5F7] px-2 py-0.5 rounded-full border border-[#BCE3EB]">
+                      {currM.meetingNumber}
+                    </span>
+                  ) : null;
+                })()}
+              </div>
+
+              {meetingsList.length > 0 ? (
+                <select
+                  value={selectedMeetingId || meetingId || ''}
+                  onChange={(e) => setSelectedMeetingId(e.target.value)}
+                  className="w-full px-3.5 py-2.5 rounded-lg border border-slate-200 focus:outline-none focus:ring-2 focus:ring-[#31889C]/30 focus:border-[#31889C] bg-white font-medium text-slate-900 text-[13px] cursor-pointer"
+                >
+                  <option value="">
+                    {isLoadingOptions ? '-- Memuat Daftar Rapat... --' : '-- Pilih Rapat yang Tersedia --'}
+                  </option>
+                  {meetingsList.map((m) => {
+                    const mDate = m.date
+                      ? new Date(m.date).toLocaleDateString('id-ID', {
+                          day: 'numeric',
+                          month: 'short',
+                          year: 'numeric',
+                        })
+                      : '';
+                    return (
+                      <option key={m.id} value={m.id}>
+                        [{m.meetingNumber}] {m.title} {mDate ? `• ${mDate}` : ''}
+                      </option>
+                    );
+                  })}
+                </select>
+              ) : (
+                <div className="w-full px-3.5 py-2.5 rounded-lg border border-slate-200 bg-slate-50 text-slate-600 text-[13px] flex items-center justify-between">
+                  <span>{isLoadingOptions ? 'Memuat rapat yang tersedia...' : 'Rapat Terkoneksi'}</span>
+                  {meetingId && (
+                    <span className="text-xs font-mono font-bold text-slate-700">{meetingId}</span>
+                  )}
+                </div>
+              )}
+              {fieldErrors.meetingId && (
+                <p className="mt-1 text-[11px] text-red-600 font-semibold">{fieldErrors.meetingId}</p>
+              )}
+              <p className="mt-1 text-[11px] text-slate-400">
+                Hubungkan tindak lanjut ini dengan agenda sidang dewan yang relevan.
+              </p>
+            </div>
 
             {/* Judul Tindak Lanjut (Required) */}
             <div>

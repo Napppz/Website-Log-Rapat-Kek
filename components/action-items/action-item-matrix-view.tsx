@@ -710,6 +710,7 @@ export function ActionItemMatrixView({
         isOpen={isFormOpen}
         meetingId={editingItem ? editingItem.meetingId : selectedMeetingIdForCreate}
         actionItem={editingItem}
+        availableMeetings={availableMeetings}
         availableBiros={availableBiros}
         availableUsers={availableUsers}
         lockedBiroCode={lockedBiroCode}
