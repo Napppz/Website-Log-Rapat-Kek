@@ -25,7 +25,6 @@ import { Meeting, BiroCode, MeetingStatus } from '@/lib/types';
 import { MOCK_MEETINGS } from '@/lib/mock-data';
 import { MeetingStatusBadge } from './meeting-status-badge';
 import { ActionItemProgress } from '../action-items/action-item-progress';
-import { MeetingDetailDialog } from './meeting-detail-dialog';
 import { AgendaSeriesModal } from './agenda-series-modal';
 import { useSession } from 'next-auth/react';
 import { deleteMeetingAction } from '@/app/actions/meeting-actions';
@@ -65,7 +64,6 @@ export function MeetingTable({
   }, [initialMeetings, deletedMeetingIds]);
   const [fetching, setFetching] = useState(false);
   const [searchFilter, setSearchFilter] = useState('');
-  const [selectedMeeting, setSelectedMeeting] = useState<Meeting | null>(null);
   const [seriesModalMeetingId, setSeriesModalMeetingId] = useState<string | null>(null);
   const [isSeriesModalOpen, setIsSeriesModalOpen] = useState<boolean>(false);
   const [currentPage, setCurrentPage] = useState(1);
@@ -154,44 +152,9 @@ export function MeetingTable({
     return map;
   }, [meetings]);
 
-  const handleSelectMeetingFromSeries = async (sessionId: string) => {
+  const handleSelectMeetingFromSeries = (sessionId: string) => {
     setIsSeriesModalOpen(false);
-    const existing = meetings.find((m) => m.id === sessionId);
-    if (existing) {
-      setSelectedMeeting(existing);
-      return;
-    }
-    try {
-      const { getMeetingDetailAction } = await import('@/app/actions/meeting-actions');
-      const res = await getMeetingDetailAction(sessionId);
-      if (res.success && res.data) {
-        const m = res.data;
-        setSelectedMeeting({
-          id: m.id,
-          code: m.meetingNumber,
-          title: m.title,
-          date: new Date(m.date).toISOString().slice(0, 10),
-          time: `${m.startTime} - ${m.endTime} WIB`,
-          location: m.location,
-          biroCode: m.primaryBiro.code as BiroCode,
-          biroName: m.primaryBiro.shortName,
-          primaryTeamId: m.primaryTeamId,
-          primaryTeamName: m.primaryTeam?.name || null,
-          previousMeetingId: m.previousMeetingId || null,
-          status: m.status as MeetingStatus,
-          isNew: false,
-          actionItems: {
-            total: m.actionItems?.length || 0,
-            completed: m.actionItems?.filter((a: any) => a.status === 'COMPLETED').length || 0,
-            inProgress: m.actionItems?.filter((a: any) => a.status === 'IN_PROGRESS').length || 0,
-            summaryText: `${m.actionItems?.filter((a: any) => a.status === 'COMPLETED').length || 0}/${m.actionItems?.length || 0} Tindak Lanjut Selesai`,
-          },
-          attendees: m.participants?.map((p: any) => p.user.name) || [],
-        });
-      }
-    } catch (e) {
-      console.error('Error selecting meeting from series:', e);
-    }
+    router.push(`/semua-rapat/${sessionId}`);
   };
 
   const handleDeleteSingleMeeting = async (m: Meeting) => {
@@ -597,14 +560,13 @@ export function MeetingTable({
                     {/* Aksi */}
                     <td className="py-3.5 px-4 align-top text-right whitespace-nowrap">
                       <div className="flex items-center justify-end gap-1">
-                        <button
-                          type="button"
-                          onClick={() => setSelectedMeeting(meeting)}
+                        <Link
+                          href={`/semua-rapat/${meeting.id}`}
                           className="p-1.5 rounded-lg text-[#31889C] hover:bg-[#F0F9FA] transition-colors cursor-pointer"
-                          title="Pratinjau Cepat Risalah (Modal)"
+                          title="Lihat Detail & Risalah Rapat"
                         >
                           <Eye className="w-4 h-4" />
-                        </button>
+                        </Link>
                         <button
                           type="button"
                           disabled={downloadingId === meeting.id}
@@ -708,26 +670,6 @@ export function MeetingTable({
           </div>
         </div>
       )}
-
-      {/* Meeting Detail Modal */}
-      <MeetingDetailDialog
-        meeting={selectedMeeting}
-        onClose={() => setSelectedMeeting(null)}
-        onOpenSeriesModal={(mId) => {
-          setSeriesModalMeetingId(mId);
-          setIsSeriesModalOpen(true);
-        }}
-        onMeetingUpdated={() => {
-          if (selectedMeeting) {
-            setDeletedMeetingIds((prev) => new Set(prev).add(selectedMeeting.id));
-            setMeetings((prev) => prev.filter((m) => m.id !== selectedMeeting.id));
-            if (onMeetingDeleted) {
-              onMeetingDeleted(selectedMeeting.id);
-            }
-          }
-          router.refresh();
-        }}
-      />
 
       {/* Agenda Series Modal (Linimasa Rapat Terkait) */}
       <AgendaSeriesModal

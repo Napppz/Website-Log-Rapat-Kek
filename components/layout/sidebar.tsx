@@ -47,18 +47,16 @@ export function Sidebar({
   const isAdmin = userRole === 'ADMIN';
 
   const isRapatRoute = pathname.includes('/semua-rapat') || pathname.includes('/buat-rapat');
-  const isTindakLanjutRoute = pathname.includes('/tindak-lanjut');
   const isBiroRoute = pathname.includes('/biro');
 
   const [toggledSections, setToggledSections] = useState<Record<string, boolean>>({});
 
-  const isRapatOpen = toggledSections.rapat !== undefined ? toggledSections.rapat : isRapatRoute || true;
-  const isTindakLanjutOpen = toggledSections.tindakLanjut !== undefined ? toggledSections.tindakLanjut : isTindakLanjutRoute;
+  const isRapatOpen = toggledSections.rapat !== undefined ? toggledSections.rapat : isRapatRoute;
   const isBiroOpen = toggledSections.biro !== undefined ? toggledSections.biro : isBiroRoute;
 
   const toggleSection = (section: string) => {
     setToggledSections((prev) => {
-      const current = section === 'rapat' ? isRapatOpen : section === 'tindakLanjut' ? isTindakLanjutOpen : isBiroOpen;
+      const current = section === 'rapat' ? isRapatOpen : isBiroOpen;
       return {
         ...prev,
         [section]: !current,
@@ -81,14 +79,10 @@ export function Sidebar({
   const dashboardLabel = isNonAdminWithBiro ? `Dashboard Biro ${session?.user?.biroCode}` : 'Dashboard';
 
   const rapatSubItems = [
-    { name: 'Semua Rapat', href: '/semua-rapat' },
+    { name: 'Daftar Rapat', href: '/semua-rapat' },
     ...(isSuperAdmin || isAdmin
-      ? [{ name: 'Buat Rapat', href: '/buat-rapat' }]
+      ? [{ name: '+ Buat Rapat Baru', href: '/buat-rapat' }]
       : []),
-    { name: '1. Draf (Penyusunan)', href: '/semua-rapat?status=DRAFT' },
-    { name: '2. Reviu (Penelaahan)', href: '/semua-rapat?status=REVIEW' },
-    { name: '3. Disetujui (Pimpinan)', href: '/semua-rapat?status=APPROVED' },
-    { name: '4. Final (Sah & Terbit)', href: '/semua-rapat?status=FINAL' },
   ];
 
   const roleLabelMap: Record<string, string> = {
@@ -234,63 +228,24 @@ export function Sidebar({
                 )}
               </div>
 
-              {/* Tindak Lanjut (Collapsible) */}
-              <div>
-                <button
-                  type="button"
-                  onClick={() => toggleSection('tindakLanjut')}
-                  className={cn(
-                    "w-full flex items-center justify-between px-3 py-2 rounded-lg text-slate-600 hover:bg-[#F0F9FA] hover:text-[#31889C] transition-all font-medium text-[14px] cursor-pointer",
-                    pathname.startsWith('/tindak-lanjut') ? "text-[#31889C] font-semibold bg-[#F0F9FA]/60" : ""
-                  )}
-                  title="Tindak Lanjut"
-                >
-                  <div className="flex items-center gap-3">
-                    <CheckSquare className={cn(
-                      "w-5 h-5 shrink-0",
-                      pathname.startsWith('/tindak-lanjut') ? "text-[#31889C]" : "text-slate-400"
-                    )} />
-                    {!collapsed && <span>Tindak Lanjut</span>}
-                  </div>
-                  {!collapsed && (
-                    <ChevronDown
-                      className={cn(
-                        "w-4 h-4 text-slate-400 transition-transform duration-200",
-                        isTindakLanjutOpen ? "rotate-180" : ""
-                      )}
-                    />
-                  )}
-                </button>
-
-                {!collapsed && isTindakLanjutOpen && (
-                  <div className="pl-7 pr-2 py-1 space-y-1">
-                    {[
-                      { name: 'Semua Tindak Lanjut', href: '/tindak-lanjut' },
-                      { name: 'Belum Dimulai', href: '/tindak-lanjut?status=belum-dimulai' },
-                      { name: 'Sedang Berjalan', href: '/tindak-lanjut?status=sedang-berjalan' },
-                      { name: 'Selesai', href: '/tindak-lanjut?status=selesai' },
-                      { name: 'Terlambat', href: '/tindak-lanjut?status=terlambat' },
-                    ].map((item) => {
-                      const isActive = pathname === item.href;
-                      return (
-                        <Link
-                          key={item.href}
-                          href={item.href}
-                          onClick={handleLinkClick}
-                          className={cn(
-                            "block px-2.5 py-1.5 rounded-md text-[13px] font-medium transition-all",
-                            isActive
-                              ? "bg-[#E8F5F7] text-[#215865] font-bold"
-                              : "text-slate-600 hover:bg-[#F0F9FA] hover:text-[#31889C]"
-                          )}
-                        >
-                          {item.name}
-                        </Link>
-                      );
-                    })}
-                  </div>
+              {/* Tindak Lanjut */}
+              <Link
+                href="/tindak-lanjut"
+                onClick={handleLinkClick}
+                className={cn(
+                  "flex items-center gap-3 px-3 py-2 rounded-lg transition-all font-medium text-[14px]",
+                  pathname.startsWith('/tindak-lanjut')
+                    ? "bg-[#F0F9FA] text-[#31889C] font-bold border-l-4 border-[#31889C] shadow-xs"
+                    : "text-slate-600 hover:bg-[#F0F9FA] hover:text-[#31889C]"
                 )}
-              </div>
+                title="Tindak Lanjut"
+              >
+                <CheckSquare className={cn(
+                  "w-5 h-5 shrink-0",
+                  pathname.startsWith('/tindak-lanjut') ? "text-[#31889C]" : "text-slate-400"
+                )} />
+                {!collapsed && <span>Tindak Lanjut</span>}
+              </Link>
 
               {/* Kalender (SUPER_ADMIN, ADMIN) */}
               {(isSuperAdmin || isAdmin) && (
@@ -367,29 +322,6 @@ export function Sidebar({
                     </div>
                   )}
                 </div>
-              )}
-
-
-
-              {/* Dokumen (SUPER_ADMIN, ADMIN) */}
-              {(isSuperAdmin || isAdmin) && (
-                <Link
-                  href="/dokumen"
-                  onClick={handleLinkClick}
-                  className={cn(
-                    "flex items-center gap-3 px-3 py-2 rounded-lg transition-all font-medium text-[14px]",
-                    pathname === '/dokumen'
-                      ? "bg-[#F0F9FA] text-[#31889C] font-bold border-l-4 border-[#31889C] shadow-xs"
-                      : "text-slate-600 hover:bg-[#F0F9FA] hover:text-[#31889C]"
-                  )}
-                  title="Dokumen"
-                >
-                  <FileText className={cn(
-                    "w-5 h-5 shrink-0",
-                    pathname === '/dokumen' ? "text-[#31889C]" : "text-slate-400"
-                  )} />
-                  {!collapsed && <span>Dokumen</span>}
-                </Link>
               )}
 
               {/* Laporan (SUPER_ADMIN, ADMIN) */}

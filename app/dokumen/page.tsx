@@ -1,22 +1,8 @@
-import React from 'react';
-import { Metadata } from 'next';
-import { getMeetingsFromDb, getOfficialBiros } from '@/lib/db-service';
-import { DokumenClient } from './dokumen-client';
-
-export const metadata: Metadata = {
-  title: 'Dokumen & Notulen Resmi — Sekretariat Dewan Nasional KEK',
-  description:
-    'Repositori arsip dokumen risalah rapat, berita acara dewan, dan penetapan regulasi Dewan Nasional Kawasan Ekonomi Khusus Republik Indonesia.',
-};
+import { redirect } from 'next/navigation';
 
 export const dynamic = 'force-dynamic';
-export const revalidate = 0;
 
-export default async function DokumenPage() {
-  const [meetings, biros] = await Promise.all([
-    getMeetingsFromDb(),
-    getOfficialBiros(),
-  ]);
-
-  return <DokumenClient initialMeetings={meetings} biros={biros} />;
+export default function DokumenPage() {
+  redirect('/semua-rapat');
 }
+

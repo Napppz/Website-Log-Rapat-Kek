@@ -74,8 +74,9 @@ interface MeetingDetailViewProps {
   initialTab?: string;
 }
 
-type TabType = 'overview' | 'participants' | 'minutes' | 'actionItems' | 'comments' | 'history';
-const VALID_TABS: TabType[] = ['overview', 'participants', 'minutes', 'actionItems', 'comments', 'history'];
+type TabType = 'overview' | 'participants' | 'minutes' | 'actionItems';
+type MinutesSubTab = 'document' | 'comments' | 'history';
+const VALID_TABS: TabType[] = ['overview', 'participants', 'minutes', 'actionItems'];
 
 const MEETING_WORKFLOW: {
   key: MeetingStatus;
@@ -186,17 +187,36 @@ export function MeetingDetailView({
 
   const canChangeStatus = isPrivileged || (userRole === 'STAFF' && isMeetingBiro);
 
-  const defaultTab: TabType = (initialTab && VALID_TABS.includes(initialTab as TabType))
-    ? (initialTab as TabType)
-    : (meeting.minutes ? 'minutes' : 'overview');
+  const initialResolvedTab: TabType = (initialTab === 'comments' || initialTab === 'history')
+    ? 'minutes'
+    : (initialTab && VALID_TABS.includes(initialTab as TabType))
+      ? (initialTab as TabType)
+      : (meeting.minutes ? 'minutes' : 'overview');
 
-  const [activeTab, setActiveTab] = useState<TabType>(defaultTab);
+  const initialMinutesSubTab: MinutesSubTab =
+    initialTab === 'comments' ? 'comments' : initialTab === 'history' ? 'history' : 'document';
+
+  const [activeTab, setActiveTab] = useState<TabType>(initialResolvedTab);
+  const [minutesSubTab, setMinutesSubTab] = useState<MinutesSubTab>(initialMinutesSubTab);
 
   const handleTabChange = (tab: TabType) => {
     setActiveTab(tab);
     if (typeof window !== 'undefined') {
       const url = new URL(window.location.href);
       url.searchParams.set('tab', tab);
+      window.history.replaceState(null, '', url.toString());
+    }
+  };
+
+  const handleMinutesSubTabChange = (sub: MinutesSubTab) => {
+    setMinutesSubTab(sub);
+    if (typeof window !== 'undefined') {
+      const url = new URL(window.location.href);
+      if (sub === 'document') {
+        url.searchParams.set('tab', 'minutes');
+      } else {
+        url.searchParams.set('tab', sub);
+      }
       window.history.replaceState(null, '', url.toString());
     }
   };
@@ -1141,8 +1161,34 @@ export function MeetingDetailView({
         </div>
       )}
 
-      {/* Tabs Navigation */}
+      {/* Tabs Navigation (4 Tab Utama Terstruktur) */}
       <div className="flex items-center gap-2 border-b border-slate-200 pb-0 overflow-x-auto">
+        <button
+          type="button"
+          onClick={() => handleTabChange('overview')}
+          className={`flex items-center gap-2 px-5 py-3 font-bold text-[13px] border-b-2 transition-all cursor-pointer whitespace-nowrap ${
+            activeTab === 'overview'
+              ? 'border-[#31889C] text-[#31889C] bg-[#F0F9FA] rounded-t-lg'
+              : 'border-transparent text-slate-600 hover:text-[#31889C] hover:bg-[#F0F9FA]/50'
+          }`}
+        >
+          <Layers className="w-4 h-4" />
+          <span>Informasi Rapat</span>
+        </button>
+
+        <button
+          type="button"
+          onClick={() => handleTabChange('participants')}
+          className={`flex items-center gap-2 px-5 py-3 font-bold text-[13px] border-b-2 transition-all cursor-pointer whitespace-nowrap ${
+            activeTab === 'participants'
+              ? 'border-[#31889C] text-[#31889C] bg-[#F0F9FA] rounded-t-lg'
+              : 'border-transparent text-slate-600 hover:text-[#31889C] hover:bg-[#F0F9FA]/50'
+          }`}
+        >
+          <Users className="w-4 h-4" />
+          <span>Peserta &amp; Presensi ({totalCount})</span>
+        </button>
+
         <button
           type="button"
           onClick={() => handleTabChange('minutes')}
@@ -1153,7 +1199,7 @@ export function MeetingDetailView({
           }`}
         >
           <FileText className="w-4 h-4" />
-          <span>Notulen / Nota Dinas</span>
+          <span>Notulen &amp; Risalah</span>
           {meeting.minutes ? (
             <span className="w-2 h-2 rounded-full bg-[#7CC563]" title="Naskah rapat telah terisi" />
           ) : (
@@ -1172,58 +1218,6 @@ export function MeetingDetailView({
         >
           <CheckSquare className="w-4 h-4" />
           <span>Tindak Lanjut ({meeting.actionItems ? meeting.actionItems.length : 0})</span>
-        </button>
-
-        <button
-          type="button"
-          onClick={() => handleTabChange('participants')}
-          className={`flex items-center gap-2 px-5 py-3 font-bold text-[13px] border-b-2 transition-all cursor-pointer whitespace-nowrap ${
-            activeTab === 'participants'
-              ? 'border-[#31889C] text-[#31889C] bg-[#F0F9FA] rounded-t-lg'
-              : 'border-transparent text-slate-600 hover:text-[#31889C] hover:bg-[#F0F9FA]/50'
-          }`}
-        >
-          <Users className="w-4 h-4" />
-          <span>Peserta &amp; Presensi ({totalCount})</span>
-        </button>
-
-        <button
-          type="button"
-          onClick={() => handleTabChange('overview')}
-          className={`flex items-center gap-2 px-5 py-3 font-bold text-[13px] border-b-2 transition-all cursor-pointer whitespace-nowrap ${
-            activeTab === 'overview'
-              ? 'border-[#31889C] text-[#31889C] bg-[#F0F9FA] rounded-t-lg'
-              : 'border-transparent text-slate-600 hover:text-[#31889C] hover:bg-[#F0F9FA]/50'
-          }`}
-        >
-          <Layers className="w-4 h-4" />
-          <span>Informasi Rapat</span>
-        </button>
-
-        <button
-          type="button"
-          onClick={() => handleTabChange('comments')}
-          className={`flex items-center gap-2 px-5 py-3 font-bold text-[13px] border-b-2 transition-all cursor-pointer whitespace-nowrap ${
-            activeTab === 'comments'
-              ? 'border-[#31889C] text-[#31889C] bg-[#F0F9FA] rounded-t-lg'
-              : 'border-transparent text-slate-600 hover:text-[#31889C] hover:bg-[#F0F9FA]/50'
-          }`}
-        >
-          <MessageCircle className="w-4 h-4" />
-          <span>Komentar</span>
-        </button>
-
-        <button
-          type="button"
-          onClick={() => handleTabChange('history')}
-          className={`flex items-center gap-2 px-5 py-3 font-bold text-[13px] border-b-2 transition-all cursor-pointer whitespace-nowrap ${
-            activeTab === 'history'
-              ? 'border-[#31889C] text-[#31889C] bg-[#F0F9FA] rounded-t-lg'
-              : 'border-transparent text-slate-600 hover:text-[#31889C] hover:bg-[#F0F9FA]/50'
-          }`}
-        >
-          <History className="w-4 h-4" />
-          <span>Riwayat Perubahan</span>
         </button>
       </div>
 
@@ -1677,13 +1671,74 @@ export function MeetingDetailView({
       {/* Tab 3: Notulen & Hasil Rapat */}
       {activeTab === 'minutes' && (
         <div className="space-y-4">
-          <MeetingMinutesSection
-            meetingId={meeting.id}
-            meeting={meeting}
-            initialMinutes={meeting.minutes}
-            defaultMode="preview"
-            onViewHistoryClick={() => handleTabChange('history')}
-          />
+          {/* Sub Navigation Bar: Naskah, Catatan & Komentar, Riwayat Perubahan */}
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-2 bg-white rounded-xl border border-slate-200 shadow-2xs">
+            <div className="flex items-center gap-1.5 p-1 bg-slate-100/90 rounded-lg text-[13px] font-semibold">
+              <button
+                type="button"
+                onClick={() => handleMinutesSubTabChange('document')}
+                className={`flex items-center gap-2 px-3.5 py-1.5 rounded-md transition-all cursor-pointer ${
+                  minutesSubTab === 'document'
+                    ? 'bg-white text-[#31889C] font-bold shadow-xs border border-slate-200/60'
+                    : 'text-slate-600 hover:text-slate-900 hover:bg-white/50'
+                }`}
+              >
+                <FileText className="w-4 h-4" />
+                <span>Naskah Risalah &amp; Notulen</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => handleMinutesSubTabChange('comments')}
+                className={`flex items-center gap-2 px-3.5 py-1.5 rounded-md transition-all cursor-pointer ${
+                  minutesSubTab === 'comments'
+                    ? 'bg-white text-[#31889C] font-bold shadow-xs border border-slate-200/60'
+                    : 'text-slate-600 hover:text-slate-900 hover:bg-white/50'
+                }`}
+              >
+                <MessageCircle className="w-4 h-4" />
+                <span>Catatan &amp; Komentar</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => handleMinutesSubTabChange('history')}
+                className={`flex items-center gap-2 px-3.5 py-1.5 rounded-md transition-all cursor-pointer ${
+                  minutesSubTab === 'history'
+                    ? 'bg-white text-[#31889C] font-bold shadow-xs border border-slate-200/60'
+                    : 'text-slate-600 hover:text-slate-900 hover:bg-white/50'
+                }`}
+              >
+                <History className="w-4 h-4" />
+                <span>Riwayat Perubahan</span>
+              </button>
+            </div>
+
+            <div className="text-[12px] text-slate-500 px-2 hidden md:block">
+              {minutesSubTab === 'document' && 'Format resmi Notula & Nota Dinas Sekretariat KEK'}
+              {minutesSubTab === 'comments' && 'Kolaborasi masukan dan catatan perumusan risalah'}
+              {minutesSubTab === 'history' && 'Audit trail riwayat revisi dan versi naskah risalah'}
+            </div>
+          </div>
+
+          {/* Sub Tab Views */}
+          {minutesSubTab === 'document' && (
+            <MeetingMinutesSection
+              meetingId={meeting.id}
+              meeting={meeting}
+              initialMinutes={meeting.minutes}
+              defaultMode="preview"
+              onViewHistoryClick={() => handleMinutesSubTabChange('history')}
+            />
+          )}
+
+          {minutesSubTab === 'comments' && (
+            <MeetingCommentsSection meetingId={meeting.id} />
+          )}
+
+          {minutesSubTab === 'history' && (
+            <MinutesHistorySection meetingId={meeting.id} />
+          )}
         </div>
       )}
 
@@ -1696,20 +1751,6 @@ export function MeetingDetailView({
             availableBiros={availableBiros}
             availableUsers={availableUsers}
           />
-        </div>
-      )}
-
-      {/* Tab 5: Komentar Notulen */}
-      {activeTab === 'comments' && (
-        <div className="space-y-4">
-          <MeetingCommentsSection meetingId={meeting.id} />
-        </div>
-      )}
-
-      {/* Tab 6: Riwayat Perubahan (Audit Trail) */}
-      {activeTab === 'history' && (
-        <div className="space-y-4">
-          <MinutesHistorySection meetingId={meeting.id} />
         </div>
       )}
 
