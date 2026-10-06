@@ -414,7 +414,7 @@ export default function BuatRapatPage() {
           `Rapat "${title}" (${res.data.meetingNumber}) berhasil dijadwalkan dengan ${res.data.participantCount || 0} peserta terdaftar!`
         );
         router.refresh();
-        router.push(`/semua-rapat/${res.data.id}`);
+        router.push(`/semua-rapat/${res.data.id}?calendar=true`);
       } else {
         setErrorMessage(res.error || 'Gagal membuat rapat');
         toast.error(res.error || 'Gagal membuat rapat');

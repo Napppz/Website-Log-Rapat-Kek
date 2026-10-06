@@ -28,6 +28,7 @@ import { ActionItemList } from '../action-items/action-item-list';
 import { getActionItemsAction, getActionItemFormOptionsAction } from '@/app/actions/action-item-actions';
 import { useSession } from 'next-auth/react';
 import { toast, confirmModal } from '@/components/providers/toast-provider';
+import { GoogleCalendarModal } from './google-calendar-modal';
 
 interface MeetingDetailDialogProps {
   meeting: Meeting | null;
@@ -65,6 +66,7 @@ export function MeetingDetailDialog({
   const [availableBiros, setAvailableBiros] = useState<any[]>([]);
   const [availableUsers, setAvailableUsers] = useState<any[]>([]);
   const [isLoadingItems, setIsLoadingItems] = useState(false);
+  const [showCalendarModal, setShowCalendarModal] = useState(false);
 
   const handleExportPdf = async (type: 'notula' | 'nota-dinas' = 'notula') => {
     if (!meeting?.id) return;
@@ -268,6 +270,16 @@ export function MeetingDetailDialog({
                 <span>Rangkaian Agenda</span>
               </button>
             )}
+
+            <button
+              type="button"
+              onClick={() => setShowCalendarModal(true)}
+              className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[12px] font-bold text-emerald-800 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 transition-colors cursor-pointer shadow-2xs"
+              title="Tambah ke Google Calendar & Bagikan ke Peserta"
+            >
+              <Calendar className="w-3.5 h-3.5 text-emerald-600" />
+              <span>Google Kalender</span>
+            </button>
 
             <Link
               href={`/semua-rapat/${meeting.id}`}
@@ -655,6 +667,36 @@ export function MeetingDetailDialog({
           </div>
         </div>
       </div>
+
+      {showCalendarModal && meeting && (
+        <GoogleCalendarModal
+          isOpen={showCalendarModal}
+          onClose={() => setShowCalendarModal(false)}
+          event={{
+            id: meeting.id,
+            meetingNumber: meeting.code,
+            title: meeting.title,
+            date: meeting.date,
+            startTime: (meeting.time || '').split('-')[0]?.trim() || '09:00',
+            endTime: (meeting.time || '').split('-')[1]?.trim() || '11:00',
+            location: meeting.location,
+            biroName: meeting.biroName,
+            attendees: (meeting as any).participants?.length
+              ? (meeting as any).participants.map((p: any) => ({
+                  name: p.user?.name || p.customName || 'Peserta',
+                  email: p.user?.email || p.customEmail || '',
+                }))
+              : (meeting.attendees || []).map((att: string) => {
+                  const emailMatch = att.match(/<([^>]+)>|\(([^)]+)\)/);
+                  const email = emailMatch ? (emailMatch[1] || emailMatch[2]) : (att.includes('@') ? att : '');
+                  return {
+                    name: att.replace(/\s*[\(<].*?[\)>]/, '').trim() || att,
+                    email: email.trim(),
+                  };
+                }),
+          }}
+        />
+      )}
     </div>
   );
 }

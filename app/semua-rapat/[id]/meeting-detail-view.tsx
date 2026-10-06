@@ -49,6 +49,7 @@ import { LinkMeetingDialog } from '@/components/meeting/link-meeting-dialog';
 import { AgendaSeriesModal } from '@/components/meeting/agenda-series-modal';
 import { MeetingCommentsSection } from '@/components/meeting/meeting-comments/meeting-comments-section';
 import { MinutesHistorySection } from '@/components/meeting/meeting-history/minutes-history-section';
+import { GoogleCalendarModal } from '@/components/meeting/google-calendar-modal';
 import { MeetingStatus } from '@/lib/types';
 import { AttendanceStatus } from '@prisma/client';
 import {
@@ -218,6 +219,7 @@ export function MeetingDetailView({
   const [showPreviousMeetingModal, setShowPreviousMeetingModal] = useState<boolean>(false);
   const [showLinkMeetingModal, setShowLinkMeetingModal] = useState<boolean>(false);
   const [showSeriesModal, setShowSeriesModal] = useState<boolean>(false);
+  const [showCalendarModal, setShowCalendarModal] = useState<boolean>(false);
 
   // Participant attendance states
   const [participants, setParticipants] = useState<any[]>(meeting.participants || []);
@@ -316,6 +318,19 @@ export function MeetingDetailView({
   const showToast = (message: string) => {
     toast.success(message);
   };
+
+  // Check if calendar modal should auto-open (e.g. from /buat-rapat?calendar=true)
+  React.useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const urlParams = new URLSearchParams(window.location.search);
+      if (urlParams.get('calendar') === 'true') {
+        setShowCalendarModal(true);
+        urlParams.delete('calendar');
+        const newUrl = window.location.pathname + (urlParams.toString() ? `?${urlParams.toString()}` : '');
+        window.history.replaceState(null, '', newUrl);
+      }
+    }
+  }, []);
 
   const handleExportPdf = async () => {
     try {
@@ -661,7 +676,18 @@ export function MeetingDetailView({
           <span>Kembali ke Semua Rapat</span>
         </Link>
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 flex-wrap">
+          {/* Google Calendar Button */}
+          <button
+            type="button"
+            onClick={() => setShowCalendarModal(true)}
+            className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-[12px] font-semibold transition-all shadow-xs cursor-pointer group"
+            title="Tambah ke Google Calendar & Undang Seluruh Peserta"
+          >
+            <Calendar className="w-3.5 h-3.5 text-amber-300 group-hover:scale-110 transition-transform" />
+            <span>Google Kalender</span>
+          </button>
+
           {/* Export PDF Button (All roles) */}
           <button
             type="button"
@@ -1432,33 +1458,45 @@ export function MeetingDetailView({
                 </p>
               </div>
 
-              {canManageParticipants && (
-                <div className="flex items-center gap-2 shrink-0">
-                  <button
-                    type="button"
-                    disabled={isBulkUpdating || totalCount === 0}
-                    onClick={handleMarkAllPresent}
-                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-[#D2EFCA] bg-[#ECF8E9] text-[#4D8F3D] hover:bg-[#daf2d1] text-[12px] font-semibold transition-all cursor-pointer disabled:opacity-50"
-                    title="Tandai semua peserta sebagai Hadir"
-                  >
-                    {isBulkUpdating ? (
-                      <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                    ) : (
-                      <CheckCircle2 className="w-3.5 h-3.5 text-[#7CC563]" />
-                    )}
-                    <span>Tandai Semua Hadir</span>
-                  </button>
+              <div className="flex items-center gap-2 shrink-0 flex-wrap">
+                <button
+                  type="button"
+                  onClick={() => setShowCalendarModal(true)}
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-emerald-300 bg-emerald-50 text-emerald-800 hover:bg-emerald-100 text-[12px] font-bold transition-all cursor-pointer shadow-2xs"
+                  title="Buka atau bagikan undangan Google Kalender ke seluruh peserta"
+                >
+                  <Calendar className="w-3.5 h-3.5 text-emerald-600" />
+                  <span>Undangan Kalender</span>
+                </button>
 
-                  <button
-                    type="button"
-                    onClick={() => setShowAddModal(true)}
-                    className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg bg-[#31889C] hover:bg-[#266F80] text-white text-[12px] font-semibold transition-all shadow-xs cursor-pointer"
-                  >
-                    <UserPlus className="w-3.5 h-3.5" />
-                    <span>Tambah Peserta</span>
-                  </button>
-                </div>
-              )}
+                {canManageParticipants && (
+                  <>
+                    <button
+                      type="button"
+                      disabled={isBulkUpdating || totalCount === 0}
+                      onClick={handleMarkAllPresent}
+                      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-[#D2EFCA] bg-[#ECF8E9] text-[#4D8F3D] hover:bg-[#daf2d1] text-[12px] font-semibold transition-all cursor-pointer disabled:opacity-50"
+                      title="Tandai semua peserta sebagai Hadir"
+                    >
+                      {isBulkUpdating ? (
+                        <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                      ) : (
+                        <CheckCircle2 className="w-3.5 h-3.5 text-[#7CC563]" />
+                      )}
+                      <span>Tandai Semua Hadir</span>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => setShowAddModal(true)}
+                      className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg bg-[#31889C] hover:bg-[#266F80] text-white text-[12px] font-semibold transition-all shadow-xs cursor-pointer"
+                    >
+                      <UserPlus className="w-3.5 h-3.5" />
+                      <span>Tambah Peserta</span>
+                    </button>
+                  </>
+                )}
+              </div>
             </div>
 
             {/* Summary Statistics Counter Pills */}
@@ -1916,6 +1954,27 @@ export function MeetingDetailView({
       <MeetingStatusGuideDialog
         isOpen={isStatusGuideOpen}
         onClose={() => setIsStatusGuideOpen(false)}
+      />
+
+      <GoogleCalendarModal
+        isOpen={showCalendarModal}
+        onClose={() => setShowCalendarModal(false)}
+        event={{
+          id: meeting.id,
+          meetingNumber: currentMeetingNumber,
+          title: meeting.title,
+          date: meeting.date,
+          startTime: meeting.startTime,
+          endTime: meeting.endTime,
+          location: meeting.location,
+          biroName: meeting.primaryBiro?.name,
+          chairpersonName: meeting.chairperson?.name,
+          secretaryName: meeting.secretary?.name,
+          attendees: participants.map((p: any) => ({
+            name: p.user?.name || 'Peserta',
+            email: p.user?.email || '',
+          })),
+        }}
       />
     </div>
   );

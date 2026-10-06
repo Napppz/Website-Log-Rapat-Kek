@@ -10,8 +10,9 @@ export const authConfig: NextAuthConfig = {
       const isLoggedIn = !!auth?.user;
       const isAuthRoute = nextUrl.pathname.startsWith('/api/auth');
       const isLoginRoute = nextUrl.pathname === '/login';
+      const isCalendarIcsRoute = nextUrl.pathname.endsWith('/ics');
 
-      if (isAuthRoute) return true;
+      if (isAuthRoute || isCalendarIcsRoute) return true;
 
       if (isLoginRoute) {
         if (isLoggedIn) {

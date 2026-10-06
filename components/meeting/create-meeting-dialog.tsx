@@ -134,9 +134,8 @@ export function CreateMeetingDialog({ isOpen, onClose, onSuccess }: CreateMeetin
         toast.success(`Rapat "${title}" (${res.data.meetingNumber}) berhasil disimpan ke database.`);
         setTitle('');
         setInvitationDoc(null);
-        if (onSuccess) onSuccess();
-        onClose();
         router.refresh();
+        router.push(`/semua-rapat/${res.data.id}?calendar=true`);
       } else {
         toast.error(res.error || 'Gagal membuat rapat');
       }
