@@ -16,6 +16,7 @@ import {
   Trash2,
   X,
   Sparkles,
+  Calendar,
 } from 'lucide-react';
 import {
   getNotificationsAction,
@@ -51,7 +52,7 @@ export function NotifikasiClient({
   const { setUnreadCount: setGlobalUnreadCount } = useNotifications();
   const [notifications, setNotifications] = useState<NotificationItem[]>(initialNotifications);
   const [unreadCount, setUnreadCount] = useState<number>(initialUnreadCount);
-  const [activeTab, setActiveTab] = useState<'ALL' | 'UNREAD' | 'DANGER' | 'INFO'>('ALL');
+  const [activeTab, setActiveTab] = useState<'ALL' | 'UNREAD' | 'MEETING' | 'DANGER' | 'INFO'>('ALL');
   const [errorMessage, setErrorMessage] = useState<string | null>(initialError || null);
   const [isRetrying, setIsRetrying] = useState(false);
   const [isMarkingAll, setIsMarkingAll] = useState(false);
@@ -255,6 +256,7 @@ export function NotifikasiClient({
 
   const filtered = notifications.filter((item) => {
     if (activeTab === 'UNREAD') return !item.isRead;
+    if (activeTab === 'MEETING') return item.type === 'meeting';
     if (activeTab === 'DANGER') return item.type === 'danger' || item.type === 'warning';
     if (activeTab === 'INFO') return item.type === 'info' || item.type === 'success';
     return true;
@@ -399,6 +401,19 @@ export function NotifikasiClient({
 
         <button
           type="button"
+          onClick={() => setActiveTab('MEETING')}
+          className={`px-3.5 py-1.5 rounded-lg text-[13px] font-semibold transition-colors whitespace-nowrap cursor-pointer flex items-center gap-1.5 ${
+            activeTab === 'MEETING'
+              ? 'bg-emerald-600 text-white shadow-xs'
+              : 'text-slate-600 hover:bg-slate-100'
+          }`}
+        >
+          <Calendar className="w-3.5 h-3.5" />
+          <span>Undangan Rapat ({notifications.filter((n) => n.type === 'meeting').length})</span>
+        </button>
+
+        <button
+          type="button"
           onClick={() => setActiveTab('DANGER')}
           className={`px-3.5 py-1.5 rounded-lg text-[13px] font-semibold transition-colors whitespace-nowrap cursor-pointer ${
             activeTab === 'DANGER'
@@ -481,6 +496,7 @@ export function NotifikasiClient({
           </div>
         ) : (
           filtered.map((item) => {
+            const isMeeting = item.type === 'meeting';
             const isDanger = item.type === 'danger';
             const isWarning = item.type === 'warning';
             const isSuccess = item.type === 'success';
@@ -493,13 +509,17 @@ export function NotifikasiClient({
                 className={`p-4 rounded-xl border transition-all flex items-start gap-4 cursor-pointer group relative ${
                   item.isRead
                     ? 'bg-white border-slate-200 hover:border-slate-300'
+                    : isMeeting
+                    ? 'bg-emerald-50/40 border-emerald-200 shadow-xs'
                     : 'bg-[#F8FDFF] border-[#BCE3EB] shadow-xs'
                 }`}
               >
                 {/* Icon */}
                 <div
                   className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 border ${
-                    isDanger
+                    isMeeting
+                      ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                      : isDanger
                       ? 'bg-red-50 text-red-600 border-red-200'
                       : isWarning
                       ? 'bg-amber-50 text-amber-600 border-amber-200'
@@ -508,7 +528,9 @@ export function NotifikasiClient({
                       : 'bg-[#E8F5F7] text-[#31889C] border-[#BCE3EB]'
                   }`}
                 >
-                  {isDanger ? (
+                  {isMeeting ? (
+                    <Calendar className="w-5 h-5 text-emerald-600" />
+                  ) : isDanger ? (
                     <AlertTriangle className="w-5 h-5" />
                   ) : isWarning ? (
                     <Clock className="w-5 h-5" />
@@ -543,10 +565,12 @@ export function NotifikasiClient({
                   <div className="flex items-center justify-between gap-4 mt-3 pt-2 border-t border-slate-100">
                     <div className="flex items-center gap-2">
                       {!item.isRead && (
-                        <span className="inline-block w-2 h-2 rounded-full bg-[#31889C]" />
+                        <span className={`inline-block w-2 h-2 rounded-full ${isMeeting ? 'bg-emerald-600' : 'bg-[#31889C]'}`} />
                       )}
-                      <span className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">
-                        {isDanger
+                      <span className={`text-[11px] font-semibold uppercase tracking-wider ${isMeeting ? 'text-emerald-700' : 'text-slate-400'}`}>
+                        {isMeeting
+                          ? 'Undangan Rapat Resmi'
+                          : isDanger
                           ? 'Eskalasi Mendesak'
                           : isWarning
                           ? 'Perhatian Batas Waktu'
@@ -560,10 +584,14 @@ export function NotifikasiClient({
                       {item.link && (
                         <Link
                           href={item.link}
-                          className="inline-flex items-center gap-1 text-[12px] font-bold text-[#31889C] hover:text-[#215865] hover:underline"
+                          className={`inline-flex items-center gap-1 text-[12px] font-bold ${
+                            isMeeting
+                              ? 'text-emerald-700 hover:text-emerald-900 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 px-2.5 py-1 rounded-lg transition-colors'
+                              : 'text-[#31889C] hover:text-[#215865] hover:underline'
+                          }`}
                           onClick={(e) => e.stopPropagation()}
                         >
-                          <span>Buka Rincian</span>
+                          <span>{isMeeting ? 'Buka Agenda Rapat' : 'Buka Rincian'}</span>
                           <ExternalLink className="w-3 h-3" />
                         </Link>
                       )}

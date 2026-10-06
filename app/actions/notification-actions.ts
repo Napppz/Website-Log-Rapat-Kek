@@ -98,50 +98,61 @@ async function syncSystemAlertsSilently() {
       console.warn('[syncSystemAlertsSilently] Upcoming sync error:', e);
     }
 
-    // 3. Latest recent meetings
+    // 3. Clean up any obsolete global broadcast meeting notifications so uninvited users never see them
+    try {
+      await prisma.notification.deleteMany({
+        where: {
+          userId: null,
+          OR: [
+            { type: 'meeting' },
+            { title: { startsWith: 'Agenda Rapat Baru Terjadwal:' } },
+          ],
+        },
+      });
+    } catch {}
+
+    // 4. Ensure invited participants of recent meetings have received their personal notification
     try {
       const recentMeetings = await prisma.meeting.findMany({
         orderBy: { createdAt: 'desc' },
-        take: 5,
-        select: {
-          id: true,
-          meetingNumber: true,
-          title: true,
-          createdAt: true,
-          status: true,
+        take: 10,
+        include: {
+          participants: {
+            select: { userId: true },
+          },
         },
       });
 
       for (const m of recentMeetings) {
-        try {
-          const link = `/semua-rapat/${m.id}`;
+        const link = `/semua-rapat/${m.id}`;
+        for (const p of m.participants) {
+          if (!p.userId) continue;
           const existing = await prisma.notification.findFirst({
-            where: { link },
+            where: {
+              userId: p.userId,
+              link,
+            },
           });
 
           if (!existing) {
-            const isApproved = m.status === 'APPROVED' || m.status === 'FINAL';
             const nextNotifId = await getNextNotificationId();
             await prisma.notification.create({
               data: {
                 id: nextNotifId,
-                title: isApproved
-                  ? `Risalah Rapat ${m.meetingNumber} Telah Disahkan`
-                  : `Agenda Rapat Baru Terjadwal: ${m.meetingNumber}`,
-                message: `Dokumen log rapat "${m.title}" telah tersedia dalam sistem dewan.`,
-                type: isApproved ? 'success' : 'info',
+                userId: p.userId,
+                title: `Undangan Rapat: [${m.meetingNumber}] ${m.title}`,
+                message: `Anda diundang untuk menghadiri rapat "${m.title}" (${m.startTime} - ${m.endTime} WIB) di ${m.location}.`,
+                type: 'meeting',
                 link,
                 isRead: false,
                 createdAt: m.createdAt,
               },
             });
           }
-        } catch {
-          // Ignore individual record sync errors
         }
       }
     } catch (e) {
-      console.warn('[syncSystemAlertsSilently] Recent meetings sync error:', e);
+      console.warn('[syncSystemAlertsSilently] Participant sync error:', e);
     }
   } catch (globalErr) {
     console.warn('[syncSystemAlertsSilently] Background sync skipped:', globalErr);
@@ -149,7 +160,8 @@ async function syncSystemAlertsSilently() {
 }
 
 /**
- * Fetch notifications from database with automatic resilient background sync
+ * Fetch notifications from database with automatic resilient background sync.
+ * Meeting invitations are strictly scoped to only the invited user.
  */
 export async function getNotificationsAction() {
   try {
@@ -161,16 +173,29 @@ export async function getNotificationsAction() {
     try {
       currentUser = await getCurrentUser();
     } catch {
-      // Unauthenticated or session expired, continue with global notifications
+      // Unauthenticated or session expired
     }
 
     // 3. Query user & system-wide notifications
+    // Only fetch personal notifications (userId == currentUser.id)
+    // or system-wide alerts that are NOT meeting invitations
     const notifications = await prisma.notification.findMany({
       where: currentUser?.id
         ? {
-            OR: [{ userId: currentUser.id }, { userId: null }],
+            OR: [
+              { userId: currentUser.id },
+              {
+                userId: null,
+                type: { notIn: ['meeting', 'meeting_invite'] },
+                title: { not: { startsWith: 'Agenda Rapat Baru Terjadwal:' } },
+              },
+            ],
           }
-        : {},
+        : {
+            userId: null,
+            type: { notIn: ['meeting', 'meeting_invite'] },
+            title: { not: { startsWith: 'Agenda Rapat Baru Terjadwal:' } },
+          },
       orderBy: { createdAt: 'desc' },
       take: 50,
     });
@@ -236,9 +261,16 @@ export async function markAllNotificationsAsReadAction() {
         isRead: false,
         ...(currentUser?.id
           ? {
-              OR: [{ userId: currentUser.id }, { userId: null }],
+              OR: [
+                { userId: currentUser.id },
+                {
+                  userId: null,
+                  type: { notIn: ['meeting', 'meeting_invite'] },
+                  title: { not: { startsWith: 'Agenda Rapat Baru Terjadwal:' } },
+                },
+              ],
             }
-          : {}),
+          : { userId: null }),
       },
       data: { isRead: true },
     });
@@ -299,9 +331,16 @@ export async function clearAllReadNotificationsAction() {
         isRead: true,
         ...(currentUser?.id
           ? {
-              OR: [{ userId: currentUser.id }, { userId: null }],
+              OR: [
+                { userId: currentUser.id },
+                {
+                  userId: null,
+                  type: { notIn: ['meeting', 'meeting_invite'] },
+                  title: { not: { startsWith: 'Agenda Rapat Baru Terjadwal:' } },
+                },
+              ],
             }
-          : {}),
+          : { userId: null }),
       },
     });
 
@@ -334,9 +373,20 @@ export async function getUnreadNotificationCountAction() {
         isRead: false,
         ...(currentUser?.id
           ? {
-              OR: [{ userId: currentUser.id }, { userId: null }],
+              OR: [
+                { userId: currentUser.id },
+                {
+                  userId: null,
+                  type: { notIn: ['meeting', 'meeting_invite'] },
+                  title: { not: { startsWith: 'Agenda Rapat Baru Terjadwal:' } },
+                },
+              ],
             }
-          : {}),
+          : {
+              userId: null,
+              type: { notIn: ['meeting', 'meeting_invite'] },
+              title: { not: { startsWith: 'Agenda Rapat Baru Terjadwal:' } },
+            }),
       },
     });
 

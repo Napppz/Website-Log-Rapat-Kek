@@ -7,7 +7,7 @@ import { MeetingStatus, AttendanceStatus, UserRole } from '@prisma/client';
 import { revalidatePath } from 'next/cache';
 import { requirePermission, requireAuth, getCurrentUser } from '@/lib/auth/authorization';
 import { extractPlainText } from '@/lib/pdf/pdf-utils';
-import { getNextMeetingId, getNextUserId, getNextParticipantId } from '@/lib/id-generator';
+import { getNextMeetingId, getNextUserId, getNextParticipantId, getNextNotificationId } from '@/lib/id-generator';
 
 export interface CreateMeetingInput {
   title: string;
@@ -243,7 +243,18 @@ export async function createMeetingAction(input: CreateMeetingInput) {
         }
       }
 
-      // Create MeetingParticipant records with clean sequential IDs
+      // Format meeting date nicely for invitation notifications
+      const rawDateObj = new Date(input.date);
+      const meetingDateFormatted = !isNaN(rawDateObj.getTime())
+        ? rawDateObj.toLocaleDateString('id-ID', {
+            weekday: 'long',
+            day: 'numeric',
+            month: 'long',
+            year: 'numeric',
+          })
+        : input.date;
+
+      // Create MeetingParticipant records and send targeted per-user notifications
       for (const uid of targetUserIds) {
         const nextPartId = await getNextParticipantId(tx);
         await tx.meetingParticipant.create({
@@ -252,6 +263,36 @@ export async function createMeetingAction(input: CreateMeetingInput) {
             meetingId: meeting.id,
             userId: uid,
             attendanceStatus: 'INVITED',
+          },
+        });
+
+        // PER-USER NOTIFICATION: Only delivered to this specific invited participant
+        const nextNotifId = await getNextNotificationId(tx);
+        await tx.notification.create({
+          data: {
+            id: nextNotifId,
+            userId: uid,
+            title: `Undangan Rapat: [${finalMeetingNumber}] ${meeting.title}`,
+            message: `Anda diundang untuk menghadiri rapat "${meeting.title}" pada ${meetingDateFormatted} (${input.startTime} - ${input.endTime} WIB) bertempat di ${input.location}.`,
+            type: 'meeting',
+            link: `/semua-rapat/${meeting.id}`,
+            isRead: false,
+          },
+        });
+      }
+
+      // If chairperson was designated and not in targetUserIds, send chairperson notification
+      if (input.chairpersonId && !targetUserIds.has(input.chairpersonId)) {
+        const nextNotifId = await getNextNotificationId(tx);
+        await tx.notification.create({
+          data: {
+            id: nextNotifId,
+            userId: input.chairpersonId,
+            title: `Undangan Pimpinan Sidang: [${finalMeetingNumber}] ${meeting.title}`,
+            message: `Anda ditugaskan sebagai Pimpinan Sidang untuk rapat "${meeting.title}" pada ${meetingDateFormatted} (${input.startTime} - ${input.endTime} WIB) bertempat di ${input.location}.`,
+            type: 'meeting',
+            link: `/semua-rapat/${meeting.id}`,
+            isRead: false,
           },
         });
       }
@@ -267,6 +308,7 @@ export async function createMeetingAction(input: CreateMeetingInput) {
     safeRevalidate([
       '/',
       '/semua-rapat',
+      '/notifikasi',
       `/biro/${input.biroCode.toLowerCase()}`,
     ]);
 
@@ -543,10 +585,66 @@ export async function addParticipantToMeetingAction(
       },
     });
 
+    // Send targeted per-user invitation notification to the newly added participant
+    if (targetUserId) {
+      try {
+        const meetingInfo = await prisma.meeting.findUnique({
+          where: { id: meetingId },
+          select: {
+            id: true,
+            meetingNumber: true,
+            title: true,
+            date: true,
+            startTime: true,
+            endTime: true,
+            location: true,
+          },
+        });
+
+        if (meetingInfo) {
+          const rawDateObj = new Date(meetingInfo.date);
+          const meetingDateFormatted = !isNaN(rawDateObj.getTime())
+            ? rawDateObj.toLocaleDateString('id-ID', {
+                weekday: 'long',
+                day: 'numeric',
+                month: 'long',
+                year: 'numeric',
+              })
+            : String(meetingInfo.date);
+
+          const existingNotif = await prisma.notification.findFirst({
+            where: {
+              userId: targetUserId,
+              link: `/semua-rapat/${meetingInfo.id}`,
+              type: 'meeting',
+            },
+          });
+
+          if (!existingNotif) {
+            const nextNotifId = await getNextNotificationId();
+            await prisma.notification.create({
+              data: {
+                id: nextNotifId,
+                userId: targetUserId,
+                title: `Undangan Rapat: [${meetingInfo.meetingNumber}] ${meetingInfo.title}`,
+                message: `Anda telah ditambahkan sebagai peserta rapat "${meetingInfo.title}" pada ${meetingDateFormatted} (${meetingInfo.startTime} - ${meetingInfo.endTime} WIB) bertempat di ${meetingInfo.location}.`,
+                type: 'meeting',
+                link: `/semua-rapat/${meetingInfo.id}`,
+                isRead: false,
+              },
+            });
+          }
+        }
+      } catch (notifErr) {
+        console.warn('Could not create notification for added participant:', notifErr);
+      }
+    }
+
     safeRevalidate([
       `/semua-rapat/${meetingId}`,
       `/rapat/${meetingId}`,
       '/semua-rapat',
+      '/notifikasi',
       '/',
     ]);
 
