@@ -72,22 +72,19 @@ export function ActionItemFormDialog({
     if (availableBiros.length > 0) {
       setBirosList(availableBiros);
     }
-  }, [availableBiros]);
+  }, [availableBiros.length]);
 
   useEffect(() => {
     if (availableUsers.length > 0) {
       setUsersList(availableUsers);
     }
-  }, [availableUsers]);
+  }, [availableUsers.length]);
 
   useEffect(() => {
     if (availableMeetings.length > 0) {
       setMeetingsList(availableMeetings);
-      if (!selectedMeetingId && !actionItem?.meetingId && !meetingId) {
-        setSelectedMeetingId(availableMeetings[0].id);
-      }
     }
-  }, [availableMeetings, selectedMeetingId, actionItem?.meetingId, meetingId]);
+  }, [availableMeetings.length]);
 
   // Form State
   const [title, setTitle] = useState('');
@@ -100,87 +97,84 @@ export function ActionItemFormDialog({
   const [priority, setPriority] = useState<ActionItemPriority>('MEDIUM');
   const [status, setStatus] = useState<ActionItemStatus>('PENDING');
 
-  // Auto-fetch biros, users, teams & meetings if not passed via props or currently empty
+  // Auto-fetch biros, users, teams & meetings when dialog opens if lists are empty
   useEffect(() => {
-    if (isOpen && (birosList.length === 0 || teamsList.length === 0 || meetingsList.length === 0)) {
-      setIsLoadingOptions(true);
-      getActionItemFormOptionsAction()
-        .then((res: any) => {
-          if (res.success) {
-            if (res.biros && res.biros.length > 0) {
-              setBirosList(res.biros);
-              const matched = effectiveLockedBiroCode
-                ? res.biros.find((b: any) => b.code.toUpperCase() === effectiveLockedBiroCode.toUpperCase())
-                : null;
-              setPicBiroId((prev) => (matched ? matched.id : prev ? prev : res.biros[0]?.id || ''));
-            }
-            if (res.users && res.users.length > 0) {
-              setUsersList(res.users);
-            }
-            if (res.teams && res.teams.length > 0) {
-              setTeamsList(res.teams);
-            }
-            if (res.meetings && res.meetings.length > 0) {
-              setMeetingsList((prev) => (prev.length > 0 ? prev : res.meetings));
-              setSelectedMeetingId((prev) => (prev ? prev : res.meetings[0]?.id || ''));
-            }
-          }
-        })
-        .finally(() => {
-          setIsLoadingOptions(false);
-        });
-    }
-  }, [isOpen, birosList.length, teamsList.length, meetingsList.length, effectiveLockedBiroCode]);
+    if (!isOpen) return;
 
-  useEffect(() => {
-    if (isOpen) {
-      setErrorMessage(null);
-      setFieldErrors({});
-
-      if (actionItem) {
-        const due = new Date(actionItem.dueDate);
-        const yyyy = due.getFullYear();
-        const mm = String(due.getMonth() + 1).padStart(2, '0');
-        const dd = String(due.getDate()).padStart(2, '0');
-
-        setSelectedMeetingId(actionItem.meetingId || meetingId || '');
-        setTitle(actionItem.title || '');
-        const foundDrive = extractDriveLink(actionItem.description);
-        if (foundDrive) {
-          setDriveLink(foundDrive);
-          setDescription(cleanTextWithoutLink(actionItem.description));
-        } else {
-          setDriveLink('');
-          setDescription(actionItem.description || '');
+    let isMounted = true;
+    setIsLoadingOptions(true);
+    getActionItemFormOptionsAction()
+      .then((res: any) => {
+        if (!isMounted || !res?.success) return;
+        if (res.biros && res.biros.length > 0) {
+          setBirosList(res.biros);
         }
-        setPicBiroId(actionItem.picBiroId || (birosList[0]?.id ?? ''));
-        setPicTeamId(actionItem.picTeamId || '');
-        setPicUserId(actionItem.picUserId || '');
-        setDueDate(`${yyyy}-${mm}-${dd}`);
-        setPriority(actionItem.priority || 'MEDIUM');
-        setStatus(actionItem.status || 'PENDING');
-      } else {
-        const nextWeek = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
-        const yyyy = nextWeek.getFullYear();
-        const mm = String(nextWeek.getMonth() + 1).padStart(2, '0');
-        const dd = String(nextWeek.getDate()).padStart(2, '0');
+        if (res.users && res.users.length > 0) {
+          setUsersList(res.users);
+        }
+        if (res.teams && res.teams.length > 0) {
+          setTeamsList(res.teams);
+        }
+        if (res.meetings && res.meetings.length > 0) {
+          setMeetingsList(res.meetings);
+        }
+      })
+      .finally(() => {
+        if (isMounted) setIsLoadingOptions(false);
+      });
 
-        setSelectedMeetingId(meetingId || availableMeetings[0]?.id || meetingsList[0]?.id || '');
-        setTitle('');
-        setDescription('');
+    return () => {
+      isMounted = false;
+    };
+  }, [isOpen]);
+
+  // Form fields reset & initialization (only runs when dialog opens or editing item changes)
+  useEffect(() => {
+    if (!isOpen) return;
+
+    setErrorMessage(null);
+    setFieldErrors({});
+
+    if (actionItem) {
+      const due = new Date(actionItem.dueDate);
+      const yyyy = due.getFullYear();
+      const mm = String(due.getMonth() + 1).padStart(2, '0');
+      const dd = String(due.getDate()).padStart(2, '0');
+
+      setSelectedMeetingId(actionItem.meetingId || meetingId || '');
+      setTitle(actionItem.title || '');
+      const foundDrive = extractDriveLink(actionItem.description);
+      if (foundDrive) {
+        setDriveLink(foundDrive);
+        setDescription(cleanTextWithoutLink(actionItem.description));
+      } else {
         setDriveLink('');
-        const matchingBiro = effectiveLockedBiroCode
-          ? birosList.find((b) => b.code.toUpperCase() === effectiveLockedBiroCode.toUpperCase())
-          : null;
-        setPicBiroId(matchingBiro?.id || birosList[0]?.id || '');
-        setPicTeamId('');
-        setPicUserId(session?.user?.role === 'STAFF' ? (session.user.id || '') : '');
-        setDueDate(`${yyyy}-${mm}-${dd}`);
-        setPriority('MEDIUM');
-        setStatus('PENDING');
+        setDescription(actionItem.description || '');
       }
+      setPicBiroId(actionItem.picBiroId || '');
+      setPicTeamId(actionItem.picTeamId || '');
+      setPicUserId(actionItem.picUserId || '');
+      setDueDate(`${yyyy}-${mm}-${dd}`);
+      setPriority(actionItem.priority || 'MEDIUM');
+      setStatus(actionItem.status || 'PENDING');
+    } else {
+      const nextWeek = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
+      const yyyy = nextWeek.getFullYear();
+      const mm = String(nextWeek.getMonth() + 1).padStart(2, '0');
+      const dd = String(nextWeek.getDate()).padStart(2, '0');
+
+      setSelectedMeetingId(meetingId || availableMeetings[0]?.id || '');
+      setTitle('');
+      setDescription('');
+      setDriveLink('');
+      setPicBiroId('');
+      setPicTeamId('');
+      setPicUserId(session?.user?.role === 'STAFF' ? (session?.user?.id || '') : '');
+      setDueDate(`${yyyy}-${mm}-${dd}`);
+      setPriority('MEDIUM');
+      setStatus('PENDING');
     }
-  }, [isOpen, actionItem, meetingId, availableMeetings, meetingsList, birosList, effectiveLockedBiroCode, session?.user?.role, session?.user?.id]);
+  }, [isOpen, actionItem?.id, meetingId]);
 
   if (!isOpen) return null;
 
@@ -207,12 +201,19 @@ export function ActionItemFormDialog({
       return;
     }
 
+    const finalPicBiroId =
+      picBiroId ||
+      (effectiveLockedBiroCode
+        ? birosList.find((b) => b.code.toUpperCase() === effectiveLockedBiroCode.toUpperCase())?.id
+        : '') ||
+      '';
+
     // Zod client validation
     const rawData = {
       meetingId: finalMeetingId,
       title,
       description: finalDescription || null,
-      picBiroId,
+      picBiroId: finalPicBiroId,
       picTeamId: picTeamId && picTeamId.trim() !== '' ? picTeamId : null,
       picUserId: picUserId && picUserId.trim() !== '' ? picUserId : null,
       dueDate,

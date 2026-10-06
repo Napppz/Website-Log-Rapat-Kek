@@ -830,6 +830,7 @@ export function ActionItemMatrixView({
         initialTab={dialogInitialTab}
         defaultStatus={dialogDefaultStatus}
         defaultProgress={dialogDefaultProgress}
+        canEdit={Boolean(loggingItem && canEditTask(loggingItem))}
         onClose={() => setLoggingItem(null)}
         onItemUpdated={(updated) => {
           setItems((prev) =>

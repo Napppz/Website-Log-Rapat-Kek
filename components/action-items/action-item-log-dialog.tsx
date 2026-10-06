@@ -47,6 +47,7 @@ interface ActionItemLogDialogProps {
   initialTab?: 'trail' | 'update';
   defaultStatus?: ActionItemStatus;
   defaultProgress?: number;
+  canEdit?: boolean;
 }
 
 // ─── Status helpers ───────────────────────────────────────────────────────────
@@ -105,6 +106,7 @@ export function ActionItemLogDialog({
   initialTab = 'trail',
   defaultStatus,
   defaultProgress,
+  canEdit = true,
 }: ActionItemLogDialogProps) {
   const [logs, setLogs] = useState<any[]>([]);
   const [isLoadingLogs, setIsLoadingLogs] = useState(false);
@@ -144,10 +146,10 @@ export function ActionItemLogDialog({
       setNotes('');
       setDriveLink('');
       setExpandedLogs(new Set());
-      setActiveTab(initialTab || 'trail');
+      setActiveTab(canEdit ? (initialTab || 'trail') : 'trail');
       fetchLogs(item.id);
     }
-  }, [isOpen, item, initialTab, defaultStatus, defaultProgress]);
+  }, [isOpen, item, initialTab, defaultStatus, defaultProgress, canEdit]);
 
   const fetchLogs = async (itemId: string) => {
     try {
@@ -339,18 +341,20 @@ export function ActionItemLogDialog({
               </span>
             )}
           </button>
-          <button
-            type="button"
-            onClick={() => setActiveTab('update')}
-            className={`flex items-center gap-1.5 px-4 py-2.5 text-[12px] font-bold border-b-2 transition-all cursor-pointer ${
-              activeTab === 'update'
-                ? 'border-[#31889C] text-[#31889C]'
-                : 'border-transparent text-slate-500 hover:text-[#31889C]'
-            }`}
-          >
-            <TrendingUp className="w-3.5 h-3.5" />
-            Tambah Catatan
-          </button>
+          {canEdit && (
+            <button
+              type="button"
+              onClick={() => setActiveTab('update')}
+              className={`flex items-center gap-1.5 px-4 py-2.5 text-[12px] font-bold border-b-2 transition-all cursor-pointer ${
+                activeTab === 'update'
+                  ? 'border-[#31889C] text-[#31889C]'
+                  : 'border-transparent text-slate-500 hover:text-[#31889C]'
+              }`}
+            >
+              <TrendingUp className="w-3.5 h-3.5" />
+              Tambah Catatan
+            </button>
+          )}
         </div>
 
         {/* ── Content Body ─────────────────────────────────────────────────── */}

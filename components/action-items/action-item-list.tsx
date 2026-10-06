@@ -533,6 +533,7 @@ export function ActionItemList({
         initialTab={dialogInitialTab}
         defaultStatus={dialogDefaultStatus}
         defaultProgress={dialogDefaultProgress}
+        canEdit={Boolean(loggingItem && canEditThisItem(loggingItem))}
         onClose={() => setLoggingItem(null)}
         onItemUpdated={(updated) => {
           setItems((prev) =>
