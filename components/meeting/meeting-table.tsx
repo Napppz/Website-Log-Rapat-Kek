@@ -29,17 +29,21 @@ import { AgendaSeriesModal } from './agenda-series-modal';
 import { useSession } from 'next-auth/react';
 import { deleteMeetingAction } from '@/app/actions/meeting-actions';
 import { toast, confirmModal } from '@/components/providers/toast-provider';
-import { parseMonthFilterIndex } from '@/lib/utils';
+import { parseMonthFilterIndex, parseDayFilterIndex, parseMeetingDate } from '@/lib/utils';
 
 interface MeetingTableProps {
   onViewAllMeetings?: () => void;
   filterBiro?: BiroCode | string | null;
   filterStatus?: MeetingStatus | null;
   filterMonth?: string | null;
+  filterYear?: string | number | null;
+  filterDayOfWeek?: string | number | null;
+  filterDate?: string | null;
   isLoading?: boolean;
   initialMeetings?: Meeting[];
   pageSize?: number;
   onMeetingDeleted?: (meetingId: string) => void;
+  onClearFilters?: () => void;
 }
 
 export function MeetingTable({
@@ -47,10 +51,14 @@ export function MeetingTable({
   filterBiro,
   filterStatus,
   filterMonth,
+  filterYear,
+  filterDayOfWeek,
+  filterDate,
   isLoading = false,
   initialMeetings,
   pageSize = 8,
   onMeetingDeleted,
+  onClearFilters,
 }: MeetingTableProps) {
   const router = useRouter();
   const [deletedMeetingIds, setDeletedMeetingIds] = useState<Set<string>>(new Set());
@@ -276,6 +284,9 @@ export function MeetingTable({
     // Clone and ensure newest date order, excluding any deleted meetings
     const list = meetings.filter((m) => !deletedMeetingIds.has(m.id));
     const monthIdx = parseMonthFilterIndex(filterMonth);
+    const dayOfWeekIdx = parseDayFilterIndex(filterDayOfWeek != null ? String(filterDayOfWeek) : null);
+    const targetYear = filterYear != null && String(filterYear).trim() !== '' ? parseInt(String(filterYear), 10) : null;
+    const targetDate = filterDate ? filterDate.trim() : null;
 
     return list.filter((m) => {
       if (filterBiro) {
@@ -300,12 +311,26 @@ export function MeetingTable({
       if (filterStatus && m.status !== filterStatus) {
         return false;
       }
-      if (monthIdx !== null) {
-        const mDate = new Date(m.date);
-        if (mDate.getMonth() !== monthIdx) {
-          return false;
+
+      // Check date/month/day/year filters
+      if (monthIdx !== null || dayOfWeekIdx !== null || targetYear !== null || targetDate !== null) {
+        const parsed = parseMeetingDate(m.date);
+        if (parsed) {
+          if (targetDate && parsed.isoDate !== targetDate) {
+            return false;
+          }
+          if (targetYear !== null && !isNaN(targetYear) && parsed.year !== targetYear) {
+            return false;
+          }
+          if (monthIdx !== null && parsed.month !== monthIdx) {
+            return false;
+          }
+          if (dayOfWeekIdx !== null && parsed.dayOfWeek !== dayOfWeekIdx) {
+            return false;
+          }
         }
       }
+
       if (!searchFilter.trim()) return true;
       const q = searchFilter.toLowerCase();
       return (
@@ -315,7 +340,7 @@ export function MeetingTable({
         m.location.toLowerCase().includes(q)
       );
     });
-  }, [meetings, deletedMeetingIds, searchFilter, filterBiro, filterStatus, filterMonth]);
+  }, [meetings, deletedMeetingIds, searchFilter, filterBiro, filterStatus, filterMonth, filterYear, filterDayOfWeek, filterDate]);
 
   const handleResetFilter = () => {
     setSearchFilter('');
@@ -324,7 +349,7 @@ export function MeetingTable({
   // Reset page when filters change
   React.useEffect(() => {
     setCurrentPage(1);
-  }, [searchFilter, filterBiro, filterStatus, filterMonth]);
+  }, [searchFilter, filterBiro, filterStatus, filterMonth, filterYear, filterDayOfWeek, filterDate]);
 
   const itemsPerPage = pageSize;
   const totalPages = Math.max(1, Math.ceil(filteredMeetings.length / itemsPerPage));
@@ -450,16 +475,28 @@ export function MeetingTable({
                         Tidak ada agenda rapat yang cocok dengan kata kunci atau filter yang Anda terapkan.
                       </p>
                     </div>
-                    {searchFilter && (
-                      <button
-                        type="button"
-                        onClick={handleResetFilter}
-                        className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg bg-[#F0F9FA] text-[#215865] hover:bg-[#E8F5F7] border border-[#BCE3EB] font-semibold text-[12px] transition-colors cursor-pointer"
-                      >
-                        <RotateCcw className="w-3.5 h-3.5" />
-                        <span>Bersihkan Filter Pencarian</span>
-                      </button>
-                    )}
+                    <div className="flex items-center gap-2 flex-wrap justify-center">
+                      {searchFilter && (
+                        <button
+                          type="button"
+                          onClick={handleResetFilter}
+                          className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg bg-[#F0F9FA] text-[#215865] hover:bg-[#E8F5F7] border border-[#BCE3EB] font-semibold text-[12px] transition-colors cursor-pointer"
+                        >
+                          <RotateCcw className="w-3.5 h-3.5" />
+                          <span>Bersihkan Filter Pencarian</span>
+                        </button>
+                      )}
+                      {onClearFilters && (filterMonth || filterYear || filterDayOfWeek || filterDate || filterStatus || filterBiro) && (
+                        <button
+                          type="button"
+                          onClick={onClearFilters}
+                          className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg bg-white text-slate-700 hover:bg-slate-50 border border-slate-200 font-semibold text-[12px] transition-colors cursor-pointer shadow-xs"
+                        >
+                          <RotateCcw className="w-3.5 h-3.5 text-slate-500" />
+                          <span>Reset Semua Filter</span>
+                        </button>
+                      )}
+                    </div>
                   </div>
                 </td>
               </tr>
