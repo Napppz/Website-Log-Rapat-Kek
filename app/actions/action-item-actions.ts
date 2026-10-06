@@ -14,6 +14,11 @@ import {
 } from '@/lib/validations/action-item';
 import { revalidatePath } from 'next/cache';
 import { requirePermission, getCurrentUser } from '@/lib/auth/authorization';
+import {
+  getNextActionItemId,
+  getNextActionItemLogId,
+  getNextNotificationId,
+} from '@/lib/id-generator';
 
 /**
  * Helper to safely revalidate paths without crashing in standalone tests
@@ -240,9 +245,11 @@ export async function createActionItemAction(input: ActionItemInput) {
     const isCompleted = status === 'COMPLETED';
     const completedAt = isCompleted ? new Date() : null;
 
-    // 6. Create Action Item
+    // 6. Create Action Item with clean sequential ID
+    const nextActionId = await getNextActionItemId();
     const actionItem = await prisma.actionItem.create({
       data: {
+        id: nextActionId,
         meetingId,
         title,
         description: description || null,
@@ -670,9 +677,11 @@ export async function addActionItemLogAction(input: AddActionItemLogInput) {
       },
     });
 
-    // Create the audit log record
+    // Create the audit log record with clean sequential ID
+    const nextLogId = await getNextActionItemLogId();
     const log = await prisma.actionItemLog.create({
       data: {
+        id: nextLogId,
         actionItemId,
         userId: currentUser?.id || null,
         previousStatus: existing.status,
@@ -702,8 +711,10 @@ export async function addActionItemLogAction(input: AddActionItemLogInput) {
 
     // Optionally create a system notification for the organization
     try {
+      const nextNotifId = await getNextNotificationId();
       await prisma.notification.create({
         data: {
+          id: nextNotifId,
           title: `Pembaruan Tindak Lanjut: ${existing.title.slice(0, 40)}`,
           message: `${currentUser?.name || 'Staf'} mencatat progres (${progress ?? 0}%): "${notes.slice(0, 80)}"`,
           type: targetStatus === 'COMPLETED' ? 'success' : 'info',

@@ -4,6 +4,7 @@ import { prisma } from '@/lib/prisma';
 import bcrypt from 'bcryptjs';
 import { revalidatePath } from 'next/cache';
 import { requireRole, getCurrentUser } from '@/lib/auth/authorization';
+import { getNextUserId } from '@/lib/id-generator';
 import {
   createUserSchema,
   updateUserSchema,
@@ -91,8 +92,10 @@ export async function createUserAction(input: CreateUserInput) {
     // Hash password with bcrypt
     const hashedPassword = await bcrypt.hash(password, 10);
 
+    const nextUserId = await getNextUserId();
     const newUser = await prisma.user.create({
       data: {
+        id: nextUserId,
         name,
         email,
         password: hashedPassword,

@@ -3,6 +3,7 @@
 import { prisma } from '@/lib/prisma';
 import { getCurrentUser } from '@/lib/auth/authorization';
 import { revalidatePath } from 'next/cache';
+import { getNextNotificationId } from '@/lib/id-generator';
 
 /**
  * Background helper to safely sync automated system notifications.
@@ -34,8 +35,10 @@ async function syncSystemAlertsSilently() {
 
           if (!existing) {
             const biroCode = item.picBiro?.code || 'Biro';
+            const nextNotifId = await getNextNotificationId();
             await prisma.notification.create({
               data: {
+                id: nextNotifId,
                 title: `Peringatan: Tindak Lanjut ${biroCode} Terlambat`,
                 message: `Komitmen "${item.title}" telah melewati tenggat waktu. Diperlukan percepatan atau eskalasi ke Dewan KEK.`,
                 type: 'danger',
@@ -75,8 +78,10 @@ async function syncSystemAlertsSilently() {
 
           if (!existing) {
             const biroCode = item.picBiro?.code || 'Biro';
+            const nextNotifId = await getNextNotificationId();
             await prisma.notification.create({
               data: {
+                id: nextNotifId,
                 title: `Tindak Lanjut Mendekati Batas Waktu (${biroCode})`,
                 message: `Komitmen "${item.title}" akan jatuh tempo dalam kurang dari 3 hari.`,
                 type: 'warning',
@@ -116,8 +121,10 @@ async function syncSystemAlertsSilently() {
 
           if (!existing) {
             const isApproved = m.status === 'APPROVED' || m.status === 'FINAL';
+            const nextNotifId = await getNextNotificationId();
             await prisma.notification.create({
               data: {
+                id: nextNotifId,
                 title: isApproved
                   ? `Risalah Rapat ${m.meetingNumber} Telah Disahkan`
                   : `Agenda Rapat Baru Terjadwal: ${m.meetingNumber}`,

@@ -2,6 +2,7 @@
 
 import { prisma } from '@/lib/prisma';
 import { requireAuth } from '@/lib/auth/authorization';
+import { getNextMinutesHistoryId } from '@/lib/id-generator';
 
 export async function getMinutesHistoryAction(meetingId: string) {
   try {
@@ -28,8 +29,10 @@ export async function recordMinutesHistoryAction(
 ) {
   try {
     const user = await requireAuth();
+    const nextHistId = await getNextMinutesHistoryId();
     const entry = await prisma.minutesHistory.create({
       data: {
+        id: nextHistId,
         meetingId,
         userId: user.id,
         changeType,

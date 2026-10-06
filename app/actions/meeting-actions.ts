@@ -7,6 +7,7 @@ import { MeetingStatus, AttendanceStatus } from '@prisma/client';
 import { revalidatePath } from 'next/cache';
 import { requirePermission, requireAuth, getCurrentUser } from '@/lib/auth/authorization';
 import { extractPlainText } from '@/lib/pdf/pdf-utils';
+import { getNextMeetingId, getNextUserId, getNextParticipantId } from '@/lib/id-generator';
 
 export interface CreateMeetingInput {
   title: string;
@@ -111,9 +112,11 @@ export async function createMeetingAction(input: CreateMeetingInput) {
         throw new Error(`Biro ${input.biroCode} tidak ditemukan.`);
       }
 
-      // 3. Create meeting record
+      // 3. Create meeting record with clean sequential ID
+      const nextMeetingId = await getNextMeetingId(tx);
       const meeting = await tx.meeting.create({
         data: {
+          id: nextMeetingId,
           meetingNumber: finalMeetingNumber,
           title: input.title,
           primaryBiroId: primaryBiro.id,
@@ -188,8 +191,10 @@ export async function createMeetingAction(input: CreateMeetingInput) {
                 .slice(0, 25);
               const uniqueEmail = `${slug || 'peserta'}.${Date.now().toString(36)}.${Math.random().toString(36).substring(2, 6)}@peserta.kek.go.id`;
 
+              const nextGuestId = await getNextUserId(tx);
               const guest = await tx.user.create({
                 data: {
+                  id: nextGuestId,
                   name: name,
                   email: uniqueEmail,
                   role: 'VIEWER',
@@ -215,10 +220,12 @@ export async function createMeetingAction(input: CreateMeetingInput) {
         }
       }
 
-      // Create MeetingParticipant records
+      // Create MeetingParticipant records with clean sequential IDs
       for (const uid of targetUserIds) {
+        const nextPartId = await getNextParticipantId(tx);
         await tx.meetingParticipant.create({
           data: {
+            id: nextPartId,
             meetingId: meeting.id,
             userId: uid,
             attendanceStatus: 'INVITED',
@@ -460,8 +467,10 @@ export async function addParticipantToMeetingAction(
             userIdOrInput.customEmail?.trim() ||
             `${slug || 'peserta'}.${Date.now().toString(36)}.${Math.random().toString(36).substring(2, 6)}@peserta.kek.go.id`;
 
+          const nextGuestUserId = await getNextUserId();
           const guestUser = await prisma.user.create({
             data: {
+              id: nextGuestUserId,
               name: trimmedName,
               email: uniqueEmail,
               role: 'VIEWER',
@@ -476,6 +485,7 @@ export async function addParticipantToMeetingAction(
       }
     }
 
+    const nextPartUpsertId = await getNextParticipantId();
     const participant = await prisma.meetingParticipant.upsert({
       where: {
         meetingId_userId: {
@@ -484,6 +494,7 @@ export async function addParticipantToMeetingAction(
         },
       },
       create: {
+        id: nextPartUpsertId,
         meetingId,
         userId: targetUserId,
         attendanceStatus: finalStatus,

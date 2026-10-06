@@ -4,6 +4,11 @@ import { prisma } from '@/lib/prisma';
 import { meetingMinutesSchema, MeetingMinutesInput } from '@/lib/validations/minutes';
 import { revalidatePath } from 'next/cache';
 import { requirePermission, requireAuth } from '@/lib/auth/authorization';
+import {
+  getNextMinutesId,
+  getNextMinutesHistoryId,
+  getNextNotificationId,
+} from '@/lib/id-generator';
 
 /**
  * Server Action: Get MeetingMinutes by meetingId
@@ -78,10 +83,12 @@ export async function upsertMeetingMinutesAction(input: MeetingMinutesInput) {
     const existing = await prisma.meetingMinutes.findUnique({ where: { meetingId } });
     const isNew = !existing;
 
-    // 4. Atomically upsert minutes
+    // 4. Atomically upsert minutes with clean sequential ID
+    const nextMinId = await getNextMinutesId();
     const minutes = await prisma.meetingMinutes.upsert({
       where: { meetingId },
       create: {
+        id: nextMinId,
         meetingId,
         agenda: agenda ?? undefined,
         discussion: discussion ?? undefined,
@@ -103,8 +110,10 @@ export async function upsertMeetingMinutesAction(input: MeetingMinutesInput) {
 
       // 5a. Audit trail
       try {
+        const nextHistId = await getNextMinutesHistoryId();
         await prisma.minutesHistory.create({
           data: {
+            id: nextHistId,
             meetingId,
             userId: currentUser.id,
             changeType: isNew ? 'CREATED' : 'UPDATED',
@@ -136,8 +145,10 @@ export async function upsertMeetingMinutesAction(input: MeetingMinutesInput) {
         const notifTitle = `${docLabel} ${actionText}: ${meeting.meetingNumber}`;
         const notifMessage = `${currentUser.name || 'Pengguna'} telah ${isNew ? 'membuat' : 'memperbarui'} ${docLabel.toLowerCase()} untuk "${meeting.title}".`;
 
+        const nextNotifId = await getNextNotificationId();
         await prisma.notification.create({
           data: {
+            id: nextNotifId,
             title: notifTitle,
             message: notifMessage,
             type: 'info',

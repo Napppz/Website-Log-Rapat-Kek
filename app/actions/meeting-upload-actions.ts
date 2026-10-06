@@ -11,6 +11,12 @@ import { requirePermission } from '@/lib/auth/authorization';
 import { getNextMeetingNumber } from '@/lib/sequence';
 import { MeetingStatus, ActionItemPriority, ActionItemStatus } from '@prisma/client';
 import { revalidatePath } from 'next/cache';
+import {
+  getNextMeetingId,
+  getNextParticipantId,
+  getNextMinutesId,
+  getNextActionItemId,
+} from '@/lib/id-generator';
 
 export interface ParseDocumentResponse {
   success: boolean;
@@ -159,9 +165,11 @@ export async function directSaveUploadedMeetingAction(
         finalMeetingNumber = seq.meetingNumber;
       }
 
-      // 3. Create Meeting
+      // 3. Create Meeting with clean sequential ID
+      const nextMeetingId = await getNextMeetingId(tx);
       const meeting = await tx.meeting.create({
         data: {
+          id: nextMeetingId,
           meetingNumber: finalMeetingNumber,
           title: extracted.title,
           primaryBiroId: primaryBiro.id,
@@ -178,8 +186,10 @@ export async function directSaveUploadedMeetingAction(
       if (participantUserIds && participantUserIds.length > 0) {
         for (const uid of participantUserIds) {
           try {
+            const nextPartId = await getNextParticipantId(tx);
             await tx.meetingParticipant.create({
               data: {
+                id: nextPartId,
                 meetingId: meeting.id,
                 userId: uid,
               },
@@ -217,8 +227,12 @@ export async function directSaveUploadedMeetingAction(
         },
       };
 
+      const nextMinutesId = await getNextMinutesId(tx);
       await tx.meetingMinutes.create({
-        data: minutesPayload,
+        data: {
+          id: nextMinutesId,
+          ...minutesPayload,
+        },
       });
 
       // 6. Create Action Items
@@ -235,8 +249,10 @@ export async function directSaveUploadedMeetingAction(
           else if (item.priority === 'HIGH') prio = ActionItemPriority.HIGH;
           else if (item.priority === 'LOW') prio = ActionItemPriority.LOW;
 
+          const nextActionId = await getNextActionItemId(tx);
           await tx.actionItem.create({
             data: {
+              id: nextActionId,
               meetingId: meeting.id,
               title: item.title,
               description: item.description || null,
@@ -330,9 +346,11 @@ export async function saveMinutesAndActionsToMeetingAction(
       },
     };
 
+    const nextUpsertMinId = await getNextMinutesId();
     await prisma.meetingMinutes.upsert({
       where: { meetingId },
       create: {
+        id: nextUpsertMinId,
         meetingId,
         ...minutesPayload,
       },
@@ -355,8 +373,10 @@ export async function saveMinutesAndActionsToMeetingAction(
         else if (item.priority === 'HIGH') prio = ActionItemPriority.HIGH;
         else if (item.priority === 'LOW') prio = ActionItemPriority.LOW;
 
+        const nextActId = await getNextActionItemId();
         await prisma.actionItem.create({
           data: {
+            id: nextActId,
             meetingId: meeting.id,
             title: item.title,
             description: item.description || null,

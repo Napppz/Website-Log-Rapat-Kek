@@ -3,6 +3,7 @@
 import { prisma } from '@/lib/prisma';
 import { revalidatePath } from 'next/cache';
 import { requireAuth } from '@/lib/auth/authorization';
+import { getNextCommentId, getNextNotificationId } from '@/lib/id-generator';
 
 function safeRevalidate(meetingId: string) {
   try {
@@ -22,8 +23,10 @@ export async function addCommentAction(
     if (!content?.trim()) {
       return { success: false, error: 'Isi komentar tidak boleh kosong.' };
     }
+    const nextCommentId = await getNextCommentId();
     const comment = await prisma.minutesComment.create({
       data: {
+        id: nextCommentId,
         meetingId,
         userId: user.id,
         content: content.trim(),
@@ -53,8 +56,10 @@ export async function addCommentAction(
             ? meeting.chairpersonId
             : null;
 
+        const nextNotifId = await getNextNotificationId();
         await prisma.notification.create({
           data: {
+            id: nextNotifId,
             title: `Komentar Baru: ${meeting.meetingNumber}`,
             message: `${user.name || 'Pengguna'} memberikan catatan: "${preview}"`,
             type: 'info',
