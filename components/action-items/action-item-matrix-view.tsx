@@ -42,7 +42,13 @@ import { toast } from '@/components/providers/toast-provider';
 
 interface ActionItemMatrixViewProps {
   initialItems: any[];
-  availableMeetings: { id: string; meetingNumber: string; title: string }[];
+  availableMeetings: {
+    id: string;
+    meetingNumber: string;
+    title: string;
+    date?: Date | string | null;
+    primaryBiro?: { code: string; name?: string } | null;
+  }[];
   availableBiros: { id: string; code: string; shortName: string; name: string }[];
   availableUsers: { id: string; name: string; email?: string; biroId?: string }[];
   lockedBiroCode?: string;

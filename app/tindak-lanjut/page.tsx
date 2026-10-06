@@ -19,7 +19,15 @@ export default async function TindakLanjutPage() {
     Promise.all([
       getActionItemsFromDb(userBiroCode ? { biroCode: userBiroCode } : undefined),
       prisma.meeting.findMany({
-        select: { id: true, meetingNumber: true, title: true, date: true },
+        select: {
+          id: true,
+          meetingNumber: true,
+          title: true,
+          date: true,
+          primaryBiro: {
+            select: { code: true, name: true },
+          },
+        },
         orderBy: { date: 'desc' },
       }),
       prisma.biro.findMany({

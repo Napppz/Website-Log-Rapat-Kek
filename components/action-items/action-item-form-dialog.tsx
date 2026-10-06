@@ -19,17 +19,16 @@ import {
   cleanTextWithoutLink,
   normalizeUrl,
 } from './google-drive-link-badge';
+import {
+  SearchableMeetingSelect,
+  MeetingOption,
+} from './searchable-meeting-select';
 
 interface ActionItemFormDialogProps {
   isOpen: boolean;
   meetingId?: string;
   actionItem?: ActionItem | null;
-  availableMeetings?: Array<{
-    id: string;
-    meetingNumber: string;
-    title: string;
-    date?: Date | string;
-  }>;
+  availableMeetings?: Array<MeetingOption>;
   availableBiros?: { id: string; code: string; shortName: string; name: string }[];
   availableUsers?: { id: string; name: string; email?: string; biroId?: string }[];
   lockedBiroCode?: string;
@@ -62,7 +61,7 @@ export function ActionItemFormDialog({
   const [birosList, setBirosList] = useState(availableBiros);
   const [usersList, setUsersList] = useState(availableUsers);
   const [teamsList, setTeamsList] = useState<Array<{ id: string; biroId: string; code: string; name: string; description?: string | null }>>([]);
-  const [meetingsList, setMeetingsList] = useState<Array<{ id: string; meetingNumber: string; title: string; date?: Date | string }>>(availableMeetings);
+  const [meetingsList, setMeetingsList] = useState<Array<MeetingOption>>(availableMeetings);
   const [selectedMeetingId, setSelectedMeetingId] = useState<string>(
     actionItem?.meetingId || meetingId || availableMeetings[0]?.id || ''
   );
@@ -298,9 +297,9 @@ export function ActionItemFormDialog({
               </div>
             )}
 
-            {/* Rapat Terkait / Agenda Sumber (Required) */}
+            {/* Rapat Terkait / Agenda Sumber (Required with Search & Filter) */}
             <div>
-              <div className="flex items-center justify-between mb-1">
+              <div className="flex items-center justify-between mb-1.5">
                 <label className="block font-bold text-slate-800 flex items-center gap-1.5 text-[13px]">
                   <Layers className="w-4 h-4 text-[#31889C]" />
                   <span>Rapat Terkait / Agenda Sumber</span>
@@ -316,43 +315,25 @@ export function ActionItemFormDialog({
                 })()}
               </div>
 
-              {meetingsList.length > 0 ? (
-                <select
-                  value={selectedMeetingId || meetingId || ''}
-                  onChange={(e) => setSelectedMeetingId(e.target.value)}
-                  className="w-full px-3.5 py-2.5 rounded-lg border border-slate-200 focus:outline-none focus:ring-2 focus:ring-[#31889C]/30 focus:border-[#31889C] bg-white font-medium text-slate-900 text-[13px] cursor-pointer"
-                >
-                  <option value="">
-                    {isLoadingOptions ? '-- Memuat Daftar Rapat... --' : '-- Pilih Rapat yang Tersedia --'}
-                  </option>
-                  {meetingsList.map((m) => {
-                    const mDate = m.date
-                      ? new Date(m.date).toLocaleDateString('id-ID', {
-                          day: 'numeric',
-                          month: 'short',
-                          year: 'numeric',
-                        })
-                      : '';
-                    return (
-                      <option key={m.id} value={m.id}>
-                        [{m.meetingNumber}] {m.title} {mDate ? `• ${mDate}` : ''}
-                      </option>
-                    );
-                  })}
-                </select>
-              ) : (
-                <div className="w-full px-3.5 py-2.5 rounded-lg border border-slate-200 bg-slate-50 text-slate-600 text-[13px] flex items-center justify-between">
-                  <span>{isLoadingOptions ? 'Memuat rapat yang tersedia...' : 'Rapat Terkoneksi'}</span>
-                  {meetingId && (
-                    <span className="text-xs font-mono font-bold text-slate-700">{meetingId}</span>
-                  )}
-                </div>
-              )}
-              {fieldErrors.meetingId && (
-                <p className="mt-1 text-[11px] text-red-600 font-semibold">{fieldErrors.meetingId}</p>
-              )}
-              <p className="mt-1 text-[11px] text-slate-400">
-                Hubungkan tindak lanjut ini dengan agenda sidang dewan yang relevan.
+              <SearchableMeetingSelect
+                meetings={meetingsList}
+                selectedMeetingId={selectedMeetingId || meetingId || ''}
+                onSelectMeeting={(mId) => {
+                  setSelectedMeetingId(mId);
+                  if (fieldErrors.meetingId) {
+                    setFieldErrors((prev) => {
+                      const next = { ...prev };
+                      delete next.meetingId;
+                      return next;
+                    });
+                  }
+                }}
+                userBiroCode={effectiveLockedBiroCode}
+                isLoading={isLoadingOptions}
+                error={fieldErrors.meetingId}
+              />
+              <p className="mt-1.5 text-[11px] text-slate-400">
+                Hubungkan tindak lanjut ini dengan agenda sidang dewan yang relevan. Gunakan pencarian instan atau filter biro untuk menemukan rapat dengan cepat.
               </p>
             </div>
 
