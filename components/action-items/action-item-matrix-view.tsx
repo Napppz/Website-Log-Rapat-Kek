@@ -3,6 +3,7 @@
 import React, { useState, useMemo } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
+import { useSession } from 'next-auth/react';
 import {
   AlertTriangle,
   Clock,
@@ -60,6 +61,25 @@ export function ActionItemMatrixView({
 }: ActionItemMatrixViewProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const { data: session } = useSession();
+  const userRole = currentUserRole || session?.user?.role || 'VIEWER';
+  const currentUserId = session?.user?.id;
+
+  const canCreateItem =
+    userRole === 'SUPER_ADMIN' ||
+    userRole === 'ADMIN' ||
+    userRole === 'NOTULIS' ||
+    userRole === 'STAFF';
+  const canDeleteItem = userRole === 'SUPER_ADMIN' || userRole === 'ADMIN' || userRole === 'NOTULIS';
+
+  const canEditTask = (task: any) => {
+    if (userRole === 'VIEWER') return false;
+    if (userRole === 'SUPER_ADMIN' || userRole === 'ADMIN' || userRole === 'NOTULIS') return true;
+    if (userRole === 'STAFF') {
+      return Boolean(task.picUserId && currentUserId && task.picUserId === currentUserId);
+    }
+    return false;
+  };
   const rawStatus = searchParams.get('status') || 'ALL';
   const statusParam = useMemo(() => {
     const s = rawStatus.toUpperCase();
@@ -446,8 +466,8 @@ export function ActionItemMatrixView({
             </button>
           </div>
 
-          {/* New Action Item Trigger */}
-          {availableMeetings.length > 0 && (
+          {/* New Action Item Trigger (Only privileged roles) */}
+          {canCreateItem && availableMeetings.length > 0 && (
             <button
               type="button"
               onClick={() => {
@@ -612,27 +632,29 @@ export function ActionItemMatrixView({
                       {/* Actions */}
                       <td className="py-3.5 px-4 align-top text-right">
                         <div className="flex items-center justify-end gap-1">
-                          {/* Quick Toggle Status */}
-                          {task.status !== 'COMPLETED' ? (
-                            <button
-                              type="button"
-                              disabled={isUpdatingThis}
-                              onClick={() => handleStatusChange(task.id, 'COMPLETED')}
-                              className="p-1 rounded text-[#4D8F3D] hover:bg-[#ECF8E9] transition-colors cursor-pointer"
-                              title="Tandai Selesai"
-                            >
-                              <CheckCircle2 className="w-4 h-4" />
-                            </button>
-                          ) : (
-                            <button
-                              type="button"
-                              disabled={isUpdatingThis}
-                              onClick={() => handleStatusChange(task.id, 'IN_PROGRESS')}
-                              className="p-1 rounded text-[#31889C] hover:bg-[#F0F9FA] transition-colors cursor-pointer"
-                              title="Kembalikan ke Dalam Proses"
-                            >
-                              <RotateCcw className="w-4 h-4" />
-                            </button>
+                          {/* Quick Toggle Status - only if user can edit this task */}
+                          {canEditTask(task) && (
+                            task.status !== 'COMPLETED' ? (
+                              <button
+                                type="button"
+                                disabled={isUpdatingThis}
+                                onClick={() => handleStatusChange(task.id, 'COMPLETED')}
+                                className="p-1 rounded text-[#4D8F3D] hover:bg-[#ECF8E9] transition-colors cursor-pointer"
+                                title="Tandai Selesai"
+                              >
+                                <CheckCircle2 className="w-4 h-4" />
+                              </button>
+                            ) : (
+                              <button
+                                type="button"
+                                disabled={isUpdatingThis}
+                                onClick={() => handleStatusChange(task.id, 'IN_PROGRESS')}
+                                className="p-1 rounded text-[#31889C] hover:bg-[#F0F9FA] transition-colors cursor-pointer"
+                                title="Kembalikan ke Dalam Proses"
+                              >
+                                <RotateCcw className="w-4 h-4" />
+                              </button>
+                            )
                           )}
 
                           {/* Audit Trail & Progress Log button */}
@@ -645,29 +667,33 @@ export function ActionItemMatrixView({
                             <History className="w-4 h-4" />
                           </button>
 
-                          {/* Edit button */}
-                          <button
-                            type="button"
-                            onClick={() => {
-                              setEditingItem(task);
-                              setSelectedMeetingIdForCreate(task.meetingId);
-                              setIsFormOpen(true);
-                            }}
-                            className="p-1 text-slate-400 hover:text-[#31889C] hover:bg-[#F0F9FA] rounded transition-colors cursor-pointer"
-                            title="Ubah Tindak Lanjut"
-                          >
-                            <Edit2 className="w-4 h-4" />
-                          </button>
+                          {/* Edit button - only if user can edit this task */}
+                          {canEditTask(task) && (
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setEditingItem(task);
+                                setSelectedMeetingIdForCreate(task.meetingId);
+                                setIsFormOpen(true);
+                              }}
+                              className="p-1 text-slate-400 hover:text-[#31889C] hover:bg-[#F0F9FA] rounded transition-colors cursor-pointer"
+                              title="Ubah Tindak Lanjut"
+                            >
+                              <Edit2 className="w-4 h-4" />
+                            </button>
+                          )}
 
-                          {/* Delete button */}
-                          <button
-                            type="button"
-                            onClick={() => setDeletingItem(task)}
-                            className="p-1 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded transition-colors cursor-pointer"
-                            title="Hapus Tindak Lanjut"
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </button>
+                          {/* Delete button - only if user can delete */}
+                          {canDeleteItem && (
+                            <button
+                              type="button"
+                              onClick={() => setDeletingItem(task)}
+                              className="p-1 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded transition-colors cursor-pointer"
+                              title="Hapus Tindak Lanjut"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </button>
+                          )}
                         </div>
                       </td>
                     </tr>

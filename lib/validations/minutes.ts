@@ -8,6 +8,7 @@ export const meetingMinutesSchema = z.object({
   conclusion: z.any().optional().nullable(),
   docType: z.enum(['NOTULA', 'NOTA_DINAS']).optional(),
   notaDinas: z.any().optional(),
+  isAutosave: z.boolean().optional(),
 });
 
 export type MeetingMinutesInput = z.infer<typeof meetingMinutesSchema>;

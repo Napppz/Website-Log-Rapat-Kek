@@ -3,7 +3,7 @@
 import { prisma } from '@/lib/prisma';
 import { getNextMeetingNumber } from '@/lib/sequence';
 import { getMeetingByIdFromDb } from '@/lib/db-service';
-import { MeetingStatus, AttendanceStatus } from '@prisma/client';
+import { MeetingStatus, AttendanceStatus, UserRole } from '@prisma/client';
 import { revalidatePath } from 'next/cache';
 import { requirePermission, requireAuth, getCurrentUser } from '@/lib/auth/authorization';
 import { extractPlainText } from '@/lib/pdf/pdf-utils';
@@ -259,8 +259,15 @@ export async function createMeetingAction(input: CreateMeetingInput) {
  */
 export async function updateMeetingStatusAction(meetingId: string, status: MeetingStatus) {
   try {
-    // Authorization Check: Must have 'edit:meeting' permission (SUPER_ADMIN, ADMIN)
-    const currentUser = await requirePermission('edit:meeting');
+    // Authorization Check: SUPER_ADMIN, ADMIN, and STAFF can update status
+    const currentUser = await requireAuth();
+    const allowedRoles: UserRole[] = ['SUPER_ADMIN', 'ADMIN', 'STAFF'];
+    if (!allowedRoles.includes(currentUser.role)) {
+      return {
+        success: false,
+        error: 'Forbidden: Peran pengguna Anda tidak memiliki izin untuk mengubah status rapat.',
+      };
+    }
     const isPrivileged =
       currentUser.role === 'SUPER_ADMIN' || currentUser.role === 'ADMIN';
 
@@ -272,11 +279,17 @@ export async function updateMeetingStatusAction(meetingId: string, status: Meeti
       return { success: false, error: 'Rapat tidak ditemukan.' };
     }
 
-    if (!isPrivileged && currentUser.biroCode && existing.primaryBiro.code.toUpperCase() !== currentUser.biroCode.toUpperCase()) {
-      return {
-        success: false,
-        error: 'Anda hanya dapat memperbarui status rapat biro Anda sendiri.',
-      };
+    if (!isPrivileged) {
+      const isSameBiro =
+        (currentUser.biroId && existing.primaryBiroId === currentUser.biroId) ||
+        (currentUser.biroCode && existing.primaryBiro.code.toUpperCase() === currentUser.biroCode.toUpperCase());
+
+      if (!isSameBiro) {
+        return {
+          success: false,
+          error: 'Anda hanya dapat memperbarui status rapat biro Anda sendiri.',
+        };
+      }
     }
 
     const updated = await prisma.meeting.update({
@@ -700,7 +713,7 @@ export async function getMeetingOptionsAction(excludeMeetingId?: string) {
     let currentUser = null;
     try {
       currentUser = await getCurrentUser();
-    } catch {}
+    } catch { }
 
     const isPrivileged =
       currentUser?.role === 'SUPER_ADMIN' || currentUser?.role === 'ADMIN';
@@ -749,7 +762,7 @@ export async function getMeetingDetailAction(meetingId: string) {
     let currentUser = null;
     try {
       currentUser = await getCurrentUser();
-    } catch {}
+    } catch { }
 
     const isPrivileged =
       currentUser?.role === 'SUPER_ADMIN' || currentUser?.role === 'ADMIN';

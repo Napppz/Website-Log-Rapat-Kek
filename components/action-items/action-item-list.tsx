@@ -55,7 +55,12 @@ export function ActionItemList({
   const userRole = currentUser?.role || 'VIEWER';
   const currentUserId = currentUser?.id;
 
-  const canCreateItem = !readOnly && (userRole === 'SUPER_ADMIN' || userRole === 'ADMIN' || userRole === 'NOTULIS');
+  const canCreateItem =
+    !readOnly &&
+    (userRole === 'SUPER_ADMIN' ||
+      userRole === 'ADMIN' ||
+      userRole === 'NOTULIS' ||
+      userRole === 'STAFF');
   const canDeleteItem = !readOnly && (userRole === 'SUPER_ADMIN' || userRole === 'ADMIN' || userRole === 'NOTULIS');
 
   const canEditThisItem = (item: ActionItem) => {
@@ -208,7 +213,9 @@ export function ActionItemList({
               Belum Ada Butir Tindak Lanjut
             </h4>
             <p className="text-[13px] text-slate-500 leading-relaxed">
-              Rapat ini belum memiliki tindak lanjut yang terdaftar. Tambahkan butir pekerjaan dan delegasikan kepada biro pelaksana.
+              {canCreateItem
+                ? 'Rapat ini belum memiliki tindak lanjut yang terdaftar. Tambahkan butir pekerjaan dan delegasikan kepada biro pelaksana.'
+                : 'Belum ada tindak lanjut yang didaftarkan untuk rapat ini oleh Notulis atau Administrator.'}
             </p>
             {canCreateItem && (
               <button
@@ -421,6 +428,7 @@ export function ActionItemList({
         actionItem={editingItem}
         availableBiros={availableBiros}
         availableUsers={availableUsers}
+        lockedBiroCode={userRole === 'STAFF' ? currentUser?.biroCode : undefined}
         onClose={() => {
           setIsFormOpen(false);
           setEditingItem(null);

@@ -47,6 +47,13 @@ export function MeetingDetailDialog({
   const { data: session } = useSession();
   const userRole = session?.user?.role || 'VIEWER';
   const canDeleteMeeting = userRole === 'SUPER_ADMIN' || userRole === 'ADMIN';
+  const isPrivileged = userRole === 'SUPER_ADMIN' || userRole === 'ADMIN';
+  const isMeetingBiro =
+    isPrivileged ||
+    (session?.user?.biroCode &&
+      meeting?.biroCode &&
+      session.user.biroCode.toUpperCase() === meeting.biroCode.toUpperCase());
+  const canChangeStatus = isPrivileged || (userRole === 'STAFF' && Boolean(isMeetingBiro));
 
   const [activeTab, setActiveTab] = useState<'info' | 'participants' | 'minutes' | 'actionItems'>('info');
   const [isDeleting, setIsDeleting] = useState(false);
@@ -402,26 +409,32 @@ export function MeetingDetailDialog({
               {/* Status Change (CRUD Update) */}
               <div className="p-3.5 bg-[#F0F9FA] rounded-xl border border-[#BCE3EB] flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                 <div>
-                  <span className="text-[12px] font-bold text-slate-900 block">Ubah Status Risalah</span>
+                  <span className="text-[12px] font-bold text-slate-900 block">
+                    {canChangeStatus ? 'Ubah Status Risalah' : 'Status Risalah'}
+                  </span>
                   <span className="text-[11px] text-slate-500">Status saat ini: <strong>{meeting.status}</strong></span>
                 </div>
-                <div className="flex flex-wrap items-center gap-1.5">
-                  {(['DRAFT', 'REVIEW', 'APPROVED', 'FINAL'] as MeetingStatus[]).map((st) => (
-                    <button
-                      key={st}
-                      type="button"
-                      disabled={meeting.status === st || isUpdatingStatus}
-                      onClick={() => handleStatusChange(st)}
-                      className={`px-2.5 py-1 rounded text-[11px] font-bold transition-all cursor-pointer ${
-                        meeting.status === st
-                          ? 'bg-[#31889C] text-white shadow-xs opacity-90 cursor-default'
-                          : 'bg-white border border-[#BCE3EB] text-[#215865] hover:bg-[#E8F5F7]'
-                      }`}
-                    >
-                      {st}
-                    </button>
-                  ))}
-                </div>
+                {canChangeStatus ? (
+                  <div className="flex flex-wrap items-center gap-1.5">
+                    {(['DRAFT', 'REVIEW', 'APPROVED', 'FINAL'] as MeetingStatus[]).map((st) => (
+                      <button
+                        key={st}
+                        type="button"
+                        disabled={meeting.status === st || isUpdatingStatus}
+                        onClick={() => handleStatusChange(st)}
+                        className={`px-2.5 py-1 rounded text-[11px] font-bold transition-all cursor-pointer ${
+                          meeting.status === st
+                            ? 'bg-[#31889C] text-white shadow-xs opacity-90 cursor-default'
+                            : 'bg-white border border-[#BCE3EB] text-[#215865] hover:bg-[#E8F5F7]'
+                        }`}
+                      >
+                        {st}
+                      </button>
+                    ))}
+                  </div>
+                ) : (
+                  <MeetingStatusBadge status={meeting.status} />
+                )}
               </div>
 
               {/* Action Items / Follow-up */}

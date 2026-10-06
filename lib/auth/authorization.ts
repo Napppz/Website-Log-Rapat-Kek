@@ -64,6 +64,7 @@ export const ROLE_PERMISSIONS: Record<UserRole, AppPermission[]> = {
     'view:dashboard',
     'view:meeting',
     'view:minutes',
+    'create:action_item',
     'edit:action_item', // Subject to ownership check
   ],
   VIEWER: [

@@ -162,6 +162,23 @@ export function MeetingDetailView({
   const canDeleteMeeting = userRole === 'SUPER_ADMIN' || userRole === 'ADMIN';
   const canManageParticipants =
     userRole === 'SUPER_ADMIN' || userRole === 'ADMIN' || userRole === 'NOTULIS';
+  const canEditMinutes = canManageParticipants;
+  const canCreateActionItem =
+    userRole === 'SUPER_ADMIN' ||
+    userRole === 'ADMIN' ||
+    userRole === 'NOTULIS' ||
+    userRole === 'STAFF';
+
+  // Biro ownership check for status updates & staff permissions
+  const isPrivileged = userRole === 'SUPER_ADMIN' || userRole === 'ADMIN';
+  const isMeetingBiro =
+    isPrivileged ||
+    (session?.user?.biroId && session.user.biroId === meeting.primaryBiroId) ||
+    (session?.user?.biroCode &&
+      meeting.primaryBiro?.code &&
+      session.user.biroCode.toUpperCase() === meeting.primaryBiro.code.toUpperCase());
+
+  const canChangeStatus = isPrivileged || (userRole === 'STAFF' && isMeetingBiro);
 
   const defaultTab: TabType = (initialTab && VALID_TABS.includes(initialTab as TabType))
     ? (initialTab as TabType)
@@ -680,7 +697,7 @@ export function MeetingDetailView({
                 <HelpCircle className="w-3.5 h-3.5 text-[#31889C]" />
                 <span>Panduan Status Risalah</span>
               </button>
-              {canEditMeeting && (
+              {canChangeStatus && (
                 <span className="text-[11px] text-slate-400 italic hidden md:inline">
                   {isUpdatingStatus ? 'Memperbarui...' : '(Klik tahapan untuk mengubah)'}
                 </span>
@@ -694,25 +711,8 @@ export function MeetingDetailView({
               const isCurrent = wf.key === status;
               const isPassed = idx < currentIdx;
 
-              return (
-                <button
-                  key={wf.key}
-                  type="button"
-                  disabled={!canEditMeeting || isCurrent || isUpdatingStatus}
-                  onClick={() => handleStatusChange(wf.key)}
-                  className={`flex items-center gap-2.5 p-2.5 rounded-xl border text-left transition-all ${
-                    isCurrent
-                      ? 'bg-[#31889C] text-white border-[#215865] shadow-xs ring-2 ring-[#31889C]/30'
-                      : isPassed
-                      ? 'bg-[#ECF8E9] text-[#215865] border-[#D2EFCA] hover:bg-[#D2EFCA]/50'
-                      : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50'
-                  } ${
-                    canEditMeeting && !isCurrent
-                      ? 'cursor-pointer hover:border-[#31889C]'
-                      : 'cursor-default'
-                  }`}
-                  title={`${wf.label} (${wf.sublabel}): ${wf.description}${canEditMeeting && !isCurrent ? ' — Klik untuk ubah ke tahap ini' : ''}`}
-                >
+              const content = (
+                <>
                   <div
                     className={`w-6 h-6 rounded-full flex items-center justify-center text-[11px] font-extrabold shrink-0 ${
                       isCurrent
@@ -732,6 +732,43 @@ export function MeetingDetailView({
                       {wf.sublabel}
                     </p>
                   </div>
+                </>
+              );
+
+              if (!canChangeStatus) {
+                return (
+                  <div
+                    key={wf.key}
+                    className={`flex items-center gap-2.5 p-2.5 rounded-xl border text-left select-none ${
+                      isCurrent
+                        ? 'bg-[#31889C] text-white border-[#215865] shadow-xs'
+                        : isPassed
+                        ? 'bg-[#ECF8E9] text-[#215865] border-[#D2EFCA]'
+                        : 'bg-white text-slate-600 border-slate-200 opacity-80'
+                    }`}
+                    title={`${wf.label} (${wf.sublabel}): ${wf.description}`}
+                  >
+                    {content}
+                  </div>
+                );
+              }
+
+              return (
+                <button
+                  key={wf.key}
+                  type="button"
+                  disabled={isCurrent || isUpdatingStatus}
+                  onClick={() => handleStatusChange(wf.key)}
+                  className={`flex items-center gap-2.5 p-2.5 rounded-xl border text-left transition-all ${
+                    isCurrent
+                      ? 'bg-[#31889C] text-white border-[#215865] shadow-xs ring-2 ring-[#31889C]/30 cursor-default'
+                      : isPassed
+                      ? 'bg-[#ECF8E9] text-[#215865] border-[#D2EFCA] hover:bg-[#D2EFCA]/50 cursor-pointer hover:border-[#31889C]'
+                      : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50 cursor-pointer hover:border-[#31889C]'
+                  }`}
+                  title={`${wf.label} (${wf.sublabel}): ${wf.description} — Klik untuk ubah ke tahap ini`}
+                >
+                  {content}
                 </button>
               );
             })}
@@ -1088,7 +1125,11 @@ export function MeetingDetailView({
                 onClick={() => handleTabChange('minutes')}
                 className="px-4 py-2 rounded-lg bg-[#31889C] hover:bg-[#266F80] text-white font-semibold text-[12px] transition-all shrink-0 cursor-pointer shadow-xs"
               >
-                {meeting.minutes ? 'Buka Notulen Rapat' : '+ Buat Notulen Sekarang'}
+                {meeting.minutes
+                  ? 'Buka Notulen Rapat'
+                  : canEditMinutes
+                  ? '+ Buat Notulen Sekarang'
+                  : 'Lihat Lembar Naskah'}
               </button>
             </div>
 
@@ -1111,7 +1152,9 @@ export function MeetingDetailView({
               >
                 {meeting.actionItems && meeting.actionItems.length > 0
                   ? 'Buka Matriks Tindak Lanjut'
-                  : '+ Tambah Tindak Lanjut'}
+                  : canCreateActionItem
+                  ? '+ Tambah Tindak Lanjut'
+                  : 'Lihat Matriks Tindak Lanjut'}
               </button>
             </div>
 
@@ -1357,7 +1400,11 @@ export function MeetingDetailView({
                   Belum ada peserta yang terdaftar pada rapat ini.
                 </p>
                 <p className="text-[12px] text-slate-500 mt-1">
-                  Klik tombol <strong>+ Tambah Peserta</strong> di atas untuk mendaftarkan peserta sidang.
+                  {canManageParticipants ? (
+                    <>Klik tombol <strong>+ Tambah Peserta</strong> di atas untuk mendaftarkan peserta sidang.</>
+                  ) : (
+                    'Daftar absensi peserta belum dimasukkan oleh Notulis atau Administrator.'
+                  )}
                 </p>
               </div>
             )}

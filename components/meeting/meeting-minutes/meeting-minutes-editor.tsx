@@ -283,6 +283,7 @@ export function MeetingMinutesEditor({
           conclusion: conclusionPayload,
           docType,
           notaDinas: notaDinasPayload,
+          isAutosave: isDraft,
         };
 
         const res = await upsertMeetingMinutesAction(payload);

@@ -48,7 +48,7 @@ export async function upsertMeetingMinutesAction(input: MeetingMinutesInput) {
       return { success: false, error: `Validasi gagal: ${errorMsg}` };
     }
 
-    const { meetingId, agenda, discussion, decisions, conclusion, docType, notaDinas } = parsed.data;
+    const { meetingId, agenda, discussion, decisions, conclusion, docType, notaDinas, isAutosave } = parsed.data;
 
     // 2. Validate that the meeting actually exists
     const meeting = await prisma.meeting.findUnique({
@@ -103,66 +103,125 @@ export async function upsertMeetingMinutesAction(input: MeetingMinutesInput) {
       },
     });
 
-    // 5. Record audit trail history & create notification
-    if (currentUser) {
+    // 5. Record audit trail history & create notification (only on meaningful manual saves or non-autosave)
+    if (currentUser && !isAutosave) {
       const isNotaDinas = docType === 'NOTA_DINAS';
       const docLabel = isNotaDinas ? 'Nota Dinas' : 'Notulen Rapat';
 
-      // 5a. Audit trail
+      // 5a. Audit trail: Find the previous confirmed revision baseline
       try {
-        const nextHistId = await getNextMinutesHistoryId();
-        await prisma.minutesHistory.create({
-          data: {
-            id: nextHistId,
-            meetingId,
-            userId: currentUser.id,
-            changeType: isNew ? 'CREATED' : 'UPDATED',
-            fieldName: isNotaDinas ? 'NOTA_DINAS' : 'NOTULA',
-            oldValue: isNew
-              ? undefined
-              : {
-                  docType: (existing?.conclusion as any)?.docType || (isNotaDinas ? 'NOTA_DINAS' : 'NOTULA'),
-                  agenda: existing?.agenda ?? undefined,
-                  discussion: existing?.discussion ?? undefined,
-                  decisions: existing?.decisions ?? undefined,
-                  conclusion: existing?.conclusion ?? undefined,
-                },
-            newValue: {
-              docType: docType || (isNotaDinas ? 'NOTA_DINAS' : 'NOTULA'),
-              agenda: agenda ?? undefined,
-              discussion: discussion ?? undefined,
-              decisions: decisions ?? undefined,
-              conclusion: finalConclusion ?? undefined,
+        let baseOldValue: any = null;
+        if (!isNew) {
+          const lastHistory = await prisma.minutesHistory.findFirst({
+            where: { meetingId, changeType: { in: ['CREATED', 'UPDATED'] } },
+            orderBy: { createdAt: 'desc' },
+          });
+          baseOldValue = lastHistory?.newValue || {
+            docType: (existing?.conclusion as any)?.docType || (isNotaDinas ? 'NOTA_DINAS' : 'NOTULA'),
+            agenda: existing?.agenda ?? undefined,
+            discussion: existing?.discussion ?? undefined,
+            decisions: existing?.decisions ?? undefined,
+            conclusion: existing?.conclusion ?? undefined,
+          };
+        }
+
+        const changedParts: string[] = [];
+        if (!isNew && baseOldValue) {
+          if (isNotaDinas) {
+            const oldNd = baseOldValue.notaDinas || (baseOldValue.conclusion as any)?.notaDinas || {};
+            const newNd = notaDinas || {};
+            if (oldNd.subject !== newNd.subject) changedParts.push('Perihal');
+            if (oldNd.documentNumber !== newNd.documentNumber) changedParts.push('Nomor Naskah');
+            if (oldNd.recipient !== newNd.recipient) changedParts.push('Penerima/Yth');
+            if (oldNd.sender !== newNd.sender) changedParts.push('Pengirim');
+            if (oldNd.attachments !== newNd.attachments) changedParts.push('Lampiran');
+            if (oldNd.dateText !== newNd.dateText) changedParts.push('Tanggal Naskah');
+            if (JSON.stringify(baseOldValue.discussion) !== JSON.stringify(discussion)) {
+              changedParts.push('Substansi Inti Pembahasan');
+            }
+            if (JSON.stringify(baseOldValue.conclusion) !== JSON.stringify(finalConclusion)) {
+              changedParts.push('Kesimpulan Rapat');
+            }
+            if (JSON.stringify(baseOldValue.decisions) !== JSON.stringify(decisions)) {
+              changedParts.push('Arahan & Tindak Lanjut');
+            }
+          } else {
+            if (JSON.stringify(baseOldValue.agenda) !== JSON.stringify(agenda)) {
+              changedParts.push('Agenda Sidang');
+            }
+            if (JSON.stringify(baseOldValue.discussion) !== JSON.stringify(discussion)) {
+              changedParts.push('Substansi Inti Pembahasan');
+            }
+            if (JSON.stringify(baseOldValue.conclusion) !== JSON.stringify(finalConclusion)) {
+              changedParts.push('Kesimpulan Rapat');
+            }
+            if (JSON.stringify(baseOldValue.decisions) !== JSON.stringify(decisions)) {
+              changedParts.push('Kesepakatan & Tindak Lanjut');
+            }
+          }
+        }
+
+        // Only create history entry if it's new or has actual changes
+        if (isNew || changedParts.length > 0) {
+          let changeSummary = `${docLabel} ${isNew ? 'dibuat pertama kali' : 'diperbarui'} oleh ${currentUser.name}`;
+          if (changedParts.length > 0) {
+            changeSummary += ` (Perubahan: ${changedParts.join(', ')})`;
+          }
+
+          const nextHistId = await getNextMinutesHistoryId();
+          await prisma.minutesHistory.create({
+            data: {
+              id: nextHistId,
+              meetingId,
+              userId: currentUser.id,
+              changeType: isNew ? 'CREATED' : 'UPDATED',
+              fieldName: isNotaDinas ? 'NOTA_DINAS' : 'NOTULA',
+              oldValue: isNew
+                ? undefined
+                : {
+                    docType: baseOldValue.docType || (isNotaDinas ? 'NOTA_DINAS' : 'NOTULA'),
+                    agenda: baseOldValue.agenda ?? undefined,
+                    discussion: baseOldValue.discussion ?? undefined,
+                    decisions: baseOldValue.decisions ?? undefined,
+                    conclusion: baseOldValue.conclusion ?? undefined,
+                    notaDinas: baseOldValue.notaDinas ?? undefined,
+                  },
+              newValue: {
+                docType: docType || (isNotaDinas ? 'NOTA_DINAS' : 'NOTULA'),
+                agenda: agenda ?? undefined,
+                discussion: discussion ?? undefined,
+                decisions: decisions ?? undefined,
+                conclusion: finalConclusion ?? undefined,
+                notaDinas: notaDinas ?? undefined,
+              },
+              summary: changeSummary,
             },
-            summary: isNew
-              ? `${docLabel} dibuat pertama kali oleh ${currentUser.name}`
-              : `${docLabel} diperbarui oleh ${currentUser.name}`,
-          },
-        });
+          });
+
+          // 5b. In-App Notification for Dewan / Team members (only on confirmed revisions)
+          try {
+            const actionText = isNew ? 'Dibuat' : 'Diperbarui';
+            const notifTitle = `${docLabel} ${actionText}: ${meeting.meetingNumber}`;
+            const notifMessage = `${currentUser.name || 'Pengguna'} telah ${isNew ? 'membuat' : 'memperbarui'} ${docLabel.toLowerCase()} untuk "${meeting.title}".`;
+
+            const nextNotifId = await getNextNotificationId();
+            await prisma.notification.create({
+              data: {
+                id: nextNotifId,
+                title: notifTitle,
+                message: notifMessage,
+                type: 'info',
+                link: `/semua-rapat/${meetingId}`,
+                isRead: false,
+                userId: null, // Broadcast to Dewan KEK team
+              },
+            });
+          } catch (notifErr) {
+            console.warn('[upsertMeetingMinutesAction] notification creation skipped:', notifErr);
+          }
+        }
       } catch (histErr) {
         console.warn('[upsertMeetingMinutesAction] history recording skipped:', histErr);
-      }
-
-      // 5b. In-App Notification for Dewan / Team members
-      try {
-        const actionText = isNew ? 'Dibuat' : 'Diperbarui';
-        const notifTitle = `${docLabel} ${actionText}: ${meeting.meetingNumber}`;
-        const notifMessage = `${currentUser.name || 'Pengguna'} telah ${isNew ? 'membuat' : 'memperbarui'} ${docLabel.toLowerCase()} untuk "${meeting.title}".`;
-
-        const nextNotifId = await getNextNotificationId();
-        await prisma.notification.create({
-          data: {
-            id: nextNotifId,
-            title: notifTitle,
-            message: notifMessage,
-            type: 'info',
-            link: `/semua-rapat/${meetingId}`,
-            isRead: false,
-            userId: null, // Broadcast to Dewan KEK team
-          },
-        });
-      } catch (notifErr) {
-        console.warn('[upsertMeetingMinutesAction] notification creation skipped:', notifErr);
       }
     }
 

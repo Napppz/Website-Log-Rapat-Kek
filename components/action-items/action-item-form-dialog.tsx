@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import { useSession } from 'next-auth/react';
 import { X, AlertCircle, Save, ExternalLink } from 'lucide-react';
 import {
   actionItemSchema,
@@ -40,6 +41,11 @@ export function ActionItemFormDialog({
   onClose,
   onSuccess,
 }: ActionItemFormDialogProps) {
+  const { data: session } = useSession();
+  const effectiveLockedBiroCode =
+    lockedBiroCode ||
+    (session?.user?.role === 'STAFF' ? session.user.biroCode : undefined);
+
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
@@ -84,7 +90,10 @@ export function ActionItemFormDialog({
           if (res.success) {
             if (res.biros && res.biros.length > 0) {
               setBirosList(res.biros);
-              setPicBiroId((prev) => (prev ? prev : res.biros[0]?.id || ''));
+              const matched = effectiveLockedBiroCode
+                ? res.biros.find((b) => b.code.toUpperCase() === effectiveLockedBiroCode.toUpperCase())
+                : null;
+              setPicBiroId((prev) => (matched ? matched.id : prev ? prev : res.biros[0]?.id || ''));
             }
             if (res.users && res.users.length > 0) {
               setUsersList(res.users);
@@ -98,7 +107,7 @@ export function ActionItemFormDialog({
           setIsLoadingOptions(false);
         });
     }
-  }, [isOpen, birosList.length, teamsList.length]);
+  }, [isOpen, birosList.length, teamsList.length, effectiveLockedBiroCode]);
 
   useEffect(() => {
     if (isOpen) {
@@ -135,18 +144,18 @@ export function ActionItemFormDialog({
         setTitle('');
         setDescription('');
         setDriveLink('');
-        const matchingBiro = lockedBiroCode
-          ? birosList.find((b) => b.code.toUpperCase() === lockedBiroCode.toUpperCase())
+        const matchingBiro = effectiveLockedBiroCode
+          ? birosList.find((b) => b.code.toUpperCase() === effectiveLockedBiroCode.toUpperCase())
           : null;
         setPicBiroId(matchingBiro?.id || birosList[0]?.id || '');
         setPicTeamId('');
-        setPicUserId('');
+        setPicUserId(session?.user?.role === 'STAFF' ? (session.user.id || '') : '');
         setDueDate(`${yyyy}-${mm}-${dd}`);
         setPriority('MEDIUM');
         setStatus('PENDING');
       }
     }
-  }, [isOpen, actionItem, birosList, lockedBiroCode]);
+  }, [isOpen, actionItem, birosList, effectiveLockedBiroCode, session?.user?.role, session?.user?.id]);
 
   if (!isOpen) return null;
 
@@ -340,9 +349,9 @@ export function ActionItemFormDialog({
                 <label className="block font-bold text-slate-800 mb-1">
                   Biro Penanggung Jawab <span className="text-red-500">*</span>
                 </label>
-                {lockedBiroCode ? (
+                {effectiveLockedBiroCode ? (
                   <div className="w-full px-3 py-2 rounded-lg border border-[#BCE3EB] bg-[#F0F9FA] text-[#215865] font-semibold text-[13px] flex items-center justify-between">
-                    <span>Biro {lockedBiroCode}</span>
+                    <span>Biro {effectiveLockedBiroCode}</span>
                     <span className="text-[11px] text-slate-500 font-normal">(Terkunci sesuai akun)</span>
                   </div>
                 ) : (

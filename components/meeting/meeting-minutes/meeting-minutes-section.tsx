@@ -233,7 +233,10 @@ export function MeetingMinutesSection({
           <div className="flex items-center gap-2.5 text-amber-900">
             <Info className="w-4 h-4 text-amber-600 shrink-0" />
             <span>
-              <strong>Notulen Belum Diisi:</strong> Lembar naskah rapat ini masih kosong. Klik tombol di samping untuk mulai mengisi catatan pembahasan, kesimpulan, dan tindak lanjut.
+              <strong>Notulen Belum Diisi:</strong> Lembar naskah rapat ini masih kosong.{' '}
+              {canEditMinutes
+                ? 'Klik tombol di samping untuk mulai mengisi catatan pembahasan, kesimpulan, dan tindak lanjut.'
+                : 'Naskah sedang dalam proses penyusunan resmi oleh Notulis / Administrator.'}
             </span>
           </div>
           {canEditMinutes && (

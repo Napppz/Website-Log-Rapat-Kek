@@ -2,6 +2,7 @@
 
 import React, { useState, useMemo } from 'react';
 import Link from 'next/link';
+import { useSession } from 'next-auth/react';
 import {
   Calendar as CalendarIcon,
   ChevronLeft,
@@ -51,6 +52,10 @@ const STATUS_CONFIG: Record<string, { label: string; badge: string; step: number
 };
 
 export function KalenderClient({ initialMeetings, biros }: KalenderClientProps) {
+  const { data: session } = useSession();
+  const userRole = session?.user?.role || 'VIEWER';
+  const canCreate = userRole === 'SUPER_ADMIN' || userRole === 'ADMIN' || userRole === 'NOTULIS';
+
   // Calendar current view month and year (defaults to current date or September 2026 if in mock year)
   const [currentDate, setCurrentDate] = useState(() => {
     // Check if meetings contain 2026 data
@@ -250,15 +255,17 @@ export function KalenderClient({ initialMeetings, biros }: KalenderClientProps) 
           </p>
         </div>
 
-        <div className="flex flex-wrap items-center gap-3 shrink-0">
-          <Link
-            href="/buat-rapat"
-            className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#31889C] text-white font-semibold text-[13px] hover:bg-[#266F80] shadow-sm shadow-[#31889C]/20 transition-all"
-          >
-            <PlusCircle className="w-4 h-4" />
-            <span>+ Jadwalkan Rapat Baru</span>
-          </Link>
-        </div>
+        {canCreate && (
+          <div className="flex flex-wrap items-center gap-3 shrink-0">
+            <Link
+              href="/buat-rapat"
+              className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#31889C] text-white font-semibold text-[13px] hover:bg-[#266F80] shadow-sm shadow-[#31889C]/20 transition-all"
+            >
+              <PlusCircle className="w-4 h-4" />
+              <span>+ Jadwalkan Rapat Baru</span>
+            </Link>
+          </div>
+        )}
       </div>
 
       {/* 2. Controls Toolbar: Month Selector + View Mode + Filters */}
