@@ -1,9 +1,9 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { MeetingTable } from '@/components/meeting/meeting-table';
-import { MeetingStatus, BiroCode, Meeting } from '@/lib/types';
+import { MeetingStatus, BiroCode, Meeting, Biro } from '@/lib/types';
 import { PlusCircle, Filter, Trash2, AlertTriangle, Loader2, CheckCircle2, X, UploadCloud, Sparkles, Calendar, Building2, HelpCircle } from 'lucide-react';
 import Link from 'next/link';
 import { useSession } from 'next-auth/react';
@@ -11,18 +11,32 @@ import { deleteAllMeetingsAction } from '@/app/actions/meeting-actions';
 import { UploadMeetingDialog } from '@/components/meeting/upload-meeting-dialog';
 import { MeetingStatusGuideDialog } from '@/components/meeting/meeting-status-guide-dialog';
 import { toast } from '@/components/providers/toast-provider';
-import { parseMonthFilterIndex, getMonthDisplayName } from '@/lib/utils';
+import { parseMonthFilterIndex, getMonthDisplayName, cn } from '@/lib/utils';
 import { getMeetingStatusDetail } from '@/lib/meeting-status';
+import { BIRO_LIST } from '@/lib/mock-data';
 
 interface SemuaRapatClientProps {
   initialMeetings: Meeting[];
+  availableBiros?: Biro[];
   lockedBiroCode?: string;
   currentUserBiroName?: string;
   currentUserRole?: string;
 }
 
+function normalizeBiroCode(c?: string | null): string {
+  if (!c) return '';
+  const upper = c.toUpperCase().trim();
+  if (upper === 'PPK' || upper === 'REN' || upper === 'IT') return 'BPPK';
+  if (upper === 'DAL' || upper === 'OPS') return 'PKKEK';
+  if (upper === 'INV') return 'IKK';
+  if (upper === 'HUK' || upper === 'LEG') return 'HSDMO';
+  if (upper === 'BUK' || upper === 'ADM') return 'UK';
+  return upper;
+}
+
 export function SemuaRapatClient({
   initialMeetings,
+  availableBiros,
   lockedBiroCode,
   currentUserBiroName,
   currentUserRole,
@@ -31,8 +45,13 @@ export function SemuaRapatClient({
   const router = useRouter();
   const { data: session } = useSession();
   const userRole = currentUserRole || session?.user?.role || 'STAFF';
-  const canCreate = userRole === 'SUPER_ADMIN' || userRole === 'ADMIN';
-  const canDeleteAll = userRole === 'SUPER_ADMIN' || userRole === 'ADMIN';
+  const isSuperAdmin = userRole === 'SUPER_ADMIN';
+  const isAdmin = userRole === 'ADMIN';
+  const isPrivileged = isSuperAdmin || isAdmin;
+  const canCreate = isPrivileged;
+  const canDeleteAll = isPrivileged;
+
+  const birosList = availableBiros && availableBiros.length > 0 ? availableBiros : BIRO_LIST;
 
   const [deletedIds, setDeletedIds] = useState<Set<string>>(new Set());
   const [meetingsList, setMeetingsList] = useState<Meeting[]>(initialMeetings);
@@ -48,14 +67,28 @@ export function SemuaRapatClient({
   const [isDeletingAll, setIsDeletingAll] = useState(false);
 
   const statusParam = searchParams.get('status') as MeetingStatus | null;
-  const biroParam = searchParams.get('biro') as BiroCode | null;
+  const rawBiroParam = searchParams.get('biro');
+  const biroParam = rawBiroParam && rawBiroParam !== 'ALL' ? (rawBiroParam as BiroCode) : null;
   const monthParam = searchParams.get('bulan') || searchParams.get('month');
 
-  const countAll = meetingsList.length;
-  const countDraft = meetingsList.filter((m) => m.status === 'DRAFT').length;
-  const countReview = meetingsList.filter((m) => m.status === 'REVIEW').length;
-  const countApproved = meetingsList.filter((m) => m.status === 'APPROVED').length;
-  const countFinal = meetingsList.filter((m) => m.status === 'FINAL').length;
+  // Meetings filtered by the selected Biro (or all if no biro filter)
+  const biroFilteredMeetings = useMemo(() => {
+    if (!biroParam || lockedBiroCode) {
+      return meetingsList;
+    }
+    const target = normalizeBiroCode(biroParam);
+    return meetingsList.filter((m) => {
+      const matchPrimary = normalizeBiroCode(m.biroCode) === target;
+      const matchInvolved = m.involvedBiros && normalizeBiroCode(m.involvedBiros).includes(target);
+      return matchPrimary || matchInvolved;
+    });
+  }, [meetingsList, biroParam, lockedBiroCode]);
+
+  const countAll = biroFilteredMeetings.length;
+  const countDraft = biroFilteredMeetings.filter((m) => m.status === 'DRAFT').length;
+  const countReview = biroFilteredMeetings.filter((m) => m.status === 'REVIEW').length;
+  const countApproved = biroFilteredMeetings.filter((m) => m.status === 'APPROVED').length;
+  const countFinal = biroFilteredMeetings.filter((m) => m.status === 'FINAL').length;
 
   const statusFilters: { label: string; value: MeetingStatus | 'ALL'; count: number; sublabel?: string }[] = [
     { label: 'Semua Status', value: 'ALL', count: countAll },
@@ -71,6 +104,16 @@ export function SemuaRapatClient({
       params.delete('status');
     } else {
       params.set('status', val);
+    }
+    router.push(params.toString() ? `/semua-rapat?${params.toString()}` : '/semua-rapat');
+  };
+
+  const handleSelectBiro = (val: string) => {
+    const params = new URLSearchParams(searchParams.toString());
+    if (val === 'ALL' || !val) {
+      params.delete('biro');
+    } else {
+      params.set('biro', val);
     }
     router.push(params.toString() ? `/semua-rapat?${params.toString()}` : '/semua-rapat');
   };
@@ -178,6 +221,88 @@ export function SemuaRapatClient({
         </div>
       </div>
 
+      {/* Super Admin & Admin: Filter Biro Pelaksana Dewan KEK */}
+      {!lockedBiroCode && isPrivileged && (
+        <div className="p-3.5 bg-white rounded-xl border border-slate-200 shadow-2xs flex flex-col md:flex-row md:items-center justify-between gap-3 animate-in fade-in">
+          <div className="flex items-center gap-2.5 flex-wrap">
+            <span className="text-[12px] font-bold text-slate-700 flex items-center gap-1.5 shrink-0">
+              <Building2 className="w-4 h-4 text-[#31889C]" />
+              Filter Biro:
+            </span>
+
+            <div className="flex items-center gap-1.5 flex-wrap">
+              <button
+                type="button"
+                onClick={() => handleSelectBiro('ALL')}
+                className={cn(
+                  "px-3 py-1.5 rounded-lg text-[12px] font-semibold transition-all cursor-pointer",
+                  !biroParam
+                    ? "bg-[#31889C] text-white shadow-xs font-bold"
+                    : "bg-[#F8FAFC] border border-slate-200 text-slate-700 hover:bg-[#F0F9FA] hover:text-[#31889C]"
+                )}
+              >
+                Semua Biro ({meetingsList.length})
+              </button>
+
+              {birosList.map((b) => {
+                const isSelected = biroParam === b.code;
+                const countForBiro = meetingsList.filter((m) => {
+                  const target = normalizeBiroCode(b.code);
+                  return (
+                    normalizeBiroCode(m.biroCode) === target ||
+                    (m.involvedBiros && normalizeBiroCode(m.involvedBiros).includes(target))
+                  );
+                }).length;
+
+                return (
+                  <button
+                    key={b.code}
+                    type="button"
+                    onClick={() => handleSelectBiro(b.code)}
+                    className={cn(
+                      "px-3 py-1.5 rounded-lg text-[12px] font-semibold transition-all cursor-pointer flex items-center gap-1.5",
+                      isSelected
+                        ? "bg-[#31889C] text-white shadow-xs font-bold"
+                        : "bg-[#F8FAFC] border border-slate-200 text-slate-700 hover:bg-[#F0F9FA] hover:text-[#31889C]"
+                    )}
+                    title={`${b.name} (${b.shortName})`}
+                  >
+                    <span>{b.code}</span>
+                    <span
+                      className={cn(
+                        "text-[10px] px-1.5 py-0.2 rounded-full font-bold",
+                        isSelected
+                          ? "bg-white/25 text-white"
+                          : "bg-slate-200/70 text-slate-600"
+                      )}
+                    >
+                      {countForBiro}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Active Biro Indicator & Quick Reset */}
+          {biroParam && (
+            <div className="flex items-center gap-2 shrink-0 self-start md:self-auto">
+              <span className="text-[11.5px] text-[#215865] bg-[#E8F5F7] px-2.5 py-1 rounded-md border border-[#BCE3EB] font-medium hidden sm:inline">
+                {birosList.find((b) => b.code === biroParam)?.shortName || `Biro ${biroParam}`}
+              </span>
+              <button
+                type="button"
+                onClick={() => handleSelectBiro('ALL')}
+                className="text-[11.5px] font-bold text-slate-500 hover:text-slate-800 hover:bg-slate-100 px-2 py-1 rounded transition-colors cursor-pointer"
+                title="Hapus filter biro"
+              >
+                ✕ Reset Biro
+              </button>
+            </div>
+          )}
+        </div>
+      )}
+
       {/* Filter Tabs, Status Guide Trigger & Active Month Indicator */}
       <div className="flex flex-col gap-3">
         <div className="flex flex-wrap items-center justify-between gap-3 pb-1">
@@ -250,28 +375,55 @@ export function SemuaRapatClient({
           </div>
         </div>
 
-        {/* Banner Penjelasan Aktif Saat Filter Status Dipilih */}
-        {statusParam && (
-          <div className="p-3 bg-gradient-to-r from-[#F0F9FA] via-white to-[#F0F9FA]/60 border border-[#BCE3EB] rounded-xl flex items-center justify-between text-xs text-[#215865] shadow-2xs animate-in fade-in">
-            <div className="flex items-center gap-2 min-w-0">
+        {/* Banner Penjelasan Aktif Saat Filter Biro / Status Dipilih */}
+        {(statusParam || (biroParam && !lockedBiroCode)) && (
+          <div className="p-3 bg-gradient-to-r from-[#F0F9FA] via-white to-[#F0F9FA]/60 border border-[#BCE3EB] rounded-xl flex flex-wrap items-center justify-between gap-2 text-xs text-[#215865] shadow-2xs animate-in fade-in">
+            <div className="flex items-center gap-2 min-w-0 flex-wrap">
               <span className="w-2 h-2 rounded-full bg-[#31889C] animate-pulse shrink-0" />
-              <div className="truncate">
-                <strong className="text-slate-900">
-                  {getMeetingStatusDetail(statusParam).fullTitle}:
-                </strong>{' '}
+              <div className="flex items-center gap-2 flex-wrap">
+                {biroParam && !lockedBiroCode && (
+                  <span>
+                    Biro Terpilih:{' '}
+                    <strong className="text-slate-900 bg-white px-2 py-0.5 rounded border border-[#BCE3EB]">
+                      {birosList.find((b) => b.code === biroParam)?.shortName || `Biro ${biroParam}`}
+                    </strong>
+                  </span>
+                )}
+                {statusParam && (
+                  <span>
+                    Tahap:{' '}
+                    <strong className="text-slate-900 bg-white px-2 py-0.5 rounded border border-[#BCE3EB]">
+                      {getMeetingStatusDetail(statusParam).fullTitle}
+                    </strong>
+                  </span>
+                )}
                 <span className="text-slate-600">
-                  {getMeetingStatusDetail(statusParam).description}
+                  (Ditemukan <strong>{biroFilteredMeetings.length}</strong> risalah rapat)
                 </span>
               </div>
             </div>
-            <button
-              type="button"
-              onClick={() => handleSelectStatus('ALL')}
-              className="text-[11px] font-bold text-[#31889C] hover:text-[#215865] bg-white px-2 py-0.5 rounded border border-[#BCE3EB] hover:bg-[#F0F9FA] shrink-0 ml-2 cursor-pointer transition-colors"
-              title="Reset filter dan tampilkan semua status"
-            >
-              ✕ Tampilkan Semua
-            </button>
+            <div className="flex items-center gap-2">
+              {biroParam && !lockedBiroCode && (
+                <button
+                  type="button"
+                  onClick={() => handleSelectBiro('ALL')}
+                  className="text-[11px] font-bold text-[#31889C] hover:text-[#215865] bg-white px-2 py-0.5 rounded border border-[#BCE3EB] hover:bg-[#F0F9FA] cursor-pointer transition-colors"
+                  title="Tampilkan semua biro"
+                >
+                  ✕ Hapus Filter Biro
+                </button>
+              )}
+              {statusParam && (
+                <button
+                  type="button"
+                  onClick={() => handleSelectStatus('ALL')}
+                  className="text-[11px] font-bold text-[#31889C] hover:text-[#215865] bg-white px-2 py-0.5 rounded border border-[#BCE3EB] hover:bg-[#F0F9FA] cursor-pointer transition-colors"
+                  title="Tampilkan semua status"
+                >
+                  ✕ Hapus Filter Status
+                </button>
+              )}
+            </div>
           </div>
         )}
       </div>

@@ -33,7 +33,7 @@ import { parseMonthFilterIndex } from '@/lib/utils';
 
 interface MeetingTableProps {
   onViewAllMeetings?: () => void;
-  filterBiro?: BiroCode | null;
+  filterBiro?: BiroCode | string | null;
   filterStatus?: MeetingStatus | null;
   filterMonth?: string | null;
   isLoading?: boolean;
@@ -278,8 +278,24 @@ export function MeetingTable({
     const monthIdx = parseMonthFilterIndex(filterMonth);
 
     return list.filter((m) => {
-      if (filterBiro && m.biroCode !== filterBiro) {
-        return false;
+      if (filterBiro) {
+        const normalize = (c?: string | null) => {
+          if (!c) return '';
+          const upper = c.toUpperCase().trim();
+          if (upper === 'PPK' || upper === 'REN' || upper === 'IT') return 'BPPK';
+          if (upper === 'DAL' || upper === 'OPS') return 'PKKEK';
+          if (upper === 'INV') return 'IKK';
+          if (upper === 'HUK' || upper === 'LEG') return 'HSDMO';
+          if (upper === 'BUK' || upper === 'ADM') return 'UK';
+          return upper;
+        };
+        const targetBiro = normalize(filterBiro);
+        const primaryBiro = normalize(m.biroCode);
+        const matchPrimary = primaryBiro === targetBiro;
+        const matchInvolved = m.involvedBiros && normalize(m.involvedBiros).includes(targetBiro);
+        if (!matchPrimary && !matchInvolved) {
+          return false;
+        }
       }
       if (filterStatus && m.status !== filterStatus) {
         return false;
