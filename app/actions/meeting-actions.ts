@@ -23,6 +23,9 @@ export interface CreateMeetingInput {
   chairpersonId?: string | null;
   meetingNumber?: string | null;
   primaryTeamId?: string | null;
+  invitationDocUrl?: string | null;
+  invitationDocName?: string | null;
+  invitationDocSize?: number | null;
 }
 
 function safeRevalidate(paths: string[]) {
@@ -128,6 +131,9 @@ export async function createMeetingAction(input: CreateMeetingInput) {
           status: MeetingStatus.DRAFT,
           previousMeetingId: input.previousMeetingId || null,
           chairpersonId: input.chairpersonId || null,
+          invitationDocUrl: input.invitationDocUrl || null,
+          invitationDocName: input.invitationDocName || null,
+          invitationDocSize: input.invitationDocSize || null,
         },
       });
 

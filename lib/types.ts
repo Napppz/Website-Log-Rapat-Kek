@@ -95,6 +95,9 @@ export interface Meeting {
   sessionNumber?: number;
   attendees?: string[];
   agendaSummary?: string;
+  invitationDocUrl?: string | null;
+  invitationDocName?: string | null;
+  invitationDocSize?: number | null;
 }
 
 export interface AgendaSessionItem {

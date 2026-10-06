@@ -1,5 +1,7 @@
 'use server';
 
+import fs from 'fs/promises';
+import path from 'path';
 import { prisma } from '@/lib/prisma';
 import { extractTextFromBuffer } from '@/lib/document-parser';
 import {
@@ -109,6 +111,9 @@ export interface DirectSaveUploadedMeetingInput {
   participantUserIds?: string[];
   chairpersonId?: string | null;
   customMeetingNumber?: string | null;
+  invitationDocUrl?: string | null;
+  invitationDocName?: string | null;
+  invitationDocSize?: number | null;
 }
 
 /**
@@ -124,7 +129,15 @@ export async function directSaveUploadedMeetingAction(
     const isPrivileged =
       currentUser.role === 'SUPER_ADMIN' || currentUser.role === 'ADMIN';
 
-    const { extracted, participantUserIds = [], chairpersonId, customMeetingNumber } = input;
+    const {
+      extracted,
+      participantUserIds = [],
+      chairpersonId,
+      customMeetingNumber,
+      invitationDocUrl,
+      invitationDocName,
+      invitationDocSize,
+    } = input;
 
     if (!isPrivileged && currentUser.biroCode && extracted.biroCode.toUpperCase() !== currentUser.biroCode.toUpperCase()) {
       return {
@@ -179,6 +192,9 @@ export async function directSaveUploadedMeetingAction(
           location: extracted.location,
           status: MeetingStatus.DRAFT,
           chairpersonId: chairpersonId || null,
+          invitationDocUrl: invitationDocUrl || null,
+          invitationDocName: invitationDocName || null,
+          invitationDocSize: invitationDocSize || null,
         },
       });
 
@@ -402,6 +418,154 @@ export async function saveMinutesAndActionsToMeetingAction(
     return {
       success: false,
       error: error?.message || 'Gagal menyimpan naskah notula ke rapat.',
+    };
+  }
+}
+
+export interface UploadInvitationResponse {
+  success: boolean;
+  error?: string;
+  data?: {
+    url: string;
+    name: string;
+    size: number;
+    extracted?: ExtractedMeetingData;
+    matchedUserIds?: string[];
+  };
+}
+
+/**
+ * Server Action: Upload and store official meeting invitation document (.pdf, .docx, .png, .jpg)
+ * Optionally extracts structured meeting data using AI/NLP if the document contains readable text.
+ */
+export async function uploadInvitationFileAction(
+  formData: FormData
+): Promise<UploadInvitationResponse> {
+  try {
+    const file = formData.get('file') as File | null;
+    if (!file) {
+      return { success: false, error: 'Tidak ada berkas yang dipilih.' };
+    }
+
+    // Maximum file size: 25MB
+    if (file.size > 25 * 1024 * 1024) {
+      return { success: false, error: 'Ukuran berkas melebihi batas maksimum 25MB.' };
+    }
+
+    const validExtensions = ['pdf', 'docx', 'doc', 'txt', 'png', 'jpg', 'jpeg'];
+    const originalName = file.name;
+    const ext = originalName.split('.').pop()?.toLowerCase() || '';
+
+    if (!validExtensions.includes(ext)) {
+      return {
+        success: false,
+        error:
+          'Format berkas tidak didukung. Mohon unggah berkas PDF, Word (.docx), Teks (.txt), atau Gambar (.png/.jpg).',
+      };
+    }
+
+    const arrayBuffer = await file.arrayBuffer();
+    const buffer = Buffer.from(arrayBuffer);
+
+    // Save to public/uploads/invitations/
+    const uploadDir = path.join(process.cwd(), 'public', 'uploads', 'invitations');
+    await fs.mkdir(uploadDir, { recursive: true });
+
+    const sanitizedBase = path
+      .basename(originalName, path.extname(originalName))
+      .replace(/[^a-zA-Z0-9_-]/g, '_')
+      .slice(0, 50);
+    const uniqueSuffix = `${Date.now()}_${Math.random().toString(36).substring(2, 7)}`;
+    const finalFileName = `UNDANGAN_${sanitizedBase}_${uniqueSuffix}.${ext}`;
+    const filePath = path.join(uploadDir, finalFileName);
+
+    await fs.writeFile(filePath, buffer);
+
+    const publicUrl = `/uploads/invitations/${finalFileName}`;
+
+    // Smart data extraction if file contains readable text
+    let extracted: ExtractedMeetingData | undefined;
+    let matchedUserIds: string[] | undefined;
+
+    if (['pdf', 'docx', 'doc', 'txt'].includes(ext)) {
+      try {
+        const rawText = await extractTextFromBuffer(buffer, file.name, file.type);
+        if (rawText && rawText.trim().length >= 20) {
+          extracted = await extractMeetingDocumentSmart(rawText);
+
+          const activeUsers = await prisma.user.findMany({
+            where: { isActive: true },
+            select: { id: true, name: true },
+          });
+          const attendeesLower = (
+            (extracted.attendees || '') +
+            ' ' +
+            (extracted.chairpersonName || '')
+          ).toLowerCase();
+          matchedUserIds = activeUsers
+            .filter((u) => attendeesLower.includes(u.name.toLowerCase()))
+            .map((u) => u.id);
+        }
+      } catch (parseErr) {
+        console.warn('Smart extraction skipped for invitation doc:', parseErr);
+      }
+    }
+
+    return {
+      success: true,
+      data: {
+        url: publicUrl,
+        name: originalName,
+        size: file.size,
+        extracted,
+        matchedUserIds,
+      },
+    };
+  } catch (error: any) {
+    console.error('Error uploading invitation document:', error);
+    return {
+      success: false,
+      error: error?.message || 'Gagal mengunggah dokumen undangan rapat.',
+    };
+  }
+}
+
+/**
+ * Server Action: Update or attach an invitation document to an existing meeting
+ */
+export async function updateMeetingInvitationDocAction(
+  meetingId: string,
+  doc: { url: string; name: string; size: number } | null
+) {
+  try {
+    const existing = await prisma.meeting.findUnique({
+      where: { id: meetingId },
+    });
+    if (!existing) {
+      return { success: false, error: 'Rapat tidak ditemukan.' };
+    }
+
+    const updated = await prisma.meeting.update({
+      where: { id: meetingId },
+      data: {
+        invitationDocUrl: doc?.url || null,
+        invitationDocName: doc?.name || null,
+        invitationDocSize: doc?.size || null,
+      },
+    });
+
+    try {
+      revalidatePath('/');
+      revalidatePath('/semua-rapat');
+      revalidatePath(`/semua-rapat/${meetingId}`);
+    } catch {}
+
+    return { success: true, data: updated };
+  } catch (error: any) {
+    console.error('Error updating meeting invitation doc:', error);
+    return {
+      success: false,
+      error: error?.message || 'Gagal memperbarui dokumen undangan rapat.',
     };
   }
 }

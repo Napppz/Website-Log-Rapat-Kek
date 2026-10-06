@@ -108,6 +108,9 @@ model Meeting {
   secretaryId       String?       @map("id_notulis")
   previousMeetingId String?       @map("id_rapat_sebelumnya")
   status            MeetingStatus @default(DRAFT) @map("status_rapat")
+  invitationDocUrl  String?       @map("dokumen_undangan_url")
+  invitationDocName String?       @map("nama_dokumen_undangan")
+  invitationDocSize Int?          @map("ukuran_dokumen_undangan")
   createdAt         DateTime      @default(now()) @map("dibuat_pada")
   updatedAt         DateTime      @updatedAt @map("diperbarui_pada")
 

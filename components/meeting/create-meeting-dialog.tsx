@@ -1,12 +1,26 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
-import { X, Calendar, Clock, MapPin, Building2, Plus, Link2 } from 'lucide-react';
+import React, { useState, useEffect, useRef } from 'react';
+import {
+  X,
+  Calendar,
+  Clock,
+  MapPin,
+  Building2,
+  Plus,
+  Link2,
+  Paperclip,
+  UploadCloud,
+  Loader2,
+  FileCheck,
+  Trash2,
+} from 'lucide-react';
 import { BIRO_LIST } from '@/lib/mock-data';
 import { BiroCode } from '@/lib/types';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { toast } from '@/components/providers/toast-provider';
+import { uploadInvitationFileAction } from '@/app/actions/meeting-upload-actions';
 
 interface CreateMeetingDialogProps {
   isOpen: boolean;
@@ -27,6 +41,15 @@ export function CreateMeetingDialog({ isOpen, onClose, onSuccess }: CreateMeetin
   const [location, setLocation] = useState('Ruang Rapat Utama Gedung Posko KEK & Hybrid Zoom');
   const [previousMeetingId, setPreviousMeetingId] = useState<string>('');
   const [availableMeetings, setAvailableMeetings] = useState<any[]>([]);
+
+  // Invitation Document State
+  const [invitationDoc, setInvitationDoc] = useState<{
+    url: string;
+    name: string;
+    size: number;
+  } | null>(null);
+  const [isUploadingDoc, setIsUploadingDoc] = useState(false);
+  const docInputRef = useRef<HTMLInputElement>(null);
 
   // Load meeting options when dialog opens
   useEffect(() => {
@@ -58,6 +81,33 @@ export function CreateMeetingDialog({ isOpen, onClose, onSuccess }: CreateMeetin
 
   if (!isOpen || !canCreate) return null;
 
+  const handleUploadFile = async (file: File) => {
+    if (file.size > 25 * 1024 * 1024) {
+      toast.error('Ukuran berkas melebihi batas 25MB.');
+      return;
+    }
+    setIsUploadingDoc(true);
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+      const res = await uploadInvitationFileAction(formData);
+      if (res.success && res.data) {
+        setInvitationDoc({
+          url: res.data.url,
+          name: res.data.name,
+          size: res.data.size,
+        });
+        toast.success(`Surat undangan "${res.data.name}" terlampir.`);
+      } else {
+        toast.error(res.error || 'Gagal mengunggah dokumen undangan');
+      }
+    } catch (err: any) {
+      toast.error(err?.message || 'Gagal mengunggah dokumen undangan');
+    } finally {
+      setIsUploadingDoc(false);
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setSubmitting(true);
@@ -75,11 +125,15 @@ export function CreateMeetingDialog({ isOpen, onClose, onSuccess }: CreateMeetin
         endTime,
         location,
         previousMeetingId: previousMeetingId || undefined,
+        invitationDocUrl: invitationDoc?.url || undefined,
+        invitationDocName: invitationDoc?.name || undefined,
+        invitationDocSize: invitationDoc?.size || undefined,
       });
 
       if (res.success && res.data) {
         toast.success(`Rapat "${title}" (${res.data.meetingNumber}) berhasil disimpan ke database.`);
         setTitle('');
+        setInvitationDoc(null);
         if (onSuccess) onSuccess();
         onClose();
         router.refresh();
@@ -220,6 +274,73 @@ export function CreateMeetingDialog({ isOpen, onClose, onSuccess }: CreateMeetin
               placeholder="Ruang Rapat Utama & Zoom..."
               className="w-full px-3 py-2 rounded-lg border border-slate-200 bg-white text-slate-800 focus:outline-none focus:ring-2 focus:ring-[#31889C]/25 focus:border-[#31889C]"
             />
+          </div>
+
+          {/* Lampiran Dokumen Undangan Rapat */}
+          <div className="p-3 bg-[#F0F9FA] rounded-xl border border-[#BCE3EB] space-y-2">
+            <div className="flex items-center justify-between">
+              <label className="block font-semibold text-slate-800 text-[12px] flex items-center gap-1.5">
+                <Paperclip className="w-3.5 h-3.5 text-[#31889C]" />
+                <span>Dokumen Undangan Resmi</span>
+                <span className="text-slate-400 font-normal text-[11px]">(Opsional)</span>
+              </label>
+              <span className="text-[10px] text-slate-500">PDF, Word, JPG, PNG (Maks 25MB)</span>
+            </div>
+
+            <input
+              ref={docInputRef}
+              type="file"
+              className="hidden"
+              accept=".pdf,.docx,.doc,.png,.jpg,.jpeg,.txt"
+              onChange={(e) => {
+                const f = e.target.files?.[0];
+                if (f) handleUploadFile(f);
+              }}
+            />
+
+            {!invitationDoc ? (
+              <button
+                type="button"
+                disabled={isUploadingDoc}
+                onClick={() => docInputRef.current?.click()}
+                className="w-full py-2 px-3 border border-dashed border-[#31889C]/50 rounded-lg bg-white hover:bg-slate-50 text-slate-700 text-[12px] font-medium flex items-center justify-center gap-2 transition-colors cursor-pointer disabled:opacity-60"
+              >
+                {isUploadingDoc ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin text-[#31889C]" />
+                    <span>Mengunggah dokumen undangan...</span>
+                  </>
+                ) : (
+                  <>
+                    <UploadCloud className="w-4 h-4 text-[#31889C]" />
+                    <span>Lampirkan Berkas Surat Undangan</span>
+                  </>
+                )}
+              </button>
+            ) : (
+              <div className="flex items-center justify-between bg-white px-3 py-2 rounded-lg border border-teal-200 shadow-2xs">
+                <div className="flex items-center gap-2 min-w-0">
+                  <FileCheck className="w-4 h-4 text-emerald-600 shrink-0" />
+                  <span className="text-[12px] font-bold text-slate-800 truncate max-w-[240px]">
+                    {invitationDoc.name}
+                  </span>
+                  <span className="text-[10px] text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded font-bold shrink-0">
+                    Terlampir
+                  </span>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setInvitationDoc(null);
+                    if (docInputRef.current) docInputRef.current.value = '';
+                  }}
+                  className="p-1 text-rose-500 hover:text-rose-700 transition-colors cursor-pointer"
+                  title="Hapus lampiran"
+                >
+                  <Trash2 className="w-3.5 h-3.5" />
+                </button>
+              </div>
+            )}
           </div>
 
           {/* Footer Actions */}

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import {
   Calendar,
@@ -26,6 +26,12 @@ import {
   Search,
   User,
   Filter,
+  Paperclip,
+  ExternalLink,
+  Trash2,
+  FileCheck,
+  FileSpreadsheet,
+  Upload,
 } from 'lucide-react';
 import { BIRO_LIST } from '@/lib/mock-data';
 import { BiroCode } from '@/lib/types';
@@ -37,7 +43,10 @@ import {
   getMeetingOptionsAction,
   getBiroTeamsAction,
 } from '@/app/actions/meeting-actions';
-import { saveMinutesAndActionsToMeetingAction } from '@/app/actions/meeting-upload-actions';
+import {
+  saveMinutesAndActionsToMeetingAction,
+  uploadInvitationFileAction,
+} from '@/app/actions/meeting-upload-actions';
 import { UploadMeetingDialog } from '@/components/meeting/upload-meeting-dialog';
 import { ExtractedMeetingData } from '@/lib/meeting-extractor';
 import { toast } from '@/components/providers/toast-provider';
@@ -68,6 +77,18 @@ export default function BuatRapatPage() {
 
   const [isUploadDialogOpen, setIsUploadDialogOpen] = useState(false);
   const [pendingMinutes, setPendingMinutes] = useState<ExtractedMeetingData | null>(null);
+
+  // Invitation Document Upload States
+  const [invitationDoc, setInvitationDoc] = useState<{
+    url: string;
+    name: string;
+    size: number;
+    extracted?: ExtractedMeetingData;
+    matchedUserIds?: string[];
+  } | null>(null);
+  const [isUploadingDoc, setIsUploadingDoc] = useState(false);
+  const [isDraggingDoc, setIsDraggingDoc] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [selectedBiro, setSelectedBiro] = useState<BiroCode>(userBiroCode || 'IKK');
   const [title, setTitle] = useState('');
@@ -279,6 +300,73 @@ export default function BuatRapatPage() {
     setAttendees(currentNames.join(', '));
   };
 
+  const formatFileSize = (bytes?: number) => {
+    if (!bytes) return '';
+    if (bytes < 1024) return `${bytes} B`;
+    if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+    return `${(bytes / (1024 * 1024)).toFixed(2)} MB`;
+  };
+
+  const handleFileUpload = async (file: File) => {
+    const validExtensions = ['pdf', 'docx', 'doc', 'png', 'jpg', 'jpeg', 'txt'];
+    const ext = file.name.split('.').pop()?.toLowerCase() || '';
+    if (!validExtensions.includes(ext)) {
+      toast.error('Format berkas tidak didukung. Mohon unggah PDF, Word (.docx), Teks (.txt), atau Gambar (.png/.jpg).');
+      return;
+    }
+    if (file.size > 25 * 1024 * 1024) {
+      toast.error('Ukuran berkas melebihi batas maksimum 25MB.');
+      return;
+    }
+
+    setIsUploadingDoc(true);
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+      const res = await uploadInvitationFileAction(formData);
+
+      if (res.success && res.data) {
+        setInvitationDoc(res.data);
+        toast.success(`Dokumen undangan "${res.data.name}" berhasil diunggah.`);
+
+        // Auto-fill customMeetingNumber if empty and extracted
+        if (res.data.extracted?.meetingNumber && !customMeetingNumber) {
+          setCustomMeetingNumber(res.data.extracted.meetingNumber);
+        }
+      } else {
+        toast.error(res.error || 'Gagal mengunggah dokumen undangan');
+      }
+    } catch (err: any) {
+      toast.error(err?.message || 'Terjadi kesalahan sistem saat mengunggah dokumen');
+    } finally {
+      setIsUploadingDoc(false);
+    }
+  };
+
+  const handleApplyFromInvitation = () => {
+    if (!invitationDoc?.extracted) return;
+    const ext = invitationDoc.extracted;
+    if (ext.title) setTitle(ext.title);
+    if (ext.meetingNumber) setCustomMeetingNumber(ext.meetingNumber);
+    if (ext.date) setDate(ext.date);
+    if (ext.startTime && ext.endTime) setTime(`${ext.startTime} - ${ext.endTime} WIB`);
+    if (ext.location) setLocation(ext.location);
+    if (ext.classification) setClassification(ext.classification);
+    if (ext.attendees) setAttendees(ext.attendees);
+    if (invitationDoc.matchedUserIds && invitationDoc.matchedUserIds.length > 0) {
+      setSelectedUserIds((prev) => Array.from(new Set([...prev, ...invitationDoc.matchedUserIds!])));
+    }
+    toast.success('Agenda, nomor surat, tanggal, lokasi & peserta berhasil disesuaikan dari surat undangan!');
+  };
+
+  const handleRemoveInvitationDoc = () => {
+    setInvitationDoc(null);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+    toast.info('Lampiran dokumen undangan dibatalkan.');
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitted(true);
@@ -308,6 +396,9 @@ export default function BuatRapatPage() {
         previousMeetingId: previousMeetingId || undefined,
         chairpersonId: chairpersonId || undefined,
         meetingNumber: validMeetingNumber,
+        invitationDocUrl: invitationDoc?.url || undefined,
+        invitationDocName: invitationDoc?.name || undefined,
+        invitationDocSize: invitationDoc?.size || undefined,
       });
 
       if (res.success && res.data) {
@@ -605,6 +696,165 @@ export default function BuatRapatPage() {
                   Hubungkan jika rapat ini melanjutkan butir tindak lanjut sesi terdahulu.
                 </p>
               </div>
+            </div>
+
+            {/* Dokumen Surat Undangan Resmi Upload Section */}
+            <div className="p-5 rounded-2xl border border-teal-100 bg-gradient-to-br from-[#F0F8FA]/80 via-white to-slate-50/70 shadow-2xs space-y-3.5">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                <div className="flex items-center gap-2">
+                  <div className="w-8 h-8 rounded-lg bg-[#1E6B7B]/10 flex items-center justify-center text-[#1E6B7B]">
+                    <Paperclip className="w-4 h-4" />
+                  </div>
+                  <div>
+                    <h3 className="font-bold text-slate-900 text-sm flex items-center gap-2">
+                      <span>Dokumen Undangan Rapat Resmi</span>
+                      <span className="text-slate-400 font-normal text-xs">(Opsional)</span>
+                    </h3>
+                    <p className="text-[11.5px] text-slate-500">
+                      Lampirkan berkas fisik/digital surat undangan untuk diakses oleh peserta &amp; pimpinan
+                    </p>
+                  </div>
+                </div>
+                <span className="text-[11px] font-semibold text-slate-400 bg-slate-100 px-2.5 py-1 rounded-full self-start sm:self-auto">
+                  PDF, DOCX, JPG, PNG (Maks 25MB)
+                </span>
+              </div>
+
+              {/* Upload Dropzone / State */}
+              {!invitationDoc ? (
+                <div
+                  onDragOver={(e) => {
+                    e.preventDefault();
+                    setIsDraggingDoc(true);
+                  }}
+                  onDragLeave={() => setIsDraggingDoc(false)}
+                  onDrop={(e) => {
+                    e.preventDefault();
+                    setIsDraggingDoc(false);
+                    const file = e.dataTransfer.files?.[0];
+                    if (file) handleFileUpload(file);
+                  }}
+                  onClick={() => !isUploadingDoc && fileInputRef.current?.click()}
+                  className={cn(
+                    'border-2 border-dashed rounded-xl p-6 text-center cursor-pointer transition-all flex flex-col items-center justify-center gap-2.5',
+                    isDraggingDoc
+                      ? 'border-[#1E6B7B] bg-[#F0F8FA] scale-[1.01]'
+                      : 'border-slate-300 hover:border-[#1E6B7B] hover:bg-slate-50/80 bg-white'
+                  )}
+                >
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    className="hidden"
+                    accept=".pdf,.docx,.doc,.png,.jpg,.jpeg,.txt"
+                    onChange={(e) => {
+                      const file = e.target.files?.[0];
+                      if (file) handleFileUpload(file);
+                    }}
+                  />
+
+                  {isUploadingDoc ? (
+                    <div className="py-2 flex flex-col items-center gap-2">
+                      <Loader2 className="w-7 h-7 text-[#1E6B7B] animate-spin" />
+                      <p className="text-xs font-bold text-slate-700">
+                        Mengunggah &amp; menganalisis isi dokumen undangan...
+                      </p>
+                      <p className="text-[11px] text-slate-400">
+                        Sistem sedang membaca format dan memeriksa identitas rapat
+                      </p>
+                    </div>
+                  ) : (
+                    <>
+                      <div className="w-11 h-11 rounded-full bg-[#F0F8FA] flex items-center justify-center text-[#1E6B7B] shadow-2xs">
+                        <UploadCloud className="w-5 h-5" />
+                      </div>
+                      <div>
+                        <p className="text-xs font-bold text-slate-800">
+                          Klik untuk memilih berkas atau seret berkas ke area ini
+                        </p>
+                        <p className="text-[11px] text-slate-500 mt-0.5">
+                          Format berkas didukung: Surat format PDF (.pdf), Word (.docx), atau Pindaian Foto (.jpg/.png)
+                        </p>
+                      </div>
+                    </>
+                  )}
+                </div>
+              ) : (
+                <div className="space-y-3 animate-in fade-in">
+                  {/* File Attached Card */}
+                  <div className="p-4 rounded-xl bg-white border border-teal-200/90 shadow-2xs flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                    <div className="flex items-center gap-3 min-w-0">
+                      <div className="w-10 h-10 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-700 flex items-center justify-center shrink-0">
+                        <FileCheck className="w-5 h-5" />
+                      </div>
+                      <div className="min-w-0">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <p className="text-sm font-bold text-slate-900 truncate max-w-[280px] sm:max-w-md">
+                            {invitationDoc.name}
+                          </p>
+                          <span className="px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 text-[10px] font-bold">
+                            ✓ Terlampir
+                          </span>
+                        </div>
+                        <p className="text-[11.5px] text-slate-500 mt-0.5">
+                          Ukuran: {formatFileSize(invitationDoc.size)} • Siap disimpan bersama data rapat
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-2 self-start sm:self-center shrink-0">
+                      <a
+                        href={invitationDoc.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 text-xs font-semibold shadow-2xs transition-colors cursor-pointer"
+                        title="Buka dokumen di tab baru"
+                      >
+                        <ExternalLink className="w-3.5 h-3.5 text-[#1E6B7B]" />
+                        <span>Pratinjau</span>
+                      </a>
+                      <button
+                        type="button"
+                        onClick={handleRemoveInvitationDoc}
+                        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-rose-200 bg-rose-50 hover:bg-rose-100 text-rose-700 text-xs font-semibold shadow-2xs transition-colors cursor-pointer"
+                        title="Hapus lampiran dokumen"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                        <span>Hapus</span>
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* AI Extraction Banner if content parsed */}
+                  {invitationDoc.extracted && (
+                    <div className="p-3.5 rounded-xl bg-gradient-to-r from-amber-50 to-emerald-50 border border-amber-200/80 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
+                      <div className="flex items-start gap-2.5">
+                        <Sparkles className="w-4 h-4 text-amber-600 mt-0.5 shrink-0" />
+                        <div>
+                          <p className="font-bold text-slate-900">
+                            Informasi Rapat Terdeteksi dari Dokumen Undangan
+                          </p>
+                          <p className="text-[11.5px] text-slate-600 mt-0.5 leading-relaxed">
+                            {invitationDoc.extracted.title ? `Agenda: "${invitationDoc.extracted.title.slice(0, 60)}..." • ` : ''}
+                            {invitationDoc.extracted.date ? `Tanggal: ${invitationDoc.extracted.date} • ` : ''}
+                            {invitationDoc.matchedUserIds && invitationDoc.matchedUserIds.length > 0
+                              ? `${invitationDoc.matchedUserIds.length} Pejabat KEK Terdeteksi`
+                              : 'Siap diterapkan ke form'}
+                          </p>
+                        </div>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={handleApplyFromInvitation}
+                        className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg bg-[#1E6B7B] hover:bg-[#175360] text-white font-bold text-xs shadow-xs transition-all shrink-0 cursor-pointer self-start sm:self-center"
+                      >
+                        <Sparkles className="w-3.5 h-3.5 text-amber-300" />
+                        <span>Terapkan ke Form</span>
+                      </button>
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
           </div>
         </div>

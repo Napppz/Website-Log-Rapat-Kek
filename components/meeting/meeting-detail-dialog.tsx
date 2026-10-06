@@ -18,6 +18,7 @@ import {
   CheckSquare,
   FileDown,
   Loader2,
+  Paperclip,
 } from 'lucide-react';
 import { Meeting, MeetingStatus } from '@/lib/types';
 import { MeetingStatusBadge } from './meeting-status-badge';
@@ -402,6 +403,34 @@ export function MeetingDetailDialog({
                       <p className="text-[11px] text-amber-800 font-semibold uppercase">Tim Kerja Pelaksana</p>
                       <p className="font-bold text-amber-950">Tim {meeting.primaryTeamName}</p>
                     </div>
+                  </div>
+                )}
+
+                {meeting.invitationDocUrl && (
+                  <div className="flex items-center justify-between col-span-1 md:col-span-2 p-3 rounded-xl bg-teal-50/90 border border-teal-200 shadow-2xs">
+                    <div className="flex items-center gap-2.5 min-w-0">
+                      <div className="w-8 h-8 rounded-lg bg-white flex items-center justify-center text-[#1E6B7B] shadow-2xs shrink-0">
+                        <Paperclip className="w-4 h-4" />
+                      </div>
+                      <div className="min-w-0">
+                        <p className="text-[10px] text-teal-800 font-bold uppercase tracking-wider">
+                          Dokumen Undangan Resmi Terlampir
+                        </p>
+                        <p className="font-bold text-slate-800 text-[12px] truncate max-w-[240px] sm:max-w-xs">
+                          {meeting.invitationDocName || 'Surat Undangan'}
+                        </p>
+                      </div>
+                    </div>
+                    <a
+                      href={meeting.invitationDocUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#1E6B7B] text-white text-[11px] font-bold hover:bg-[#175360] shadow-2xs shrink-0 cursor-pointer transition-colors"
+                      title="Buka dokumen undangan di tab baru"
+                    >
+                      <ExternalLink className="w-3 h-3" />
+                      <span>Buka Berkas</span>
+                    </a>
                   </div>
                 )}
               </div>

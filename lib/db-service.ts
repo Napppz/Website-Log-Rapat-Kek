@@ -352,6 +352,9 @@ export async function getMeetingsFromDb(filters?: {
           agendaSummary: `Diselenggarakan oleh ${m.primaryBiro.name}. ${
             involvedBiroNames ? `Biro terlibat: ${involvedBiroNames}.` : ''
           }`,
+          invitationDocUrl: m.invitationDocUrl || null,
+          invitationDocName: m.invitationDocName || null,
+          invitationDocSize: m.invitationDocSize || null,
         };
       });
     });
