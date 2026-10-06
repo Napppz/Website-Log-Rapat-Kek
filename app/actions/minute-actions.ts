@@ -117,18 +117,22 @@ export async function upsertMeetingMinutesAction(input: MeetingMinutesInput) {
             meetingId,
             userId: currentUser.id,
             changeType: isNew ? 'CREATED' : 'UPDATED',
-            fieldName: null,
+            fieldName: isNotaDinas ? 'NOTA_DINAS' : 'NOTULA',
             oldValue: isNew
               ? undefined
               : {
+                  docType: (existing?.conclusion as any)?.docType || (isNotaDinas ? 'NOTA_DINAS' : 'NOTULA'),
                   agenda: existing?.agenda ?? undefined,
                   discussion: existing?.discussion ?? undefined,
-                  decisions: decisions ?? undefined,
+                  decisions: existing?.decisions ?? undefined,
+                  conclusion: existing?.conclusion ?? undefined,
                 },
             newValue: {
+              docType: docType || (isNotaDinas ? 'NOTA_DINAS' : 'NOTULA'),
               agenda: agenda ?? undefined,
               discussion: discussion ?? undefined,
               decisions: decisions ?? undefined,
+              conclusion: finalConclusion ?? undefined,
             },
             summary: isNew
               ? `${docLabel} dibuat pertama kali oleh ${currentUser.name}`

@@ -26,6 +26,7 @@ import {
   GoogleDriveLinkCard,
   extractDriveLink,
   extractAnyLink,
+  extractAllLinks,
   cleanTextWithoutLink,
   RenderTextWithLinks,
 } from './google-drive-link-badge';
@@ -250,8 +251,8 @@ export function ActionItemList({
                       {item.title}
                     </h4>
                     {(() => {
-                      const driveUrl = extractDriveLink(item.description) || extractAnyLink(item.description);
-                      const cleanDesc = driveUrl ? cleanTextWithoutLink(item.description) : item.description;
+                      const allUrls = extractAllLinks(item.description);
+                      const cleanDesc = allUrls.length > 0 ? cleanTextWithoutLink(item.description) : item.description;
 
                       return (
                         <div className="space-y-1.5 pt-0.5">
@@ -260,9 +261,16 @@ export function ActionItemList({
                               <RenderTextWithLinks text={cleanDesc} />
                             </p>
                           ) : null}
-                          {driveUrl ? (
-                            <div className="pt-0.5">
-                              <GoogleDriveLinkCard url={driveUrl} variant="badge" />
+                          {allUrls.length > 0 ? (
+                            <div className="flex flex-wrap items-center gap-1.5 pt-0.5">
+                              {allUrls.map((url, idx) => (
+                                <GoogleDriveLinkCard
+                                  key={url + idx}
+                                  url={url}
+                                  label={allUrls.length > 1 ? `Buka Google Drive ${idx + 1}` : undefined}
+                                  variant="badge"
+                                />
+                              ))}
                             </div>
                           ) : null}
                         </div>

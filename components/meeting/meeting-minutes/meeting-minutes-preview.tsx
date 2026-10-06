@@ -10,6 +10,7 @@ import {
   RefreshCw,
   CheckCircle2,
   Loader2,
+  History,
 } from 'lucide-react';
 import { JSONContent } from '@tiptap/react';
 import {
@@ -42,6 +43,7 @@ interface MeetingMinutesPreviewProps {
   isDownloadingDocx?: boolean;
   onEditClick?: () => void;
   canEdit?: boolean;
+  onViewHistoryClick?: () => void;
 }
 
 /**
@@ -103,6 +105,7 @@ export function MeetingMinutesPreview({
   isDownloadingDocx,
   onEditClick,
   canEdit = false,
+  onViewHistoryClick,
 }: MeetingMinutesPreviewProps) {
   const [viewMode, setViewMode] = useState<'paper' | 'raw_pdf'>('paper');
   const [iframeKey, setIframeKey] = useState(0);
@@ -288,8 +291,20 @@ export function MeetingMinutesPreview({
             </div>
           </div>
 
-          {/* Right: Actions Group (Edit Button + Export Group) */}
+          {/* Right: Actions Group (History Button + Edit Button + Export Group) */}
           <div className="flex flex-wrap items-center gap-2 self-start sm:self-auto">
+            {onViewHistoryClick && (
+              <button
+                type="button"
+                onClick={onViewHistoryClick}
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-slate-300 bg-white hover:bg-slate-50 text-slate-700 font-semibold text-[12px] transition-all cursor-pointer shadow-2xs hover:border-[#31889C]/40"
+                title={`Lihat riwayat perubahan ${docType === 'NOTA_DINAS' ? 'Nota Dinas' : 'Notula'}`}
+              >
+                <History className="w-3.5 h-3.5 text-[#31889C]" />
+                <span>Riwayat {docType === 'NOTA_DINAS' ? 'Nota Dinas' : 'Notula'}</span>
+              </button>
+            )}
+
             {canEdit && onEditClick && (
               <button
                 type="button"

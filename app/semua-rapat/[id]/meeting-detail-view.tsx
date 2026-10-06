@@ -1373,6 +1373,7 @@ export function MeetingDetailView({
             meeting={meeting}
             initialMinutes={meeting.minutes}
             defaultMode="preview"
+            onViewHistoryClick={() => handleTabChange('history')}
           />
         </div>
       )}

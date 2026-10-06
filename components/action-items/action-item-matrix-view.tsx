@@ -32,6 +32,7 @@ import {
   GoogleDriveLinkCard,
   extractDriveLink,
   extractAnyLink,
+  extractAllLinks,
   cleanTextWithoutLink,
   RenderTextWithLinks,
 } from './google-drive-link-badge';
@@ -532,8 +533,8 @@ export function ActionItemMatrixView({
                       <td className="py-3.5 px-4 align-top">
                         <p className="font-bold text-slate-900 leading-snug">{task.title}</p>
                         {(() => {
-                          const driveUrl = extractDriveLink(task.description) || extractAnyLink(task.description);
-                          const cleanDesc = driveUrl ? cleanTextWithoutLink(task.description) : task.description;
+                          const allUrls = extractAllLinks(task.description);
+                          const cleanDesc = allUrls.length > 0 ? cleanTextWithoutLink(task.description) : task.description;
 
                           return (
                             <div className="space-y-1 mt-0.5">
@@ -542,9 +543,16 @@ export function ActionItemMatrixView({
                                   <RenderTextWithLinks text={cleanDesc} />
                                 </p>
                               ) : null}
-                              {driveUrl ? (
-                                <div className="pt-0.5">
-                                  <GoogleDriveLinkCard url={driveUrl} variant="badge" />
+                              {allUrls.length > 0 ? (
+                                <div className="flex flex-wrap items-center gap-1.5 pt-0.5">
+                                  {allUrls.map((url, idx) => (
+                                    <GoogleDriveLinkCard
+                                      key={url + idx}
+                                      url={url}
+                                      label={allUrls.length > 1 ? `Buka Google Drive ${idx + 1}` : undefined}
+                                      variant="badge"
+                                    />
+                                  ))}
                                 </div>
                               ) : null}
                             </div>

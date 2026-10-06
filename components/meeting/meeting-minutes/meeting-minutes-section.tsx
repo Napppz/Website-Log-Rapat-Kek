@@ -14,6 +14,7 @@ interface MeetingMinutesSectionProps {
   meeting?: any;
   initialMinutes?: any;
   defaultMode?: 'preview' | 'edit';
+  onViewHistoryClick?: () => void;
 }
 
 export function MeetingMinutesSection({
@@ -21,6 +22,7 @@ export function MeetingMinutesSection({
   meeting: propMeeting,
   initialMinutes: propMinutes,
   defaultMode = 'preview',
+  onViewHistoryClick,
 }: MeetingMinutesSectionProps) {
   const { data: session } = useSession();
   const userRole = session?.user?.role || 'VIEWER';
@@ -262,6 +264,7 @@ export function MeetingMinutesSection({
         isDownloadingDocx={isDownloadingDocx}
         onEditClick={canEditMinutes ? () => setMode('edit') : undefined}
         canEdit={canEditMinutes}
+        onViewHistoryClick={onViewHistoryClick}
       />
     </div>
   );

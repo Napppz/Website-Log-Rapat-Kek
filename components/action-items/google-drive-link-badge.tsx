@@ -55,6 +55,20 @@ export function extractAnyLink(text?: string | null): string | null {
   return normalizeUrl(match[0]);
 }
 
+/**
+ * Extracts ALL unique Google Drive / document links found in text (useful if 2 or 3 links are attached)
+ */
+export function extractAllLinks(text?: string | null): string[] {
+  if (!text) return [];
+  const regex = /(https?:\/\/[^\s\)\"\'>]+|(?:drive|docs)\.google\.com\/[^\s\)\"\'>]+)/gi;
+  const matches = text.match(regex);
+  if (!matches) return [];
+  const normalized = matches
+    .map((m) => normalizeUrl(m))
+    .filter((m) => m && m.length > 5);
+  return Array.from(new Set(normalized));
+}
+
 export function cleanTextWithoutLink(text?: string | null): string {
   if (!text) return '';
   // Only remove if it's formatted as standard attachment line:
@@ -79,7 +93,7 @@ interface GoogleDriveLinkCardProps {
 
 export function GoogleDriveLinkCard({
   url,
-  label = 'Dokumen Pendukung Google Drive',
+  label,
   variant = 'card',
 }: GoogleDriveLinkCardProps) {
   const [copied, setCopied] = useState(false);
@@ -114,7 +128,7 @@ export function GoogleDriveLinkCard({
             <FileText className="w-3.5 h-3.5 text-[#31889C] shrink-0" />
           )}
           <span className="underline decoration-dotted underline-offset-2">
-            {isDrive ? 'Buka Google Drive' : 'Buka Dokumen'}
+            {label ? label : isDrive ? 'Buka Google Drive' : 'Buka Dokumen'}
           </span>
           <ExternalLink className="w-3 h-3 text-[#31889C] group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform shrink-0" />
         </a>
