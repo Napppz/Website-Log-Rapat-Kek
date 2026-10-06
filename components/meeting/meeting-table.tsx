@@ -422,7 +422,7 @@ export function MeetingTable({
               <th className="py-3 px-4">Nomor &amp; Tanggal</th>
               <th className="py-3 px-4">Agenda Rapat</th>
               <th className="py-3 px-4">Biro Pelaksana</th>
-              <th className="py-3 px-4">Status</th>
+              <th className="py-3 px-4" title="Siklus 4 Tahap Risalah: 1. Draf -> 2. Reviu -> 3. Disetujui -> 4. Final">Tahap Risalah</th>
               <th className="py-3 px-4">Tindak Lanjut</th>
               <th className="py-3 px-4 text-right">Aksi</th>
             </tr>
@@ -585,6 +585,7 @@ export function MeetingTable({
                       <MeetingStatusBadge
                         status={meeting.status}
                         isNew={meeting.isNew}
+                        showStep
                       />
                     </td>
 

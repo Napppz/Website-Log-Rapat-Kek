@@ -34,9 +34,12 @@ import {
   Edit3,
   MessageCircle,
   History,
+  HelpCircle,
 } from 'lucide-react';
 
 import { MeetingStatusBadge } from '@/components/meeting/meeting-status-badge';
+import { MeetingStatusGuideDialog } from '@/components/meeting/meeting-status-guide-dialog';
+import { getMeetingStatusDetail, MEETING_STATUS_DETAILS } from '@/lib/meeting-status';
 import { MeetingMinutesSection } from '@/components/meeting/meeting-minutes/meeting-minutes-section';
 import { ActionItemList } from '@/components/action-items/action-item-list';
 import { PreviousMeetingModal } from '@/components/meeting/previous-meeting-modal';
@@ -176,6 +179,7 @@ export function MeetingDetailView({
   };
   const [isDeleting, setIsDeleting] = useState(false);
   const [isUpdatingStatus, setIsUpdatingStatus] = useState(false);
+  const [isStatusGuideOpen, setIsStatusGuideOpen] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
   const [isExportingDocx, setIsExportingDocx] = useState(false);
   const [status, setStatus] = useState<MeetingStatus>(meeting.status);
@@ -304,12 +308,32 @@ export function MeetingDetailView({
   const handleStatusChange = async (newStatus: MeetingStatus) => {
     if (status === newStatus || isUpdatingStatus) return;
 
+    const targetDetail = getMeetingStatusDetail(newStatus);
+
     if (newStatus === 'FINAL') {
       const confirmed = await confirmModal({
-        title: `Finalisasi Risalah Rapat ${currentMeetingNumber}?`,
+        title: `Finalisasi & Sahkan Risalah ${currentMeetingNumber}?`,
         message:
-          'Mengubah status menjadi FINAL menandakan bahwa naskah risalah telah sah dan disetujui sepenuhnya oleh pimpinan sidang. Lanjutkan?',
-        confirmText: 'Ya, Finalkan Risalah',
+          'Mengubah status menjadi "Final (Tahap 4)" menandakan naskah risalah resmi telah disahkan, berkekuatan hukum tetap, dan seluruh butir tindak lanjut wajib dieksekusi oleh biro terkait. Lanjutkan pengesahan final?',
+        confirmText: 'Ya, Finalkan & Sahkan Risalah',
+        variant: 'primary',
+      });
+      if (!confirmed) return;
+    } else if (newStatus === 'APPROVED') {
+      const confirmed = await confirmModal({
+        title: `Validasi & Setujui Risalah ${currentMeetingNumber}?`,
+        message:
+          'Mengubah status menjadi "Disetujui (Tahap 3)" menandakan bahwa materi dan substansi risalah telah divalidasi oleh Pimpinan Sidang. Anda masih dapat memajukannya ke "Final" saat naskah siap diedarkan secara resmi. Lanjutkan persetujuan?',
+        confirmText: 'Ya, Setujui Risalah',
+        variant: 'primary',
+      });
+      if (!confirmed) return;
+    } else if (newStatus === 'REVIEW') {
+      const confirmed = await confirmModal({
+        title: `Kirim Risalah ke Tahap Reviu?`,
+        message:
+          'Mengubah status menjadi "Reviu (Tahap 2)" menandakan draf risalah siap diedarkan ke tim perumus atau peserta rapat untuk penelaahan dan koreksi materi. Lanjutkan?',
+        confirmText: 'Ya, Kirim ke Reviu',
         variant: 'primary',
       });
       if (!confirmed) return;
@@ -320,8 +344,7 @@ export function MeetingDetailView({
       const res = await updateMeetingStatusAction(meeting.id, newStatus);
       if (res.success) {
         setStatus(newStatus);
-        const targetWf = MEETING_WORKFLOW.find((w) => w.key === newStatus);
-        toast.success(`Status rapat berhasil diperbarui ke tahap ${targetWf?.label || newStatus}.`);
+        toast.success(`Status rapat berhasil diperbarui ke tahap ${targetDetail.fullTitle}.`);
         router.refresh();
       } else {
         toast.error(res.error || 'Gagal mengubah status');
@@ -639,19 +662,30 @@ export function MeetingDetailView({
         </div>
 
         {/* Alur Siklus Risalah Stepper */}
-        <div className="bg-[#F8FAFC] rounded-xl p-3.5 border border-slate-200">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-2.5">
-            <div className="flex items-center gap-2">
+        <div className="bg-[#F8FAFC] rounded-xl p-4 border border-slate-200">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-3">
+            <div className="flex items-center gap-2 flex-wrap">
               <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">
                 Alur Siklus Risalah Rapat:
               </span>
-              <MeetingStatusBadge status={status} />
+              <MeetingStatusBadge status={status} showStep />
             </div>
-            {canEditMeeting && (
-              <span className="text-[11px] text-slate-500 italic">
-                {isUpdatingStatus ? 'Memperbarui status...' : 'Klik tahapan untuk memperbarui status'}
-              </span>
-            )}
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={() => setIsStatusGuideOpen(true)}
+                className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg border border-[#BCE3EB] bg-white hover:bg-[#F0F9FA] text-[#215865] text-[11.5px] font-bold shadow-2xs transition-all cursor-pointer"
+                title="Buka penjelasan detail perbedaan status (Draft vs Review vs Disetujui vs Final)"
+              >
+                <HelpCircle className="w-3.5 h-3.5 text-[#31889C]" />
+                <span>Panduan Status Risalah</span>
+              </button>
+              {canEditMeeting && (
+                <span className="text-[11px] text-slate-400 italic hidden md:inline">
+                  {isUpdatingStatus ? 'Memperbarui...' : '(Klik tahapan untuk mengubah)'}
+                </span>
+              )}
+            </div>
           </div>
 
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
@@ -666,7 +700,7 @@ export function MeetingDetailView({
                   type="button"
                   disabled={!canEditMeeting || isCurrent || isUpdatingStatus}
                   onClick={() => handleStatusChange(wf.key)}
-                  className={`flex items-center gap-2.5 p-2 rounded-lg border text-left transition-all ${
+                  className={`flex items-center gap-2.5 p-2.5 rounded-xl border text-left transition-all ${
                     isCurrent
                       ? 'bg-[#31889C] text-white border-[#215865] shadow-xs ring-2 ring-[#31889C]/30'
                       : isPassed
@@ -677,10 +711,10 @@ export function MeetingDetailView({
                       ? 'cursor-pointer hover:border-[#31889C]'
                       : 'cursor-default'
                   }`}
-                  title={`${wf.label}: ${wf.description}${canEditMeeting && !isCurrent ? ' (Klik untuk ubah status)' : ''}`}
+                  title={`${wf.label} (${wf.sublabel}): ${wf.description}${canEditMeeting && !isCurrent ? ' — Klik untuk ubah ke tahap ini' : ''}`}
                 >
                   <div
-                    className={`w-6 h-6 rounded-full flex items-center justify-center text-[11px] font-bold shrink-0 ${
+                    className={`w-6 h-6 rounded-full flex items-center justify-center text-[11px] font-extrabold shrink-0 ${
                       isCurrent
                         ? 'bg-white text-[#31889C]'
                         : isPassed
@@ -691,7 +725,7 @@ export function MeetingDetailView({
                     {isPassed ? <Check className="w-3.5 h-3.5 stroke-[3]" /> : wf.step}
                   </div>
                   <div className="min-w-0">
-                    <p className={`text-[12px] font-bold truncate ${isCurrent ? 'text-white' : 'text-slate-800'}`}>
+                    <p className={`text-[12.5px] font-bold truncate ${isCurrent ? 'text-white' : 'text-slate-800'}`}>
                       {wf.label}
                     </p>
                     <p className={`text-[10px] truncate ${isCurrent ? 'text-[#E8F5F7]' : isPassed ? 'text-[#4D8F3D]' : 'text-slate-400'}`}>
@@ -701,6 +735,32 @@ export function MeetingDetailView({
                 </button>
               );
             })}
+          </div>
+
+          {/* Kartu Penjelasan Status Aktif & Panduan Langkah Selanjutnya */}
+          <div className="mt-3 pt-3 border-t border-slate-200/80 flex flex-col sm:flex-row sm:items-start justify-between gap-3 text-[12px]">
+            <div className="flex items-start gap-2.5 min-w-0">
+              <span className="w-2 h-2 rounded-full bg-[#31889C] mt-1.5 shrink-0" />
+              <div>
+                <p className="font-bold text-slate-900 leading-snug">
+                  Status Saat Ini: {getMeetingStatusDetail(status).fullTitle}
+                </p>
+                <p className="text-slate-600 text-[11.5px] mt-0.5 leading-relaxed">
+                  {getMeetingStatusDetail(status).description}
+                </p>
+                <p className="text-[#215865] font-semibold text-[11.5px] mt-1">
+                  👉 <strong>Langkah Selanjutnya:</strong> {getMeetingStatusDetail(status).nextStepNote}
+                </p>
+              </div>
+            </div>
+
+            <button
+              type="button"
+              onClick={() => setIsStatusGuideOpen(true)}
+              className="inline-flex items-center gap-1 text-[11px] font-bold text-[#31889C] hover:text-[#215865] bg-white border border-[#BCE3EB] px-2.5 py-1 rounded-lg shrink-0 hover:bg-[#F0F9FA] transition-all cursor-pointer shadow-2xs self-start"
+            >
+              <span>Beda &ldquo;Disetujui&rdquo; vs &ldquo;Final&rdquo;?</span>
+            </button>
           </div>
         </div>
 
@@ -1578,6 +1638,11 @@ export function MeetingDetailView({
             router.push(`/semua-rapat/${selectedId}`);
           }
         }}
+      />
+
+      <MeetingStatusGuideDialog
+        isOpen={isStatusGuideOpen}
+        onClose={() => setIsStatusGuideOpen(false)}
       />
     </div>
   );

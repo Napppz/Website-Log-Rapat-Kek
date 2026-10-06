@@ -259,7 +259,7 @@ export function AgendaSeriesModal({
                             {session.code}
                           </span>
 
-                          <MeetingStatusBadge status={session.status} />
+                          <MeetingStatusBadge status={session.status} showStep />
 
                           {isSelected && (
                             <span className="text-[11px] font-semibold text-[#31889C] bg-teal-50 px-2 py-0.5 rounded-full border border-teal-200 flex items-center gap-1">

@@ -86,10 +86,10 @@ export function Sidebar({
     ...(isSuperAdmin || isAdmin || isNotulis
       ? [{ name: 'Buat Rapat', href: '/buat-rapat' }]
       : []),
-    { name: 'Draft', href: '/semua-rapat?status=DRAFT' },
-    { name: 'Menunggu Review', href: '/semua-rapat?status=REVIEW' },
-    { name: 'Disetujui', href: '/semua-rapat?status=APPROVED' },
-    { name: 'Selesai', href: '/semua-rapat?status=FINAL' },
+    { name: '1. Draf (Penyusunan)', href: '/semua-rapat?status=DRAFT' },
+    { name: '2. Reviu (Penelaahan)', href: '/semua-rapat?status=REVIEW' },
+    { name: '3. Disetujui (Pimpinan)', href: '/semua-rapat?status=APPROVED' },
+    { name: '4. Final (Sah & Terbit)', href: '/semua-rapat?status=FINAL' },
   ];
 
   const roleLabelMap: Record<string, string> = {

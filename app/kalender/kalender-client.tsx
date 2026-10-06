@@ -43,11 +43,11 @@ const MONTH_NAMES = [
 
 const DAY_NAMES = ['Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab', 'Min'];
 
-const STATUS_CONFIG: Record<string, { label: string; badge: string }> = {
-  FINAL: { label: 'Final', badge: 'bg-[#ECF8E9] text-[#4D8F3D] border-[#D2EFCA]' },
-  APPROVED: { label: 'Disetujui', badge: 'bg-[#E8F5F7] text-[#31889C] border-[#BCE3EB]' },
-  REVIEW: { label: 'Review', badge: 'bg-[#FFF8CC] text-[#8A7200] border-[#FFEE99]' },
-  DRAFT: { label: 'Draft', badge: 'bg-[#F1F5F9] text-[#64748B] border-[#E2E8F0]' },
+const STATUS_CONFIG: Record<string, { label: string; badge: string; step: number }> = {
+  DRAFT: { label: '1. Draf', badge: 'bg-[#F1F5F9] text-[#475569] border-[#CBD5E1]', step: 1 },
+  REVIEW: { label: '2. Reviu', badge: 'bg-[#FEF9C3] text-[#854D0E] border-[#FDE047]', step: 2 },
+  APPROVED: { label: '3. Disetujui', badge: 'bg-[#E0F2FE] text-[#0369A1] border-[#BAE6FD]', step: 3 },
+  FINAL: { label: '4. Final', badge: 'bg-[#DCFCE7] text-[#15803D] border-[#86EFAC]', step: 4 },
 };
 
 export function KalenderClient({ initialMeetings, biros }: KalenderClientProps) {
@@ -328,11 +328,11 @@ export function KalenderClient({ initialMeetings, biros }: KalenderClientProps) 
             onChange={(e) => setSelectedStatus(e.target.value)}
             className="px-2.5 py-1.5 rounded-xl border border-slate-200 text-[12px] font-semibold text-slate-700 bg-white cursor-pointer focus:outline-none focus:border-[#31889C]"
           >
-            <option value="ALL">Semua Status</option>
-            <option value="FINAL">Final</option>
-            <option value="APPROVED">Disetujui</option>
-            <option value="REVIEW">Review</option>
-            <option value="DRAFT">Draft</option>
+            <option value="ALL">Semua Tahap</option>
+            <option value="DRAFT">1. Draf (Penyusunan)</option>
+            <option value="REVIEW">2. Reviu (Penelaahan)</option>
+            <option value="APPROVED">3. Disetujui (Pimpinan)</option>
+            <option value="FINAL">4. Final (Sah &amp; Terbit)</option>
           </select>
 
           {/* Toggle View Mode */}

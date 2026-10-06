@@ -237,7 +237,12 @@ export function MeetingDetailDialog({
             <span className="font-bold text-[16px] text-[#215865] bg-[#E8F5F7] px-2.5 py-1 rounded-md border border-[#BCE3EB]">
               {meeting.code}
             </span>
-            <MeetingStatusBadge status={meeting.status} isNew={meeting.isNew} />
+            <MeetingStatusBadge
+              status={meeting.status}
+              isNew={meeting.isNew}
+              showStep
+              showSublabel
+            />
           </div>
 
           <div className="flex items-center gap-2">

@@ -4,13 +4,15 @@ import React, { useState, useEffect } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { MeetingTable } from '@/components/meeting/meeting-table';
 import { MeetingStatus, BiroCode, Meeting } from '@/lib/types';
-import { PlusCircle, Filter, Trash2, AlertTriangle, Loader2, CheckCircle2, X, UploadCloud, Sparkles, Calendar, Building2 } from 'lucide-react';
+import { PlusCircle, Filter, Trash2, AlertTriangle, Loader2, CheckCircle2, X, UploadCloud, Sparkles, Calendar, Building2, HelpCircle } from 'lucide-react';
 import Link from 'next/link';
 import { useSession } from 'next-auth/react';
 import { deleteAllMeetingsAction } from '@/app/actions/meeting-actions';
 import { UploadMeetingDialog } from '@/components/meeting/upload-meeting-dialog';
+import { MeetingStatusGuideDialog } from '@/components/meeting/meeting-status-guide-dialog';
 import { toast } from '@/components/providers/toast-provider';
 import { parseMonthFilterIndex, getMonthDisplayName } from '@/lib/utils';
+import { getMeetingStatusDetail } from '@/lib/meeting-status';
 
 interface SemuaRapatClientProps {
   initialMeetings: Meeting[];
@@ -41,6 +43,7 @@ export function SemuaRapatClient({
 
   const [isUploadDialogOpen, setIsUploadDialogOpen] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [isStatusGuideOpen, setIsStatusGuideOpen] = useState(false);
   const [confirmInput, setConfirmInput] = useState('');
   const [isDeletingAll, setIsDeletingAll] = useState(false);
 
@@ -48,12 +51,18 @@ export function SemuaRapatClient({
   const biroParam = searchParams.get('biro') as BiroCode | null;
   const monthParam = searchParams.get('bulan') || searchParams.get('month');
 
-  const statusFilters: { label: string; value: MeetingStatus | 'ALL' }[] = [
-    { label: 'Semua Status', value: 'ALL' },
-    { label: 'Disetujui (Approved)', value: 'APPROVED' },
-    { label: 'Final', value: 'FINAL' },
-    { label: 'Menunggu Review', value: 'REVIEW' },
-    { label: 'Draft', value: 'DRAFT' },
+  const countAll = meetingsList.length;
+  const countDraft = meetingsList.filter((m) => m.status === 'DRAFT').length;
+  const countReview = meetingsList.filter((m) => m.status === 'REVIEW').length;
+  const countApproved = meetingsList.filter((m) => m.status === 'APPROVED').length;
+  const countFinal = meetingsList.filter((m) => m.status === 'FINAL').length;
+
+  const statusFilters: { label: string; value: MeetingStatus | 'ALL'; count: number; sublabel?: string }[] = [
+    { label: 'Semua Status', value: 'ALL', count: countAll },
+    { label: '1. Draf', value: 'DRAFT', count: countDraft, sublabel: 'Penyusunan' },
+    { label: '2. Reviu', value: 'REVIEW', count: countReview, sublabel: 'Penelaahan' },
+    { label: '3. Disetujui', value: 'APPROVED', count: countApproved, sublabel: 'Validasi Pimpinan' },
+    { label: '4. Final', value: 'FINAL', count: countFinal, sublabel: 'Disahkan & Terbit' },
   ];
 
   const handleSelectStatus = (val: MeetingStatus | 'ALL') => {
@@ -169,54 +178,108 @@ export function SemuaRapatClient({
         </div>
       </div>
 
-      {/* Filter Tabs & Active Month Indicator */}
-      <div className="flex flex-wrap items-center justify-between gap-3 pb-1">
-        <div className="flex flex-wrap items-center gap-2">
-          <span className="text-[12px] font-semibold text-slate-500 mr-1 flex items-center gap-1">
-            <Filter className="w-3.5 h-3.5 text-[#31889C]" />
-            Filter:
-          </span>
-          {statusFilters.map((tab) => {
-            const isActive = tab.value === 'ALL' ? !statusParam : statusParam === tab.value;
-            return (
-              <button
-                key={tab.value}
-                type="button"
-                onClick={() => handleSelectStatus(tab.value)}
-                className={`px-3 py-1.5 rounded-lg text-[12px] font-semibold transition-all cursor-pointer ${
-                  isActive
-                    ? 'bg-[#31889C] text-white shadow-xs'
-                    : 'bg-white border border-slate-200 text-slate-700 hover:bg-[#F0F9FA] hover:text-[#31889C]'
-                }`}
-              >
-                {tab.label}
-              </button>
-            );
-          })}
-        </div>
-
-        {monthParam && (
-          <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-[#E8F5F7] border border-[#BCE3EB] text-[#215865] text-[12px] font-bold shadow-2xs animate-in fade-in">
-            <Calendar className="w-3.5 h-3.5 text-[#31889C]" />
-            <span>
-              Periode Bulan: {getMonthDisplayName(parseMonthFilterIndex(monthParam) ?? 8)}
+      {/* Filter Tabs, Status Guide Trigger & Active Month Indicator */}
+      <div className="flex flex-col gap-3">
+        <div className="flex flex-wrap items-center justify-between gap-3 pb-1">
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="text-[12px] font-semibold text-slate-500 mr-1 flex items-center gap-1">
+              <Filter className="w-3.5 h-3.5 text-[#31889C]" />
+              Filter Tahap:
             </span>
+            {statusFilters.map((tab) => {
+              const isActive = tab.value === 'ALL' ? !statusParam : statusParam === tab.value;
+              return (
+                <button
+                  key={tab.value}
+                  type="button"
+                  onClick={() => handleSelectStatus(tab.value)}
+                  className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[12px] font-semibold transition-all cursor-pointer ${
+                    isActive
+                      ? 'bg-[#31889C] text-white shadow-xs'
+                      : 'bg-white border border-slate-200 text-slate-700 hover:bg-[#F0F9FA] hover:text-[#31889C]'
+                  }`}
+                  title={tab.sublabel ? `${tab.label} (${tab.sublabel})` : tab.label}
+                >
+                  <span>{tab.label}</span>
+                  <span
+                    className={`text-[10px] px-1.5 py-0.2 rounded-full font-bold ${
+                      isActive
+                        ? 'bg-white/25 text-white'
+                        : 'bg-slate-100 text-slate-600'
+                    }`}
+                  >
+                    {tab.count}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+
+          <div className="flex items-center gap-2 flex-wrap">
             <button
               type="button"
-              onClick={() => {
-                const params = new URLSearchParams(searchParams.toString());
-                params.delete('bulan');
-                params.delete('month');
-                router.push(params.toString() ? `/semua-rapat?${params.toString()}` : '/semua-rapat');
-              }}
-              className="p-1 hover:bg-[#BCE3EB] rounded text-slate-500 hover:text-slate-800 transition-colors ml-0.5 cursor-pointer"
-              title="Hapus filter bulan & tampilkan semua bulan"
+              onClick={() => setIsStatusGuideOpen(true)}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-[#BCE3EB] bg-[#F0F9FA] hover:bg-[#E8F5F7] text-[#215865] text-[12px] font-bold shadow-2xs transition-all cursor-pointer"
+              title="Buka panduan alur status risalah rapat (Draf -> Reviu -> Disetujui -> Final)"
             >
-              <X className="w-3.5 h-3.5" />
+              <HelpCircle className="w-3.5 h-3.5 text-[#31889C]" />
+              <span>Panduan Status Risalah</span>
+            </button>
+
+            {monthParam && (
+              <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-[#E8F5F7] border border-[#BCE3EB] text-[#215865] text-[12px] font-bold shadow-2xs animate-in fade-in">
+                <Calendar className="w-3.5 h-3.5 text-[#31889C]" />
+                <span>
+                  Periode Bulan: {getMonthDisplayName(parseMonthFilterIndex(monthParam) ?? 8)}
+                </span>
+                <button
+                  type="button"
+                  onClick={() => {
+                    const params = new URLSearchParams(searchParams.toString());
+                    params.delete('bulan');
+                    params.delete('month');
+                    router.push(params.toString() ? `/semua-rapat?${params.toString()}` : '/semua-rapat');
+                  }}
+                  className="p-1 hover:bg-[#BCE3EB] rounded text-slate-500 hover:text-slate-800 transition-colors ml-0.5 cursor-pointer"
+                  title="Hapus filter bulan & tampilkan semua bulan"
+                >
+                  <X className="w-3.5 h-3.5" />
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Banner Penjelasan Aktif Saat Filter Status Dipilih */}
+        {statusParam && (
+          <div className="p-3 bg-gradient-to-r from-[#F0F9FA] via-white to-[#F0F9FA]/60 border border-[#BCE3EB] rounded-xl flex items-center justify-between text-xs text-[#215865] shadow-2xs animate-in fade-in">
+            <div className="flex items-center gap-2 min-w-0">
+              <span className="w-2 h-2 rounded-full bg-[#31889C] animate-pulse shrink-0" />
+              <div className="truncate">
+                <strong className="text-slate-900">
+                  {getMeetingStatusDetail(statusParam).fullTitle}:
+                </strong>{' '}
+                <span className="text-slate-600">
+                  {getMeetingStatusDetail(statusParam).description}
+                </span>
+              </div>
+            </div>
+            <button
+              type="button"
+              onClick={() => handleSelectStatus('ALL')}
+              className="text-[11px] font-bold text-[#31889C] hover:text-[#215865] bg-white px-2 py-0.5 rounded border border-[#BCE3EB] hover:bg-[#F0F9FA] shrink-0 ml-2 cursor-pointer transition-colors"
+              title="Reset filter dan tampilkan semua status"
+            >
+              ✕ Tampilkan Semua
             </button>
           </div>
         )}
       </div>
+
+      <MeetingStatusGuideDialog
+        isOpen={isStatusGuideOpen}
+        onClose={() => setIsStatusGuideOpen(false)}
+      />
 
       {/* Meeting Table */}
       <MeetingTable
