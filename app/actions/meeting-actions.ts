@@ -76,7 +76,7 @@ export async function getActiveUsersAction() {
  */
 export async function createMeetingAction(input: CreateMeetingInput) {
   try {
-    // Authorization Check: Must have 'create:meeting' permission (SUPER_ADMIN, ADMIN, NOTULIS)
+    // Authorization Check: Must have 'create:meeting' permission (SUPER_ADMIN, ADMIN)
     const currentUser = await requirePermission('create:meeting');
     const isPrivileged =
       currentUser.role === 'SUPER_ADMIN' || currentUser.role === 'ADMIN';
@@ -220,7 +220,7 @@ export async function createMeetingAction(input: CreateMeetingInput) {
                   id: nextGuestId,
                   name: name,
                   email: uniqueEmail,
-                  role: 'VIEWER',
+                  role: 'STAFF',
                   biroId: primaryBiro.id,
                   isActive: true,
                 },
@@ -383,7 +383,7 @@ export async function updateMeetingStatusAction(meetingId: string, status: Meeti
  */
 export async function updateMeetingNumberAction(meetingId: string, newMeetingNumber: string) {
   try {
-    // Authorization Check: Must have 'edit:meeting' permission (SUPER_ADMIN, ADMIN, NOTULIS)
+    // Authorization Check: Must have 'edit:meeting' permission (SUPER_ADMIN, ADMIN)
     const currentUser = await requirePermission('edit:meeting');
     const isPrivileged =
       currentUser.role === 'SUPER_ADMIN' || currentUser.role === 'ADMIN';
@@ -452,7 +452,7 @@ export async function updateParticipantAttendanceAction(
   attendanceStatus: AttendanceStatus
 ) {
   try {
-    // Authorization Check: Must have 'manage:participants' permission (SUPER_ADMIN, ADMIN, NOTULIS)
+    // Authorization Check: Must have 'manage:participants' permission (SUPER_ADMIN, ADMIN)
     await requirePermission('manage:participants');
 
     const updated = await prisma.meetingParticipant.update({
@@ -551,7 +551,7 @@ export async function addParticipantToMeetingAction(
               id: nextGuestUserId,
               name: trimmedName,
               email: uniqueEmail,
-              role: 'VIEWER',
+              role: 'STAFF',
               biroId: userIdOrInput.biroId || meeting.primaryBiroId,
               isActive: true,
             },

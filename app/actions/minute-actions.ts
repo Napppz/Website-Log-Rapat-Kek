@@ -36,7 +36,7 @@ export async function getMeetingMinutesAction(meetingId: string) {
  */
 export async function upsertMeetingMinutesAction(input: MeetingMinutesInput) {
   try {
-    // Authorization Check: Must have 'create:minutes' permission (SUPER_ADMIN, ADMIN, NOTULIS)
+    // Authorization Check: Must have 'create:minutes' permission (SUPER_ADMIN, ADMIN)
     const currentUser = await requirePermission('create:minutes');
     const isPrivileged =
       currentUser.role === 'SUPER_ADMIN' || currentUser.role === 'ADMIN';

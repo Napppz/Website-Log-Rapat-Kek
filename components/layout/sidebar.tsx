@@ -41,11 +41,10 @@ export function Sidebar({
   const pathname = usePathname();
   const { unreadCount } = useNotifications();
   const { data: session } = useSession();
-  const userRole = session?.user?.role || 'VIEWER';
+  const userRole = session?.user?.role || 'STAFF';
 
   const isSuperAdmin = userRole === 'SUPER_ADMIN';
   const isAdmin = userRole === 'ADMIN';
-  const isNotulis = userRole === 'NOTULIS';
 
   const isRapatRoute = pathname.includes('/semua-rapat') || pathname.includes('/buat-rapat');
   const isTindakLanjutRoute = pathname.includes('/tindak-lanjut');
@@ -83,7 +82,7 @@ export function Sidebar({
 
   const rapatSubItems = [
     { name: 'Semua Rapat', href: '/semua-rapat' },
-    ...(isSuperAdmin || isAdmin || isNotulis
+    ...(isSuperAdmin || isAdmin
       ? [{ name: 'Buat Rapat', href: '/buat-rapat' }]
       : []),
     { name: '1. Draf (Penyusunan)', href: '/semua-rapat?status=DRAFT' },
@@ -95,9 +94,7 @@ export function Sidebar({
   const roleLabelMap: Record<string, string> = {
     SUPER_ADMIN: 'Super Admin',
     ADMIN: 'Administrator',
-    NOTULIS: 'Notulis',
     STAFF: 'Staf',
-    VIEWER: 'Viewer',
   };
 
   return (

@@ -48,7 +48,7 @@ export function PengaturanClient({
   const [name, setName] = useState(initialUser?.name || '');
   const [email, setEmail] = useState(initialUser?.email || '');
   const [biroId, setBiroId] = useState(initialUser?.biroId || availableBiros[0]?.id || '');
-  const role = initialUser?.role || 'VIEWER';
+  const role = initialUser?.role || 'STAFF';
 
   // Password fields
   const [showPasswordSection, setShowPasswordSection] = useState(false);

@@ -90,9 +90,9 @@ async function main() {
       isActive: true,
     },
     {
-      name: 'Notulis Sidang Pleno KEK',
+      name: 'Staf Notula Sidang Pleno KEK',
       email: 'notulis@simrapat.local',
-      role: UserRole.NOTULIS,
+      role: UserRole.STAFF,
       biroCode: 'PKKEK',
       isActive: true,
     },
@@ -104,9 +104,9 @@ async function main() {
       isActive: true,
     },
     {
-      name: 'Viewer Publikasi Dewan KEK',
+      name: 'Staf Publikasi Dewan KEK',
       email: 'viewer@simrapat.local',
-      role: UserRole.VIEWER,
+      role: UserRole.STAFF,
       biroCode: 'HSDMO',
       isActive: true,
     },
@@ -145,7 +145,7 @@ async function main() {
     {
       name: 'Siti Nurhaliza, S.E.',
       email: 'user.pkkek2@kek.go.id',
-      role: UserRole.NOTULIS,
+      role: UserRole.STAFF,
       biroCode: 'PKKEK',
       isActive: true,
     },
@@ -160,7 +160,7 @@ async function main() {
     {
       name: 'Maya Puspita, S.Sos',
       email: 'user.ikk2@kek.go.id',
-      role: UserRole.NOTULIS,
+      role: UserRole.STAFF,
       biroCode: 'IKK',
       isActive: true,
     },
@@ -190,7 +190,7 @@ async function main() {
     {
       name: 'Fitri Handayani, S.A.P.',
       email: 'user.uk2@kek.go.id',
-      role: UserRole.VIEWER,
+      role: UserRole.STAFF,
       biroCode: 'UK',
       isActive: true,
     },

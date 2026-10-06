@@ -19,17 +19,9 @@ const ROLE_LABELS: Record<string, { label: string; badgeClass: string }> = {
     label: 'Administrator',
     badgeClass: 'bg-blue-100 text-blue-900 border-blue-300',
   },
-  NOTULIS: {
-    label: 'Notulis Sidang',
-    badgeClass: 'bg-[#ECF8E9] text-[#4D8F3D] border-[#D2EFCA]',
-  },
   STAFF: {
     label: 'Staf Biro',
     badgeClass: 'bg-purple-100 text-purple-900 border-purple-300',
-  },
-  VIEWER: {
-    label: 'Tamu / Viewer',
-    badgeClass: 'bg-slate-100 text-slate-800 border-slate-300',
   },
 };
 
@@ -94,7 +86,7 @@ export function WelcomeBanner({
   };
 
   const canCreateMeeting =
-    userRole === 'SUPER_ADMIN' || userRole === 'ADMIN' || userRole === 'NOTULIS';
+    userRole === 'SUPER_ADMIN' || userRole === 'ADMIN';
 
   const [isMounted, setIsMounted] = useState(false);
   React.useEffect(() => {

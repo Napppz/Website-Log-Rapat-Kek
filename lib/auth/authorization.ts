@@ -48,29 +48,12 @@ export const ROLE_PERMISSIONS: Record<UserRole, AppPermission[]> = {
     'edit:action_item',
     'delete:action_item',
   ],
-  NOTULIS: [
-    'view:dashboard',
-    'view:meeting',
-    'create:meeting',
-    'manage:participants',
-    'create:minutes',
-    'edit:minutes',
-    'view:minutes',
-    'create:action_item',
-    'edit:action_item',
-    'delete:action_item',
-  ],
   STAFF: [
     'view:dashboard',
     'view:meeting',
     'view:minutes',
     'create:action_item',
     'edit:action_item', // Subject to ownership check
-  ],
-  VIEWER: [
-    'view:dashboard',
-    'view:meeting',
-    'view:minutes',
   ],
 };
 

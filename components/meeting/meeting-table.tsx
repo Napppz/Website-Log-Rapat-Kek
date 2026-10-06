@@ -72,7 +72,7 @@ export function MeetingTable({
   const [downloadingId, setDownloadingId] = useState<string | null>(null);
   const [deletingRowId, setDeletingRowId] = useState<string | null>(null);
   const { data: session } = useSession();
-  const userRole = session?.user?.role || 'VIEWER';
+  const userRole = session?.user?.role || 'STAFF';
   const canDeleteMeeting = userRole === 'SUPER_ADMIN' || userRole === 'ADMIN';
 
   // Group meetings into series to compute total sessions & session index

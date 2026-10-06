@@ -25,8 +25,8 @@ export function MeetingMinutesSection({
   onViewHistoryClick,
 }: MeetingMinutesSectionProps) {
   const { data: session } = useSession();
-  const userRole = session?.user?.role || 'VIEWER';
-  const canEditMinutes = userRole === 'SUPER_ADMIN' || userRole === 'ADMIN' || userRole === 'NOTULIS';
+  const userRole = session?.user?.role || 'STAFF';
+  const canEditMinutes = userRole === 'SUPER_ADMIN' || userRole === 'ADMIN';
 
   const [currentMeeting, setCurrentMeeting] = useState<any>(propMeeting || null);
   const [minutes, setMinutes] = useState<any>(propMinutes || propMeeting?.minutes || null);

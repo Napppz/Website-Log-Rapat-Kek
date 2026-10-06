@@ -69,11 +69,11 @@ export default function BuatRapatPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { data: session, status } = useSession();
-  const userRole = session?.user?.role || 'VIEWER';
+  const userRole = session?.user?.role || 'STAFF';
   const isPrivileged = userRole === 'SUPER_ADMIN' || userRole === 'ADMIN';
   const userBiroCode = !isPrivileged && session?.user?.biroCode ? (session.user.biroCode as BiroCode) : undefined;
   const canCreate =
-    userRole === 'SUPER_ADMIN' || userRole === 'ADMIN' || userRole === 'NOTULIS';
+    userRole === 'SUPER_ADMIN' || userRole === 'ADMIN';
 
   const [isUploadDialogOpen, setIsUploadDialogOpen] = useState(false);
   const [pendingMinutes, setPendingMinutes] = useState<ExtractedMeetingData | null>(null);
@@ -267,7 +267,7 @@ export default function BuatRapatPage() {
     );
   }
 
-  // Unauthorized role (STAFF or VIEWER)
+  // Unauthorized role (STAFF)
   if (!canCreate) {
     return (
       <div className="max-w-md mx-auto my-16 bg-white p-8 rounded-2xl border border-slate-200 text-center shadow-xs space-y-4">
@@ -276,9 +276,8 @@ export default function BuatRapatPage() {
         </div>
         <h2 className="text-lg font-bold text-slate-800">Izin Tidak Mencukupi</h2>
         <p className="text-sm text-slate-500 leading-relaxed">
-          Peran akun Anda saat ini (<strong>{userRole}</strong>) hanya memiliki hak baca.
-          Hanya peran <strong>SUPER_ADMIN</strong>, <strong>ADMIN</strong>, atau{' '}
-          <strong>NOTULIS</strong> yang dapat menjadwalkan rapat baru.
+          Peran akun Anda saat ini (<strong>{userRole}</strong>) tidak memiliki akses untuk membuat rapat baru.
+          Hanya peran <strong>SUPER_ADMIN</strong> atau <strong>ADMIN</strong> yang dapat menjadwalkan rapat baru.
         </p>
         <Link
           href="/"

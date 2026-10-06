@@ -250,23 +250,11 @@ export function UserManagementView({
             Administrator
           </span>
         );
-      case 'NOTULIS':
-        return (
-          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full bg-sky-100 text-sky-900 border border-sky-300 text-[11px] font-bold">
-            Notulis
-          </span>
-        );
       case 'STAFF':
+      default:
         return (
           <span className="inline-flex items-center px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-900 border border-emerald-300 text-[11px] font-bold">
             Staf
-          </span>
-        );
-      case 'VIEWER':
-      default:
-        return (
-          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full bg-slate-100 text-slate-700 border border-slate-300 text-[11px] font-bold">
-            Viewer
           </span>
         );
     }
@@ -315,9 +303,7 @@ export function UserManagementView({
             <option value="ALL">Semua Peran (Role)</option>
             <option value="SUPER_ADMIN">Super Admin</option>
             <option value="ADMIN">Administrator</option>
-            <option value="NOTULIS">Notulis</option>
             <option value="STAFF">Staf</option>
-            <option value="VIEWER">Viewer</option>
           </select>
 
           {/* Biro Filter */}
@@ -594,9 +580,7 @@ export function UserManagementView({
                   >
                     <option value="SUPER_ADMIN">SUPER_ADMIN (Penuh)</option>
                     <option value="ADMIN">ADMIN (Operasional)</option>
-                    <option value="NOTULIS">NOTULIS (Dokumentasi)</option>
                     <option value="STAFF">STAFF (Pelaksana)</option>
-                    <option value="VIEWER">VIEWER (Read-Only)</option>
                   </select>
                 </div>
 

@@ -40,17 +40,13 @@ const SECTION_LABELS: Record<string, string> = {
 const ROLE_LABELS: Record<string, string> = {
   SUPER_ADMIN: 'Super Admin',
   ADMIN: 'Admin',
-  NOTULIS: 'Notulis',
   STAFF: 'Staf',
-  VIEWER: 'Pengamat',
 };
 
 const ROLE_COLORS: Record<string, string> = {
   SUPER_ADMIN: 'bg-rose-100 text-rose-700',
   ADMIN: 'bg-violet-100 text-violet-700',
-  NOTULIS: 'bg-teal-100 text-teal-700',
   STAFF: 'bg-blue-100 text-blue-700',
-  VIEWER: 'bg-slate-100 text-slate-600',
 };
 
 function getInitials(name: string) {
@@ -96,7 +92,7 @@ function CommentItem({ comment, meetingId, currentUserId, currentUserRole, onRef
   const isOwner = currentUserId === comment.user?.id;
   const isAdmin = currentUserRole === 'SUPER_ADMIN' || currentUserRole === 'ADMIN';
   const canDelete = isOwner || isAdmin;
-  const canResolve = isAdmin || currentUserRole === 'NOTULIS';
+  const canResolve = isAdmin;
 
   const handleReply = async () => {
     if (!replyContent.trim()) return;
@@ -145,7 +141,7 @@ function CommentItem({ comment, meetingId, currentUserId, currentUserRole, onRef
   };
 
   const userName = comment.user?.name || 'Pengguna';
-  const userRole = comment.user?.role || 'VIEWER';
+  const userRole = comment.user?.role || 'STAFF';
 
   return (
     <div className={`${depth > 0 ? 'ml-8 border-l-2 border-slate-200 pl-4' : ''}`}>
@@ -298,7 +294,7 @@ function CommentItem({ comment, meetingId, currentUserId, currentUserRole, onRef
 export function MeetingCommentsSection({ meetingId }: MeetingCommentsProps) {
   const { data: session } = useSession();
   const currentUserId = session?.user?.id;
-  const currentUserRole = session?.user?.role || 'VIEWER';
+  const currentUserRole = session?.user?.role || 'STAFF';
 
   const [comments, setComments] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);

@@ -68,19 +68,17 @@ export function ActionItemMatrixView({
   const router = useRouter();
   const searchParams = useSearchParams();
   const { data: session } = useSession();
-  const userRole = currentUserRole || session?.user?.role || 'VIEWER';
+  const userRole = currentUserRole || session?.user?.role || 'STAFF';
   const currentUserId = session?.user?.id;
 
   const canCreateItem =
     userRole === 'SUPER_ADMIN' ||
     userRole === 'ADMIN' ||
-    userRole === 'NOTULIS' ||
     userRole === 'STAFF';
-  const canDeleteItem = userRole === 'SUPER_ADMIN' || userRole === 'ADMIN' || userRole === 'NOTULIS';
+  const canDeleteItem = userRole === 'SUPER_ADMIN' || userRole === 'ADMIN';
 
   const canEditTask = (task: any) => {
-    if (userRole === 'VIEWER') return false;
-    if (userRole === 'SUPER_ADMIN' || userRole === 'ADMIN' || userRole === 'NOTULIS') return true;
+    if (userRole === 'SUPER_ADMIN' || userRole === 'ADMIN') return true;
     if (userRole === 'STAFF') {
       return Boolean(task.picUserId && currentUserId && task.picUserId === currentUserId);
     }

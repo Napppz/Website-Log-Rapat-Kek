@@ -164,16 +164,15 @@ export function MeetingDetailView({
 }: MeetingDetailViewProps) {
   const router = useRouter();
   const { data: session } = useSession();
-  const userRole = session?.user?.role || 'VIEWER';
+  const userRole = session?.user?.role || 'STAFF';
   const canEditMeeting = userRole === 'SUPER_ADMIN' || userRole === 'ADMIN';
   const canDeleteMeeting = userRole === 'SUPER_ADMIN' || userRole === 'ADMIN';
   const canManageParticipants =
-    userRole === 'SUPER_ADMIN' || userRole === 'ADMIN' || userRole === 'NOTULIS';
+    userRole === 'SUPER_ADMIN' || userRole === 'ADMIN';
   const canEditMinutes = canManageParticipants;
   const canCreateActionItem =
     userRole === 'SUPER_ADMIN' ||
     userRole === 'ADMIN' ||
-    userRole === 'NOTULIS' ||
     userRole === 'STAFF';
 
   // Biro ownership check for status updates & staff permissions

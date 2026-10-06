@@ -231,7 +231,7 @@ export async function createActionItemAction(input: ActionItemInput) {
       return { success: false, error: 'Biro penanggung jawab tidak ditemukan.' };
     }
 
-    // Authorization Check: Must have 'create:action_item' permission (SUPER_ADMIN, ADMIN, NOTULIS)
+    // Authorization Check: Must have 'create:action_item' permission (SUPER_ADMIN, ADMIN, STAFF)
     const currentUser = await requirePermission('create:action_item');
     const isPrivileged =
       currentUser.role === 'SUPER_ADMIN' || currentUser.role === 'ADMIN';
@@ -530,7 +530,7 @@ export async function updateActionItemStatusAction(input: UpdateActionItemStatus
  */
 export async function deleteActionItemAction(id: string) {
   try {
-    // Authorization Check: Must have 'delete:action_item' permission (SUPER_ADMIN, ADMIN, NOTULIS)
+    // Authorization Check: Must have 'delete:action_item' permission (SUPER_ADMIN, ADMIN)
     const currentUser = await requirePermission('delete:action_item');
     const isPrivileged =
       currentUser.role === 'SUPER_ADMIN' || currentUser.role === 'ADMIN';

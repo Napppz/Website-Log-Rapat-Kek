@@ -52,20 +52,19 @@ export function ActionItemList({
   const router = useRouter();
   const { data: session } = useSession();
   const currentUser = session?.user;
-  const userRole = currentUser?.role || 'VIEWER';
+  const userRole = currentUser?.role || 'STAFF';
   const currentUserId = currentUser?.id;
 
   const canCreateItem =
     !readOnly &&
     (userRole === 'SUPER_ADMIN' ||
       userRole === 'ADMIN' ||
-      userRole === 'NOTULIS' ||
       userRole === 'STAFF');
-  const canDeleteItem = !readOnly && (userRole === 'SUPER_ADMIN' || userRole === 'ADMIN' || userRole === 'NOTULIS');
+  const canDeleteItem = !readOnly && (userRole === 'SUPER_ADMIN' || userRole === 'ADMIN');
 
   const canEditThisItem = (item: ActionItem) => {
-    if (readOnly || userRole === 'VIEWER') return false;
-    if (userRole === 'SUPER_ADMIN' || userRole === 'ADMIN' || userRole === 'NOTULIS') return true;
+    if (readOnly) return false;
+    if (userRole === 'SUPER_ADMIN' || userRole === 'ADMIN') return true;
     if (userRole === 'STAFF') {
       return Boolean(item.picUserId && currentUserId && item.picUserId === currentUserId);
     }

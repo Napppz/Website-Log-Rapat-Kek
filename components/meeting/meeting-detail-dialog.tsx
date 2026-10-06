@@ -47,7 +47,7 @@ export function MeetingDetailDialog({
 }: MeetingDetailDialogProps) {
   const router = useRouter();
   const { data: session } = useSession();
-  const userRole = session?.user?.role || 'VIEWER';
+  const userRole = session?.user?.role || 'STAFF';
   const canDeleteMeeting = userRole === 'SUPER_ADMIN' || userRole === 'ADMIN';
   const isPrivileged = userRole === 'SUPER_ADMIN' || userRole === 'ADMIN';
   const isMeetingBiro =

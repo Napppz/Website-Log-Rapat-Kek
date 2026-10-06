@@ -30,8 +30,8 @@ export function SemuaRapatClient({
   const searchParams = useSearchParams();
   const router = useRouter();
   const { data: session } = useSession();
-  const userRole = currentUserRole || session?.user?.role || 'VIEWER';
-  const canCreate = userRole === 'SUPER_ADMIN' || userRole === 'ADMIN' || userRole === 'NOTULIS';
+  const userRole = currentUserRole || session?.user?.role || 'STAFF';
+  const canCreate = userRole === 'SUPER_ADMIN' || userRole === 'ADMIN';
   const canDeleteAll = userRole === 'SUPER_ADMIN' || userRole === 'ADMIN';
 
   const [deletedIds, setDeletedIds] = useState<Set<string>>(new Set());

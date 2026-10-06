@@ -31,8 +31,8 @@ interface CreateMeetingDialogProps {
 export function CreateMeetingDialog({ isOpen, onClose, onSuccess }: CreateMeetingDialogProps) {
   const router = useRouter();
   const { data: session } = useSession();
-  const userRole = session?.user?.role || 'VIEWER';
-  const canCreate = userRole === 'SUPER_ADMIN' || userRole === 'ADMIN' || userRole === 'NOTULIS';
+  const userRole = session?.user?.role || 'STAFF';
+  const canCreate = userRole === 'SUPER_ADMIN' || userRole === 'ADMIN';
 
   // Today's date in YYYY-MM-DD format (prevents past date selection)
   const todayStr = (() => {

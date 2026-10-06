@@ -19,9 +19,7 @@ interface HeaderProps {
 const ROLE_LABELS: Record<string, string> = {
   SUPER_ADMIN: 'Super Admin',
   ADMIN: 'Administrator',
-  NOTULIS: 'Notulis',
   STAFF: 'Staf',
-  VIEWER: 'Viewer',
 };
 
 const getInitials = (name?: string | null) => {
@@ -47,14 +45,14 @@ export function Header({
   const currentUser = session?.user;
   const userName = currentUser?.name || 'Pengguna Sistem';
   const userEmail = currentUser?.email || '';
-  const userRole = currentUser?.role || 'VIEWER';
+  const userRole = currentUser?.role || 'STAFF';
   const roleLabel = ROLE_LABELS[userRole] || userRole;
   const biroLabel = currentUser?.biroCode
     ? `${currentUser.biroCode} - ${currentUser.biroName || 'Biro KEK'}`
     : null;
 
   const canCreateMeeting =
-    userRole === 'SUPER_ADMIN' || userRole === 'ADMIN' || userRole === 'NOTULIS';
+    userRole === 'SUPER_ADMIN' || userRole === 'ADMIN';
 
   return (
     <header

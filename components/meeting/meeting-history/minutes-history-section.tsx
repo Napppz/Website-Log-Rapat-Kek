@@ -106,17 +106,13 @@ const CATEGORY_CONFIG: Record<
 const ROLE_COLORS: Record<string, string> = {
   SUPER_ADMIN: 'bg-rose-100 text-rose-700',
   ADMIN: 'bg-violet-100 text-violet-700',
-  NOTULIS: 'bg-teal-100 text-teal-700',
   STAFF: 'bg-blue-100 text-blue-700',
-  VIEWER: 'bg-slate-100 text-slate-600',
 };
 
 const ROLE_LABELS: Record<string, string> = {
   SUPER_ADMIN: 'Super Admin',
   ADMIN: 'Admin',
-  NOTULIS: 'Notulis',
   STAFF: 'Staf',
-  VIEWER: 'Pengamat',
 };
 
 function getInitials(name: string) {

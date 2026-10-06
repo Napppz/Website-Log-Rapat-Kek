@@ -114,22 +114,14 @@ export function BiroDashboardClient({
       label: 'Administrator Biro',
       badgeClass: 'bg-blue-100 text-blue-900 border-blue-300',
     },
-    NOTULIS: {
-      label: 'Notulis Sidang',
-      badgeClass: 'bg-[#ECF8E9] text-[#4D8F3D] border-[#D2EFCA]',
-    },
     STAFF: {
       label: 'Staf Pelaksana Teknis',
       badgeClass: 'bg-purple-100 text-purple-900 border-purple-300',
     },
-    VIEWER: {
-      label: 'Tamu / Viewer',
-      badgeClass: 'bg-slate-100 text-slate-800 border-slate-300',
-    },
   };
 
   const roleConfig = roleLabelMap[userRole] || roleLabelMap.STAFF;
-  const canCreate = userRole === 'SUPER_ADMIN' || userRole === 'ADMIN' || userRole === 'NOTULIS';
+  const canCreate = userRole === 'SUPER_ADMIN' || userRole === 'ADMIN';
 
   const todayFormatted = new Date().toLocaleDateString('id-ID', {
     weekday: 'long',
