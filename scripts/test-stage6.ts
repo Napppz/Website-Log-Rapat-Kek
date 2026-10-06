@@ -332,7 +332,7 @@ async function runStage6Tests() {
   const createdMeetingRes = await createMeetingAction({
     title: 'Rapat Pleno Koordinasi Stage 6 Test',
     biroCode: 'BPPK',
-    date: '2026-09-30',
+    date: '2026-10-10',
     startTime: '10:00',
     endTime: '12:00',
     location: 'Ruang Rapat Pleno',

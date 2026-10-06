@@ -89,6 +89,23 @@ export async function createMeetingAction(input: CreateMeetingInput) {
       };
     }
 
+    // Date validation: meeting execution date cannot be before today (tidak bisa mundur)
+    const todayDateStr = (() => {
+      const d = new Date();
+      return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+    })();
+
+    const inputDateStr = typeof input.date === 'string' && input.date.includes('T')
+      ? input.date.split('T')[0]
+      : String(input.date).slice(0, 10);
+
+    if (inputDateStr < todayDateStr) {
+      return {
+        success: false,
+        error: 'Tanggal pelaksanaan rapat tidak boleh tanggal sebelum hari ini (tidak bisa mundur).',
+      };
+    }
+
     const result = await prisma.$transaction(async (tx) => {
       // 1. Generate sequence atomically or use custom meetingNumber if provided (and not '-' or empty)
       let finalMeetingNumber = input.meetingNumber?.trim();

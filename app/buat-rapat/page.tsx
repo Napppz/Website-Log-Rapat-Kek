@@ -90,9 +90,15 @@ export default function BuatRapatPage() {
   const [isDraggingDoc, setIsDraggingDoc] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  // Today's date in YYYY-MM-DD format (prevents past date selection)
+  const todayStr = (() => {
+    const d = new Date();
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+  })();
+
   const [selectedBiro, setSelectedBiro] = useState<BiroCode>(userBiroCode || 'IKK');
   const [title, setTitle] = useState('');
-  const [date, setDate] = useState('2026-09-25');
+  const [date, setDate] = useState(todayStr);
   const [time, setTime] = useState('09:00 - 12:00 WIB');
   const [location, setLocation] = useState(
     'Ruang Rapat Utama Gedung Posko KEK & Hybrid Zoom'
@@ -145,7 +151,16 @@ export default function BuatRapatPage() {
     if (extractedData.biroCode && !userBiroCode) {
       setSelectedBiro(extractedData.biroCode as BiroCode);
     }
-    setDate(extractedData.date);
+    if (extractedData.date) {
+      if (extractedData.date < todayStr) {
+        toast.warning(
+          `Tanggal pada berkas undangan (${extractedData.date}) sudah lewat. Tanggal pelaksanaan disesuaikan ke hari ini.`
+        );
+        setDate(todayStr);
+      } else {
+        setDate(extractedData.date);
+      }
+    }
     setTime(`${extractedData.startTime} - ${extractedData.endTime} WIB`);
     setLocation(extractedData.location);
     if (extractedData.classification) {
@@ -373,6 +388,12 @@ export default function BuatRapatPage() {
     setErrorMessage(null);
 
     try {
+      if (date && date < todayStr) {
+        toast.error('Tanggal pelaksanaan rapat tidak boleh sebelum hari ini (tidak bisa mundur).');
+        setIsSubmitted(false);
+        return;
+      }
+
       const parts = time.split('-').map((s) => s.trim().replace('WIB', '').trim());
       const startTime = parts[0] || '09:00';
       const endTime = parts[1] || '12:00';
@@ -885,18 +906,35 @@ export default function BuatRapatPage() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-5 sm:gap-6">
               {/* Tanggal Pelaksanaan */}
               <div>
-                <label className="font-semibold text-slate-800 mb-2 flex items-center gap-1.5 text-sm">
-                  <Calendar className="w-4 h-4 text-[#1E6B7B]" />
-                  <span>Tanggal Pelaksanaan</span>
-                  <span className="text-red-500 font-bold">*</span>
-                </label>
+                <div className="flex items-center justify-between mb-2">
+                  <label className="font-semibold text-slate-800 flex items-center gap-1.5 text-sm">
+                    <Calendar className="w-4 h-4 text-[#1E6B7B]" />
+                    <span>Tanggal Pelaksanaan</span>
+                    <span className="text-red-500 font-bold">*</span>
+                  </label>
+                  <span className="text-[11px] font-semibold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200">
+                    Min. Hari Ini
+                  </span>
+                </div>
                 <input
                   type="date"
                   required
+                  min={todayStr}
                   value={date}
-                  onChange={(e) => setDate(e.target.value)}
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    if (val && val < todayStr) {
+                      toast.error('Tanggal pelaksanaan rapat tidak bisa mundur (tidak boleh sebelum hari ini).');
+                      setDate(todayStr);
+                    } else {
+                      setDate(val);
+                    }
+                  }}
                   className="w-full px-4 h-[44px] rounded-xl border border-slate-300 bg-white text-slate-800 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-[#1E6B7B]/20 focus:border-[#1E6B7B] shadow-2xs"
                 />
+                <p className="text-[11px] text-slate-500 mt-1">
+                  Tanggal pelaksanaan rapat hanya dapat dijadwalkan mulai hari ini ke depan.
+                </p>
               </div>
 
               {/* Waktu Pelaksanaan */}

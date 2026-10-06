@@ -34,9 +34,15 @@ export function CreateMeetingDialog({ isOpen, onClose, onSuccess }: CreateMeetin
   const userRole = session?.user?.role || 'VIEWER';
   const canCreate = userRole === 'SUPER_ADMIN' || userRole === 'ADMIN' || userRole === 'NOTULIS';
 
+  // Today's date in YYYY-MM-DD format (prevents past date selection)
+  const todayStr = (() => {
+    const d = new Date();
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+  })();
+
   const [selectedBiro, setSelectedBiro] = useState<BiroCode>('IKK');
   const [title, setTitle] = useState('');
-  const [date, setDate] = useState('2026-09-25');
+  const [date, setDate] = useState(todayStr);
   const [time, setTime] = useState('09:00 - 12:00 WIB');
   const [location, setLocation] = useState('Ruang Rapat Utama Gedung Posko KEK & Hybrid Zoom');
   const [previousMeetingId, setPreviousMeetingId] = useState<string>('');
@@ -112,6 +118,12 @@ export function CreateMeetingDialog({ isOpen, onClose, onSuccess }: CreateMeetin
     e.preventDefault();
     setSubmitting(true);
     try {
+      if (date && date < todayStr) {
+        toast.error('Tanggal pelaksanaan rapat tidak boleh sebelum hari ini (tidak bisa mundur).');
+        setSubmitting(false);
+        return;
+      }
+
       const { createMeetingAction } = await import('@/app/actions/meeting-actions');
       const parts = time.split('-').map((s) => s.trim().replace('WIB', '').trim());
       const startTime = parts[0] || '09:00';
@@ -232,15 +244,29 @@ export function CreateMeetingDialog({ isOpen, onClose, onSuccess }: CreateMeetin
           {/* Tanggal & Waktu */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
-              <label className="block font-semibold text-slate-700 mb-1 flex items-center gap-1.5">
-                <Calendar className="w-4 h-4 text-[#31889C]" />
-                Tanggal Pelaksanaan <span className="text-red-500">*</span>
-              </label>
+              <div className="flex items-center justify-between mb-1">
+                <label className="font-semibold text-slate-700 flex items-center gap-1.5">
+                  <Calendar className="w-4 h-4 text-[#31889C]" />
+                  <span>Tanggal Pelaksanaan</span> <span className="text-red-500">*</span>
+                </label>
+                <span className="text-[10px] font-semibold text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-200">
+                  Min. Hari Ini
+                </span>
+              </div>
               <input
                 type="date"
                 required
+                min={todayStr}
                 value={date}
-                onChange={(e) => setDate(e.target.value)}
+                onChange={(e) => {
+                  const val = e.target.value;
+                  if (val && val < todayStr) {
+                    toast.error('Tanggal pelaksanaan rapat tidak bisa mundur (tidak boleh sebelum hari ini).');
+                    setDate(todayStr);
+                  } else {
+                    setDate(val);
+                  }
+                }}
                 className="w-full px-3 py-2 rounded-lg border border-slate-200 bg-white text-slate-800 focus:outline-none focus:ring-2 focus:ring-[#31889C]/25 focus:border-[#31889C]"
               />
             </div>
