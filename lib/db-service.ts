@@ -229,6 +229,21 @@ export async function getActionItemsFromDb(filters?: {
           picTeam: true,
           picUser: true,
           meeting: true,
+          logs: {
+            orderBy: { createdAt: 'desc' },
+            take: 1,
+            select: {
+              progress: true,
+              notes: true,
+              createdAt: true,
+              user: {
+                select: { name: true },
+              },
+            },
+          },
+          _count: {
+            select: { logs: true },
+          },
         },
         orderBy: [{ dueDate: 'asc' }, { createdAt: 'desc' }],
       });
@@ -237,10 +252,25 @@ export async function getActionItemsFromDb(filters?: {
       return items.map((item) => {
         const isOverdue = item.status !== 'COMPLETED' && new Date(item.dueDate).getTime() < now;
         const computedStatus = isOverdue ? 'OVERDUE' : item.status;
+        const latestLog = item.logs?.[0];
+        const latestProgress =
+          latestLog?.progress !== undefined && latestLog?.progress !== null
+            ? Number(latestLog.progress)
+            : item.status === 'COMPLETED'
+            ? 100
+            : item.status === 'IN_PROGRESS'
+            ? 50
+            : 0;
+
         return {
           ...item,
           computedStatus,
           isOverdue,
+          latestProgress,
+          latestLogNote: latestLog?.notes ?? null,
+          latestLogCreatedAt: latestLog?.createdAt ?? null,
+          latestLogUser: latestLog?.user?.name ?? null,
+          logsCount: item._count?.logs ?? 0,
         };
       });
     });

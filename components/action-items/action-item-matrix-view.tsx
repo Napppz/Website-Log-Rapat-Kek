@@ -23,6 +23,7 @@ import {
   FileText,
   Loader2,
   History,
+  TrendingUp,
 } from 'lucide-react';
 import { ActionItem, ActionItemStatus } from '@/lib/types';
 import { ActionItemStatusBadge, ActionItemPriorityBadge } from './action-item-status-badge';
@@ -105,9 +106,32 @@ export function ActionItemMatrixView({
   const [editingItem, setEditingItem] = useState<ActionItem | null>(null);
   const [deletingItem, setDeletingItem] = useState<ActionItem | null>(null);
   const [loggingItem, setLoggingItem] = useState<ActionItem | null>(null);
+  const [dialogInitialTab, setDialogInitialTab] = useState<'trail' | 'update'>('update');
+  const [dialogDefaultStatus, setDialogDefaultStatus] = useState<ActionItemStatus | undefined>(undefined);
+  const [dialogDefaultProgress, setDialogDefaultProgress] = useState<number | undefined>(undefined);
   const [updatingStatusId, setUpdatingStatusId] = useState<string | null>(null);
   const [isExporting, setIsExporting] = useState(false);
   const [isExportingDocx, setIsExportingDocx] = useState(false);
+
+  const openUpdateDialog = (task: ActionItem, targetStatus?: ActionItemStatus, targetProgress?: number) => {
+    setLoggingItem(task);
+    setDialogInitialTab('update');
+    setDialogDefaultStatus(targetStatus || task.status);
+    setDialogDefaultProgress(
+      targetProgress !== undefined
+        ? targetProgress
+        : targetStatus === 'COMPLETED'
+        ? 100
+        : task.latestProgress
+    );
+  };
+
+  const openAuditTrailDialog = (task: ActionItem) => {
+    setLoggingItem(task);
+    setDialogInitialTab('trail');
+    setDialogDefaultStatus(task.status);
+    setDialogDefaultProgress(task.latestProgress);
+  };
 
   /**
    * Export Excel — uses the same active filters as the visible table.
@@ -625,50 +649,105 @@ export function ActionItemMatrixView({
                         <ActionItemPriorityBadge priority={task.priority} />
                       </td>
 
-                      {/* Status Badge */}
+                      {/* Status Badge & Mini Progress Bar */}
                       <td className="py-3.5 px-4 align-top">
-                        <ActionItemStatusBadge
-                          status={task.status}
-                          isOverdue={isItemOverdue}
-                        />
+                        <div className="flex flex-col items-start gap-1.5">
+                          {canEditTask(task) ? (
+                            <button
+                              type="button"
+                              onClick={() => openUpdateDialog(task)}
+                              className="cursor-pointer transition-opacity hover:opacity-80 text-left"
+                              title="Klik untuk memperbarui progres status"
+                            >
+                              <ActionItemStatusBadge
+                                status={task.status}
+                                isOverdue={isItemOverdue}
+                              />
+                            </button>
+                          ) : (
+                            <ActionItemStatusBadge
+                              status={task.status}
+                              isOverdue={isItemOverdue}
+                            />
+                          )}
+                          {/* Mini Progress Bar */}
+                          <div className="flex items-center gap-1.5 w-full max-w-[120px]">
+                            <div className="flex-1 bg-slate-100 h-1.5 rounded-full overflow-hidden shrink-0">
+                              <div
+                                className={`h-full rounded-full transition-all duration-300 ${
+                                  task.status === 'COMPLETED'
+                                    ? 'bg-[#7CC563]'
+                                    : isItemOverdue
+                                    ? 'bg-rose-500'
+                                    : 'bg-[#31889C]'
+                                }`}
+                                style={{
+                                  width: `${
+                                    task.latestProgress !== undefined && task.latestProgress !== null
+                                      ? task.latestProgress
+                                      : task.status === 'COMPLETED'
+                                      ? 100
+                                      : task.status === 'IN_PROGRESS'
+                                      ? 50
+                                      : 0
+                                  }%`,
+                                }}
+                              />
+                            </div>
+                            <span className="text-[10px] font-black text-slate-500 shrink-0">
+                              {task.latestProgress !== undefined && task.latestProgress !== null
+                                ? task.latestProgress
+                                : task.status === 'COMPLETED'
+                                ? 100
+                                : task.status === 'IN_PROGRESS'
+                                ? 50
+                                : 0}
+                              %
+                            </span>
+                          </div>
+                        </div>
                       </td>
 
                       {/* Actions */}
                       <td className="py-3.5 px-4 align-top text-right">
                         <div className="flex items-center justify-end gap-1">
-                          {/* Quick Toggle Status - only if user can edit this task */}
+                          {/* Quick Selesai - opens evidence modal prefilled to COMPLETED */}
+                          {canEditTask(task) && task.status !== 'COMPLETED' && (
+                            <button
+                              type="button"
+                              onClick={() => openUpdateDialog(task, 'COMPLETED', 100)}
+                              className="p-1 rounded text-[#4D8F3D] hover:bg-[#ECF8E9] transition-colors cursor-pointer"
+                              title="Tandai Selesai (Catat Hasil & Bukti Dukung)"
+                            >
+                              <CheckCircle2 className="w-4 h-4" />
+                            </button>
+                          )}
+
+                          {/* Update Progres button */}
                           {canEditTask(task) && (
-                            task.status !== 'COMPLETED' ? (
-                              <button
-                                type="button"
-                                disabled={isUpdatingThis}
-                                onClick={() => handleStatusChange(task.id, 'COMPLETED')}
-                                className="p-1 rounded text-[#4D8F3D] hover:bg-[#ECF8E9] transition-colors cursor-pointer"
-                                title="Tandai Selesai"
-                              >
-                                <CheckCircle2 className="w-4 h-4" />
-                              </button>
-                            ) : (
-                              <button
-                                type="button"
-                                disabled={isUpdatingThis}
-                                onClick={() => handleStatusChange(task.id, 'IN_PROGRESS')}
-                                className="p-1 rounded text-[#31889C] hover:bg-[#F0F9FA] transition-colors cursor-pointer"
-                                title="Kembalikan ke Dalam Proses"
-                              >
-                                <RotateCcw className="w-4 h-4" />
-                              </button>
-                            )
+                            <button
+                              type="button"
+                              onClick={() => openUpdateDialog(task)}
+                              className="p-1 text-[#31889C] hover:text-[#215865] hover:bg-[#F0F9FA] rounded transition-colors cursor-pointer"
+                              title="Update Progres & Bukti Tindak Lanjut"
+                            >
+                              <TrendingUp className="w-4 h-4" />
+                            </button>
                           )}
 
                           {/* Audit Trail & Progress Log button */}
                           <button
                             type="button"
-                            onClick={() => setLoggingItem(task)}
-                            className="p-1 text-sky-600 hover:text-sky-800 hover:bg-sky-50 rounded transition-colors cursor-pointer"
+                            onClick={() => openAuditTrailDialog(task)}
+                            className="p-1 text-slate-500 hover:text-slate-800 hover:bg-slate-100 rounded transition-colors cursor-pointer relative"
                             title="Lihat Riwayat & Catatan Progres"
                           >
                             <History className="w-4 h-4" />
+                            {Boolean(task.logsCount && task.logsCount > 0) && (
+                              <span className="absolute -top-1 -right-1 w-3.5 h-3.5 rounded-full bg-[#31889C] text-white text-[8px] font-bold flex items-center justify-center">
+                                {task.logsCount}
+                              </span>
+                            )}
                           </button>
 
                           {/* Edit button - only if user can edit this task */}
@@ -748,6 +827,9 @@ export function ActionItemMatrixView({
       <ActionItemLogDialog
         item={loggingItem}
         isOpen={Boolean(loggingItem)}
+        initialTab={dialogInitialTab}
+        defaultStatus={dialogDefaultStatus}
+        defaultProgress={dialogDefaultProgress}
         onClose={() => setLoggingItem(null)}
         onItemUpdated={(updated) => {
           setItems((prev) =>

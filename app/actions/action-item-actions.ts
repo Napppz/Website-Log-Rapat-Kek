@@ -88,6 +88,21 @@ export async function getActionItemsAction(meetingId?: string) {
             date: true,
           },
         },
+        logs: {
+          orderBy: { createdAt: 'desc' },
+          take: 1,
+          select: {
+            progress: true,
+            notes: true,
+            createdAt: true,
+            user: {
+              select: { name: true },
+            },
+          },
+        },
+        _count: {
+          select: { logs: true },
+        },
       },
       orderBy: [{ dueDate: 'asc' }, { createdAt: 'desc' }],
     });
@@ -755,7 +770,10 @@ export async function addActionItemLogAction(input: AddActionItemLogInput) {
       success: true,
       data: {
         log,
-        updatedItem: computeActionItemStatus(updatedItem),
+        updatedItem: computeActionItemStatus({
+          ...updatedItem,
+          logs: [log],
+        }),
       },
     };
   } catch (error: any) {

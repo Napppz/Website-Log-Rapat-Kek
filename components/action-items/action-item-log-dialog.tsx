@@ -44,6 +44,9 @@ interface ActionItemLogDialogProps {
   isOpen: boolean;
   onClose: () => void;
   onItemUpdated?: (updatedItem: any) => void;
+  initialTab?: 'trail' | 'update';
+  defaultStatus?: ActionItemStatus;
+  defaultProgress?: number;
 }
 
 // ─── Status helpers ───────────────────────────────────────────────────────────
@@ -60,6 +63,14 @@ const STATUS_BULLET: Record<string, string> = {
   PENDING:     'bg-amber-400 ring-amber-100',
   OVERDUE:     'bg-rose-500 ring-rose-100',
 };
+
+const QUICK_NOTE_TEMPLATES = [
+  '🎯 Tindak lanjut telah selesai dilaksanakan sesuai arahan rapat.',
+  '📄 Draf regulasi/dokumen telah disusun dan siap difinalisasi.',
+  '🤝 Sedang berkoordinasi dengan kementerian/biro terkait.',
+  '📊 Masih dalam proses penyusunan dan pengumpulan data.',
+  '⚠️ Mengalami kendala teknis dalam kelengkapan data dukung.',
+];
 
 function StatusPill({ status }: { status: string }) {
   const m = STATUS_META[status] ?? STATUS_META['PENDING'];
@@ -91,6 +102,9 @@ export function ActionItemLogDialog({
   isOpen,
   onClose,
   onItemUpdated,
+  initialTab = 'trail',
+  defaultStatus,
+  defaultProgress,
 }: ActionItemLogDialogProps) {
   const [logs, setLogs] = useState<any[]>([]);
   const [isLoadingLogs, setIsLoadingLogs] = useState(false);
@@ -102,29 +116,38 @@ export function ActionItemLogDialog({
   // Form states
   const [notes, setNotes] = useState('');
   const [driveLink, setDriveLink] = useState('');
-  const [progress, setProgress] = useState(
-    item?.status === 'COMPLETED' ? 100 : item?.status === 'IN_PROGRESS' ? 50 : 0,
-  );
-  const [selectedStatus, setSelectedStatus] = useState<ActionItemStatus>(
-    item?.status || 'PENDING',
-  );
+  const [progress, setProgress] = useState(0);
+  const [selectedStatus, setSelectedStatus] = useState<ActionItemStatus>('PENDING');
 
   // Expand/collapse individual log cards
   const [expandedLogs, setExpandedLogs] = useState<Set<string>>(new Set());
 
   useEffect(() => {
     if (isOpen && item?.id) {
-      setSelectedStatus(item.status);
-      setProgress(
-        item.status === 'COMPLETED' ? 100 : item.status === 'IN_PROGRESS' ? 50 : 0,
-      );
+      const targetSt = defaultStatus || item.status || 'PENDING';
+      setSelectedStatus(targetSt);
+
+      let targetProg = 0;
+      if (defaultProgress !== undefined) {
+        targetProg = defaultProgress;
+      } else if (targetSt === 'COMPLETED') {
+        targetProg = 100;
+      } else if (item.latestProgress !== undefined && item.latestProgress !== null) {
+        targetProg = item.latestProgress;
+      } else if (targetSt === 'IN_PROGRESS') {
+        targetProg = 50;
+      } else {
+        targetProg = 0;
+      }
+      setProgress(targetProg);
+
       setNotes('');
       setDriveLink('');
       setExpandedLogs(new Set());
-      setActiveTab('trail');
+      setActiveTab(initialTab || 'trail');
       fetchLogs(item.id);
     }
-  }, [isOpen, item]);
+  }, [isOpen, item, initialTab, defaultStatus, defaultProgress]);
 
   const fetchLogs = async (itemId: string) => {
     try {
@@ -147,7 +170,11 @@ export function ActionItemLogDialog({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!notes.trim()) {
-      toast.warning('Silakan masukkan catatan progres atau kendala terlebih dahulu.');
+      if (selectedStatus === 'COMPLETED') {
+        toast.warning('Ringkasan hasil penyelesaian wajib diisi saat menandai status Selesai.');
+      } else {
+        toast.warning('Silakan masukkan catatan progres atau kendala terlebih dahulu.');
+      }
       return;
     }
 
@@ -157,10 +184,12 @@ export function ActionItemLogDialog({
         ? `${notes.trim()}\n\n${normalizeUrl(driveLink.trim())}`
         : notes.trim();
 
+      const targetProgress = selectedStatus === 'COMPLETED' ? 100 : progress;
+
       const res = await addActionItemLogAction({
         actionItemId: item.id,
         notes: fullNotes,
-        progress,
+        progress: targetProgress,
         newStatus: selectedStatus,
       });
 
@@ -169,7 +198,11 @@ export function ActionItemLogDialog({
         setNotes('');
         setDriveLink('');
         setActiveTab('trail');
-        toast.success('Catatan progres berhasil ditambahkan ke audit trail.');
+        toast.success(
+          selectedStatus === 'COMPLETED'
+            ? 'Tindak lanjut ditandai Selesai & dicatat ke audit trail.'
+            : 'Catatan progres berhasil disimpan ke audit trail.'
+        );
         if (onItemUpdated) {
           onItemUpdated(res.data.updatedItem);
         }
@@ -571,6 +604,19 @@ export function ActionItemLogDialog({
                   Setiap catatan yang dikirim akan tercatat permanen ke dalam audit trail resmi.
                 </p>
 
+                {/* Completion Guidance Banner */}
+                {selectedStatus === 'COMPLETED' && (
+                  <div className="flex items-start gap-2.5 p-3 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-[12px] animate-in fade-in duration-200">
+                    <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
+                    <div>
+                      <span className="font-bold">Menandai Tindak Lanjut Selesai:</span>
+                      <p className="text-[11.5px] text-emerald-700 mt-0.5 leading-relaxed">
+                        Mohon sertakan ringkasan hasil penyelesaian dan tautan bukti Google Drive agar akuntabilitas pelaksanaan tercatat dengan jelas dalam arsip resmi KEK RI.
+                      </p>
+                    </div>
+                  </div>
+                )}
+
                 {/* Notes */}
                 <div>
                   <label className="block text-[12px] font-semibold text-slate-700 mb-1.5">
@@ -580,10 +626,28 @@ export function ActionItemLogDialog({
                   <textarea
                     value={notes}
                     onChange={(e) => setNotes(e.target.value)}
-                    placeholder="Contoh: Telah melakukan koordinasi dengan Kementerian Keuangan mengenai insentif fiskal. Draf aturan pelaksana sedang dalam proses harmonisasi hukum."
+                    placeholder={
+                      selectedStatus === 'COMPLETED'
+                        ? 'Contoh: Telah menyelesaikan penyusunan nota dinas No. ND-12/KEK/2026 dan menyampaikan kepada pimpinan biro terkait.'
+                        : 'Contoh: Telah melakukan koordinasi dengan kementerian terkait. Draf kebijakan sedang dalam proses penelaahan hukum.'
+                    }
                     rows={4}
                     className="w-full px-3 py-2.5 rounded-lg border border-slate-200 focus:outline-none focus:ring-2 focus:ring-[#31889C]/20 focus:border-[#31889C] text-[13px] placeholder:text-slate-400 resize-none"
                   />
+                  {/* Quick Note Templates */}
+                  <div className="mt-2 flex flex-wrap items-center gap-1.5">
+                    <span className="text-[10.5px] text-slate-400 font-medium mr-0.5">Templat Cepat:</span>
+                    {QUICK_NOTE_TEMPLATES.map((tmpl, idx) => (
+                      <button
+                        key={idx}
+                        type="button"
+                        onClick={() => setNotes((prev) => (prev ? `${prev}\n${tmpl}` : tmpl))}
+                        className="px-2 py-0.5 rounded-md bg-slate-50 hover:bg-[#E8F5F7] hover:text-[#215865] hover:border-[#BCE3EB] text-slate-600 text-[11px] font-medium transition-colors cursor-pointer border border-slate-200"
+                      >
+                        {tmpl.split(' ')[0]} {tmpl.slice(tmpl.indexOf(' ') + 1, tmpl.indexOf(' ') + 22)}...
+                      </button>
+                    ))}
+                  </div>
                 </div>
 
                 {/* Google Drive Link */}
@@ -705,17 +769,26 @@ export function ActionItemLogDialog({
                   <button
                     type="submit"
                     disabled={isSubmitting}
-                    className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-[#31889C] hover:bg-[#266F80] text-white text-[12px] font-bold shadow-xs transition-all cursor-pointer disabled:opacity-50"
+                    className={`inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-white text-[12px] font-bold shadow-xs transition-all cursor-pointer disabled:opacity-50 ${
+                      selectedStatus === 'COMPLETED'
+                        ? 'bg-[#4D8F3D] hover:bg-[#3F7532] shadow-emerald-500/20'
+                        : 'bg-[#31889C] hover:bg-[#266F80] shadow-sky-500/20'
+                    }`}
                   >
                     {isSubmitting ? (
                       <>
                         <Loader2 className="w-3.5 h-3.5 animate-spin" />
                         <span>Menyimpan...</span>
                       </>
+                    ) : selectedStatus === 'COMPLETED' ? (
+                      <>
+                        <CheckCircle2 className="w-3.5 h-3.5" />
+                        <span>Simpan Capaian &amp; Tandai Selesai</span>
+                      </>
                     ) : (
                       <>
                         <Send className="w-3.5 h-3.5" />
-                        <span>Kirim & Catat ke Audit Trail</span>
+                        <span>Simpan Catatan &amp; Update Progres</span>
                       </>
                     )}
                   </button>

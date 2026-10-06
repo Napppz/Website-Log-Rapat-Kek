@@ -16,6 +16,7 @@ import {
   RotateCcw,
   Check,
   History,
+  TrendingUp,
 } from 'lucide-react';
 import { ActionItem, ActionItemStatus } from '@/lib/types';
 import { ActionItemStatusBadge, ActionItemPriorityBadge } from './action-item-status-badge';
@@ -76,7 +77,30 @@ export function ActionItemList({
   const [editingItem, setEditingItem] = useState<ActionItem | null>(null);
   const [deletingItem, setDeletingItem] = useState<ActionItem | null>(null);
   const [loggingItem, setLoggingItem] = useState<ActionItem | null>(null);
+  const [dialogInitialTab, setDialogInitialTab] = useState<'trail' | 'update'>('update');
+  const [dialogDefaultStatus, setDialogDefaultStatus] = useState<ActionItemStatus | undefined>(undefined);
+  const [dialogDefaultProgress, setDialogDefaultProgress] = useState<number | undefined>(undefined);
   const [updatingStatusId, setUpdatingStatusId] = useState<string | null>(null);
+
+  const openUpdateDialog = (item: ActionItem, targetStatus?: ActionItemStatus, targetProgress?: number) => {
+    setLoggingItem(item);
+    setDialogInitialTab('update');
+    setDialogDefaultStatus(targetStatus || item.status);
+    setDialogDefaultProgress(
+      targetProgress !== undefined
+        ? targetProgress
+        : targetStatus === 'COMPLETED'
+        ? 100
+        : item.latestProgress
+    );
+  };
+
+  const openAuditTrailDialog = (item: ActionItem) => {
+    setLoggingItem(item);
+    setDialogInitialTab('trail');
+    setDialogDefaultStatus(item.status);
+    setDialogDefaultProgress(item.latestProgress);
+  };
 
   // Compute stats
   const total = items.length;
@@ -250,7 +274,18 @@ export function ActionItemList({
                       <span className="text-[11px] font-bold text-[#215865] bg-[#E8F5F7] px-2 py-0.5 rounded border border-[#BCE3EB]">
                         Item #{idx + 1}
                       </span>
-                      <ActionItemStatusBadge status={item.status} isOverdue={isItemOverdue} />
+                      {canEditThisItem(item) ? (
+                        <button
+                          type="button"
+                          onClick={() => openUpdateDialog(item)}
+                          className="cursor-pointer transition-opacity hover:opacity-80 text-left"
+                          title="Klik untuk memperbarui progres status"
+                        >
+                          <ActionItemStatusBadge status={item.status} isOverdue={isItemOverdue} />
+                        </button>
+                      ) : (
+                        <ActionItemStatusBadge status={item.status} isOverdue={isItemOverdue} />
+                      )}
                       <ActionItemPriorityBadge priority={item.priority} />
                     </div>
                     <h4 className="text-[15px] font-bold text-slate-900 pt-1 leading-snug">
@@ -369,50 +404,97 @@ export function ActionItemList({
                     )}
                   </div>
 
-                  {/* Status Transition controls */}
-                  {canEditThisItem(item) && (
-                    <div className="flex items-center gap-1 bg-slate-50 p-1 rounded-lg border border-slate-200">
-                      <span className="text-[11px] font-semibold text-slate-500 px-1 hidden md:inline">
-                        Ubah Progres:
+                  {/* Progress Bar & Akuntabilitas (Opsi A) */}
+                  <div className="mt-3.5 pt-3 border-t border-slate-100 flex flex-col md:flex-row md:items-center justify-between gap-3">
+                    {/* Visual Progress Bar */}
+                    <div className="flex items-center gap-2.5 min-w-[220px]">
+                      <div className="w-24 sm:w-28 bg-slate-100 h-2 rounded-full overflow-hidden shrink-0">
+                        <div
+                          className={`h-full rounded-full transition-all duration-300 ${
+                            item.status === 'COMPLETED'
+                              ? 'bg-[#7CC563]'
+                              : isItemOverdue
+                              ? 'bg-rose-500'
+                              : 'bg-[#31889C]'
+                          }`}
+                          style={{
+                            width: `${
+                              item.latestProgress !== undefined && item.latestProgress !== null
+                                ? item.latestProgress
+                                : item.status === 'COMPLETED'
+                                ? 100
+                                : item.status === 'IN_PROGRESS'
+                                ? 50
+                                : 0
+                            }%`,
+                          }}
+                        />
+                      </div>
+                      <span className="text-[12px] font-black text-slate-700 shrink-0">
+                        {item.latestProgress !== undefined && item.latestProgress !== null
+                          ? item.latestProgress
+                          : item.status === 'COMPLETED'
+                          ? 100
+                          : item.status === 'IN_PROGRESS'
+                          ? 50
+                          : 0}
+                        %
                       </span>
+                      {item.latestLogNote && (
+                        <span
+                          className="text-[11px] text-slate-500 truncate max-w-[260px] hidden sm:inline"
+                          title={item.latestLogNote}
+                        >
+                          &bull; {cleanTextWithoutLink(item.latestLogNote)}
+                        </span>
+                      )}
+                    </div>
+
+                    {/* Controls & Actions */}
+                    <div className="flex items-center gap-1.5 flex-wrap">
+                      {/* Tandai Selesai Quick Button (Opens Evidence Modal pre-filled to Completed) */}
+                      {canEditThisItem(item) && item.status !== 'COMPLETED' && (
+                        <button
+                          type="button"
+                          onClick={() => openUpdateDialog(item, 'COMPLETED', 100)}
+                          className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-emerald-50 hover:bg-emerald-100 text-[#4D8F3D] border border-emerald-200 text-[11px] font-bold transition-all cursor-pointer shadow-2xs"
+                          title="Tandai Selesai beserta Catatan & Bukti Google Drive"
+                        >
+                          <CheckCircle2 className="w-3.5 h-3.5" />
+                          <span>Tandai Selesai</span>
+                        </button>
+                      )}
+
+                      {/* Update Progres button */}
+                      {canEditThisItem(item) && (
+                        <button
+                          type="button"
+                          onClick={() => openUpdateDialog(item)}
+                          className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-[#E8F5F7] hover:bg-[#D5EEF2] text-[#215865] border border-[#BCE3EB] text-[11px] font-bold transition-all cursor-pointer shadow-2xs"
+                          title="Perbarui status, persentase progres, atau tautan bukti"
+                        >
+                          <TrendingUp className="w-3.5 h-3.5 text-[#31889C]" />
+                          <span>Update Progres</span>
+                        </button>
+                      )}
+
+                      {/* History / Audit Trail button */}
                       <button
                         type="button"
-                        disabled={item.status === 'PENDING' || isUpdatingThis}
-                        onClick={() => handleStatusChange(item.id, 'PENDING')}
-                        className={`px-2 py-0.5 rounded text-[11px] font-bold transition-all cursor-pointer ${
-                          item.status === 'PENDING'
-                            ? 'bg-slate-700 text-white shadow-xs'
-                            : 'text-slate-600 hover:bg-slate-200'
-                        }`}
+                        onClick={() => openAuditTrailDialog(item)}
+                        className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-slate-50 hover:bg-slate-100 text-slate-600 border border-slate-200 text-[11px] font-semibold transition-all cursor-pointer"
+                        title="Lihat riwayat catatan progres dan bukti pelaksanaan"
                       >
-                        Pending
-                      </button>
-                      <button
-                        type="button"
-                        disabled={item.status === 'IN_PROGRESS' || isUpdatingThis}
-                        onClick={() => handleStatusChange(item.id, 'IN_PROGRESS')}
-                        className={`px-2 py-0.5 rounded text-[11px] font-bold transition-all cursor-pointer ${
-                          item.status === 'IN_PROGRESS'
-                            ? 'bg-[#31889C] text-white shadow-xs'
-                            : 'text-slate-600 hover:bg-[#F0F9FA]'
-                        }`}
-                      >
-                        In Progress
-                      </button>
-                      <button
-                        type="button"
-                        disabled={item.status === 'COMPLETED' || isUpdatingThis}
-                        onClick={() => handleStatusChange(item.id, 'COMPLETED')}
-                        className={`px-2 py-0.5 rounded text-[11px] font-bold transition-all cursor-pointer ${
-                          item.status === 'COMPLETED'
-                            ? 'bg-[#7CC563] text-white shadow-xs'
-                            : 'text-slate-600 hover:bg-[#ECF8E9]'
-                        }`}
-                      >
-                        Completed
+                        <History className="w-3.5 h-3.5 text-slate-400" />
+                        <span>Riwayat Log</span>
+                        {Boolean(item.logsCount && item.logsCount > 0) && (
+                          <span className="ml-0.5 px-1.5 py-0.2 rounded-full bg-slate-200 text-slate-700 text-[9px] font-black">
+                            {item.logsCount}
+                          </span>
+                        )}
                       </button>
                     </div>
-                  )}
+                  </div>
                 </div>
               </div>
             );
@@ -448,6 +530,9 @@ export function ActionItemList({
       <ActionItemLogDialog
         isOpen={Boolean(loggingItem)}
         item={loggingItem}
+        initialTab={dialogInitialTab}
+        defaultStatus={dialogDefaultStatus}
+        defaultProgress={dialogDefaultProgress}
         onClose={() => setLoggingItem(null)}
         onItemUpdated={(updated) => {
           setItems((prev) =>

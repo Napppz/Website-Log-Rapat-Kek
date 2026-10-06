@@ -50,15 +50,38 @@ export type UpdateActionItemStatusInput = z.infer<typeof updateActionItemStatusS
  * If status is not COMPLETED and dueDate < now, the effective status is OVERDUE.
  */
 export function computeActionItemStatus<
-  T extends { status: string; dueDate: Date | string }
->(item: T): T & { computedStatus: string; isOverdue: boolean } {
+  T extends { status: string; dueDate: Date | string; logs?: any[]; _count?: any }
+>(item: T): T & {
+  computedStatus: string;
+  isOverdue: boolean;
+  latestProgress: number;
+  latestLogNote?: string | null;
+  latestLogCreatedAt?: Date | string | null;
+  latestLogUser?: string | null;
+  logsCount: number;
+} {
   const isOverdue =
     item.status !== 'COMPLETED' && new Date(item.dueDate).getTime() < Date.now();
   const computedStatus = isOverdue ? 'OVERDUE' : item.status;
+  const latestLog = Array.isArray(item.logs) && item.logs.length > 0 ? item.logs[0] : null;
+  const latestProgress =
+    latestLog?.progress !== undefined && latestLog?.progress !== null
+      ? Number(latestLog.progress)
+      : item.status === 'COMPLETED'
+      ? 100
+      : item.status === 'IN_PROGRESS'
+      ? 50
+      : 0;
+
   return {
     ...item,
     computedStatus,
     isOverdue,
+    latestProgress,
+    latestLogNote: latestLog?.notes ?? null,
+    latestLogCreatedAt: latestLog?.createdAt ?? null,
+    latestLogUser: latestLog?.user?.name ?? null,
+    logsCount: item._count?.logs ?? (Array.isArray(item.logs) ? item.logs.length : 0),
   };
 }
 

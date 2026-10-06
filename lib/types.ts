@@ -63,6 +63,11 @@ export interface ActionItem {
   };
   computedStatus?: ActionItemStatus;
   isOverdue?: boolean;
+  latestProgress?: number;
+  latestLogNote?: string | null;
+  latestLogCreatedAt?: Date | string | null;
+  latestLogUser?: string | null;
+  logsCount?: number;
 }
 
 export interface ActionItemProgressData {
