@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { useSession } from 'next-auth/react';
@@ -305,7 +305,6 @@ export function MeetingCommentsSection({ meetingId }: MeetingCommentsProps) {
   const [newContent, setNewContent] = useState('');
   const [newSection, setNewSection] = useState('general');
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [filter, setFilter] = useState<'all' | 'open' | 'resolved'>('all');
 
   const loadComments = useCallback(async () => {
     setIsLoading(true);
@@ -341,15 +340,6 @@ export function MeetingCommentsSection({ meetingId }: MeetingCommentsProps) {
     }
   };
 
-  const filtered = comments.filter((c) => {
-    if (filter === 'open') return !c.isResolved;
-    if (filter === 'resolved') return c.isResolved;
-    return true;
-  });
-
-  const openCount = comments.filter((c) => !c.isResolved).length;
-  const resolvedCount = comments.filter((c) => c.isResolved).length;
-
   return (
     <div className="space-y-5">
       {/* Header */}
@@ -360,22 +350,8 @@ export function MeetingCommentsSection({ meetingId }: MeetingCommentsProps) {
           </div>
           <div>
             <h3 className="font-bold text-slate-900 text-[15px]">Komentar & Anotasi Notulen</h3>
-            <p className="text-[12px] text-slate-500">{comments.length} komentar · {openCount} terbuka · {resolvedCount} selesai</p>
+            <p className="text-[12px] text-slate-500">{comments.length} komentar</p>
           </div>
-        </div>
-        {/* Filter buttons */}
-        <div className="flex items-center gap-1 bg-slate-100 rounded-xl p-1">
-          {([['all', 'Semua'], ['open', 'Terbuka'], ['resolved', 'Selesai']] as const).map(([val, label]) => (
-            <button
-              key={val}
-              onClick={() => setFilter(val)}
-              className={`text-[12px] font-medium px-3 py-1.5 rounded-lg transition-all ${
-                filter === val ? 'bg-white text-slate-900 shadow-xs' : 'text-slate-500 hover:text-slate-700'
-              }`}
-            >
-              {label}
-            </button>
-          ))}
         </div>
       </div>
 
@@ -423,21 +399,21 @@ export function MeetingCommentsSection({ meetingId }: MeetingCommentsProps) {
         <div className="flex items-center justify-center py-16">
           <Loader2 className="w-6 h-6 animate-spin text-[#31889C]" />
         </div>
-      ) : filtered.length === 0 ? (
+      ) : comments.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-16 text-center">
           <div className="w-14 h-14 rounded-2xl bg-slate-100 flex items-center justify-center mb-4">
             <MessageCircle className="w-7 h-7 text-slate-400" />
           </div>
           <h4 className="font-semibold text-slate-700 text-[14px]">
-            {filter === 'resolved' ? 'Belum ada komentar yang selesai' : filter === 'open' ? 'Tidak ada komentar terbuka' : 'Belum ada komentar'}
+            Belum ada komentar
           </h4>
           <p className="text-slate-400 text-[13px] mt-1">
-            {filter === 'all' ? 'Jadilah yang pertama memberi komentar pada notulen ini.' : 'Coba ubah filter di atas.'}
+            Jadilah yang pertama memberi komentar pada notulen ini.
           </p>
         </div>
       ) : (
         <div className="space-y-3">
-          {filtered.map((comment) => (
+          {comments.map((comment) => (
             <CommentItem
               key={comment.id}
               comment={comment}
