@@ -26,10 +26,12 @@ import {
   Check,
   FileText,
   FileEdit,
+  Loader2,
 } from 'lucide-react';
 import { SignatureDialog } from './signature-dialog';
 import { updateMeetingNumberAction } from '@/app/actions/meeting-actions';
 import { UploadMeetingDialog } from '@/components/meeting/upload-meeting-dialog';
+import { toast } from '@/components/providers/toast-provider';
 
 interface MeetingMinutesEditorProps {
   meetingId: string;
@@ -293,14 +295,17 @@ export function MeetingMinutesEditor({
           setStatusMessage(isDraft ? 'Draft tersimpan' : 'Tersimpan');
           hasChangesRef.current = false;
           if (onSaved) onSaved(res.data);
+          return true;
         } else {
           setSaveStatus('error');
           setStatusMessage(res.error || 'Gagal menyimpan');
+          return false;
         }
       } catch (err: any) {
         console.error('Save error:', err);
         setSaveStatus('error');
         setStatusMessage('Gagal menyimpan');
+        return false;
       }
     },
     [
@@ -384,8 +389,20 @@ export function MeetingMinutesEditor({
 
   const handleManualSave = async (isDraft: boolean) => {
     setIsManualSaving(true);
-    await executeSave(isDraft);
+    const isSuccess = await executeSave(isDraft);
     setIsManualSaving(false);
+    if (isSuccess && !isDraft) {
+      toast.success(
+        docType === 'NOTA_DINAS'
+          ? 'Nota Dinas berhasil disimpan.'
+          : 'Notulen berhasil disimpan.'
+      );
+      if (onPreviewClick) {
+        onPreviewClick();
+      }
+    } else if (!isSuccess && !isDraft) {
+      toast.error('Gagal menyimpan naskah rapat. Silakan periksa kembali isian Anda.');
+    }
   };
 
   // Muat draf template resmi naskah dinas notula
@@ -761,6 +778,21 @@ export function MeetingMinutesEditor({
               >
                 <Sparkles className="w-3.5 h-3.5 text-[#31889C]" />
                 <span>Gunakan Contoh Nota Dinas</span>
+              </button>
+
+              <button
+                type="button"
+                disabled={isManualSaving}
+                onClick={() => handleManualSave(false)}
+                className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-lg bg-[#31889C] hover:bg-[#266F80] text-white font-semibold text-[12px] transition-all shadow-xs cursor-pointer disabled:opacity-50"
+                title="Simpan perubahan dan langsung buka pratinjau Nota Dinas"
+              >
+                {isManualSaving ? (
+                  <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                ) : (
+                  <FileCheck className="w-3.5 h-3.5" />
+                )}
+                <span>{isManualSaving ? 'Menyimpan...' : 'Simpan Nota Dinas'}</span>
               </button>
 
               {onPreviewClick && (
@@ -1262,6 +1294,21 @@ export function MeetingMinutesEditor({
           >
             <Sparkles className="w-3.5 h-3.5 text-[#31889C]" />
             <span>Gunakan Template Dinas</span>
+          </button>
+
+          <button
+            type="button"
+            disabled={isManualSaving}
+            onClick={() => handleManualSave(false)}
+            className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-lg bg-[#31889C] hover:bg-[#266F80] text-white font-semibold text-[12px] transition-all shadow-xs cursor-pointer disabled:opacity-50"
+            title="Simpan perubahan dan langsung buka pratinjau Notulen"
+          >
+            {isManualSaving ? (
+              <Loader2 className="w-3.5 h-3.5 animate-spin" />
+            ) : (
+              <FileCheck className="w-3.5 h-3.5" />
+            )}
+            <span>{isManualSaving ? 'Menyimpan...' : 'Simpan Notulen'}</span>
           </button>
 
           {onPreviewClick && (
@@ -1835,7 +1882,7 @@ export function MeetingMinutesEditor({
       {/* Bottom Save Bar */}
       <div className="p-4 bg-[#F8FAFC] rounded-xl border border-slate-200 flex flex-col sm:flex-row items-center justify-between gap-3">
         <span className="text-[12px] text-slate-600">
-          💡 Setiap ketikan otomatis disimpan (Autosave aktif). Klik tombol <strong>Simpan {docType === 'NOTA_DINAS' ? 'Nota Dinas' : 'Notulen'}</strong> untuk konfirmasi data final.
+          💡 Setiap ketikan otomatis disimpan (Autosave aktif). Klik tombol <strong>Simpan {docType === 'NOTA_DINAS' ? 'Nota Dinas' : 'Notulen'}</strong> untuk menyimpan dan langsung membuka pratinjau naskah resmi.
         </span>
 
         <div className="flex items-center gap-2 shrink-0 self-end sm:self-center">
@@ -1844,8 +1891,13 @@ export function MeetingMinutesEditor({
             disabled={isManualSaving}
             onClick={() => handleManualSave(false)}
             className="inline-flex items-center gap-1.5 px-5 py-2.5 rounded-xl bg-[#31889C] hover:bg-[#266F80] text-white font-semibold text-[13px] transition-all shadow-md shadow-[#31889C]/20 cursor-pointer disabled:opacity-50"
+            title={`Simpan ${docType === 'NOTA_DINAS' ? 'Nota Dinas' : 'Notulen'} dan langsung buka pratinjau`}
           >
-            <FileCheck className="w-4 h-4" />
+            {isManualSaving ? (
+              <Loader2 className="w-4 h-4 animate-spin" />
+            ) : (
+              <FileCheck className="w-4 h-4" />
+            )}
             <span>
               {isManualSaving
                 ? 'Menyimpan...'
