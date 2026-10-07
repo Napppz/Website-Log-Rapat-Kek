@@ -397,6 +397,10 @@ export async function getMeetingsFromDb(filters?: {
           invitationDocUrl: m.invitationDocUrl || null,
           invitationDocName: m.invitationDocName || null,
           invitationDocSize: m.invitationDocSize || null,
+          documentCategory: (m as any).documentCategory || 'UNDANGAN_INTERNAL',
+          documentSubCategory: (m as any).documentSubCategory || null,
+          sourceOrigin: (m as any).sourceOrigin || null,
+          postponeReason: (m as any).postponeReason || null,
         };
       });
     });

@@ -39,6 +39,8 @@ import {
   UploadCloud,
   Video,
   Presentation,
+  Inbox,
+  Tag,
 } from 'lucide-react';
 
 import { MeetingStatusBadge } from '@/components/meeting/meeting-status-badge';
@@ -53,9 +55,18 @@ import { AgendaSeriesModal } from '@/components/meeting/agenda-series-modal';
 import { MeetingCommentsSection } from '@/components/meeting/meeting-comments/meeting-comments-section';
 import { MinutesHistorySection } from '@/components/meeting/meeting-history/minutes-history-section';
 import { GoogleCalendarModal } from '@/components/meeting/google-calendar-modal';
+import {
+  MeetingCategorySelector,
+  CategorySelectionData,
+} from '@/components/meeting/meeting-category-selector';
 import { extractVirtualMeetingDetails } from '@/lib/calendar';
 import { extractPlainText } from '@/lib/pdf/pdf-utils';
-import { MeetingStatus } from '@/lib/types';
+import {
+  MeetingStatus,
+  getMeetingCategoryInfo,
+  MeetingDocumentCategory,
+  MeetingDocumentSubCategory,
+} from '@/lib/types';
 import { AttendanceStatus } from '@prisma/client';
 import {
   updateMeetingStatusAction,
@@ -64,6 +75,7 @@ import {
   addParticipantToMeetingAction,
   removeParticipantFromMeetingAction,
   updateMeetingNumberAction,
+  updateMeetingCategoryAction,
 } from '@/app/actions/meeting-actions';
 import {
   uploadInvitationFileAction,
@@ -243,6 +255,22 @@ export function MeetingDetailView({
   const [isEditingMeetingNumber, setIsEditingMeetingNumber] = useState(false);
   const [editNumberValue, setEditNumberValue] = useState<string>(meeting.meetingNumber);
   const [isSavingNumber, setIsSavingNumber] = useState(false);
+
+  // Meeting Category state
+  const [categoryData, setCategoryData] = useState<CategorySelectionData>({
+    category: (meeting.documentCategory as MeetingDocumentCategory) || 'UNDANGAN_INTERNAL',
+    subCategory: (meeting.documentSubCategory as MeetingDocumentSubCategory) || null,
+    sourceOrigin: meeting.sourceOrigin || '',
+    postponeReason: meeting.postponeReason || '',
+  });
+  const [isEditCategoryModalOpen, setIsEditCategoryModalOpen] = useState(false);
+  const [editCategoryForm, setEditCategoryForm] = useState<CategorySelectionData>({
+    category: (meeting.documentCategory as MeetingDocumentCategory) || 'UNDANGAN_INTERNAL',
+    subCategory: (meeting.documentSubCategory as MeetingDocumentSubCategory) || null,
+    sourceOrigin: meeting.sourceOrigin || '',
+    postponeReason: meeting.postponeReason || '',
+  });
+  const [isSavingCategory, setIsSavingCategory] = useState(false);
 
   // Rapat Lanjutan / Rujukan states
   const [previousMeeting, setPreviousMeeting] = useState<any>(meeting.previousMeeting || null);
@@ -451,6 +479,38 @@ export function MeetingDetailView({
       toast.error(err?.message || 'Terjadi kesalahan sistem.');
     } finally {
       setIsSavingNumber(false);
+    }
+  };
+
+  const handleSaveCategory = async () => {
+    if (editCategoryForm.category === 'SURAT_DITUNDA' && !editCategoryForm.postponeReason?.trim()) {
+      toast.warning('Mohon isi alasan penundaan rapat');
+      return;
+    }
+    if (
+      editCategoryForm.category === 'NASKAH_MASUK' &&
+      editCategoryForm.subCategory === 'SURAT_EKSTERNAL' &&
+      !editCategoryForm.sourceOrigin?.trim()
+    ) {
+      toast.warning('Mohon isi instansi pengirim surat eksternal');
+      return;
+    }
+
+    try {
+      setIsSavingCategory(true);
+      const res = await updateMeetingCategoryAction(meeting.id, editCategoryForm);
+      if (res.success) {
+        setCategoryData({ ...editCategoryForm });
+        setIsEditCategoryModalOpen(false);
+        toast.success('Kategori naskah berhasil diperbarui!');
+        router.refresh();
+      } else {
+        toast.error(res.error || 'Gagal memperbarui kategori');
+      }
+    } catch (err: any) {
+      toast.error(err?.message || 'Terjadi kesalahan sistem');
+    } finally {
+      setIsSavingCategory(false);
     }
   };
 
@@ -700,16 +760,16 @@ export function MeetingDetailView({
   const agendaItems = agendaPlainText
     ? agendaPlainText
         .split('\n')
-        .map((s) => s.trim().replace(/^[-*•\d.]+\s*/, ''))
-        .filter((s) => s.length > 0)
+        .map((s: string) => s.trim().replace(/^[-*•\d.]+\s*/, ''))
+        .filter((s: string) => s.length > 0)
     : [];
 
   const decisionsPlainText = extractPlainText(meeting.minutes?.decisions);
   const decisionItems = decisionsPlainText
     ? decisionsPlainText
         .split('\n')
-        .map((s) => s.trim().replace(/^[-*•\d.]+\s*/, ''))
-        .filter((s) => s.length > 0)
+        .map((s: string) => s.trim().replace(/^[-*•\d.]+\s*/, ''))
+        .filter((s: string) => s.length > 0)
     : [];
 
   // Unadded users for modal
@@ -841,6 +901,37 @@ export function MeetingDetailView({
               </div>
             )}
             <MeetingStatusBadge status={status} />
+            {/* Kategori Naskah / Status Penundaan */}
+            {(() => {
+              const catInfo = getMeetingCategoryInfo(categoryData.category, categoryData.subCategory);
+              return (
+                <div className="flex items-center gap-1.5">
+                  <span
+                    className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-lg text-[12px] font-bold border shadow-2xs ${catInfo.badgeClass}`}
+                    title={catInfo.description}
+                  >
+                    <span>{catInfo.badgeIcon}</span>
+                    <span>{catInfo.label}</span>
+                    {categoryData.category === 'NASKAH_MASUK' && catInfo.subLabel && (
+                      <span className="opacity-90 font-medium">({catInfo.subLabel})</span>
+                    )}
+                  </span>
+                  {canEditMeeting && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setEditCategoryForm({ ...categoryData });
+                        setIsEditCategoryModalOpen(true);
+                      }}
+                      className="p-1.5 rounded-lg text-slate-400 hover:text-[#31889C] hover:bg-[#F0F9FA] transition-colors cursor-pointer"
+                      title="Ubah Kategori Naskah / Status Penundaan"
+                    >
+                      <Edit3 className="w-3.5 h-3.5" />
+                    </button>
+                  )}
+                </div>
+              );
+            })()}
             {invitationDoc && (
               <a
                 href={invitationDoc.url}
@@ -978,6 +1069,99 @@ export function MeetingDetailView({
             </button>
           </div>
         </div>
+
+        {/* Banner Khusus: Surat Ditunda */}
+        {categoryData.category === 'SURAT_DITUNDA' && (
+          <div className="bg-gradient-to-r from-amber-50 to-orange-50 border-2 border-amber-300/80 rounded-xl p-4 text-amber-950 shadow-xs flex items-start gap-3.5">
+            <div className="p-2 bg-amber-500 text-white rounded-lg font-bold shrink-0 text-base shadow-xs">
+              ⚠️
+            </div>
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center justify-between gap-2 flex-wrap">
+                <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-black bg-amber-200/80 text-amber-900 uppercase tracking-wide">
+                  Rapat Ditunda
+                </span>
+                {canEditMeeting && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setEditCategoryForm({ ...categoryData });
+                      setIsEditCategoryModalOpen(true);
+                    }}
+                    className="text-xs font-bold text-amber-800 hover:text-amber-950 underline cursor-pointer"
+                  >
+                    Ubah Status Penundaan
+                  </button>
+                )}
+              </div>
+              <p className="font-extrabold text-[15px] text-amber-950 mt-1">
+                Jadwal Rapat Ditunda / Dijadwalkan Ulang
+              </p>
+              <div className="mt-1.5 text-xs text-amber-900 bg-white/80 rounded-lg p-2.5 border border-amber-200">
+                <span className="font-bold text-amber-950">Alasan Penundaan:</span>{' '}
+                <span className="italic">{categoryData.postponeReason || 'Alasan penundaan belum dicantumkan.'}</span>
+              </div>
+              <p className="text-[11.5px] text-amber-800 mt-2">
+                📌 Catatan: Seluruh agenda tindak lanjut &amp; risalah ditangguhkan hingga tanggal penjadwalan ulang disahkan oleh pimpinan.
+              </p>
+            </div>
+          </div>
+        )}
+
+        {/* Banner Khusus: Naskah Masuk */}
+        {categoryData.category === 'NASKAH_MASUK' && (
+          <div className="bg-gradient-to-r from-indigo-50/70 via-sky-50/50 to-blue-50/70 border border-indigo-200 rounded-xl p-3.5 text-indigo-950 shadow-xs flex items-start gap-3">
+            <div className="p-2 bg-indigo-600 text-white rounded-lg font-bold shrink-0 text-sm shadow-xs">
+              📥
+            </div>
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center justify-between gap-2 flex-wrap">
+                <div className="flex items-center gap-2">
+                  <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold bg-indigo-100 text-indigo-900">
+                    Daftar Naskah Masuk
+                  </span>
+                  <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold bg-white border border-indigo-200 text-indigo-800">
+                    {categoryData.subCategory === 'DISPOSISI_SEKJEN'
+                      ? 'Disposisi Sekjen'
+                      : 'Surat Eksternal (Surat Masuk Luar)'}
+                  </span>
+                </div>
+                {canEditMeeting && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setEditCategoryForm({ ...categoryData });
+                      setIsEditCategoryModalOpen(true);
+                    }}
+                    className="text-xs font-bold text-indigo-700 hover:text-indigo-950 underline cursor-pointer"
+                  >
+                    Edit Naskah Masuk
+                  </button>
+                )}
+              </div>
+              <p className="text-xs text-indigo-900 mt-1.5 leading-relaxed">
+                {categoryData.subCategory === 'DISPOSISI_SEKJEN' ? (
+                  <>
+                    <span className="font-semibold">Mandat Pimpinan:</span> Rapat koordinasi tindak lanjut berdasarkan arahan dan disposisi Sekretariat Jenderal Dewan Nasional KEK.
+                    {categoryData.sourceOrigin && (
+                      <span className="block mt-1 font-mono text-[11.5px] text-indigo-950 bg-white/80 px-2.5 py-1 rounded border border-indigo-100">
+                        No. Disposisi / Agenda: {categoryData.sourceOrigin}
+                      </span>
+                    )}
+                  </>
+                ) : (
+                  <>
+                    <span className="font-semibold">Instansi Pengirim:</span>{' '}
+                    <span className="font-bold text-indigo-950">{categoryData.sourceOrigin || 'Instansi Luar'}</span>
+                    <span className="block mt-0.5 text-[11.5px] text-indigo-800">
+                      Rapat pembahasan atas permohonan atau surat naskah masuk dari kementerian/lembaga/badan usaha luar Sekretariat KEK.
+                    </span>
+                  </>
+                )}
+              </p>
+            </div>
+          </div>
+        )}
 
         <div>
           <span className="text-[12px] font-bold text-[#31889C] uppercase tracking-wider block">
@@ -1437,7 +1621,7 @@ export function MeetingDetailView({
 
             {agendaItems.length > 0 ? (
               <div className="space-y-2.5">
-                {agendaItems.map((item, idx) => (
+                {agendaItems.map((item: string, idx: number) => (
                   <div
                     key={idx}
                     className="flex items-start gap-3 p-3 rounded-lg bg-slate-50/70 border border-slate-200/70 hover:bg-white hover:border-slate-300 transition-colors"
@@ -1474,7 +1658,7 @@ export function MeetingDetailView({
                   <span>Ringkasan Kesepakatan &amp; Keputusan Rapat:</span>
                 </h4>
                 <div className="space-y-2">
-                  {decisionItems.slice(0, 4).map((dec, idx) => (
+                  {decisionItems.slice(0, 4).map((dec: string, idx: number) => (
                     <div
                       key={idx}
                       className="flex items-start gap-2.5 text-[12.5px] text-slate-700 bg-emerald-50/40 border border-emerald-200/60 p-2.5 rounded-lg"
@@ -2232,6 +2416,65 @@ export function MeetingDetailView({
           })),
         }}
       />
+
+      {/* Modal: Ubah Kategori Naskah / Status Penundaan */}
+      {isEditCategoryModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-xs animate-in fade-in">
+          <div className="bg-white rounded-2xl max-w-xl w-full p-6 shadow-2xl border border-slate-200 space-y-5 animate-in zoom-in-95 max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between pb-3 border-b border-slate-100">
+              <div className="flex items-center gap-2.5">
+                <div className="w-8 h-8 rounded-lg bg-[#E8F5F7] text-[#31889C] flex items-center justify-center font-bold text-base">
+                  🏷️
+                </div>
+                <div>
+                  <h3 className="font-bold text-slate-900 text-[15px]">Ubah Kategori Naskah / Status Penundaan</h3>
+                  <p className="text-xs text-slate-500">Sesuaikan klasifikasi undangan, naskah masuk, atau status penundaan</p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setIsEditCategoryModalOpen(false)}
+                className="p-1.5 text-slate-400 hover:text-slate-600 rounded-lg hover:bg-slate-100 cursor-pointer"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <MeetingCategorySelector
+              value={editCategoryForm}
+              onChange={setEditCategoryForm}
+            />
+
+            <div className="flex items-center justify-end gap-2.5 pt-4 border-t border-slate-100">
+              <button
+                type="button"
+                onClick={() => setIsEditCategoryModalOpen(false)}
+                className="px-4 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-100 rounded-xl transition cursor-pointer"
+              >
+                Batal
+              </button>
+              <button
+                type="button"
+                disabled={isSavingCategory}
+                onClick={handleSaveCategory}
+                className="px-5 py-2 text-xs font-bold text-white bg-[#31889C] hover:bg-[#215865] rounded-xl shadow-xs transition disabled:opacity-50 flex items-center gap-2 cursor-pointer"
+              >
+                {isSavingCategory ? (
+                  <>
+                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                    Menyimpan...
+                  </>
+                ) : (
+                  <>
+                    <Check className="w-3.5 h-3.5" />
+                    Simpan Perubahan
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

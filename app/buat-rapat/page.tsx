@@ -55,6 +55,10 @@ import { cn } from '@/lib/utils';
 import { PreviousMeetingSelector } from '@/components/meeting/previous-meeting-selector';
 import { LocationPicker, MeetingType } from '@/components/meeting/location-picker';
 import { extractVirtualMeetingDetails } from '@/lib/calendar';
+import {
+  MeetingCategorySelector,
+  CategorySelectionData,
+} from '@/components/meeting/meeting-category-selector';
 
 interface AvailableUser {
   id: string;
@@ -116,6 +120,12 @@ export default function BuatRapatPage() {
     'Ruang Rapat Utama Gedung Posko KEK & Hybrid Zoom'
   );
   const [classification, setClassification] = useState('STRATEGIS');
+  const [categoryData, setCategoryData] = useState<CategorySelectionData>({
+    category: 'UNDANGAN_INTERNAL',
+    subCategory: null,
+    sourceOrigin: '',
+    postponeReason: '',
+  });
   const [attendees, setAttendees] = useState(
     'Dr. Hendra Suprayitno, Maya Puspita, S.Sos, Tim Sekretariat Jenderal'
   );
@@ -447,6 +457,12 @@ export default function BuatRapatPage() {
         return;
       }
 
+      if (categoryData.category === 'SURAT_DITUNDA' && !categoryData.postponeReason?.trim()) {
+        toast.error('Mohon cantumkan alasan atau keterangan penundaan rapat untuk kategori Surat Ditunda.');
+        setIsSubmitted(false);
+        return;
+      }
+
       // Validasi dan konstruksi lokasi & tautan Zoom
       let constructedLocation = '';
       if (meetingType === 'OFFLINE') {
@@ -508,6 +524,10 @@ export default function BuatRapatPage() {
         invitationDocUrl: invitationDoc?.url || undefined,
         invitationDocName: invitationDoc?.name || undefined,
         invitationDocSize: invitationDoc?.size || undefined,
+        documentCategory: categoryData.category,
+        documentSubCategory: categoryData.subCategory || undefined,
+        sourceOrigin: categoryData.sourceOrigin?.trim() || undefined,
+        postponeReason: categoryData.postponeReason?.trim() || undefined,
       });
 
       if (res.success && res.data) {
@@ -632,6 +652,14 @@ export default function BuatRapatPage() {
           </div>
 
           <div className="p-6 sm:p-7 space-y-6">
+            {/* Opsi Inputan Kategori Rapat: Undangan Internal, Daftar Naskah Masuk, Surat Ditunda */}
+            <div className="pb-6 border-b border-slate-100">
+              <MeetingCategorySelector
+                value={categoryData}
+                onChange={setCategoryData}
+              />
+            </div>
+
             {/* Grid 2 Kolom Lega untuk Dropdowns Pokok */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-5 sm:gap-6">
               {/* Biro Penyelenggara */}

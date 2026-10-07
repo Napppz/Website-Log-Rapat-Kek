@@ -23,6 +23,10 @@ import { toast } from '@/components/providers/toast-provider';
 import { uploadInvitationFileAction } from '@/app/actions/meeting-upload-actions';
 import { PreviousMeetingSelector } from './previous-meeting-selector';
 import { LocationPicker, MeetingType } from './location-picker';
+import {
+  MeetingCategorySelector,
+  CategorySelectionData,
+} from './meeting-category-selector';
 
 interface CreateMeetingDialogProps {
   isOpen: boolean;
@@ -42,6 +46,12 @@ export function CreateMeetingDialog({ isOpen, onClose, onSuccess }: CreateMeetin
     return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
   })();
 
+  const [categoryData, setCategoryData] = useState<CategorySelectionData>({
+    category: 'UNDANGAN_INTERNAL',
+    subCategory: null,
+    sourceOrigin: '',
+    postponeReason: '',
+  });
   const [selectedBiro, setSelectedBiro] = useState<BiroCode>('IKK');
   const [title, setTitle] = useState('');
   const [date, setDate] = useState(todayStr);
@@ -166,6 +176,12 @@ export function CreateMeetingDialog({ isOpen, onClose, onSuccess }: CreateMeetin
         constructedLocation = `${isCustomPLoc ? `${pLoc} • ` : ''}Online (Zoom: ${zoomUrl.trim()}${zoomMeetingId.trim() ? ` - ID: ${zoomMeetingId.trim()}` : ''})`;
       }
 
+      if (categoryData.category === 'SURAT_DITUNDA' && !categoryData.postponeReason?.trim()) {
+        toast.error('Mohon cantumkan alasan atau keterangan penundaan rapat untuk kategori Surat Ditunda.');
+        setSubmitting(false);
+        return;
+      }
+
       const { createMeetingAction } = await import('@/app/actions/meeting-actions');
       const parts = time.split('-').map((s) => s.trim().replace('WIB', '').trim());
       const startTime = parts[0] || '09:00';
@@ -182,6 +198,10 @@ export function CreateMeetingDialog({ isOpen, onClose, onSuccess }: CreateMeetin
         invitationDocUrl: invitationDoc?.url || undefined,
         invitationDocName: invitationDoc?.name || undefined,
         invitationDocSize: invitationDoc?.size || undefined,
+        documentCategory: categoryData.category,
+        documentSubCategory: categoryData.subCategory || undefined,
+        sourceOrigin: categoryData.sourceOrigin?.trim() || undefined,
+        postponeReason: categoryData.postponeReason?.trim() || undefined,
       });
 
       if (res.success && res.data) {
@@ -206,11 +226,11 @@ export function CreateMeetingDialog({ isOpen, onClose, onSuccess }: CreateMeetin
       onClick={onClose}
     >
       <div
-        className="relative w-full max-w-lg bg-white rounded-2xl shadow-2xl border border-slate-200 overflow-hidden flex flex-col animate-in zoom-in-95 duration-150"
+        className="relative w-full max-w-2xl bg-white rounded-2xl shadow-2xl border border-slate-200 overflow-hidden flex flex-col max-h-[90vh] animate-in zoom-in-95 duration-150"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 bg-[#F8FAFC] border-b border-slate-200">
+        <div className="flex items-center justify-between px-6 py-4 bg-[#F8FAFC] border-b border-slate-200 shrink-0">
           <div className="flex items-center gap-2">
             <span className="w-2.5 h-2.5 rounded-full bg-[#31889C]"></span>
             <h3 className="font-bold text-[16px] text-slate-900">
@@ -228,7 +248,15 @@ export function CreateMeetingDialog({ isOpen, onClose, onSuccess }: CreateMeetin
         </div>
 
         {/* Form Body */}
-        <form onSubmit={handleSubmit} className="p-6 space-y-4 text-[13px]">
+        <form onSubmit={handleSubmit} className="p-6 space-y-4 text-[13px] overflow-y-auto flex-1">
+          {/* Kategori Naskah & Agenda Rapat */}
+          <div className="pb-3 border-b border-slate-100">
+            <MeetingCategorySelector
+              value={categoryData}
+              onChange={setCategoryData}
+            />
+          </div>
+
           {/* Biro Pelaksana */}
           <div>
             <label className="block font-semibold text-slate-700 mb-1 flex items-center gap-1.5">

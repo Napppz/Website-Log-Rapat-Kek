@@ -23,6 +23,7 @@ import {
   Search,
   ChevronDown,
   SlidersHorizontal,
+  Tag,
 } from 'lucide-react';
 import Link from 'next/link';
 import { useSession } from 'next-auth/react';
@@ -97,6 +98,7 @@ export function SemuaRapatClient({
 
   // Filter params
   const statusParam = searchParams.get('status') as MeetingStatus | null;
+  const kategoriParam = searchParams.get('kategori') as string | null;
   const rawBiroParam = searchParams.get('biro');
   const biroParam = rawBiroParam && rawBiroParam !== 'ALL' ? (rawBiroParam as BiroCode) : null;
   const monthParam = searchParams.get('bulan') || searchParams.get('month');
@@ -135,7 +137,7 @@ export function SemuaRapatClient({
     });
   }, [meetingsList, biroParam, lockedBiroCode]);
 
-  // Meetings filtered by Biro AND Date/Month/Day/Year AND Search Filter
+  // Meetings filtered by Biro AND Date/Month/Day/Year AND Search Filter AND Category
   const fullyFilteredMeetings = useMemo(() => {
     return biroFilteredMeetings.filter((m) => {
       if (monthIdx !== null || dayIdx !== null || targetYear !== null || targetDate !== null) {
@@ -146,6 +148,21 @@ export function SemuaRapatClient({
         if (monthIdx !== null && parsed.month !== monthIdx) return false;
         if (dayIdx !== null && parsed.dayOfWeek !== dayIdx) return false;
       }
+      if (kategoriParam && kategoriParam !== 'ALL') {
+        const cat = (m as any).documentCategory || 'UNDANGAN_INTERNAL';
+        const subCat = (m as any).documentSubCategory;
+        if (kategoriParam === 'UNDANGAN_INTERNAL' && cat !== 'UNDANGAN_INTERNAL') {
+          return false;
+        } else if (kategoriParam === 'NASKAH_MASUK' && cat !== 'NASKAH_MASUK') {
+          return false;
+        } else if (kategoriParam === 'DISPOSISI_SEKJEN' && (cat !== 'NASKAH_MASUK' || subCat !== 'DISPOSISI_SEKJEN')) {
+          return false;
+        } else if (kategoriParam === 'SURAT_EKSTERNAL' && (cat !== 'NASKAH_MASUK' || subCat !== 'SURAT_EKSTERNAL')) {
+          return false;
+        } else if (kategoriParam === 'SURAT_DITUNDA' && cat !== 'SURAT_DITUNDA') {
+          return false;
+        }
+      }
       if (searchFilter.trim()) {
         const q = searchFilter.toLowerCase();
         const matches =
@@ -154,18 +171,47 @@ export function SemuaRapatClient({
           m.biroName.toLowerCase().includes(q) ||
           m.location.toLowerCase().includes(q) ||
           (m.primaryTeamName && m.primaryTeamName.toLowerCase().includes(q)) ||
-          (m.agendaSummary && m.agendaSummary.toLowerCase().includes(q));
+          (m.agendaSummary && m.agendaSummary.toLowerCase().includes(q)) ||
+          ((m as any).incomingLetterOrigin && (m as any).incomingLetterOrigin.toLowerCase().includes(q)) ||
+          ((m as any).postponeReason && (m as any).postponeReason.toLowerCase().includes(q));
         if (!matches) return false;
       }
       return true;
     });
-  }, [biroFilteredMeetings, monthIdx, dayIdx, targetYear, targetDate, searchFilter]);
+  }, [biroFilteredMeetings, monthIdx, dayIdx, targetYear, targetDate, searchFilter, kategoriParam]);
 
   const countAll = fullyFilteredMeetings.length;
   const countDraft = fullyFilteredMeetings.filter((m) => m.status === 'DRAFT').length;
   const countReview = fullyFilteredMeetings.filter((m) => m.status === 'REVIEW').length;
   const countApproved = fullyFilteredMeetings.filter((m) => m.status === 'APPROVED').length;
   const countFinal = fullyFilteredMeetings.filter((m) => m.status === 'FINAL').length;
+
+  const countUndanganInternal = biroFilteredMeetings.filter(
+    (m) => ((m as any).documentCategory || 'UNDANGAN_INTERNAL') === 'UNDANGAN_INTERNAL'
+  ).length;
+  const countNaskahMasuk = biroFilteredMeetings.filter(
+    (m) => (m as any).documentCategory === 'NASKAH_MASUK'
+  ).length;
+  const countSuratDitunda = biroFilteredMeetings.filter(
+    (m) => (m as any).documentCategory === 'SURAT_DITUNDA'
+  ).length;
+
+  const categoryFilters = [
+    { label: 'Semua Kategori', value: 'ALL', count: biroFilteredMeetings.length, icon: '🏷️' },
+    { label: 'Undangan Internal', value: 'UNDANGAN_INTERNAL', count: countUndanganInternal, icon: '🏢' },
+    { label: 'Daftar Naskah Masuk', value: 'NASKAH_MASUK', count: countNaskahMasuk, icon: '📥' },
+    { label: 'Surat Ditunda', value: 'SURAT_DITUNDA', count: countSuratDitunda, icon: '⏳' },
+  ];
+
+  const handleSelectCategory = (val: string) => {
+    const params = new URLSearchParams(searchParams.toString());
+    if (val === 'ALL' || !val) {
+      params.delete('kategori');
+    } else {
+      params.set('kategori', val);
+    }
+    router.push(params.toString() ? `/semua-rapat?${params.toString()}` : '/semua-rapat');
+  };
 
   const statusFilters: {
     label: string;
@@ -230,6 +276,7 @@ export function SemuaRapatClient({
   const hasAnyActiveFilter = Boolean(
     statusParam ||
     (biroParam && !lockedBiroCode) ||
+    (kategoriParam && kategoriParam !== 'ALL') ||
     hasActiveTimeFilter ||
     searchFilter.trim()
   );
@@ -286,6 +333,7 @@ export function SemuaRapatClient({
     setSearchFilter('');
     const params = new URLSearchParams(searchParams.toString());
     params.delete('status');
+    params.delete('kategori');
     if (!lockedBiroCode) params.delete('biro');
     params.delete('tahun');
     params.delete('year');
@@ -535,8 +583,45 @@ export function SemuaRapatClient({
             )}
           </div>
 
+          {/* Baris Kontrol: Filter Kategori Naskah */}
+          <div className="flex items-center gap-2 overflow-x-auto no-scrollbar py-0.5 border-t border-slate-100 pt-2.5">
+            <span className="text-[11.5px] font-bold text-slate-600 flex items-center gap-1 shrink-0">
+              <Tag className="w-3.5 h-3.5 text-[#31889C]" />
+              Kategori:
+            </span>
+            <div className="flex items-center gap-1.5 flex-wrap">
+              {categoryFilters.map((cf) => {
+                const isActive = cf.value === 'ALL' ? !kategoriParam : kategoriParam === cf.value;
+                return (
+                  <button
+                    key={cf.value}
+                    type="button"
+                    onClick={() => handleSelectCategory(cf.value)}
+                    className={cn(
+                      "px-2.5 py-1 rounded-lg text-[11.5px] font-semibold transition-all cursor-pointer flex items-center gap-1",
+                      isActive
+                        ? "bg-[#31889C] text-white shadow-2xs font-bold"
+                        : "bg-slate-50 border border-slate-200 text-slate-700 hover:bg-[#F0F9FA] hover:text-[#31889C]"
+                    )}
+                  >
+                    <span>{cf.icon}</span>
+                    <span>{cf.label}</span>
+                    <span
+                      className={cn(
+                        "text-[9.5px] px-1 py-0.1 rounded-full font-bold",
+                        isActive ? "bg-white/25 text-white" : "bg-slate-200/80 text-slate-600"
+                      )}
+                    >
+                      {cf.count}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
           {/* Baris Kontrol: Filter Biro & Filter Waktu */}
-          <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3 pt-0.5">
+          <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3 pt-0.5 border-t border-slate-100 pt-2.5">
             {/* Filter Biro (Hanya Super Admin & Admin) */}
             {!lockedBiroCode && isPrivileged && (
               <div className="flex items-center gap-2 overflow-x-auto no-scrollbar py-0.5">
@@ -857,6 +942,31 @@ export function SemuaRapatClient({
                     onClick={() => handleSelectStatus('ALL')}
                     className="hover:text-red-600 ml-0.5 cursor-pointer font-bold"
                     title="Hapus filter tahap"
+                  >
+                    ✕
+                  </button>
+                </span>
+              )}
+
+              {/* Category chip */}
+              {kategoriParam && (
+                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-white border border-[#BCE3EB] text-[#1B5260] font-semibold text-[11px] shadow-2xs">
+                  Kategori: {
+                    kategoriParam === 'UNDANGAN_INTERNAL'
+                      ? 'Undangan Internal'
+                      : kategoriParam === 'NASKAH_MASUK'
+                        ? 'Daftar Naskah Masuk'
+                        : kategoriParam === 'DISPOSISI_SEKJEN'
+                          ? 'Disposisi Sekjen'
+                          : kategoriParam === 'SURAT_EKSTERNAL'
+                            ? 'Surat Eksternal'
+                            : 'Surat Ditunda'
+                  }
+                  <button
+                    type="button"
+                    onClick={() => handleSelectCategory('ALL')}
+                    className="hover:text-red-600 ml-0.5 cursor-pointer font-bold"
+                    title="Hapus filter kategori"
                   >
                     ✕
                   </button>

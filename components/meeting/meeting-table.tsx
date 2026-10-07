@@ -21,7 +21,7 @@ import {
   Layers,
   ExternalLink,
 } from 'lucide-react';
-import { Meeting, BiroCode, MeetingStatus } from '@/lib/types';
+import { Meeting, BiroCode, MeetingStatus, getMeetingCategoryInfo } from '@/lib/types';
 import { MOCK_MEETINGS } from '@/lib/mock-data';
 import { MeetingStatusBadge } from './meeting-status-badge';
 import { ActionItemProgress } from '../action-items/action-item-progress';
@@ -29,7 +29,7 @@ import { AgendaSeriesModal } from './agenda-series-modal';
 import { useSession } from 'next-auth/react';
 import { deleteMeetingAction } from '@/app/actions/meeting-actions';
 import { toast, confirmModal } from '@/components/providers/toast-provider';
-import { parseMonthFilterIndex, parseDayFilterIndex, parseMeetingDate } from '@/lib/utils';
+import { parseMonthFilterIndex, parseDayFilterIndex, parseMeetingDate, cn } from '@/lib/utils';
 
 interface MeetingTableProps {
   onViewAllMeetings?: () => void;
@@ -559,6 +559,29 @@ export function MeetingTable({
                             >
                               {meeting.title}
                             </Link>
+
+                            {/* Kategori Naskah & Status Penundaan */}
+                            {(() => {
+                              const catInfo = getMeetingCategoryInfo(meeting.documentCategory, meeting.documentSubCategory);
+                              return (
+                                <div className="flex items-center gap-1.5 flex-wrap">
+                                  <span className={cn('inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-bold border', catInfo.badgeClass)}>
+                                    {catInfo.badgeLabel}
+                                  </span>
+                                  {meeting.documentCategory === 'SURAT_DITUNDA' && meeting.postponeReason && (
+                                    <span className="text-[11px] text-rose-600 italic truncate max-w-[200px]" title={meeting.postponeReason}>
+                                      • {meeting.postponeReason}
+                                    </span>
+                                  )}
+                                  {meeting.documentCategory === 'NASKAH_MASUK' && meeting.sourceOrigin && (
+                                    <span className="text-[11px] text-slate-500 truncate max-w-[200px]" title={meeting.sourceOrigin}>
+                                      • {meeting.sourceOrigin}
+                                    </span>
+                                  )}
+                                </div>
+                              );
+                            })()}
+
                             <div className="flex items-center gap-2 flex-wrap text-slate-500">
                               <div className="flex items-center gap-1 text-[12px]">
                                 <MapPin className="w-3.5 h-3.5 text-[#31889C] shrink-0" />

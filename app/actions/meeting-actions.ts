@@ -26,6 +26,10 @@ export interface CreateMeetingInput {
   invitationDocUrl?: string | null;
   invitationDocName?: string | null;
   invitationDocSize?: number | null;
+  documentCategory?: string | null;
+  documentSubCategory?: string | null;
+  sourceOrigin?: string | null;
+  postponeReason?: string | null;
 }
 
 function safeRevalidate(paths: string[]) {
@@ -151,6 +155,10 @@ export async function createMeetingAction(input: CreateMeetingInput) {
           invitationDocUrl: input.invitationDocUrl || null,
           invitationDocName: input.invitationDocName || null,
           invitationDocSize: input.invitationDocSize || null,
+          documentCategory: input.documentCategory || 'UNDANGAN_INTERNAL',
+          documentSubCategory: input.documentSubCategory || null,
+          sourceOrigin: input.sourceOrigin || null,
+          postponeReason: input.postponeReason || null,
         },
       });
 
@@ -441,6 +449,69 @@ export async function updateMeetingNumberAction(meetingId: string, newMeetingNum
   } catch (error: any) {
     console.error('Failed to update meeting number:', error);
     return { success: false, error: error?.message || 'Gagal mengubah nomor surat/undangan' };
+  }
+}
+
+/**
+ * Server action to update meeting document category, sub-category, source origin, or postpone reason
+ */
+export async function updateMeetingCategoryAction(
+  meetingId: string,
+  data: {
+    category?: string | null;
+    documentCategory?: string | null;
+    subCategory?: string | null;
+    documentSubCategory?: string | null;
+    sourceOrigin?: string | null;
+    postponeReason?: string | null;
+  }
+) {
+  try {
+    const currentUser = await requirePermission('edit:meeting');
+    const isPrivileged =
+      currentUser.role === 'SUPER_ADMIN' || currentUser.role === 'ADMIN';
+
+    const existingMeeting = await prisma.meeting.findUnique({
+      where: { id: meetingId },
+      include: { primaryBiro: true },
+    });
+    if (!existingMeeting) {
+      return { success: false, error: 'Rapat tidak ditemukan.' };
+    }
+
+    if (!isPrivileged && currentUser.biroCode && existingMeeting.primaryBiro.code.toUpperCase() !== currentUser.biroCode.toUpperCase()) {
+      return {
+        success: false,
+        error: 'Anda hanya dapat memperbarui kategori rapat biro Anda sendiri.',
+      };
+    }
+
+    const resolvedCategory = data.category || data.documentCategory || 'UNDANGAN_INTERNAL';
+    const resolvedSubCategory = data.subCategory || data.documentSubCategory || null;
+
+    const updated = await prisma.meeting.update({
+      where: { id: meetingId },
+      data: {
+        documentCategory: resolvedCategory,
+        documentSubCategory: resolvedCategory === 'NASKAH_MASUK' ? resolvedSubCategory : null,
+        sourceOrigin: resolvedCategory === 'NASKAH_MASUK' ? (data.sourceOrigin || null) : null,
+        postponeReason: resolvedCategory === 'SURAT_DITUNDA' ? (data.postponeReason || null) : null,
+      },
+      include: { primaryBiro: true },
+    });
+
+    safeRevalidate([
+      '/',
+      '/semua-rapat',
+      `/semua-rapat/${meetingId}`,
+      `/rapat/${meetingId}`,
+      `/biro/${updated.primaryBiro.code.toLowerCase()}`,
+    ]);
+
+    return { success: true, data: updated };
+  } catch (error: any) {
+    console.error('Failed to update meeting category:', error);
+    return { success: false, error: error?.message || 'Gagal memperbarui kategori dokumen rapat' };
   }
 }
 

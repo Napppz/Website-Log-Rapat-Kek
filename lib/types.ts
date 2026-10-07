@@ -80,6 +80,15 @@ export interface ActionItemProgressData {
   isCompletePercentage?: boolean;
 }
 
+export type MeetingDocumentCategory =
+  | 'UNDANGAN_INTERNAL'
+  | 'NASKAH_MASUK'
+  | 'SURAT_DITUNDA';
+
+export type MeetingDocumentSubCategory =
+  | 'DISPOSISI_SEKJEN'
+  | 'SURAT_EKSTERNAL';
+
 export interface Meeting {
   id: string;
   code: string;
@@ -103,6 +112,71 @@ export interface Meeting {
   invitationDocUrl?: string | null;
   invitationDocName?: string | null;
   invitationDocSize?: number | null;
+  documentCategory?: MeetingDocumentCategory | string | null;
+  documentSubCategory?: MeetingDocumentSubCategory | string | null;
+  sourceOrigin?: string | null;
+  postponeReason?: string | null;
+}
+
+export function getMeetingCategoryInfo(
+  category?: string | null,
+  subCategory?: string | null
+): {
+  key: string;
+  label: string;
+  subLabel?: string | null;
+  badgeLabel: string;
+  badgeClass: string;
+  badgeIcon: string;
+  description: string;
+} {
+  const cat = (category || 'UNDANGAN_INTERNAL').toUpperCase();
+  const sub = subCategory ? subCategory.toUpperCase() : null;
+
+  if (cat === 'SURAT_DITUNDA') {
+    return {
+      key: 'SURAT_DITUNDA',
+      label: 'Surat Ditunda',
+      subLabel: 'Rapat Ditunda',
+      badgeLabel: 'Surat Ditunda',
+      badgeClass: 'bg-rose-50 text-rose-700 border-rose-200',
+      badgeIcon: '⏳',
+      description: 'Agenda rapat mengalami penundaan jadwal atau penjadwalan ulang.',
+    };
+  }
+
+  if (cat === 'NASKAH_MASUK') {
+    if (sub === 'DISPOSISI_SEKJEN') {
+      return {
+        key: 'NASKAH_MASUK_DISPOSISI_SEKJEN',
+        label: 'Daftar Naskah Masuk',
+        subLabel: 'Disposisi Sekjen',
+        badgeLabel: 'Naskah Masuk • Disposisi Sekjen',
+        badgeClass: 'bg-indigo-50 text-indigo-700 border-indigo-200',
+        badgeIcon: '📥',
+        description: 'Tindak lanjut arahan atau disposisi resmi dari Sekretaris Jenderal Dewan Nasional KEK.',
+      };
+    }
+    return {
+      key: 'NASKAH_MASUK_SURAT_EKSTERNAL',
+      label: 'Daftar Naskah Masuk',
+      subLabel: 'Surat Eksternal (Surat Masuk dari Luar)',
+      badgeLabel: 'Naskah Masuk • Surat Eksternal',
+      badgeClass: 'bg-amber-50 text-amber-800 border-amber-200',
+      badgeIcon: '✉️',
+      description: 'Rapat berdasarkan surat permohonan atau undangan resmi dari pihak luar/eksternal.',
+    };
+  }
+
+  return {
+    key: 'UNDANGAN_INTERNAL',
+    label: 'Undangan Internal',
+    subLabel: null,
+    badgeLabel: 'Undangan Internal',
+    badgeClass: 'bg-[#E8F5F7] text-[#215865] border-[#BCE3EB]',
+    badgeIcon: '🏢',
+    description: 'Rapat koordinasi antar unit kerja internal Sekretariat Dewan Nasional KEK.',
+  };
 }
 
 export interface AgendaSessionItem {
