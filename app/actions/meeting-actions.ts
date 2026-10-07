@@ -379,9 +379,13 @@ export async function createMeetingAction(input: CreateMeetingInput) {
 }
 
 /**
- * Server action to update meeting status (DRAFT, REVIEW, APPROVED, FINAL)
+ * Server action to update meeting status (Start, On Progres, Finish, DRAFT, REVIEW, APPROVED, FINAL)
  */
-export async function updateMeetingStatusAction(meetingId: string, status: MeetingStatus) {
+export async function updateMeetingStatusAction(
+  meetingId: string,
+  status: MeetingStatus | string,
+  explicitProgressStatus?: string | null
+) {
   try {
     // Authorization Check: SUPER_ADMIN, ADMIN, and STAFF can update status
     const currentUser = await requireAuth();
@@ -416,9 +420,56 @@ export async function updateMeetingStatusAction(meetingId: string, status: Meeti
       }
     }
 
+    // Determine target MeetingStatus and target progressStatus ('Start' | 'On Progres' | 'Finish')
+    let targetStatus: MeetingStatus = existing.status;
+    let targetProgressStatus: string = existing.progressStatus || 'Start';
+
+    const valStr = (status || '').toString().trim();
+    const valLower = valStr.toLowerCase();
+
+    if (valLower === 'finish' || valLower === 'selesai') {
+      targetProgressStatus = 'Finish';
+      targetStatus = MeetingStatus.FINAL;
+    } else if (valLower === 'on progres' || valLower === 'on progress' || valLower === 'berjalan') {
+      targetProgressStatus = 'On Progres';
+      targetStatus = MeetingStatus.REVIEW;
+    } else if (valLower === 'start' || valLower === 'mulai') {
+      targetProgressStatus = 'Start';
+      targetStatus = MeetingStatus.DRAFT;
+    } else if (valStr.toUpperCase() === 'FINAL') {
+      targetStatus = MeetingStatus.FINAL;
+      targetProgressStatus = 'Finish';
+    } else if (valStr.toUpperCase() === 'APPROVED') {
+      targetStatus = MeetingStatus.APPROVED;
+      targetProgressStatus = 'Finish';
+    } else if (valStr.toUpperCase() === 'REVIEW') {
+      targetStatus = MeetingStatus.REVIEW;
+      targetProgressStatus = 'On Progres';
+    } else if (valStr.toUpperCase() === 'DRAFT') {
+      targetStatus = MeetingStatus.DRAFT;
+      targetProgressStatus = 'Start';
+    }
+
+    if (explicitProgressStatus) {
+      const expLower = explicitProgressStatus.trim().toLowerCase();
+      if (expLower === 'finish' || expLower === 'selesai') {
+        targetProgressStatus = 'Finish';
+        targetStatus = MeetingStatus.FINAL;
+      } else if (expLower === 'on progres' || expLower === 'on progress') {
+        targetProgressStatus = 'On Progres';
+        targetStatus = MeetingStatus.REVIEW;
+      } else if (expLower === 'start') {
+        targetProgressStatus = 'Start';
+        targetStatus = MeetingStatus.DRAFT;
+      }
+    }
+
     const updated = await prisma.meeting.update({
       where: { id: meetingId },
-      data: { status },
+      data: {
+        status: targetStatus,
+        progressStatus: targetProgressStatus,
+      },
       include: { primaryBiro: true },
     });
 

@@ -114,3 +114,108 @@ export const MEETING_STATUS_ORDER: MeetingStatus[] = ['DRAFT', 'REVIEW', 'APPROV
 export function getMeetingStatusDetail(status: MeetingStatus): MeetingStatusDetail {
   return MEETING_STATUS_DETAILS[status] || MEETING_STATUS_DETAILS.DRAFT;
 }
+
+export type MeetingProgressStatus = 'Start' | 'On Progres' | 'Finish';
+
+export interface ProgressStatusDetail {
+  key: MeetingProgressStatus;
+  label: 'Start' | 'On Progres' | 'Finish';
+  step: number;
+  subtitle: string;
+  badgeLabel: string;
+  tagline: string;
+  description: string;
+  colorClass: {
+    bg: string;
+    border: string;
+    text: string;
+    dot: string;
+    badgeStyle: string;
+  };
+}
+
+export const PROGRESS_STATUS_DETAILS: Record<MeetingProgressStatus, ProgressStatusDetail> = {
+  Start: {
+    key: 'Start',
+    label: 'Start',
+    step: 1,
+    subtitle: 'Persiapan / Terjadwal',
+    badgeLabel: 'Start',
+    tagline: 'Rapat baru diagendakan & persiapan risalah',
+    description: 'Rapat telah dijadwalkan dan dokumen/risalah sedang dalam persiapan awal.',
+    colorClass: {
+      bg: 'bg-sky-50',
+      border: 'border-sky-300',
+      text: 'text-sky-800',
+      dot: 'bg-sky-500',
+      badgeStyle: 'bg-sky-50 border-sky-300 text-sky-800 ring-1 ring-sky-400/20',
+    },
+  },
+  'On Progres': {
+    key: 'On Progres',
+    label: 'On Progres',
+    step: 2,
+    subtitle: 'Sedang Berjalan / Telaah',
+    badgeLabel: 'On Progres',
+    tagline: 'Rapat berlangsung & notula dalam telaah',
+    description: 'Rapat sedang dilaksanakan atau draf notula sedang ditelaah & dibahas lintas tim.',
+    colorClass: {
+      bg: 'bg-amber-50',
+      border: 'border-amber-300',
+      text: 'text-amber-800',
+      dot: 'bg-amber-500',
+      badgeStyle: 'bg-amber-50 border-amber-300 text-amber-800 ring-1 ring-amber-400/20',
+    },
+  },
+  Finish: {
+    key: 'Finish',
+    label: 'Finish',
+    step: 3,
+    subtitle: 'Selesai & Disahkan',
+    badgeLabel: 'Finish',
+    tagline: 'Rapat selesai & risalah resmi sah',
+    description: 'Rapat telah selesai dilaksanakan, risalah disahkan pimpinan resmi dan mengikat.',
+    colorClass: {
+      bg: 'bg-emerald-50',
+      border: 'border-emerald-300',
+      text: 'text-emerald-800',
+      dot: 'bg-emerald-500',
+      badgeStyle: 'bg-emerald-50 border-emerald-300 text-emerald-800 ring-1 ring-emerald-400/20',
+    },
+  },
+};
+
+export const PROGRESS_STATUS_ORDER: MeetingProgressStatus[] = ['Start', 'On Progres', 'Finish'];
+
+export function normalizeProgressStatus(raw?: string | null): MeetingProgressStatus {
+  if (!raw) return 'Start';
+  const clean = raw.trim().toLowerCase();
+  if (clean === 'finish' || clean === 'selesai' || clean === 'final' || clean === 'approved') {
+    return 'Finish';
+  }
+  if (clean === 'on progres' || clean === 'on progress' || clean === 'review' || clean === 'berjalan') {
+    return 'On Progres';
+  }
+  return 'Start';
+}
+
+export function mapStatusToProgress(status?: MeetingStatus | string | null): MeetingProgressStatus {
+  if (!status) return 'Start';
+  const upper = status.toUpperCase();
+  if (upper === 'FINAL' || upper === 'APPROVED') return 'Finish';
+  if (upper === 'REVIEW') return 'On Progres';
+  if (upper === 'DRAFT') return 'Start';
+  return normalizeProgressStatus(status);
+}
+
+export function mapProgressToStatus(prog: MeetingProgressStatus | string): MeetingStatus {
+  const norm = normalizeProgressStatus(prog);
+  if (norm === 'Finish') return 'FINAL';
+  if (norm === 'On Progres') return 'REVIEW';
+  return 'DRAFT';
+}
+
+export function getProgressStatusDetail(prog?: string | null): ProgressStatusDetail {
+  const key = normalizeProgressStatus(prog);
+  return PROGRESS_STATUS_DETAILS[key];
+}

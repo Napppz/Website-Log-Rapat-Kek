@@ -19,6 +19,7 @@ export interface Biro {
 }
 
 export type MeetingStatus = 'APPROVED' | 'FINAL' | 'REVIEW' | 'DRAFT';
+export type MeetingProgressStatus = 'Start' | 'On Progres' | 'Finish';
 
 export type ActionItemStatus = 'PENDING' | 'IN_PROGRESS' | 'COMPLETED' | 'OVERDUE';
 export type ActionItemPriority = 'LOW' | 'MEDIUM' | 'HIGH' | 'URGENT';
@@ -322,6 +323,7 @@ export interface TeamWorkloadMetric {
     title: string;
     date: string;
     status: MeetingStatus;
+    progressStatus?: string | null;
   }>;
 }
 

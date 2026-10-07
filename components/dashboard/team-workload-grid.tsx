@@ -208,12 +208,12 @@ export function TeamWorkloadGrid({ teams, onTeamClick }: TeamWorkloadGridProps) 
                       {team.meetingCount}
                     </span>
                     <span className="text-[11px] font-semibold text-slate-500">
-                      rapat ({team.meetingPercentage}%)
+                      agenda rapat
                     </span>
                   </div>
                 </div>
 
-                {/* KPI 2: Status Tiap Pekerjaan (Berjalan, Selesai, Dalam Proses) */}
+                {/* KPI 2: Status Pekerjaan (Start, On Progres, Finish) */}
                 <div>
                   <div className="flex items-center justify-between text-[11px] font-semibold text-slate-500 uppercase tracking-wider mb-2">
                     <span>Status Tiap Pekerjaan</span>
@@ -223,58 +223,56 @@ export function TeamWorkloadGrid({ teams, onTeamClick }: TeamWorkloadGridProps) 
                   </div>
 
                   <div className="grid grid-cols-3 gap-2">
-                    {/* Selesai */}
-                    <div className="bg-emerald-50/70 border border-emerald-200/80 rounded-xl p-2.5 flex flex-col items-center text-center transition-all group-hover:bg-emerald-50">
-                      <div className="flex items-center gap-1 text-[11px] font-bold text-emerald-800 mb-0.5">
-                        <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
-                        <span>Selesai</span>
+                    {/* Start */}
+                    <div className="bg-sky-50/70 border border-sky-200/80 rounded-xl p-2.5 flex flex-col items-center text-center transition-all group-hover:bg-sky-50">
+                      <div className="flex items-center gap-1 text-[11px] font-bold text-sky-800 mb-0.5">
+                        <span className="w-1.5 h-1.5 rounded-full bg-sky-500" />
+                        <span>Start</span>
                       </div>
-                      <span className="text-lg font-black text-emerald-700 tabular-nums">
-                        {team.completedJobs}
+                      <span className="text-lg font-black text-sky-700 tabular-nums">
+                        {team.pendingJobs}
                       </span>
                     </div>
 
-                    {/* Berjalan */}
-                    <div className="bg-sky-50/70 border border-sky-200/80 rounded-xl p-2.5 flex flex-col items-center text-center transition-all group-hover:bg-sky-50">
-                      <div className="flex items-center gap-1 text-[11px] font-bold text-sky-800 mb-0.5">
-                        <Clock className="w-3.5 h-3.5 text-sky-600" />
-                        <span>Berjalan</span>
+                    {/* On Progres */}
+                    <div className="bg-amber-50/70 border border-amber-200/80 rounded-xl p-2.5 flex flex-col items-center text-center transition-all group-hover:bg-amber-50">
+                      <div className="flex items-center gap-1 text-[11px] font-bold text-amber-800 mb-0.5">
+                        <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse" />
+                        <span>On Progres</span>
                       </div>
-                      <span className="text-lg font-black text-sky-700 tabular-nums">
+                      <span className="text-lg font-black text-amber-700 tabular-nums">
                         {team.inProgressJobs}
                       </span>
                     </div>
 
-                    {/* Dalam Proses */}
-                    <div className="bg-amber-50/70 border border-amber-200/80 rounded-xl p-2.5 flex flex-col items-center text-center transition-all group-hover:bg-amber-50">
-                      <div className="flex items-center gap-1 text-[11px] font-bold text-amber-800 mb-0.5">
-                        <Hourglass className="w-3.5 h-3.5 text-amber-600" />
-                        <span>Dalam Proses</span>
+                    {/* Finish */}
+                    <div className="bg-emerald-50/70 border border-emerald-200/80 rounded-xl p-2.5 flex flex-col items-center text-center transition-all group-hover:bg-emerald-50">
+                      <div className="flex items-center gap-1 text-[11px] font-bold text-emerald-800 mb-0.5">
+                        <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
+                        <span>Finish</span>
                       </div>
-                      <span className="text-lg font-black text-amber-700 tabular-nums">
-                        {team.pendingJobs}
+                      <span className="text-lg font-black text-emerald-700 tabular-nums">
+                        {team.completedJobs}
                       </span>
                     </div>
                   </div>
                 </div>
               </div>
 
-              {/* Card Footer: Progress Bar + Action */}
+              {/* Card Footer: Monitoring Summary (Start • On Progres • Finish) */}
               <div className="mt-4 pt-3 border-t border-slate-100">
-                <div className="flex items-center justify-between text-[11px] mb-1.5">
-                  <span className="text-slate-500 font-medium">Tingkat Penyelesaian</span>
-                  <span className="font-bold text-slate-800 tabular-nums">
-                    {team.completionRate}%
-                  </span>
-                </div>
-                <div className="h-2 w-full bg-slate-100 rounded-full overflow-hidden">
-                  <div
-                    className={cn('h-full rounded-full transition-all duration-700', colors.barColor)}
-                    style={{ width: `${Math.max(team.completionRate, team.totalJobs > 0 ? 5 : 0)}%` }}
-                  />
+                <div className="flex items-center justify-between text-[11px] bg-slate-50/90 px-2.5 py-1.5 rounded-lg border border-slate-200/60 mb-2">
+                  <span className="text-slate-500 font-medium text-[10.5px]">Monitoring Tim:</span>
+                  <div className="flex items-center gap-1.5 text-[11px] font-bold">
+                    <span className="text-emerald-700">{team.completedJobs} Finish</span>
+                    <span className="text-slate-300">•</span>
+                    <span className="text-amber-700">{team.inProgressJobs} On Progres</span>
+                    <span className="text-slate-300">•</span>
+                    <span className="text-sky-700">{team.pendingJobs} Start</span>
+                  </div>
                 </div>
 
-                <div className="mt-3 flex items-center justify-between text-[12px] text-slate-500 group-hover:text-[#215865] font-semibold transition-colors">
+                <div className="flex items-center justify-between text-[12px] text-slate-500 group-hover:text-[#215865] font-semibold transition-colors">
                   <span>Lihat Detail Pekerjaan &amp; Rapat</span>
                   <ChevronRight className="w-4 h-4 text-slate-400 group-hover:text-[#31889C] group-hover:translate-x-1 transition-all" />
                 </div>

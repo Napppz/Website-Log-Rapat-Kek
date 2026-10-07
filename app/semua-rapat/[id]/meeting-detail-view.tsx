@@ -43,7 +43,7 @@ import {
   Tag,
 } from 'lucide-react';
 
-import { MeetingStatusBadge } from '@/components/meeting/meeting-status-badge';
+import { MeetingStatusBadge, MeetingProgressBadge } from '@/components/meeting/meeting-status-badge';
 import { MeetingStatusGuideDialog } from '@/components/meeting/meeting-status-guide-dialog';
 import { getMeetingStatusDetail, MEETING_STATUS_DETAILS } from '@/lib/meeting-status';
 import { MeetingMinutesSection } from '@/components/meeting/meeting-minutes/meeting-minutes-section';
@@ -900,7 +900,7 @@ export function MeetingDetailView({
                 )}
               </div>
             )}
-            <MeetingStatusBadge status={status} />
+            <MeetingProgressBadge progressStatus={(meeting as any).progressStatus} status={status} size="lg" showSubtitle />
             {/* Kategori Naskah / Status Penundaan */}
             {(() => {
               const catInfo = getMeetingCategoryInfo(categoryData.category, categoryData.subCategory);

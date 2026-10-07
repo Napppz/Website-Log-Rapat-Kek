@@ -23,18 +23,24 @@ import {
 } from 'lucide-react';
 import { Meeting, BiroCode, MeetingStatus, getMeetingCategoryInfo } from '@/lib/types';
 import { MOCK_MEETINGS } from '@/lib/mock-data';
-import { MeetingStatusBadge } from './meeting-status-badge';
+import { MeetingStatusBadge, MeetingProgressBadge } from './meeting-status-badge';
 import { ActionItemProgress } from '../action-items/action-item-progress';
 import { AgendaSeriesModal } from './agenda-series-modal';
 import { useSession } from 'next-auth/react';
-import { deleteMeetingAction } from '@/app/actions/meeting-actions';
+import { deleteMeetingAction, updateMeetingStatusAction } from '@/app/actions/meeting-actions';
 import { toast, confirmModal } from '@/components/providers/toast-provider';
 import { parseMonthFilterIndex, parseDayFilterIndex, parseMeetingDate, cn } from '@/lib/utils';
+import {
+  normalizeProgressStatus,
+  mapStatusToProgress,
+  mapProgressToStatus,
+  PROGRESS_STATUS_DETAILS,
+} from '@/lib/meeting-status';
 
 interface MeetingTableProps {
   onViewAllMeetings?: () => void;
   filterBiro?: BiroCode | string | null;
-  filterStatus?: MeetingStatus | null;
+  filterStatus?: MeetingStatus | string | null;
   filterMonth?: string | null;
   filterYear?: string | number | null;
   filterDayOfWeek?: string | number | null;
@@ -91,9 +97,53 @@ export function MeetingTable({
   const [currentPage, setCurrentPage] = useState(1);
   const [downloadingId, setDownloadingId] = useState<string | null>(null);
   const [deletingRowId, setDeletingRowId] = useState<string | null>(null);
+  const [updatingStatusId, setUpdatingStatusId] = useState<string | null>(null);
+  const [progressTabFilter, setProgressTabFilter] = useState<'ALL' | 'Start' | 'On Progres' | 'Finish'>('ALL');
   const { data: session } = useSession();
   const userRole = session?.user?.role || 'STAFF';
   const canDeleteMeeting = userRole === 'SUPER_ADMIN' || userRole === 'ADMIN';
+  const canUpdateStatus = userRole === 'SUPER_ADMIN' || userRole === 'ADMIN' || userRole === 'STAFF';
+
+  const countStart = useMemo(
+    () => meetings.filter((m) => normalizeProgressStatus(m.progressStatus || mapStatusToProgress(m.status)) === 'Start').length,
+    [meetings]
+  );
+  const countOnProgress = useMemo(
+    () => meetings.filter((m) => normalizeProgressStatus(m.progressStatus || mapStatusToProgress(m.status)) === 'On Progres').length,
+    [meetings]
+  );
+  const countFinish = useMemo(
+    () => meetings.filter((m) => normalizeProgressStatus(m.progressStatus || mapStatusToProgress(m.status)) === 'Finish').length,
+    [meetings]
+  );
+
+  const handleQuickUpdateStatus = async (meetingId: string, newProg: 'Start' | 'On Progres' | 'Finish') => {
+    try {
+      setUpdatingStatusId(meetingId);
+      const res = await updateMeetingStatusAction(meetingId, newProg);
+      if (res.success) {
+        setMeetings((prev) =>
+          prev.map((item) =>
+            item.id === meetingId
+              ? {
+                  ...item,
+                  progressStatus: newProg,
+                  status: mapProgressToStatus(newProg),
+                }
+              : item
+          )
+        );
+        toast.success(`Status rapat berhasil diperbarui ke "${newProg}".`);
+        router.refresh();
+      } else {
+        toast.error(res.error || 'Gagal memperbarui status rapat.');
+      }
+    } catch (err: any) {
+      toast.error(err?.message || 'Gagal memperbarui status rapat.');
+    } finally {
+      setUpdatingStatusId(null);
+    }
+  };
 
   // Group meetings into series to compute total sessions & session index
   const meetingSeriesMap = useMemo(() => {
@@ -335,8 +385,26 @@ export function MeetingTable({
           }
         }
       }
-      if (filterStatus && m.status !== filterStatus) {
-        return false;
+      if (filterStatus) {
+        const normTarget = normalizeProgressStatus(filterStatus);
+        const mProg = normalizeProgressStatus(m.progressStatus || mapStatusToProgress(m.status));
+        const isOldEnum = ['DRAFT', 'REVIEW', 'APPROVED', 'FINAL'].includes(String(filterStatus).toUpperCase());
+        if (isOldEnum) {
+          if (m.status !== filterStatus && mProg !== normTarget) {
+            return false;
+          }
+        } else {
+          if (mProg !== normTarget) {
+            return false;
+          }
+        }
+      }
+
+      if (progressTabFilter !== 'ALL') {
+        const mProg = normalizeProgressStatus(m.progressStatus || mapStatusToProgress(m.status));
+        if (mProg !== progressTabFilter) {
+          return false;
+        }
       }
 
       // Check date/month/day/year filters
@@ -369,16 +437,17 @@ export function MeetingTable({
         (m.agendaSummary && m.agendaSummary.toLowerCase().includes(q))
       );
     });
-  }, [meetings, deletedMeetingIds, effectiveSearch, filterBiro, filterStatus, filterMonth, filterYear, filterDayOfWeek, filterDate]);
+  }, [meetings, deletedMeetingIds, effectiveSearch, filterBiro, filterStatus, progressTabFilter, filterMonth, filterYear, filterDayOfWeek, filterDate]);
 
   const handleResetFilter = () => {
     setEffectiveSearch('');
+    setProgressTabFilter('ALL');
   };
 
   // Reset page when filters change
   React.useEffect(() => {
     setCurrentPage(1);
-  }, [effectiveSearch, filterBiro, filterStatus, filterMonth, filterYear, filterDayOfWeek, filterDate]);
+  }, [effectiveSearch, filterBiro, filterStatus, progressTabFilter, filterMonth, filterYear, filterDayOfWeek, filterDate]);
 
   const itemsPerPage = pageSize;
   const totalPages = Math.max(1, Math.ceil(filteredMeetings.length / itemsPerPage));
@@ -421,7 +490,81 @@ export function MeetingTable({
             </p>
           </div>
 
-          <div className="flex items-center gap-3">
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+            {/* Quick 1-Click Status Filter Tabs for Atasan */}
+            <div className="flex items-center gap-1 p-1 bg-slate-100 rounded-xl border border-slate-200/90 overflow-x-auto no-scrollbar">
+              <button
+                type="button"
+                onClick={() => setProgressTabFilter('ALL')}
+                className={cn(
+                  "px-2.5 py-1 rounded-lg text-[11.5px] font-bold transition-all cursor-pointer flex items-center gap-1.5 select-none shrink-0",
+                  progressTabFilter === 'ALL'
+                    ? "bg-slate-900 text-white shadow-2xs"
+                    : "text-slate-600 hover:text-slate-900 hover:bg-white/70"
+                )}
+                title="Tampilkan semua rapat"
+              >
+                <span>Semua</span>
+                <span className={cn("px-1.5 py-0.2 rounded-full text-[10px]", progressTabFilter === 'ALL' ? "bg-slate-800 text-slate-200" : "bg-slate-200 text-slate-600")}>
+                  {meetings.length}
+                </span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setProgressTabFilter('Start')}
+                className={cn(
+                  "px-2.5 py-1 rounded-lg text-[11.5px] font-bold transition-all cursor-pointer flex items-center gap-1.5 border select-none shrink-0",
+                  progressTabFilter === 'Start'
+                    ? "bg-sky-600 text-white border-sky-700 shadow-2xs ring-2 ring-sky-300/40"
+                    : "bg-white text-sky-800 border-sky-200 hover:bg-sky-50"
+                )}
+                title="Filter rapat tahap Start (Persiapan / Terjadwal)"
+              >
+                <span className="w-2 h-2 rounded-full bg-sky-500"></span>
+                <span>Start</span>
+                <span className={cn("px-1.5 py-0.2 rounded-full text-[10px]", progressTabFilter === 'Start' ? "bg-sky-700 text-white" : "bg-sky-100 text-sky-800")}>
+                  {countStart}
+                </span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setProgressTabFilter('On Progres')}
+                className={cn(
+                  "px-2.5 py-1 rounded-lg text-[11.5px] font-bold transition-all cursor-pointer flex items-center gap-1.5 border select-none shrink-0",
+                  progressTabFilter === 'On Progres'
+                    ? "bg-amber-600 text-white border-amber-700 shadow-2xs ring-2 ring-amber-300/40"
+                    : "bg-white text-amber-800 border-amber-200 hover:bg-amber-50"
+                )}
+                title="Filter rapat tahap On Progres (Sedang Berjalan / Telaah)"
+              >
+                <span className="w-2 h-2 rounded-full bg-amber-500 animate-pulse"></span>
+                <span>On Progres</span>
+                <span className={cn("px-1.5 py-0.2 rounded-full text-[10px]", progressTabFilter === 'On Progres' ? "bg-amber-700 text-white" : "bg-amber-100 text-amber-800")}>
+                  {countOnProgress}
+                </span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setProgressTabFilter('Finish')}
+                className={cn(
+                  "px-2.5 py-1 rounded-lg text-[11.5px] font-bold transition-all cursor-pointer flex items-center gap-1.5 border select-none shrink-0",
+                  progressTabFilter === 'Finish'
+                    ? "bg-emerald-600 text-white border-emerald-700 shadow-2xs ring-2 ring-emerald-300/40"
+                    : "bg-white text-emerald-800 border-emerald-200 hover:bg-emerald-50"
+                )}
+                title="Filter rapat tahap Finish (Selesai & Disahkan)"
+              >
+                <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
+                <span>Finish</span>
+                <span className={cn("px-1.5 py-0.2 rounded-full text-[10px]", progressTabFilter === 'Finish' ? "bg-emerald-700 text-white" : "bg-emerald-100 text-emerald-800")}>
+                  {countFinish}
+                </span>
+              </button>
+            </div>
+
             {/* Quick Filter Input */}
             <div className="relative">
               <input
@@ -429,7 +572,7 @@ export function MeetingTable({
                 value={effectiveSearch}
                 onChange={(e) => setEffectiveSearch(e.target.value)}
                 placeholder="Cari nomor/agenda..."
-                className="pl-8 pr-3 py-1.5 rounded-xl bg-white border border-slate-200 text-slate-800 text-[12.5px] focus:outline-none focus:ring-2 focus:ring-[#31889C]/25 focus:border-[#31889C] shadow-2xs"
+                className="pl-8 pr-3 py-1.5 rounded-xl bg-white border border-slate-200 text-slate-800 text-[12.5px] focus:outline-none focus:ring-2 focus:ring-[#31889C]/25 focus:border-[#31889C] shadow-2xs w-full sm:w-auto"
               />
               <Filter className="w-3.5 h-3.5 absolute left-2.5 top-2.5 text-[#31889C] pointer-events-none" />
             </div>
@@ -456,8 +599,8 @@ export function MeetingTable({
             <tr>
               <th className="py-3 px-4">Nomor &amp; Tanggal</th>
               <th className="py-3 px-4">Agenda Rapat</th>
-              <th className="py-3 px-4">Biro Pelaksana</th>
-              <th className="py-3 px-4" title="Siklus 4 Tahap Risalah: 1. Draf -> 2. Review -> 3. Disetujui -> 4. Final">Tahap Risalah</th>
+              <th className="py-3 px-4">Tim / Biro Pelaksana</th>
+              <th className="py-3 px-4" title="Status Pemantauan Rapat: Start -> On Progres -> Finish">Status Rapat</th>
               <th className="py-3 px-4">Tindak Lanjut</th>
               <th className="py-3 px-4 text-right">Aksi</th>
             </tr>
@@ -655,29 +798,52 @@ export function MeetingTable({
                       </div>
                     </td>
 
-                    {/* Status */}
+                    {/* Status Rapat (Start, On Progres, Finish) */}
                     <td className="py-3.5 px-4 align-top whitespace-nowrap">
-                      <MeetingStatusBadge
-                        status={meeting.status}
-                        isNew={meeting.isNew}
-                        showStep
-                      />
-                      {meeting.progressStatus && (
-                        <div className="mt-1">
-                          <span
-                            className={cn(
-                              'text-[10.5px] font-bold px-2 py-0.5 rounded-full inline-block border',
-                              meeting.progressStatus === 'Finish'
-                                ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
-                                : meeting.progressStatus === 'On Progres'
-                                ? 'bg-amber-50 text-amber-800 border-amber-200'
-                                : 'bg-blue-50 text-blue-700 border-blue-200'
-                            )}
-                          >
-                            Status: {meeting.progressStatus}
-                          </span>
-                        </div>
-                      )}
+                      <div className="flex flex-col items-start gap-1.5">
+                        <MeetingProgressBadge
+                          progressStatus={meeting.progressStatus}
+                          status={meeting.status}
+                          isNew={meeting.isNew}
+                          showSubtitle
+                        />
+
+                        {/* Quick 1-Click Status Updater for Atasan & Staff */}
+                        {canUpdateStatus && (
+                          <div className="flex items-center gap-1 mt-0.5">
+                            <span className="text-[10px] text-slate-400 font-medium mr-0.5">Ubah:</span>
+                            {(['Start', 'On Progres', 'Finish'] as const).map((st) => {
+                              const curProg = normalizeProgressStatus(meeting.progressStatus || mapStatusToProgress(meeting.status));
+                              const isSelected = curProg === st;
+                              return (
+                                <button
+                                  key={st}
+                                  type="button"
+                                  disabled={isSelected || updatingStatusId === meeting.id}
+                                  onClick={() => handleQuickUpdateStatus(meeting.id, st)}
+                                  className={cn(
+                                    "px-1.5 py-0.5 rounded text-[10px] font-bold transition-all border select-none",
+                                    isSelected
+                                      ? st === 'Start'
+                                        ? "bg-sky-100 text-sky-800 border-sky-300 shadow-2xs font-extrabold cursor-default"
+                                        : st === 'On Progres'
+                                        ? "bg-amber-100 text-amber-900 border-amber-300 shadow-2xs font-extrabold cursor-default"
+                                        : "bg-emerald-100 text-emerald-900 border-emerald-300 shadow-2xs font-extrabold cursor-default"
+                                      : "bg-white text-slate-500 border-slate-200 hover:text-slate-800 hover:bg-slate-50 cursor-pointer"
+                                  )}
+                                  title={`Klik untuk ubah status rapat menjadi ${st}`}
+                                >
+                                  {updatingStatusId === meeting.id ? (
+                                    <Loader2 className="w-2.5 h-2.5 animate-spin inline" />
+                                  ) : (
+                                    st
+                                  )}
+                                </button>
+                              );
+                            })}
+                          </div>
+                        )}
+                      </div>
                     </td>
 
                     {/* Tindak Lanjut Progress */}

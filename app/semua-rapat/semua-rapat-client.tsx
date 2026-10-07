@@ -42,7 +42,7 @@ import {
   DAY_NAMES_INDONESIA,
   cn,
 } from '@/lib/utils';
-import { getMeetingStatusDetail } from '@/lib/meeting-status';
+import { getMeetingStatusDetail, normalizeProgressStatus, mapStatusToProgress } from '@/lib/meeting-status';
 import { BIRO_LIST } from '@/lib/mock-data';
 
 interface SemuaRapatClientProps {
@@ -98,7 +98,7 @@ export function SemuaRapatClient({
   const [searchFilter, setSearchFilter] = useState('');
 
   // Filter params
-  const statusParam = searchParams.get('status') as MeetingStatus | null;
+  const statusParam = searchParams.get('status') as string | null;
   const kategoriParam = searchParams.get('kategori') as string | null;
   const rawTimParam = searchParams.get('tim') || searchParams.get('biro');
   const timParam = rawTimParam && rawTimParam !== 'ALL' && rawTimParam !== 'IKK' && rawTimParam !== 'BIRO-IKK' ? rawTimParam.toUpperCase() : null;
@@ -188,10 +188,15 @@ export function SemuaRapatClient({
   }, [teamFilteredMeetings, monthIdx, dayIdx, targetYear, targetDate, searchFilter, kategoriParam]);
 
   const countAll = fullyFilteredMeetings.length;
-  const countDraft = fullyFilteredMeetings.filter((m) => m.status === 'DRAFT').length;
-  const countReview = fullyFilteredMeetings.filter((m) => m.status === 'REVIEW').length;
-  const countApproved = fullyFilteredMeetings.filter((m) => m.status === 'APPROVED').length;
-  const countFinal = fullyFilteredMeetings.filter((m) => m.status === 'FINAL').length;
+  const countStart = fullyFilteredMeetings.filter(
+    (m) => normalizeProgressStatus(m.progressStatus || mapStatusToProgress(m.status)) === 'Start'
+  ).length;
+  const countOnProgress = fullyFilteredMeetings.filter(
+    (m) => normalizeProgressStatus(m.progressStatus || mapStatusToProgress(m.status)) === 'On Progres'
+  ).length;
+  const countFinish = fullyFilteredMeetings.filter(
+    (m) => normalizeProgressStatus(m.progressStatus || mapStatusToProgress(m.status)) === 'Finish'
+  ).length;
 
   const countUndanganInternal = teamFilteredMeetings.filter(
     (m) => ((m as any).documentCategory || 'UNDANGAN_INTERNAL') === 'UNDANGAN_INTERNAL'
@@ -222,17 +227,16 @@ export function SemuaRapatClient({
 
   const statusFilters: {
     label: string;
-    value: MeetingStatus | 'ALL';
+    value: string;
     count: number;
     sublabel?: string;
     dotColor: string;
   }[] = [
-      { label: 'Semua Status', value: 'ALL', count: countAll, dotColor: 'bg-slate-400' },
-      { label: '1. Draf', value: 'DRAFT', count: countDraft, sublabel: 'Penyusunan', dotColor: 'bg-slate-400' },
-      { label: '2. Review', value: 'REVIEW', count: countReview, sublabel: 'Penelaahan', dotColor: 'bg-amber-500' },
-      { label: '3. Disetujui', value: 'APPROVED', count: countApproved, sublabel: 'Validasi Pimpinan', dotColor: 'bg-sky-500' },
-      { label: '4. Final', value: 'FINAL', count: countFinal, sublabel: 'Disahkan & Terbit', dotColor: 'bg-emerald-500' },
-    ];
+    { label: 'Semua Status', value: 'ALL', count: countAll, dotColor: 'bg-slate-400' },
+    { label: 'Start', value: 'Start', count: countStart, sublabel: 'Persiapan / Terjadwal', dotColor: 'bg-sky-500' },
+    { label: 'On Progres', value: 'On Progres', count: countOnProgress, sublabel: 'Sedang Berjalan / Telaah', dotColor: 'bg-amber-500' },
+    { label: 'Finish', value: 'Finish', count: countFinish, sublabel: 'Selesai & Disahkan', dotColor: 'bg-emerald-500' },
+  ];
 
   // Presets and date helpers
   const todayIso = new Date().toLocaleDateString('en-CA');
@@ -380,7 +384,7 @@ export function SemuaRapatClient({
     }).length;
   };
 
-  const handleSelectStatus = (val: MeetingStatus | 'ALL') => {
+  const handleSelectStatus = (val: string) => {
     const params = new URLSearchParams(searchParams.toString());
     if (val === 'ALL') {
       params.delete('status');
@@ -532,10 +536,14 @@ export function SemuaRapatClient({
           <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar py-0.5">
             <span className="text-[11.5px] font-bold text-slate-500 mr-1 shrink-0 flex items-center gap-1">
               <Filter className="w-3.5 h-3.5 text-[#31889C]" />
-              Tahap:
+              Status Rapat:
             </span>
             {statusFilters.map((tab) => {
-              const isActive = tab.value === 'ALL' ? !statusParam : statusParam === tab.value;
+              const isActive =
+                tab.value === 'ALL'
+                  ? !statusParam
+                  : statusParam === tab.value ||
+                    normalizeProgressStatus(statusParam) === tab.value;
               return (
                 <button
                   key={tab.value}
@@ -947,12 +955,12 @@ export function SemuaRapatClient({
               {/* Status chip */}
               {statusParam && (
                 <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-white border border-[#BCE3EB] text-[#1B5260] font-semibold text-[11px] shadow-2xs">
-                  Tahap: {getMeetingStatusDetail(statusParam).label}
+                  Status: {normalizeProgressStatus(statusParam)}
                   <button
                     type="button"
                     onClick={() => handleSelectStatus('ALL')}
                     className="hover:text-red-600 ml-0.5 cursor-pointer font-bold"
-                    title="Hapus filter tahap"
+                    title="Hapus filter status"
                   >
                     ✕
                   </button>

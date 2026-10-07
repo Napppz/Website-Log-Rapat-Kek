@@ -22,7 +22,8 @@ import {
   Video,
 } from 'lucide-react';
 import { Meeting, MeetingStatus } from '@/lib/types';
-import { MeetingStatusBadge } from './meeting-status-badge';
+import { MeetingStatusBadge, MeetingProgressBadge } from './meeting-status-badge';
+import { normalizeProgressStatus, mapStatusToProgress } from '@/lib/meeting-status';
 import { ActionItemProgress } from '../action-items/action-item-progress';
 import { MeetingMinutesSection } from './meeting-minutes/meeting-minutes-section';
 import { ActionItemList } from '../action-items/action-item-list';
@@ -31,6 +32,7 @@ import { useSession } from 'next-auth/react';
 import { toast, confirmModal } from '@/components/providers/toast-provider';
 import { GoogleCalendarModal } from './google-calendar-modal';
 import { extractVirtualMeetingDetails } from '@/lib/calendar';
+import { cn } from '@/lib/utils';
 
 interface MeetingDetailDialogProps {
   meeting: Meeting | null;
@@ -211,13 +213,13 @@ export function MeetingDetailDialog({
     }
   };
 
-  const handleStatusChange = async (newStatus: MeetingStatus) => {
+  const handleStatusChange = async (newStatus: string) => {
     try {
       setIsUpdatingStatus(true);
       const { updateMeetingStatusAction } = await import('@/app/actions/meeting-actions');
       const res = await updateMeetingStatusAction(meeting.id, newStatus);
       if (res.success) {
-        toast.success(`Status rapat ${meeting.code} berhasil diubah ke ${newStatus}.`);
+        toast.success(`Status rapat ${meeting.code} berhasil diubah ke "${newStatus}".`);
         onClose();
         if (onMeetingUpdated) {
           onMeetingUpdated();
@@ -249,11 +251,11 @@ export function MeetingDetailDialog({
             <span className="font-bold text-[16px] text-[#215865] bg-[#E8F5F7] px-2.5 py-1 rounded-md border border-[#BCE3EB]">
               {meeting.code}
             </span>
-            <MeetingStatusBadge
+            <MeetingProgressBadge
+              progressStatus={meeting.progressStatus}
               status={meeting.status}
               isNew={meeting.isNew}
-              showStep
-              showSublabel
+              showSubtitle
             />
           </div>
 
@@ -475,30 +477,53 @@ export function MeetingDetailDialog({
               <div className="p-3.5 bg-[#F0F9FA] rounded-xl border border-[#BCE3EB] flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                 <div>
                   <span className="text-[12px] font-bold text-slate-900 block">
-                    {canChangeStatus ? 'Ubah Status Risalah' : 'Status Risalah'}
+                    {canChangeStatus ? 'Ubah Status Pemantauan Rapat' : 'Status Pemantauan Rapat'}
                   </span>
-                  <span className="text-[11px] text-slate-500">Status saat ini: <strong>{meeting.status}</strong></span>
+                  <span className="text-[11px] text-slate-500">
+                    Status saat ini: <strong className="text-slate-800">{normalizeProgressStatus(meeting.progressStatus || mapStatusToProgress(meeting.status))}</strong>
+                  </span>
                 </div>
                 {canChangeStatus ? (
-                  <div className="flex flex-wrap items-center gap-1.5">
-                    {(['DRAFT', 'REVIEW', 'APPROVED', 'FINAL'] as MeetingStatus[]).map((st) => (
-                      <button
-                        key={st}
-                        type="button"
-                        disabled={meeting.status === st || isUpdatingStatus}
-                        onClick={() => handleStatusChange(st)}
-                        className={`px-2.5 py-1 rounded text-[11px] font-bold transition-all cursor-pointer ${
-                          meeting.status === st
-                            ? 'bg-[#31889C] text-white shadow-xs opacity-90 cursor-default'
-                            : 'bg-white border border-[#BCE3EB] text-[#215865] hover:bg-[#E8F5F7]'
-                        }`}
-                      >
-                        {st}
-                      </button>
-                    ))}
+                  <div className="flex flex-wrap items-center gap-2">
+                    {(['Start', 'On Progres', 'Finish'] as const).map((st) => {
+                      const curProg = normalizeProgressStatus(meeting.progressStatus || mapStatusToProgress(meeting.status));
+                      const isSelected = curProg === st;
+                      return (
+                        <button
+                          key={st}
+                          type="button"
+                          disabled={isSelected || isUpdatingStatus}
+                          onClick={() => handleStatusChange(st)}
+                          className={cn(
+                            "px-3 py-1.5 rounded-xl text-[11.5px] font-bold transition-all cursor-pointer border flex items-center gap-1.5 select-none",
+                            isSelected
+                              ? st === 'Start'
+                                ? "bg-sky-600 text-white border-sky-700 shadow-xs cursor-default ring-2 ring-sky-300/40"
+                                : st === 'On Progres'
+                                ? "bg-amber-600 text-white border-amber-700 shadow-xs cursor-default ring-2 ring-amber-300/40"
+                                : "bg-emerald-600 text-white border-emerald-700 shadow-xs cursor-default ring-2 ring-emerald-300/40"
+                              : "bg-white border-slate-200 text-slate-700 hover:bg-[#E8F5F7] hover:text-[#215865] hover:border-[#BCE3EB]"
+                          )}
+                          title={`Ubah status ke ${st}`}
+                        >
+                          <span
+                            className={cn(
+                              "w-2 h-2 rounded-full",
+                              st === 'Start' ? "bg-sky-400" : st === 'On Progres' ? "bg-amber-400" : "bg-emerald-400",
+                              isSelected && st === 'On Progres' && "animate-pulse"
+                            )}
+                          />
+                          <span>{st}</span>
+                        </button>
+                      );
+                    })}
                   </div>
                 ) : (
-                  <MeetingStatusBadge status={meeting.status} />
+                  <MeetingProgressBadge
+                    progressStatus={meeting.progressStatus}
+                    status={meeting.status}
+                    showSubtitle
+                  />
                 )}
               </div>
 

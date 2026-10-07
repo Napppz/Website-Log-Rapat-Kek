@@ -22,7 +22,7 @@ import {
 } from 'lucide-react';
 import { TeamWorkloadMetric } from '@/lib/types';
 import { cn } from '@/lib/utils';
-import { MeetingStatusBadge } from '@/components/meeting/meeting-status-badge';
+import { MeetingStatusBadge, MeetingProgressBadge } from '@/components/meeting/meeting-status-badge';
 
 interface TeamDetailModalProps {
   isOpen: boolean;
@@ -112,24 +112,27 @@ export function TeamDetailModal({ isOpen, onClose, team }: TeamDetailModalProps)
     switch (status) {
       case 'COMPLETED':
         return (
-          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-200">
+          <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-emerald-50 text-emerald-800 border border-emerald-300">
+            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
             <CheckCircle2 className="w-3 h-3 text-emerald-600" />
-            Selesai (100%)
+            Finish
           </span>
         );
       case 'IN_PROGRESS':
         return (
-          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-sky-100 text-sky-800 border border-sky-200">
-            <Clock className="w-3 h-3 text-sky-600" />
-            Sedang Berjalan (50%)
+          <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-amber-50 text-amber-800 border border-amber-300">
+            <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse" />
+            <Clock className="w-3 h-3 text-amber-600" />
+            On Progres
           </span>
         );
       case 'PENDING':
       default:
         return (
-          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-amber-100 text-amber-800 border border-amber-200">
-            <AlertCircle className="w-3 h-3 text-amber-600" />
-            Dalam Proses (0%)
+          <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-sky-50 text-sky-800 border border-sky-300">
+            <span className="w-1.5 h-1.5 rounded-full bg-sky-500" />
+            <AlertCircle className="w-3 h-3 text-sky-600" />
+            Start
           </span>
         );
     }
@@ -175,32 +178,41 @@ export function TeamDetailModal({ isOpen, onClose, team }: TeamDetailModalProps)
           </button>
         </div>
 
-        {/* Executive KPI Bar (Jumlah Rapat & Status Pekerjaan) */}
+        {/* Executive KPI Bar (Jumlah Rapat & Status Pemantauan: Finish, On Progres, Start - NO PERCENTAGE) */}
         <div className="grid grid-cols-2 sm:grid-cols-5 gap-2.5 p-4 bg-slate-50/80 border-b border-slate-200 text-center">
           <div className="bg-white p-2.5 rounded-xl border border-slate-200/90 shadow-2xs">
             <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Jumlah Rapat</p>
             <p className="text-[20px] font-extrabold text-[#215865] mt-0.5">{team.meetingCount}</p>
-            <p className="text-[10px] text-slate-400 mt-0.5">{team.meetingPercentage}% dari total sidang</p>
+            <p className="text-[10px] text-slate-400 mt-0.5">Agenda resmi tim</p>
           </div>
           <div className="bg-white p-2.5 rounded-xl border border-slate-200/90 shadow-2xs">
             <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Total Pekerjaan</p>
             <p className="text-[20px] font-extrabold text-slate-800 mt-0.5">{team.totalJobs}</p>
             <p className="text-[10px] text-slate-400 mt-0.5">Tindak lanjut aktif</p>
           </div>
-          <div className="bg-white p-2.5 rounded-xl border border-emerald-200 bg-emerald-50/20 shadow-2xs">
-            <p className="text-[11px] font-bold text-emerald-700 uppercase tracking-wider">Selesai</p>
-            <p className="text-[20px] font-extrabold text-emerald-700 mt-0.5">{team.completedJobs}</p>
-            <p className="text-[10px] text-emerald-600 mt-0.5">{team.completionRate}% tuntas</p>
+          <div className="bg-white p-2.5 rounded-xl border border-emerald-300 bg-emerald-50/40 shadow-2xs">
+            <p className="text-[11px] font-bold text-emerald-800 uppercase tracking-wider flex items-center justify-center gap-1">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+              Finish
+            </p>
+            <p className="text-[20px] font-extrabold text-emerald-800 mt-0.5">{team.completedJobs}</p>
+            <p className="text-[10px] text-emerald-700 font-semibold mt-0.5">Selesai tuntas</p>
           </div>
-          <div className="bg-white p-2.5 rounded-xl border border-sky-200 bg-sky-50/20 shadow-2xs">
-            <p className="text-[11px] font-bold text-sky-700 uppercase tracking-wider">Berjalan</p>
-            <p className="text-[20px] font-extrabold text-sky-700 mt-0.5">{team.inProgressJobs}</p>
-            <p className="text-[10px] text-sky-600 mt-0.5">On Progress</p>
+          <div className="bg-white p-2.5 rounded-xl border border-amber-300 bg-amber-50/40 shadow-2xs">
+            <p className="text-[11px] font-bold text-amber-800 uppercase tracking-wider flex items-center justify-center gap-1">
+              <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse" />
+              On Progres
+            </p>
+            <p className="text-[20px] font-extrabold text-amber-800 mt-0.5">{team.inProgressJobs}</p>
+            <p className="text-[10px] text-amber-700 font-semibold mt-0.5">Sedang berjalan</p>
           </div>
-          <div className="bg-white p-2.5 rounded-xl border border-amber-200 bg-amber-50/20 shadow-2xs col-span-2 sm:col-span-1">
-            <p className="text-[11px] font-bold text-amber-700 uppercase tracking-wider">Dalam Proses</p>
-            <p className="text-[20px] font-extrabold text-amber-700 mt-0.5">{team.pendingJobs}</p>
-            <p className="text-[10px] text-amber-600 mt-0.5">Antrean tindak lanjut</p>
+          <div className="bg-white p-2.5 rounded-xl border border-sky-300 bg-sky-50/40 shadow-2xs col-span-2 sm:col-span-1">
+            <p className="text-[11px] font-bold text-sky-800 uppercase tracking-wider flex items-center justify-center gap-1">
+              <span className="w-1.5 h-1.5 rounded-full bg-sky-500" />
+              Start
+            </p>
+            <p className="text-[20px] font-extrabold text-sky-800 mt-0.5">{team.pendingJobs}</p>
+            <p className="text-[10px] text-sky-700 font-semibold mt-0.5">Persiapan awal</p>
           </div>
         </div>
 
@@ -295,6 +307,30 @@ export function TeamDetailModal({ isOpen, onClose, team }: TeamDetailModalProps)
                 </button>
                 <button
                   type="button"
+                  onClick={() => setJobFilter('PENDING')}
+                  className={cn(
+                    'px-2.5 py-1 rounded-lg text-[11px] font-bold transition cursor-pointer',
+                    jobFilter === 'PENDING'
+                      ? 'bg-sky-700 text-white shadow-2xs'
+                      : 'bg-white border border-sky-200 text-sky-800 hover:bg-sky-50'
+                  )}
+                >
+                  Start ({team.pendingJobs})
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setJobFilter('IN_PROGRESS')}
+                  className={cn(
+                    'px-2.5 py-1 rounded-lg text-[11px] font-bold transition cursor-pointer',
+                    jobFilter === 'IN_PROGRESS'
+                      ? 'bg-amber-700 text-white shadow-2xs'
+                      : 'bg-white border border-amber-200 text-amber-800 hover:bg-amber-50'
+                  )}
+                >
+                  On Progres ({team.inProgressJobs})
+                </button>
+                <button
+                  type="button"
                   onClick={() => setJobFilter('COMPLETED')}
                   className={cn(
                     'px-2.5 py-1 rounded-lg text-[11px] font-bold transition cursor-pointer',
@@ -303,31 +339,7 @@ export function TeamDetailModal({ isOpen, onClose, team }: TeamDetailModalProps)
                       : 'bg-white border border-emerald-200 text-emerald-800 hover:bg-emerald-50'
                   )}
                 >
-                  Selesai ({team.completedJobs})
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setJobFilter('IN_PROGRESS')}
-                  className={cn(
-                    'px-2.5 py-1 rounded-lg text-[11px] font-bold transition cursor-pointer',
-                    jobFilter === 'IN_PROGRESS'
-                      ? 'bg-sky-700 text-white shadow-2xs'
-                      : 'bg-white border border-sky-200 text-sky-800 hover:bg-sky-50'
-                  )}
-                >
-                  Berjalan ({team.inProgressJobs})
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setJobFilter('PENDING')}
-                  className={cn(
-                    'px-2.5 py-1 rounded-lg text-[11px] font-bold transition cursor-pointer',
-                    jobFilter === 'PENDING'
-                      ? 'bg-amber-700 text-white shadow-2xs'
-                      : 'bg-white border border-amber-200 text-amber-800 hover:bg-amber-50'
-                  )}
-                >
-                  Dalam Proses ({team.pendingJobs})
+                  Finish ({team.completedJobs})
                 </button>
               </div>
 
@@ -340,14 +352,13 @@ export function TeamDetailModal({ isOpen, onClose, team }: TeamDetailModalProps)
                     >
                       <div className="min-w-0 flex-1">
                         <div className="flex items-center gap-2 flex-wrap mb-1">
-                          {getStatusBadge(job.status)}
                           {job.meetingNumber && (
-                            <span className="text-[11px] font-mono font-bold text-[#1E6B7B] bg-[#F0F9FA] px-2 py-0.2 rounded border border-[#BCE3EB]">
+                            <span className="text-[11px] font-mono font-bold text-[#1E6B7B] bg-[#F0F9FA] px-2 py-0.5 rounded border border-[#BCE3EB]">
                               Rapat {job.meetingNumber}
                             </span>
                           )}
                           {job.priority && (
-                            <span className="text-[10px] font-bold uppercase text-slate-500 bg-slate-100 px-1.5 py-0.2 rounded">
+                            <span className="text-[10px] font-bold uppercase text-slate-500 bg-slate-100 px-1.5 py-0.5 rounded">
                               Prioritas: {job.priority}
                             </span>
                           )}
@@ -369,26 +380,9 @@ export function TeamDetailModal({ isOpen, onClose, team }: TeamDetailModalProps)
                         </div>
                       </div>
 
-                      {/* Progress Bar & Rate */}
+                      {/* Status Lifecycle Indicator (Start / On Progres / Finish) */}
                       <div className="sm:text-right shrink-0">
-                        <div className="flex items-center sm:justify-end gap-1.5">
-                          <span className="text-xs font-bold text-slate-700">
-                            Progres: {job.progress || 0}%
-                          </span>
-                        </div>
-                        <div className="w-28 h-2 bg-slate-100 rounded-full mt-1 overflow-hidden sm:ml-auto">
-                          <div
-                            className={cn(
-                              'h-full rounded-full transition-all duration-300',
-                              job.status === 'COMPLETED'
-                                ? 'bg-emerald-500'
-                                : job.status === 'IN_PROGRESS'
-                                ? 'bg-sky-500'
-                                : 'bg-amber-400'
-                            )}
-                            style={{ width: `${job.progress || 0}%` }}
-                          />
-                        </div>
+                        {getStatusBadge(job.status)}
                       </div>
                     </div>
                   ))}
@@ -421,7 +415,7 @@ export function TeamDetailModal({ isOpen, onClose, team }: TeamDetailModalProps)
                         <span className="text-[11.5px] font-mono font-extrabold text-[#215865] bg-[#F0F9FA] px-2 py-0.5 rounded border border-[#BCE3EB]">
                           {m.meetingNumber}
                         </span>
-                        <MeetingStatusBadge status={m.status} />
+                        <MeetingProgressBadge progressStatus={(m as any).progressStatus} status={m.status} showSubtitle />
                         <span className="text-[11.5px] text-slate-400">📅 {m.date}</span>
                       </div>
                       <h4 className="font-bold text-[14px] text-slate-900 group-hover:text-[#31889C] transition-colors leading-snug">

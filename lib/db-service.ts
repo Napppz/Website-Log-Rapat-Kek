@@ -626,8 +626,8 @@ export async function getDashboardStats() {
           label: 'Tindak Lanjut Selesai',
           value: totalActionItems > 0 ? completedActionItems : approvedMeetings + finalMeetings,
           unit: 'Selesai',
-          badgeText: `${totalActionItems > 0 ? Math.round((completedActionItems / totalActionItems) * 100) : totalMeetings > 0 ? Math.round(((approvedMeetings + finalMeetings) / totalMeetings) * 100) : 0}%`,
-          badgeSubtext: 'Tingkat Penyelesaian',
+          badgeText: `${totalActionItems > 0 ? completedActionItems : approvedMeetings + finalMeetings} Finish`,
+          badgeSubtext: 'Status Selesai',
           variant: 'success',
           iconName: 'task_alt',
         },
@@ -782,6 +782,7 @@ export async function getDashboardStats() {
             title: m.title,
             date: m.date.toISOString().slice(0, 10),
             status: m.status as any,
+            progressStatus: (m as any).progressStatus || 'Start',
           })),
         };
       });

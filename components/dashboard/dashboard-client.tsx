@@ -11,6 +11,7 @@ import { TeamDetailModal } from '@/components/dashboard/team-detail-modal';
 import { MeetingTable } from '@/components/meeting/meeting-table';
 import { useRouter } from 'next/navigation';
 import { Meeting, DashboardMetric, BureauWorkload, FollowUpStatusMetric, MonthlyActivity, TeamWorkloadMetric } from '@/lib/types';
+import { normalizeProgressStatus, mapStatusToProgress } from '@/lib/meeting-status';
 
 interface DashboardClientProps {
   initialMeetings: Meeting[];
@@ -175,10 +176,15 @@ export function DashboardClient({
   // Dynamically compute the 5 cards shown in the user's photo
   const displayMetrics: DashboardMetric[] = useMemo(() => {
     const totalMonth = monthMeetings.length;
-    const approvedMonth = monthMeetings.filter((m) => m.status === 'APPROVED').length;
-    const finalMonth = monthMeetings.filter((m) => m.status === 'FINAL').length;
-    const reviewMonth = monthMeetings.filter((m) => m.status === 'REVIEW').length;
-    const draftMonth = monthMeetings.filter((m) => m.status === 'DRAFT').length;
+    const startMonth = monthMeetings.filter(
+      (m) => normalizeProgressStatus(m.progressStatus || mapStatusToProgress(m.status)) === 'Start'
+    ).length;
+    const onProgressMonth = monthMeetings.filter(
+      (m) => normalizeProgressStatus(m.progressStatus || mapStatusToProgress(m.status)) === 'On Progres'
+    ).length;
+    const finishMonth = monthMeetings.filter(
+      (m) => normalizeProgressStatus(m.progressStatus || mapStatusToProgress(m.status)) === 'Finish'
+    ).length;
 
     const totalItems = monthMeetings.reduce((sum, m) => sum + (m.actionItems?.total || 0), 0);
     const completedItems = monthMeetings.reduce((sum, m) => sum + (m.actionItems?.completed || 0), 0);
@@ -186,16 +192,20 @@ export function DashboardClient({
     const pendingItems = monthMeetings.reduce((sum, m) => sum + (m.actionItems?.pending || 0), 0);
     const activeItems = inProgressItems + pendingItems;
 
-    const overdueCount = draftMonth;
+    const overdueCount = onProgressMonth;
     const completionPercent = totalItems > 0
       ? Math.round((completedItems / totalItems) * 100)
       : totalMonth > 0
-      ? Math.round(((approvedMonth + finalMonth) / totalMonth) * 100)
+      ? Math.round((finishMonth / totalMonth) * 100)
       : 0;
 
     if (!selectedMonth) {
       // If no month is selected, compute the overall metrics for the selected year
       const totalYearMeetings = yearMeetings.length;
+      const yearStart = yearMeetings.filter((m) => normalizeProgressStatus(m.progressStatus || mapStatusToProgress(m.status)) === 'Start').length;
+      const yearOnProgress = yearMeetings.filter((m) => normalizeProgressStatus(m.progressStatus || mapStatusToProgress(m.status)) === 'On Progres').length;
+      const yearFinish = yearMeetings.filter((m) => normalizeProgressStatus(m.progressStatus || mapStatusToProgress(m.status)) === 'Finish').length;
+
       return [
         {
           id: 'total-rapat',
@@ -209,11 +219,11 @@ export function DashboardClient({
         },
         {
           id: 'rapat-bulan-ini',
-          label: `AGENDA SIDANG (${selectedYear})`,
+          label: `STATUS PEMANTAUAN (${selectedYear})`,
           value: totalYearMeetings,
           unit: 'Agenda',
-          badgeText: `${approvedMonth + finalMonth} Disetujui/Sah`,
-          badgeSubtext: `Tahun ${selectedYear}`,
+          badgeText: `${yearFinish} Finish • ${yearOnProgress} On Progres`,
+          badgeSubtext: `${yearStart} Start (Persiapan)`,
           variant: 'default',
           iconName: 'calendar_month',
         },
@@ -229,12 +239,12 @@ export function DashboardClient({
         },
         {
           id: 'perlu-atensi',
-          label: 'PERLU ATENSI (OVERDUE / DRAFT)',
-          value: overdueCount,
-          unit: 'Item',
-          badgeText: draftMonth > 0 ? `${draftMonth} Draft` : '0 Terlambat',
+          label: 'MONITORING PROSES RAPAT',
+          value: yearOnProgress + yearStart,
+          unit: 'Rapat',
+          badgeText: `${yearOnProgress} On Progres • ${yearStart} Start`,
           badgeSubtext: `Tahun ${selectedYear}`,
-          variant: overdueCount > 0 ? 'danger' : 'default',
+          variant: yearOnProgress > 0 ? 'default' : 'default',
           iconName: 'warning',
         },
         {
@@ -242,8 +252,8 @@ export function DashboardClient({
           label: 'TINDAK LANJUT SELESAI',
           value: completedItems,
           unit: 'Selesai',
-          badgeText: `${completionPercent}%`,
-          badgeSubtext: 'Tingkat Penyelesaian',
+          badgeText: `${completedItems} Finish`,
+          badgeSubtext: `${inProgressItems} On Progres • ${pendingItems} Start`,
           variant: 'success',
           iconName: 'task_alt',
         },
@@ -266,8 +276,8 @@ export function DashboardClient({
         label: `RAPAT BULAN ${fullMonthName.toUpperCase()}`,
         value: totalMonth,
         unit: 'Agenda',
-        badgeText: totalMonth > 0 ? `${approvedMonth + finalMonth} Disetujui/Sah` : '0 Agenda',
-        badgeSubtext: `${fullMonthName} ${selectedYear}`,
+        badgeText: totalMonth > 0 ? `${finishMonth} Finish • ${onProgressMonth} On Progres` : '0 Agenda',
+        badgeSubtext: `${startMonth} Start (${fullMonthName})`,
         variant: 'default',
         iconName: 'calendar_month',
       },
@@ -283,12 +293,12 @@ export function DashboardClient({
       },
       {
         id: 'perlu-atensi',
-        label: 'PERLU ATENSI (OVERDUE / DRAFT)',
-        value: overdueCount,
-        unit: 'Item',
-        badgeText: draftMonth > 0 ? `${draftMonth} Draft Rapat` : reviewMonth > 0 ? `${reviewMonth} Review` : 'Nihil',
+        label: 'MONITORING PROSES RAPAT',
+        value: onProgressMonth + startMonth,
+        unit: 'Rapat',
+        badgeText: `${onProgressMonth} On Progres • ${startMonth} Start`,
         badgeSubtext: `${fullMonthName} ${selectedYear}`,
-        variant: overdueCount > 0 ? 'danger' : 'default',
+        variant: onProgressMonth > 0 ? 'default' : 'default',
         iconName: 'warning',
       },
       {
@@ -296,8 +306,8 @@ export function DashboardClient({
         label: 'TINDAK LANJUT SELESAI',
         value: completedItems,
         unit: 'Selesai',
-        badgeText: `${completionPercent}%`,
-        badgeSubtext: 'Tingkat Penyelesaian',
+        badgeText: `${completedItems} Finish`,
+        badgeSubtext: `${inProgressItems} On Progres • ${pendingItems} Start`,
         variant: 'success',
         iconName: 'task_alt',
       },
