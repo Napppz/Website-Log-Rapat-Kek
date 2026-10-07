@@ -254,8 +254,8 @@ export function MeetingMinutesPreview({
 
         {/* ROW 2: View Controls (Left) & Actions (Right) */}
         <div className="px-4 py-2.5 sm:px-5 bg-[#F8FAFC] flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-          {/* Left: View Mode (Lembar A4 vs PDF Langsung) */}
-          <div className="flex items-center gap-2">
+          {/* Left: View Mode (Lembar A4 vs PDF Langsung) & Split Screen Toggle */}
+          <div className="flex flex-wrap items-center gap-2">
             <span className="text-[11.5px] font-bold text-slate-500 uppercase tracking-wider hidden sm:inline">
               Tampilan:
             </span>

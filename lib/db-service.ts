@@ -186,6 +186,19 @@ export async function getMeetingByIdFromDb(idOrNumber: string) {
         },
       });
 
+      if (meeting) {
+        try {
+          const rawAttachments: any[] = await prisma.$queryRawUnsafe(
+            `SELECT id_lampiran AS "id", id_rapat AS "meetingId", nama_berkas AS "fileName", url_berkas AS "fileUrl", ukuran_berkas AS "fileSize", tipe_berkas AS "fileType", nama_pengunggah AS "uploadedBy", kategori AS "category", dibuat_pada AS "createdAt" FROM lampiran_rapat WHERE id_rapat = $1 ORDER BY dibuat_pada ASC`,
+            meeting.id
+          );
+          (meeting as any).attachments = rawAttachments || [];
+        } catch (attErr) {
+          console.error('Error fetching meeting attachments:', attErr);
+          (meeting as any).attachments = [];
+        }
+      }
+
       return meeting;
     });
   } catch (error) {
@@ -681,21 +694,4 @@ export async function getDashboardStats() {
     console.error('Error calculating dashboard stats from Neon DB:', error);
     return null;
   }
-}
-metrics,
-  monthlyActivity,
-  actionItemStats: {
-  total: totalActionItems,
-    completed: completedActionItems,
-      inProgress: inProgressActionItems,
-        pending: pendingActionItems,
-          overdue: overdueCount,
-      },
-followUpMetrics,
-    };
-    });
-  } catch (error) {
-  console.error('Error calculating dashboard stats from Neon DB:', error);
-  return null;
-}
 }

@@ -38,12 +38,14 @@ import {
   Paperclip,
   UploadCloud,
   Video,
+  Presentation,
 } from 'lucide-react';
 
 import { MeetingStatusBadge } from '@/components/meeting/meeting-status-badge';
 import { MeetingStatusGuideDialog } from '@/components/meeting/meeting-status-guide-dialog';
 import { getMeetingStatusDetail, MEETING_STATUS_DETAILS } from '@/lib/meeting-status';
 import { MeetingMinutesSection } from '@/components/meeting/meeting-minutes/meeting-minutes-section';
+import { MeetingFilePreviewPanel } from '@/components/meeting/file-preview';
 import { ActionItemList } from '@/components/action-items/action-item-list';
 import { PreviousMeetingModal } from '@/components/meeting/previous-meeting-modal';
 import { LinkMeetingDialog } from '@/components/meeting/link-meeting-dialog';
@@ -77,7 +79,7 @@ interface MeetingDetailViewProps {
 }
 
 type TabType = 'overview' | 'participants' | 'minutes' | 'actionItems';
-type MinutesSubTab = 'document' | 'comments' | 'history';
+type MinutesSubTab = 'document' | 'materials' | 'comments' | 'history';
 const VALID_TABS: TabType[] = ['overview', 'participants', 'minutes', 'actionItems'];
 
 const MEETING_WORKFLOW: {
@@ -196,7 +198,13 @@ export function MeetingDetailView({
       : (meeting.minutes ? 'minutes' : 'overview');
 
   const initialMinutesSubTab: MinutesSubTab =
-    initialTab === 'comments' ? 'comments' : initialTab === 'history' ? 'history' : 'document';
+    initialTab === 'comments'
+      ? 'comments'
+      : initialTab === 'history'
+      ? 'history'
+      : initialTab === 'materials'
+      ? 'materials'
+      : 'document';
 
   const [activeTab, setActiveTab] = useState<TabType>(initialResolvedTab);
   const [minutesSubTab, setMinutesSubTab] = useState<MinutesSubTab>(initialMinutesSubTab);
@@ -1708,6 +1716,25 @@ export function MeetingDetailView({
 
               <button
                 type="button"
+                onClick={() => handleMinutesSubTabChange('materials')}
+                className={`flex items-center gap-2 px-3.5 py-1.5 rounded-md transition-all cursor-pointer ${minutesSubTab === 'materials'
+                  ? 'bg-white text-[#31889C] font-bold shadow-xs border border-slate-200/60'
+                  : 'text-slate-600 hover:text-slate-900 hover:bg-white/50'
+                  }`}
+              >
+                <Presentation className="w-4 h-4" />
+                <span>Berkas &amp; Paparan</span>
+                {Array.isArray(meeting.attachments) && meeting.attachments.length > 0 && (
+                  <span className={`px-1.5 py-0.2 rounded-full text-[10px] font-bold ${
+                    minutesSubTab === 'materials' ? 'bg-[#F0F9FA] text-[#215865] border border-[#BCE3EB]' : 'bg-slate-200 text-slate-700'
+                  }`}>
+                    {meeting.attachments.length}
+                  </span>
+                )}
+              </button>
+
+              <button
+                type="button"
                 onClick={() => handleMinutesSubTabChange('comments')}
                 className={`flex items-center gap-2 px-3.5 py-1.5 rounded-md transition-all cursor-pointer ${minutesSubTab === 'comments'
                   ? 'bg-white text-[#31889C] font-bold shadow-xs border border-slate-200/60'
@@ -1733,6 +1760,7 @@ export function MeetingDetailView({
 
             <div className="text-[12px] text-slate-500 px-2 hidden md:block">
               {minutesSubTab === 'document' && 'Format resmi Notula & Nota Dinas Sekretariat KEK'}
+              {minutesSubTab === 'materials' && 'Preview bahan paparan, slide presentasi, dan dokumen tindak lanjut'}
               {minutesSubTab === 'comments' && 'Kolaborasi masukan dan catatan perumusan risalah'}
               {minutesSubTab === 'history' && 'Audit trail riwayat revisi dan versi naskah risalah'}
             </div>
@@ -1746,6 +1774,14 @@ export function MeetingDetailView({
               initialMinutes={meeting.minutes}
               defaultMode="preview"
               onViewHistoryClick={() => handleMinutesSubTabChange('history')}
+            />
+          )}
+
+          {minutesSubTab === 'materials' && (
+            <MeetingFilePreviewPanel
+              meetingId={meeting.id}
+              meetingTitle={meeting.title}
+              initialAttachments={meeting.attachments || []}
             />
           )}
 

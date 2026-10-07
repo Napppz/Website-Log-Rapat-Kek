@@ -6,7 +6,7 @@ import { MeetingMinutesEditor } from './meeting-minutes-editor';
 import { MeetingMinutesPreview } from './meeting-minutes-preview';
 import { getMeetingMinutesAction } from '@/app/actions/minute-actions';
 import { getMeetingDetailAction } from '@/app/actions/meeting-actions';
-import { FileEdit, Eye, FileText, Loader2, Info } from 'lucide-react';
+import { FileEdit, FileText, Loader2, Info } from 'lucide-react';
 import { toast } from '@/components/providers/toast-provider';
 
 interface MeetingMinutesSectionProps {
