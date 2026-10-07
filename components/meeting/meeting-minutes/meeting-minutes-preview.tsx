@@ -227,11 +227,10 @@ export function MeetingMinutesPreview({
               <button
                 type="button"
                 onClick={() => handleDocTypeToggle('NOTULA')}
-                className={`inline-flex items-center gap-2 px-3.5 py-1.5 rounded-lg text-[12px] font-bold transition-all cursor-pointer ${
-                  docType === 'NOTULA'
+                className={`inline-flex items-center gap-2 px-3.5 py-1.5 rounded-lg text-[12px] font-bold transition-all cursor-pointer ${docType === 'NOTULA'
                     ? 'bg-white text-[#215865] shadow-xs border border-slate-200/60'
                     : 'text-slate-600 hover:text-slate-900'
-                }`}
+                  }`}
                 title="Tampilkan lembar Risalah / Notula Rapat"
               >
                 <FileText className={`w-3.5 h-3.5 ${docType === 'NOTULA' ? 'text-[#31889C]' : 'text-slate-500'}`} />
@@ -240,11 +239,10 @@ export function MeetingMinutesPreview({
               <button
                 type="button"
                 onClick={() => handleDocTypeToggle('NOTA_DINAS')}
-                className={`inline-flex items-center gap-2 px-3.5 py-1.5 rounded-lg text-[12px] font-bold transition-all cursor-pointer ${
-                  docType === 'NOTA_DINAS'
+                className={`inline-flex items-center gap-2 px-3.5 py-1.5 rounded-lg text-[12px] font-bold transition-all cursor-pointer ${docType === 'NOTA_DINAS'
                     ? 'bg-[#31889C] text-white shadow-xs'
                     : 'text-slate-600 hover:text-slate-900'
-                }`}
+                  }`}
                 title="Tampilkan lembar Nota Dinas resmi"
               >
                 <FileEdit className="w-3.5 h-3.5" />
@@ -265,11 +263,10 @@ export function MeetingMinutesPreview({
               <button
                 type="button"
                 onClick={() => setViewMode('paper')}
-                className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-[12px] font-medium transition-all cursor-pointer ${
-                  viewMode === 'paper'
+                className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-[12px] font-medium transition-all cursor-pointer ${viewMode === 'paper'
                     ? 'bg-[#F0F9FA] text-[#215865] font-bold border border-[#BCE3EB] shadow-2xs'
                     : 'text-slate-600 hover:text-slate-900'
-                }`}
+                  }`}
                 title="Tampilkan format kertas naskah dinas A4"
               >
                 <FileText className="w-3.5 h-3.5 text-[#31889C]" />
@@ -278,11 +275,10 @@ export function MeetingMinutesPreview({
               <button
                 type="button"
                 onClick={() => setViewMode('raw_pdf')}
-                className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-[12px] font-medium transition-all cursor-pointer ${
-                  viewMode === 'raw_pdf'
+                className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-[12px] font-medium transition-all cursor-pointer ${viewMode === 'raw_pdf'
                     ? 'bg-[#F0F9FA] text-[#215865] font-bold border border-[#BCE3EB] shadow-2xs'
                     : 'text-slate-600 hover:text-slate-900'
-                }`}
+                  }`}
                 title="Tampilkan pratinjau stream PDF asli"
               >
                 <Eye className="w-3.5 h-3.5 text-[#31889C]" />
@@ -540,272 +536,272 @@ export function MeetingMinutesPreview({
                 lineHeight: 1.45,
               }}
             >
-            {/* 1. KOP SURAT RESMI */}
-            <div className="pb-1">
-              {/* Header Row: Logo di Kiri, Teks di Tengah, Spacer di Kanan */}
-              <div
-                className="w-full"
-                style={{
-                  display: 'grid',
-                  gridTemplateColumns: '72px 1fr 72px',
-                  alignItems: 'center',
-                }}
-              >
-                {/* Logo Dewan KEK di Kiri */}
-                <div className="flex items-center justify-start">
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img
-                    src="/lambang-kek.png"
-                    alt="Lambang Dewan Nasional KEK"
-                    className="w-[64px] h-[64px] sm:w-[68px] sm:h-[68px] object-contain drop-shadow-2xs"
-                    onError={(e) => {
-                      (e.target as HTMLImageElement).src = '/logo-kek.png';
-                    }}
-                  />
-                </div>
-
-                {/* Teks Kop Rata Tengah: Tahoma-Bold 12pt & Tahoma 8pt */}
+              {/* 1. KOP SURAT RESMI */}
+              <div className="pb-1">
+                {/* Header Row: Logo di Kiri, Teks di Tengah, Spacer di Kanan */}
                 <div
-                  className="text-center px-1"
-                  style={{ fontFamily: 'Tahoma, Arial, sans-serif' }}
+                  className="w-full"
+                  style={{
+                    display: 'grid',
+                    gridTemplateColumns: '72px 1fr 72px',
+                    alignItems: 'center',
+                  }}
                 >
-                  <div className="font-bold text-[11pt] sm:text-[12pt] text-black leading-tight tracking-normal whitespace-nowrap">
-                    DEWAN NASIONAL KAWASAN EKONOMI KHUSUS
-                  </div>
-                  <div className="font-bold text-[11pt] sm:text-[12pt] text-black leading-tight tracking-normal mt-0.5 whitespace-nowrap">
-                    SEKRETARIAT JENDERAL
-                  </div>
-                  <div className="text-[7.5pt] sm:text-[8pt] text-black mt-1 leading-snug">
-                    Gedung MNC Tower Lantai 3, Jl. Kebon Sirih No.17 – 19, Jakarta Pusat 10340
-                  </div>
-                  <div className="text-[7.5pt] sm:text-[8pt] text-black leading-snug">
-                    Telp: (021) 3912491, email:{' '}
-                    <span className="text-blue-700 underline">info@kek.go.id</span>
-                  </div>
-                </div>
-
-                {/* Penyeimbang Kolom Kanan agar Teks Pas di Tengah Kertas */}
-                <div className="w-[72px]" aria-hidden="true" />
-              </div>
-
-              {/* Garis Pemisah Tunggal 1.5pt */}
-              <div className="w-full h-[1.5px] bg-black mt-2.5 mb-4"></div>
-            </div>
-
-            {/* 2. JUDUL DOKUMEN: NOTULA & NOMOR */}
-            <div className="text-center pt-1 mb-5">
-              <div className="font-bold text-[11pt] tracking-widest text-black">
-                NOTULA
-              </div>
-              <div className="text-[11pt] text-black mt-0.5">
-                NOMOR: {meetingNumber}
-              </div>
-            </div>
-
-            {/* 3. IDENTITAS & METADATA RAPAT */}
-            <div className="space-y-1.5 text-[11pt] mb-5">
-              {/* Judul Rapat */}
-              <div className="grid grid-cols-[165px_16px_1fr] sm:grid-cols-[185px_20px_1fr] items-start">
-                <span className="text-black">Judul Rapat</span>
-                <span className="text-black">:</span>
-                <span className="text-black leading-relaxed">{meetingTitle}</span>
-              </div>
-
-              {/* Hari/Tanggal */}
-              <div className="grid grid-cols-[165px_16px_1fr] sm:grid-cols-[185px_20px_1fr] items-start">
-                <span className="text-black">Hari/Tanggal</span>
-                <span className="text-black">:</span>
-                <span className="text-black">{meetingDate}</span>
-              </div>
-
-              {/* Nomor Surat Undangan */}
-              <div className="grid grid-cols-[165px_16px_1fr] sm:grid-cols-[185px_20px_1fr] items-start">
-                <span className="text-black whitespace-nowrap">Nomor Surat Undangan</span>
-                <span className="text-black">:</span>
-                <span className="text-black font-normal">{invitationNumberDisplay}</span>
-              </div>
-
-              {/* Pukul */}
-              <div className="grid grid-cols-[165px_16px_1fr] sm:grid-cols-[185px_20px_1fr] items-start">
-                <span className="text-black">Pukul</span>
-                <span className="text-black">:</span>
-                <span className="text-black">{meetingTime}</span>
-              </div>
-
-              {/* Agenda */}
-              <div className="grid grid-cols-[165px_16px_1fr] sm:grid-cols-[185px_20px_1fr] items-start">
-                <span className="text-black">Agenda</span>
-                <span className="text-black">:</span>
-                <div className="text-black space-y-0.5">
-                  {agendaLines.map((line, idx) => (
-                    <div key={idx} className="leading-relaxed">
-                      {line}
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
-
-            {/* 4. PELAKSANA RAPAT & PESERTA */}
-            <div className="text-[11pt] mb-5">
-              <div className="font-bold text-black mb-1.5">
-                Pelaksana Rapat:
-              </div>
-
-              <div className="space-y-1.5">
-                {/* Ketua/Pimpinan Rapat */}
-                <div className="grid grid-cols-[165px_16px_1fr] sm:grid-cols-[185px_20px_1fr] items-start">
-                  <span className="text-black">Ketua/Pimpinan Rapat</span>
-                  <span className="text-black">:</span>
-                  <span className="text-black leading-relaxed">{chairpersonName}</span>
-                </div>
-
-                {/* Pencatat */}
-                <div className="grid grid-cols-[165px_16px_1fr] sm:grid-cols-[185px_20px_1fr] items-start">
-                  <span className="text-black">Pencatat</span>
-                  <span className="text-black">:</span>
-                  <span className="text-black leading-relaxed">{secretaryMetaText}</span>
-                </div>
-
-                {/* Peserta Rapat */}
-                <div className="grid grid-cols-[165px_16px_1fr] sm:grid-cols-[185px_20px_1fr] items-start">
-                  <span className="text-black">Peserta Rapat</span>
-                  <span className="text-black">:</span>
-                  <div className="text-black space-y-1">
-                    {participants.length === 0 ? (
-                      <div className="text-black">
-                        1 &nbsp;Belum terdapat data peserta yang tercatat.
-                      </div>
-                    ) : (
-                      participants.map((p: any, idx: number) => {
-                        const name = p.user?.name || p.name || (typeof p === 'string' ? p : 'Peserta');
-                        return (
-                          <div key={idx} className="flex gap-2 leading-snug">
-                            <span className="w-5 text-right shrink-0">{idx + 1}</span>
-                            <span>{name}</span>
-                          </div>
-                        );
-                      })
-                    )}
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* 5. SUBSTANSI INTI PEMBAHASAN RAPAT */}
-            <div className="text-[11pt] mb-5">
-              <div className="grid grid-cols-[165px_16px_1fr] sm:grid-cols-[185px_20px_1fr] items-start font-bold text-black mb-1">
-                <div className="leading-tight">
-                  <div>Substansi Inti</div>
-                  <div>Pembahasan Rapat</div>
-                </div>
-                <div>:</div>
-                <div></div>
-              </div>
-
-              <div className="pt-1">
-                {discussionBlocks.length === 0 ? (
-                  <div className="text-slate-400 italic text-[10.5pt] py-2 px-3 rounded-lg border border-dashed border-slate-200 bg-slate-50/50 print:border-none print:bg-transparent print:p-0">
-                    <span className="print:hidden">(Belum ada substansi pembahasan yang diisi)</span>
-                    <span className="hidden print:inline text-black not-italic">-</span>
-                  </div>
-                ) : (
-                  discussionBlocks.map((b, idx) => renderBlock(b, idx))
-                )}
-              </div>
-            </div>
-
-            {/* 6. KESIMPULAN */}
-            <div className="text-[11pt] mb-5">
-              <div className="font-bold text-black mb-1">
-                Kesimpulan
-              </div>
-
-              <div>
-                {conclusionBlocks.length === 0 ? (
-                  <div className="text-slate-400 italic text-[10.5pt] py-2 px-3 rounded-lg border border-dashed border-slate-200 bg-slate-50/50 print:border-none print:bg-transparent print:p-0">
-                    <span className="print:hidden">(Belum ada kesimpulan yang diisi)</span>
-                    <span className="hidden print:inline text-black not-italic">-</span>
-                  </div>
-                ) : (
-                  conclusionBlocks.map((b, idx) => {
-                    const itemNum = b.type === 'ordered' && b.number ? b.number : idx + 1;
-                    const prefix = b.type === 'ordered' || b.type === 'paragraph' ? `${itemNum}. ` : undefined;
-                    return renderBlock(b, idx, prefix);
-                  })
-                )}
-              </div>
-            </div>
-
-            {/* 7. TINDAK LANJUT */}
-            <div className="text-[11pt] mb-8">
-              <div className="font-bold text-black mb-1">
-                Tindak Lanjut
-              </div>
-
-              <div>
-                {actionItems.length > 0 ? (
-                  actionItems.map((ai: any, idx: number) => {
-                    const desc = ai.description ? ` ${ai.description}` : '';
-                    return (
-                      <div key={ai.id || idx} className="text-justify leading-relaxed text-black mb-1.5">
-                        <span className="mr-1">{idx + 1}.</span>
-                        <span>{ai.title}{desc}</span>
-                      </div>
-                    );
-                  })
-                ) : decisionsBlocks.length > 0 ? (
-                  decisionsBlocks.map((b, idx) => {
-                    const itemNum = b.type === 'ordered' && b.number ? b.number : idx + 1;
-                    const prefix = b.type === 'ordered' || b.type === 'paragraph' ? `${itemNum}. ` : undefined;
-                    return renderBlock(b, idx, prefix);
-                  })
-                ) : (
-                  <div className="text-slate-400 italic text-[10.5pt] py-2 px-3 rounded-lg border border-dashed border-slate-200 bg-slate-50/50 print:border-none print:bg-transparent print:p-0">
-                    <span className="print:hidden">(Belum ada tindak lanjut yang diisi)</span>
-                    <span className="hidden print:inline text-black not-italic">-</span>
-                  </div>
-                )}
-              </div>
-            </div>
-
-            {/* 8. TANDA TANGAN (SIGNATURE BLOCK) */}
-            <div className="pt-4 flex justify-end text-[11pt]">
-              <div className="w-64 space-y-0.5 text-left text-black">
-                <p>Notulis,</p>
-                <p className="leading-tight whitespace-pre-line">
-                  {finalSignerRole.endsWith(',') ? finalSignerRole : `${finalSignerRole},`}
-                </p>
-
-                {/* Ruang tanda tangan: gambar jika ada, atau ruang kosong jika belum ada */}
-                {signatureImage ? (
-                  <div className="py-1">
+                  {/* Logo Dewan KEK di Kiri */}
+                  <div className="flex items-center justify-start">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img
-                      src={signatureImage}
-                      alt={`Tanda Tangan ${finalSignerName}`}
-                      className="max-h-20 max-w-[180px] object-contain drop-shadow-2xs"
+                      src="/lambang-kek.png"
+                      alt="Lambang Dewan Nasional KEK"
+                      className="w-[64px] h-[64px] sm:w-[68px] sm:h-[68px] object-contain drop-shadow-2xs"
+                      onError={(e) => {
+                        (e.target as HTMLImageElement).src = '/logo-kek.png';
+                      }}
                     />
                   </div>
-                ) : (
-                  <div className="h-20" />
-                )}
 
-                <p className="font-normal leading-tight">
-                  {finalSignerName}
-                </p>
+                  {/* Teks Kop Rata Tengah: Tahoma-Bold 12pt & Tahoma 8pt */}
+                  <div
+                    className="text-center px-1"
+                    style={{ fontFamily: 'Tahoma, Arial, sans-serif' }}
+                  >
+                    <div className="font-bold text-[11pt] sm:text-[12pt] text-black leading-tight tracking-normal whitespace-nowrap">
+                      DEWAN NASIONAL KAWASAN EKONOMI KHUSUS
+                    </div>
+                    <div className="font-bold text-[11pt] sm:text-[12pt] text-black leading-tight tracking-normal mt-0.5 whitespace-nowrap">
+                      SEKRETARIAT JENDERAL
+                    </div>
+                    <div className="text-[7.5pt] sm:text-[8pt] text-black mt-1 leading-snug">
+                      Gedung MNC Tower Lantai 3, Jl. Kebon Sirih No.17 – 19, Jakarta Pusat 10340
+                    </div>
+                    <div className="text-[7.5pt] sm:text-[8pt] text-black leading-snug">
+                      Telp: (021) 3912491, email:{' '}
+                      <span className="text-blue-700 underline">info@kek.go.id</span>
+                    </div>
+                  </div>
+
+                  {/* Penyeimbang Kolom Kanan agar Teks Pas di Tengah Kertas */}
+                  <div className="w-[72px]" aria-hidden="true" />
+                </div>
+
+                {/* Garis Pemisah Tunggal 1.5pt */}
+                <div className="w-full h-[1.5px] bg-black mt-2.5 mb-4"></div>
               </div>
+
+              {/* 2. JUDUL DOKUMEN: NOTULA & NOMOR */}
+              <div className="text-center pt-1 mb-5">
+                <div className="font-bold text-[11pt] tracking-widest text-black">
+                  NOTULA
+                </div>
+                <div className="text-[11pt] text-black mt-0.5">
+                  NOMOR: {meetingNumber}
+                </div>
+              </div>
+
+              {/* 3. IDENTITAS & METADATA RAPAT */}
+              <div className="space-y-1.5 text-[11pt] mb-5">
+                {/* Judul Rapat */}
+                <div className="grid grid-cols-[165px_16px_1fr] sm:grid-cols-[185px_20px_1fr] items-start">
+                  <span className="text-black">Judul Rapat</span>
+                  <span className="text-black">:</span>
+                  <span className="text-black leading-relaxed">{meetingTitle}</span>
+                </div>
+
+                {/* Hari/Tanggal */}
+                <div className="grid grid-cols-[165px_16px_1fr] sm:grid-cols-[185px_20px_1fr] items-start">
+                  <span className="text-black">Hari/Tanggal</span>
+                  <span className="text-black">:</span>
+                  <span className="text-black">{meetingDate}</span>
+                </div>
+
+                {/* Nomor Surat Undangan */}
+                <div className="grid grid-cols-[165px_16px_1fr] sm:grid-cols-[185px_20px_1fr] items-start">
+                  <span className="text-black whitespace-nowrap">Nomor Surat Undangan</span>
+                  <span className="text-black">:</span>
+                  <span className="text-black font-normal">{invitationNumberDisplay}</span>
+                </div>
+
+                {/* Pukul */}
+                <div className="grid grid-cols-[165px_16px_1fr] sm:grid-cols-[185px_20px_1fr] items-start">
+                  <span className="text-black">Pukul</span>
+                  <span className="text-black">:</span>
+                  <span className="text-black">{meetingTime}</span>
+                </div>
+
+                {/* Agenda */}
+                <div className="grid grid-cols-[165px_16px_1fr] sm:grid-cols-[185px_20px_1fr] items-start">
+                  <span className="text-black">Agenda</span>
+                  <span className="text-black">:</span>
+                  <div className="text-black space-y-0.5">
+                    {agendaLines.map((line, idx) => (
+                      <div key={idx} className="leading-relaxed">
+                        {line}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+
+              {/* 4. PELAKSANA RAPAT & PESERTA */}
+              <div className="text-[11pt] mb-5">
+                <div className="font-bold text-black mb-1.5">
+                  Pelaksana Rapat:
+                </div>
+
+                <div className="space-y-1.5">
+                  {/* Ketua/Pimpinan Rapat */}
+                  <div className="grid grid-cols-[165px_16px_1fr] sm:grid-cols-[185px_20px_1fr] items-start">
+                    <span className="text-black">Ketua/Pimpinan Rapat</span>
+                    <span className="text-black">:</span>
+                    <span className="text-black leading-relaxed">{chairpersonName}</span>
+                  </div>
+
+                  {/* Pencatat */}
+                  <div className="grid grid-cols-[165px_16px_1fr] sm:grid-cols-[185px_20px_1fr] items-start">
+                    <span className="text-black">Pencatat</span>
+                    <span className="text-black">:</span>
+                    <span className="text-black leading-relaxed">{secretaryMetaText}</span>
+                  </div>
+
+                  {/* Peserta Rapat */}
+                  <div className="grid grid-cols-[165px_16px_1fr] sm:grid-cols-[185px_20px_1fr] items-start">
+                    <span className="text-black">Peserta Rapat</span>
+                    <span className="text-black">:</span>
+                    <div className="text-black space-y-1">
+                      {participants.length === 0 ? (
+                        <div className="text-black">
+                          1 &nbsp;Belum terdapat data peserta yang tercatat.
+                        </div>
+                      ) : (
+                        participants.map((p: any, idx: number) => {
+                          const name = p.user?.name || p.name || (typeof p === 'string' ? p : 'Peserta');
+                          return (
+                            <div key={idx} className="flex gap-2 leading-snug">
+                              <span className="w-5 text-right shrink-0">{idx + 1}</span>
+                              <span>{name}</span>
+                            </div>
+                          );
+                        })
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* 5. SUBSTANSI INTI PEMBAHASAN RAPAT */}
+              <div className="text-[11pt] mb-5">
+                <div className="grid grid-cols-[165px_16px_1fr] sm:grid-cols-[185px_20px_1fr] items-start font-bold text-black mb-1">
+                  <div className="leading-tight">
+                    <div>Substansi Inti</div>
+                    <div>Pembahasan Rapat</div>
+                  </div>
+                  <div>:</div>
+                  <div></div>
+                </div>
+
+                <div className="pt-1">
+                  {discussionBlocks.length === 0 ? (
+                    <div className="text-slate-400 italic text-[10.5pt] py-2 px-3 rounded-lg border border-dashed border-slate-200 bg-slate-50/50 print:border-none print:bg-transparent print:p-0">
+                      <span className="print:hidden">(Belum ada substansi pembahasan yang diisi)</span>
+                      <span className="hidden print:inline text-black not-italic">-</span>
+                    </div>
+                  ) : (
+                    discussionBlocks.map((b, idx) => renderBlock(b, idx))
+                  )}
+                </div>
+              </div>
+
+              {/* 6. KESIMPULAN */}
+              <div className="text-[11pt] mb-5">
+                <div className="font-bold text-black mb-1">
+                  Kesimpulan
+                </div>
+
+                <div>
+                  {conclusionBlocks.length === 0 ? (
+                    <div className="text-slate-400 italic text-[10.5pt] py-2 px-3 rounded-lg border border-dashed border-slate-200 bg-slate-50/50 print:border-none print:bg-transparent print:p-0">
+                      <span className="print:hidden">(Belum ada kesimpulan yang diisi)</span>
+                      <span className="hidden print:inline text-black not-italic">-</span>
+                    </div>
+                  ) : (
+                    conclusionBlocks.map((b, idx) => {
+                      const itemNum = b.type === 'ordered' && b.number ? b.number : idx + 1;
+                      const prefix = b.type === 'ordered' || b.type === 'paragraph' ? `${itemNum}. ` : undefined;
+                      return renderBlock(b, idx, prefix);
+                    })
+                  )}
+                </div>
+              </div>
+
+              {/* 7. TINDAK LANJUT */}
+              <div className="text-[11pt] mb-8">
+                <div className="font-bold text-black mb-1">
+                  Tindak Lanjut
+                </div>
+
+                <div>
+                  {actionItems.length > 0 ? (
+                    actionItems.map((ai: any, idx: number) => {
+                      const desc = ai.description ? ` ${ai.description}` : '';
+                      return (
+                        <div key={ai.id || idx} className="text-justify leading-relaxed text-black mb-1.5">
+                          <span className="mr-1">{idx + 1}.</span>
+                          <span>{ai.title}{desc}</span>
+                        </div>
+                      );
+                    })
+                  ) : decisionsBlocks.length > 0 ? (
+                    decisionsBlocks.map((b, idx) => {
+                      const itemNum = b.type === 'ordered' && b.number ? b.number : idx + 1;
+                      const prefix = b.type === 'ordered' || b.type === 'paragraph' ? `${itemNum}. ` : undefined;
+                      return renderBlock(b, idx, prefix);
+                    })
+                  ) : (
+                    <div className="text-slate-400 italic text-[10.5pt] py-2 px-3 rounded-lg border border-dashed border-slate-200 bg-slate-50/50 print:border-none print:bg-transparent print:p-0">
+                      <span className="print:hidden">(Belum ada tindak lanjut yang diisi)</span>
+                      <span className="hidden print:inline text-black not-italic">-</span>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* 8. TANDA TANGAN (SIGNATURE BLOCK) */}
+              <div className="pt-4 flex justify-end text-[11pt]">
+                <div className="w-64 space-y-0.5 text-left text-black">
+                  <p>Notulis,</p>
+                  <p className="leading-tight whitespace-pre-line">
+                    {finalSignerRole.endsWith(',') ? finalSignerRole : `${finalSignerRole},`}
+                  </p>
+
+                  {/* Ruang tanda tangan: gambar jika ada, atau ruang kosong jika belum ada */}
+                  {signatureImage ? (
+                    <div className="py-1">
+                      <img
+                        src={signatureImage}
+                        alt={`Tanda Tangan ${finalSignerName}`}
+                        className="max-h-20 max-w-[180px] object-contain drop-shadow-2xs"
+                      />
+                    </div>
+                  ) : (
+                    <div className="h-20" />
+                  )}
+
+                  <p className="font-normal leading-tight">
+                    {finalSignerName}
+                  </p>
+                </div>
+              </div>
+
+              {/* Footer update stamp */}
+              {updatedAt && (
+                <div className="text-right text-[10px] text-slate-400 pt-6 mt-8 border-t border-slate-200 print:hidden">
+                  Pembaruan terakhir: {new Date(updatedAt).toLocaleString('id-ID', { dateStyle: 'long', timeStyle: 'short' })} WIB
+                </div>
+              )}
             </div>
-
-            {/* Footer update stamp */}
-            {updatedAt && (
-              <div className="text-right text-[10px] text-slate-400 pt-6 mt-8 border-t border-slate-200 print:hidden">
-                Pembaruan terakhir: {new Date(updatedAt).toLocaleString('id-ID', { dateStyle: 'long', timeStyle: 'short' })} WIB
-              </div>
-            )}
-          </div>
-        )}
-      </div>
-    )}
+          )}
+        </div>
+      )}
 
       {/* VIEW MODE 2: DOKUMEN PDF LANGSUNG (LIVE STREAM) */}
       {viewMode === 'raw_pdf' && (

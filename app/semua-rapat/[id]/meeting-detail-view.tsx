@@ -97,7 +97,7 @@ const MEETING_WORKFLOW: {
     {
       key: 'REVIEW',
       step: 2,
-      label: 'Reviu',
+      label: 'Review',
       sublabel: 'Penelaahan',
       description: 'Pemeriksaan substansi oleh biro terkait / tim perumus',
     },
@@ -470,10 +470,10 @@ export function MeetingDetailView({
       if (!confirmed) return;
     } else if (newStatus === 'REVIEW') {
       const confirmed = await confirmModal({
-        title: `Kirim Risalah ke Tahap Reviu?`,
+        title: `Kirim Risalah ke Tahap Review?`,
         message:
-          'Mengubah status menjadi "Reviu (Tahap 2)" menandakan draf risalah siap diedarkan ke tim perumus atau peserta rapat untuk penelaahan dan koreksi materi. Lanjutkan?',
-        confirmText: 'Ya, Kirim ke Reviu',
+          'Mengubah status menjadi "Review (Tahap 2)" menandakan draf risalah siap diedarkan ke tim perumus atau peserta rapat untuk penelaahan dan koreksi materi. Lanjutkan?',
+        confirmText: 'Ya, Kirim ke Review',
         variant: 'primary',
       });
       if (!confirmed) return;
@@ -864,10 +864,10 @@ export function MeetingDetailView({
                 <>
                   <div
                     className={`w-6 h-6 rounded-full flex items-center justify-center text-[11px] font-extrabold shrink-0 ${isCurrent
-                        ? 'bg-white text-[#31889C]'
-                        : isPassed
-                          ? 'bg-[#7CC563] text-white'
-                          : 'bg-slate-200 text-slate-600'
+                      ? 'bg-white text-[#31889C]'
+                      : isPassed
+                        ? 'bg-[#7CC563] text-white'
+                        : 'bg-slate-200 text-slate-600'
                       }`}
                   >
                     {isPassed ? <Check className="w-3.5 h-3.5 stroke-[3]" /> : wf.step}
@@ -888,10 +888,10 @@ export function MeetingDetailView({
                   <div
                     key={wf.key}
                     className={`flex items-center gap-2.5 p-2.5 rounded-xl border text-left select-none ${isCurrent
-                        ? 'bg-[#31889C] text-white border-[#215865] shadow-xs'
-                        : isPassed
-                          ? 'bg-[#ECF8E9] text-[#215865] border-[#D2EFCA]'
-                          : 'bg-white text-slate-600 border-slate-200 opacity-80'
+                      ? 'bg-[#31889C] text-white border-[#215865] shadow-xs'
+                      : isPassed
+                        ? 'bg-[#ECF8E9] text-[#215865] border-[#D2EFCA]'
+                        : 'bg-white text-slate-600 border-slate-200 opacity-80'
                       }`}
                     title={`${wf.label} (${wf.sublabel}): ${wf.description}`}
                   >
@@ -907,10 +907,10 @@ export function MeetingDetailView({
                   disabled={isCurrent || isUpdatingStatus}
                   onClick={() => handleStatusChange(wf.key)}
                   className={`flex items-center gap-2.5 p-2.5 rounded-xl border text-left transition-all ${isCurrent
-                      ? 'bg-[#31889C] text-white border-[#215865] shadow-xs ring-2 ring-[#31889C]/30 cursor-default'
-                      : isPassed
-                        ? 'bg-[#ECF8E9] text-[#215865] border-[#D2EFCA] hover:bg-[#D2EFCA]/50 cursor-pointer hover:border-[#31889C]'
-                        : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50 cursor-pointer hover:border-[#31889C]'
+                    ? 'bg-[#31889C] text-white border-[#215865] shadow-xs ring-2 ring-[#31889C]/30 cursor-default'
+                    : isPassed
+                      ? 'bg-[#ECF8E9] text-[#215865] border-[#D2EFCA] hover:bg-[#D2EFCA]/50 cursor-pointer hover:border-[#31889C]'
+                      : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50 cursor-pointer hover:border-[#31889C]'
                     }`}
                   title={`${wf.label} (${wf.sublabel}): ${wf.description} — Klik untuk ubah ke tahap ini`}
                 >
@@ -1193,8 +1193,8 @@ export function MeetingDetailView({
           type="button"
           onClick={() => handleTabChange('overview')}
           className={`flex items-center gap-2 px-5 py-3 font-bold text-[13px] border-b-2 transition-all cursor-pointer whitespace-nowrap ${activeTab === 'overview'
-              ? 'border-[#31889C] text-[#31889C] bg-[#F0F9FA] rounded-t-lg'
-              : 'border-transparent text-slate-600 hover:text-[#31889C] hover:bg-[#F0F9FA]/50'
+            ? 'border-[#31889C] text-[#31889C] bg-[#F0F9FA] rounded-t-lg'
+            : 'border-transparent text-slate-600 hover:text-[#31889C] hover:bg-[#F0F9FA]/50'
             }`}
         >
           <Layers className="w-4 h-4" />
@@ -1205,8 +1205,8 @@ export function MeetingDetailView({
           type="button"
           onClick={() => handleTabChange('participants')}
           className={`flex items-center gap-2 px-5 py-3 font-bold text-[13px] border-b-2 transition-all cursor-pointer whitespace-nowrap ${activeTab === 'participants'
-              ? 'border-[#31889C] text-[#31889C] bg-[#F0F9FA] rounded-t-lg'
-              : 'border-transparent text-slate-600 hover:text-[#31889C] hover:bg-[#F0F9FA]/50'
+            ? 'border-[#31889C] text-[#31889C] bg-[#F0F9FA] rounded-t-lg'
+            : 'border-transparent text-slate-600 hover:text-[#31889C] hover:bg-[#F0F9FA]/50'
             }`}
         >
           <Users className="w-4 h-4" />
@@ -1217,8 +1217,8 @@ export function MeetingDetailView({
           type="button"
           onClick={() => handleTabChange('minutes')}
           className={`flex items-center gap-2 px-5 py-3 font-bold text-[13px] border-b-2 transition-all cursor-pointer whitespace-nowrap ${activeTab === 'minutes'
-              ? 'border-[#31889C] text-[#31889C] bg-[#F0F9FA] rounded-t-lg'
-              : 'border-transparent text-slate-600 hover:text-[#31889C] hover:bg-[#F0F9FA]/50'
+            ? 'border-[#31889C] text-[#31889C] bg-[#F0F9FA] rounded-t-lg'
+            : 'border-transparent text-slate-600 hover:text-[#31889C] hover:bg-[#F0F9FA]/50'
             }`}
         >
           <FileText className="w-4 h-4" />
@@ -1234,8 +1234,8 @@ export function MeetingDetailView({
           type="button"
           onClick={() => handleTabChange('actionItems')}
           className={`flex items-center gap-2 px-5 py-3 font-bold text-[13px] border-b-2 transition-all cursor-pointer whitespace-nowrap ${activeTab === 'actionItems'
-              ? 'border-[#31889C] text-[#31889C] bg-[#F0F9FA] rounded-t-lg'
-              : 'border-transparent text-slate-600 hover:text-[#31889C] hover:bg-[#F0F9FA]/50'
+            ? 'border-[#31889C] text-[#31889C] bg-[#F0F9FA] rounded-t-lg'
+            : 'border-transparent text-slate-600 hover:text-[#31889C] hover:bg-[#F0F9FA]/50'
             }`}
         >
           <CheckSquare className="w-4 h-4" />
@@ -1632,8 +1632,8 @@ export function MeetingDetailView({
                                       handleUpdateAttendance(p.id, opt.value, p.user?.name || 'Peserta')
                                     }
                                     className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-md text-[11px] font-bold transition-all cursor-pointer ${isActive
-                                        ? opt.activeClass
-                                        : 'text-slate-600 hover:text-slate-900 hover:bg-white/80'
+                                      ? opt.activeClass
+                                      : 'text-slate-600 hover:text-slate-900 hover:bg-white/80'
                                       } ${isUpdating ? 'opacity-50 cursor-wait' : ''}`}
                                     title={opt.desc}
                                   >
@@ -1698,8 +1698,8 @@ export function MeetingDetailView({
                 type="button"
                 onClick={() => handleMinutesSubTabChange('document')}
                 className={`flex items-center gap-2 px-3.5 py-1.5 rounded-md transition-all cursor-pointer ${minutesSubTab === 'document'
-                    ? 'bg-white text-[#31889C] font-bold shadow-xs border border-slate-200/60'
-                    : 'text-slate-600 hover:text-slate-900 hover:bg-white/50'
+                  ? 'bg-white text-[#31889C] font-bold shadow-xs border border-slate-200/60'
+                  : 'text-slate-600 hover:text-slate-900 hover:bg-white/50'
                   }`}
               >
                 <FileText className="w-4 h-4" />
@@ -1710,8 +1710,8 @@ export function MeetingDetailView({
                 type="button"
                 onClick={() => handleMinutesSubTabChange('comments')}
                 className={`flex items-center gap-2 px-3.5 py-1.5 rounded-md transition-all cursor-pointer ${minutesSubTab === 'comments'
-                    ? 'bg-white text-[#31889C] font-bold shadow-xs border border-slate-200/60'
-                    : 'text-slate-600 hover:text-slate-900 hover:bg-white/50'
+                  ? 'bg-white text-[#31889C] font-bold shadow-xs border border-slate-200/60'
+                  : 'text-slate-600 hover:text-slate-900 hover:bg-white/50'
                   }`}
               >
                 <MessageCircle className="w-4 h-4" />
@@ -1722,8 +1722,8 @@ export function MeetingDetailView({
                 type="button"
                 onClick={() => handleMinutesSubTabChange('history')}
                 className={`flex items-center gap-2 px-3.5 py-1.5 rounded-md transition-all cursor-pointer ${minutesSubTab === 'history'
-                    ? 'bg-white text-[#31889C] font-bold shadow-xs border border-slate-200/60'
-                    : 'text-slate-600 hover:text-slate-900 hover:bg-white/50'
+                  ? 'bg-white text-[#31889C] font-bold shadow-xs border border-slate-200/60'
+                  : 'text-slate-600 hover:text-slate-900 hover:bg-white/50'
                   }`}
               >
                 <History className="w-4 h-4" />
@@ -1800,8 +1800,8 @@ export function MeetingDetailView({
                 type="button"
                 onClick={() => setParticipantMode('registered')}
                 className={`py-2 px-3 rounded-lg transition-all cursor-pointer ${participantMode === 'registered'
-                    ? 'bg-white text-[#31889C] shadow-xs border border-slate-200/80'
-                    : 'text-slate-600 hover:text-slate-900'
+                  ? 'bg-white text-[#31889C] shadow-xs border border-slate-200/80'
+                  : 'text-slate-600 hover:text-slate-900'
                   }`}
               >
                 Pegawai Terdaftar
@@ -1810,8 +1810,8 @@ export function MeetingDetailView({
                 type="button"
                 onClick={() => setParticipantMode('unregistered')}
                 className={`py-2 px-3 rounded-lg transition-all cursor-pointer ${participantMode === 'unregistered'
-                    ? 'bg-white text-[#31889C] shadow-xs border border-slate-200/80'
-                    : 'text-slate-600 hover:text-slate-900'
+                  ? 'bg-white text-[#31889C] shadow-xs border border-slate-200/80'
+                  : 'text-slate-600 hover:text-slate-900'
                   }`}
               >
                 Pejabat Baru / Eksternal
@@ -1920,8 +1920,8 @@ export function MeetingDetailView({
                         type="button"
                         onClick={() => setNewParticipantStatus(opt.value)}
                         className={`flex items-center gap-2 p-2.5 rounded-xl border text-left transition-all cursor-pointer ${isSelected
-                            ? 'bg-[#F0F9FA] border-[#31889C] text-[#31889C] font-bold shadow-xs'
-                            : 'bg-white border-slate-200 text-slate-700 hover:bg-slate-50'
+                          ? 'bg-[#F0F9FA] border-[#31889C] text-[#31889C] font-bold shadow-xs'
+                          : 'bg-white border-slate-200 text-slate-700 hover:bg-slate-50'
                           }`}
                       >
                         <Icon className="w-3.5 h-3.5 text-[#31889C] shrink-0" />

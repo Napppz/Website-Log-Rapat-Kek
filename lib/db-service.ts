@@ -257,10 +257,10 @@ export async function getActionItemsFromDb(filters?: {
           latestLog?.progress !== undefined && latestLog?.progress !== null
             ? Number(latestLog.progress)
             : item.status === 'COMPLETED'
-            ? 100
-            : item.status === 'IN_PROGRESS'
-            ? 50
-            : 0;
+              ? 100
+              : item.status === 'IN_PROGRESS'
+                ? 50
+                : 0;
 
         return {
           ...item,
@@ -336,18 +336,18 @@ export async function getMeetingsFromDb(filters?: {
           totalItems > 0
             ? completedItems
             : m.status === 'FINAL'
-            ? 4
-            : m.status === 'APPROVED'
-            ? 3
-            : 1;
+              ? 4
+              : m.status === 'APPROVED'
+                ? 3
+                : 1;
         const fallbackInProgress =
           totalItems > 0
             ? inProgressItems
             : m.status === 'APPROVED'
-            ? 1
-            : m.status === 'REVIEW'
-            ? 2
-            : 1;
+              ? 1
+              : m.status === 'REVIEW'
+                ? 2
+                : 1;
 
         return {
           id: m.id,
@@ -374,14 +374,13 @@ export async function getMeetingsFromDb(filters?: {
               totalItems > 0
                 ? `${completedItems}/${totalItems} Tindak Lanjut Selesai`
                 : involvedBiroNames.length > 0
-                ? `Biro Terlibat: ${involvedBiroNames}`
-                : `Biro Utama: ${m.primaryBiro.code}`,
+                  ? `Biro Terlibat: ${involvedBiroNames}`
+                  : `Biro Utama: ${m.primaryBiro.code}`,
             isCompletePercentage: totalItems > 0 ? completedItems === totalItems : m.status === 'FINAL',
           },
           attendees,
-          agendaSummary: `Diselenggarakan oleh ${m.primaryBiro.name}. ${
-            involvedBiroNames ? `Biro terlibat: ${involvedBiroNames}.` : ''
-          }`,
+          agendaSummary: `Diselenggarakan oleh ${m.primaryBiro.name}. ${involvedBiroNames ? `Biro terlibat: ${involvedBiroNames}.` : ''
+            }`,
           invitationDocUrl: m.invitationDocUrl || null,
           invitationDocName: m.invitationDocName || null,
           invitationDocSize: m.invitationDocSize || null,
@@ -398,288 +397,305 @@ export async function getDashboardStats() {
   try {
     return await withDbRetry(async () => {
       const [totalMeetings, totalUsers, totalBiros, approvedMeetings, reviewMeetings, draftMeetings] =
-      await Promise.all([
-        prisma.meeting.count(),
-        prisma.user.count(),
-        prisma.biro.count(),
-        prisma.meeting.count({ where: { status: 'APPROVED' } }),
-        prisma.meeting.count({ where: { status: 'REVIEW' } }),
-        prisma.meeting.count({ where: { status: 'DRAFT' } }),
+        await Promise.all([
+          prisma.meeting.count(),
+          prisma.user.count(),
+          prisma.biro.count(),
+          prisma.meeting.count({ where: { status: 'APPROVED' } }),
+          prisma.meeting.count({ where: { status: 'REVIEW' } }),
+          prisma.meeting.count({ where: { status: 'DRAFT' } }),
+        ]);
+
+      // Workload per Biro
+      const biros = await prisma.biro.findMany({
+        where: { isActive: true },
+        include: {
+          _count: {
+            select: { primaryMeetings: true },
+          },
+        },
+        orderBy: { code: 'asc' },
+      });
+
+      const colors: Record<string, string> = {
+        BPPK: 'bg-[#31889C]',
+        PKKEK: 'bg-[#7CC563]',
+        IKK: 'bg-[#F99D1C]',
+        HSDMO: 'bg-[#266F80]',
+        UK: 'bg-[#3D9BAE]',
+      };
+
+      const bureauWorkload: BureauWorkload[] = biros.map((b) => {
+        const count = b._count.primaryMeetings;
+        const percentage = totalMeetings > 0 ? Math.round((count / totalMeetings) * 100) : 0;
+        return {
+          code: b.code as BiroCode,
+          name: b.shortName,
+          count,
+          percentage,
+          barColor: colors[b.code] || 'bg-[#31889C]',
+        };
+      });
+
+      const finalMeetings = await prisma.meeting.count({ where: { status: 'FINAL' } });
+      const now = new Date();
+      const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+      const thisMonthMeetings = await prisma.meeting.count({
+        where: {
+          date: {
+            gte: startOfMonth,
+          },
+        },
+      });
+
+      // Action Items Real Stats
+      const [
+        totalActionItems,
+        completedActionItems,
+        inProgressActionItems,
+        pendingActionItems,
+        allActionItems,
+      ] = await Promise.all([
+        prisma.actionItem.count(),
+        prisma.actionItem.count({ where: { status: 'COMPLETED' } }),
+        prisma.actionItem.count({ where: { status: 'IN_PROGRESS' } }),
+        prisma.actionItem.count({ where: { status: 'PENDING' } }),
+        prisma.actionItem.findMany({ select: { status: true, dueDate: true } }),
       ]);
 
-    // Workload per Biro
-    const biros = await prisma.biro.findMany({
-      where: { isActive: true },
-      include: {
-        _count: {
-          select: { primaryMeetings: true },
-        },
-      },
-      orderBy: { code: 'asc' },
-    });
+      const overdueCount = allActionItems.filter(
+        (a) => a.status !== 'COMPLETED' && new Date(a.dueDate).getTime() < Date.now()
+      ).length;
 
-    const colors: Record<string, string> = {
-      BPPK: 'bg-[#31889C]',
-      PKKEK: 'bg-[#7CC563]',
-      IKK: 'bg-[#F99D1C]',
-      HSDMO: 'bg-[#266F80]',
-      UK: 'bg-[#3D9BAE]',
-    };
-
-    const bureauWorkload: BureauWorkload[] = biros.map((b) => {
-      const count = b._count.primaryMeetings;
-      const percentage = totalMeetings > 0 ? Math.round((count / totalMeetings) * 100) : 0;
-      return {
-        code: b.code as BiroCode,
-        name: b.shortName,
-        count,
-        percentage,
-        barColor: colors[b.code] || 'bg-[#31889C]',
-      };
-    });
-
-    const finalMeetings = await prisma.meeting.count({ where: { status: 'FINAL' } });
-    const now = new Date();
-    const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
-    const thisMonthMeetings = await prisma.meeting.count({
-      where: {
-        date: {
-          gte: startOfMonth,
-        },
-      },
-    });
-
-    // Action Items Real Stats
-    const [
-      totalActionItems,
-      completedActionItems,
-      inProgressActionItems,
-      pendingActionItems,
-      allActionItems,
-    ] = await Promise.all([
-      prisma.actionItem.count(),
-      prisma.actionItem.count({ where: { status: 'COMPLETED' } }),
-      prisma.actionItem.count({ where: { status: 'IN_PROGRESS' } }),
-      prisma.actionItem.count({ where: { status: 'PENDING' } }),
-      prisma.actionItem.findMany({ select: { status: true, dueDate: true } }),
-    ]);
-
-    const overdueCount = allActionItems.filter(
-      (a) => a.status !== 'COMPLETED' && new Date(a.dueDate).getTime() < Date.now()
-    ).length;
-
-    // Follow-up status metric for Donut Chart
-    let followUpMetrics = [
-      {
-        label: 'Selesai',
-        percentage: 45,
-        count: 64,
-        color: '#7CC563',
-        dasharray: '107.4 238.7',
-        dashoffset: '0',
-      },
-      {
-        label: 'Sedang Berjalan',
-        percentage: 35,
-        count: 50,
-        color: '#31889C',
-        dasharray: '83.5 238.7',
-        dashoffset: '-107.4',
-      },
-      {
-        label: 'Belum Dimulai',
-        percentage: 15,
-        count: 21,
-        color: '#FFD300',
-        borderColor: '#FFD300',
-        dasharray: '35.8 238.7',
-        dashoffset: '-190.9',
-      },
-      {
-        label: 'Terlambat',
-        percentage: 5,
-        count: 7,
-        color: '#DC2626',
-        dasharray: '12 238.7',
-        dashoffset: '-226.7',
-      },
-    ];
-
-    if (totalActionItems > 0) {
-      const circ = 238.76;
-      const pCompleted = Math.round((completedActionItems / totalActionItems) * 100);
-      const pInProgress = Math.round((inProgressActionItems / totalActionItems) * 100);
-      const pOverdue = Math.round((overdueCount / totalActionItems) * 100);
-      const pPending = Math.max(0, 100 - pCompleted - pInProgress - pOverdue);
-
-      const lenComp = (pCompleted / 100) * circ;
-      const lenInProg = (pInProgress / 100) * circ;
-      const lenPend = (pPending / 100) * circ;
-      const lenOver = (pOverdue / 100) * circ;
-
-      followUpMetrics = [
+      // Follow-up status metric for Donut Chart
+      let followUpMetrics = [
         {
           label: 'Selesai',
-          percentage: pCompleted,
-          count: completedActionItems,
+          percentage: 45,
+          count: 64,
           color: '#7CC563',
-          dasharray: `${lenComp.toFixed(1)} ${circ}`,
+          dasharray: '107.4 238.7',
           dashoffset: '0',
         },
         {
           label: 'Sedang Berjalan',
-          percentage: pInProgress,
-          count: inProgressActionItems,
+          percentage: 35,
+          count: 50,
           color: '#31889C',
-          dasharray: `${lenInProg.toFixed(1)} ${circ}`,
-          dashoffset: `-${lenComp.toFixed(1)}`,
+          dasharray: '83.5 238.7',
+          dashoffset: '-107.4',
         },
         {
           label: 'Belum Dimulai',
-          percentage: pPending,
-          count: pendingActionItems,
+          percentage: 15,
+          count: 21,
           color: '#FFD300',
           borderColor: '#FFD300',
-          dasharray: `${lenPend.toFixed(1)} ${circ}`,
-          dashoffset: `-${(lenComp + lenInProg).toFixed(1)}`,
+          dasharray: '35.8 238.7',
+          dashoffset: '-190.9',
         },
         {
           label: 'Terlambat',
-          percentage: pOverdue,
-          count: overdueCount,
+          percentage: 5,
+          count: 7,
           color: '#DC2626',
-          dasharray: `${lenOver.toFixed(1)} ${circ}`,
-          dashoffset: `-${(lenComp + lenInProg + lenPend).toFixed(1)}`,
+          dasharray: '12 238.7',
+          dashoffset: '-226.7',
         },
       ];
-    }
 
-    const metrics: DashboardMetric[] = [
-      {
-        id: 'total-rapat',
-        label: 'Total Rapat (YTD)',
-        value: totalMeetings,
-        unit: 'Rapat',
-        changeValue: '+100%',
-        changeLabel: 'Tersinkronisasi Neon DB',
-        variant: 'default',
-        iconName: 'event_note',
-      },
-      {
-        id: 'rapat-bulan-ini',
-        label: 'Rapat Bulan Ini',
-        value: thisMonthMeetings,
-        unit: 'Agenda',
-        badgeText: `${approvedMeetings} Disetujui`,
-        badgeSubtext: 'Bulan Ini',
-        variant: 'default',
-        iconName: 'calendar_month',
-      },
-      {
-        id: 'tindak-lanjut-aktif',
-        label: 'Tindak Lanjut Aktif',
-        value: totalActionItems > 0 ? inProgressActionItems + pendingActionItems : reviewMeetings,
-        unit: 'Item',
-        badgeText: `${inProgressActionItems} Sedang Jalan`,
-        badgeSubtext: `${pendingActionItems} Menunggu`,
-        variant: 'default',
-        iconName: 'pending_actions',
-      },
-      {
-        id: 'perlu-atensi',
-        label: 'Perlu Atensi (Overdue / Draft)',
-        value: totalActionItems > 0 ? overdueCount : draftMeetings,
-        unit: 'Item',
-        badgeText: overdueCount > 0 ? `${overdueCount} Terlambat` : `${draftMeetings} Draft`,
-        badgeSubtext: 'Biro Terkait',
-        variant: overdueCount > 0 || draftMeetings > 0 ? 'danger' : 'default',
-        iconName: 'warning',
-      },
-      {
-        id: 'tindak-lanjut-selesai',
-        label: 'Tindak Lanjut Selesai',
-        value: totalActionItems > 0 ? completedActionItems : approvedMeetings + finalMeetings,
-        unit: 'Selesai',
-        badgeText: `${totalActionItems > 0 ? Math.round((completedActionItems / totalActionItems) * 100) : totalMeetings > 0 ? Math.round(((approvedMeetings + finalMeetings) / totalMeetings) * 100) : 0}%`,
-        badgeSubtext: 'Tingkat Penyelesaian',
-        variant: 'success',
-        iconName: 'task_alt',
-      },
-    ];
+      if (totalActionItems > 0) {
+        const circ = 238.76;
+        const pCompleted = Math.round((completedActionItems / totalActionItems) * 100);
+        const pInProgress = Math.round((inProgressActionItems / totalActionItems) * 100);
+        const pOverdue = Math.round((overdueCount / totalActionItems) * 100);
+        const pPending = Math.max(0, 100 - pCompleted - pInProgress - pOverdue);
 
-    // -------------------------------------------------------------------------
-    // Real Monthly Activity Trend directly from Database
-    // -------------------------------------------------------------------------
-    const monthLabels = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
+        const lenComp = (pCompleted / 100) * circ;
+        const lenInProg = (pInProgress / 100) * circ;
+        const lenPend = (pPending / 100) * circ;
+        const lenOver = (pOverdue / 100) * circ;
 
-    const allDbMeetingsForTrend = await prisma.meeting.findMany({
-      select: { date: true },
-      orderBy: { date: 'asc' },
-    });
-
-    const monthCountMap: Record<number, number> = {};
-    for (let i = 0; i < 12; i++) {
-      monthCountMap[i] = 0;
-    }
-
-    allDbMeetingsForTrend.forEach((m) => {
-      const d = new Date(m.date);
-      const mIdx = d.getMonth();
-      if (mIdx >= 0 && mIdx < 12) {
-        monthCountMap[mIdx]++;
+        followUpMetrics = [
+          {
+            label: 'Selesai',
+            percentage: pCompleted,
+            count: completedActionItems,
+            color: '#7CC563',
+            dasharray: `${lenComp.toFixed(1)} ${circ}`,
+            dashoffset: '0',
+          },
+          {
+            label: 'Sedang Berjalan',
+            percentage: pInProgress,
+            count: inProgressActionItems,
+            color: '#31889C',
+            dasharray: `${lenInProg.toFixed(1)} ${circ}`,
+            dashoffset: `-${lenComp.toFixed(1)}`,
+          },
+          {
+            label: 'Belum Dimulai',
+            percentage: pPending,
+            count: pendingActionItems,
+            color: '#FFD300',
+            borderColor: '#FFD300',
+            dasharray: `${lenPend.toFixed(1)} ${circ}`,
+            dashoffset: `-${(lenComp + lenInProg).toFixed(1)}`,
+          },
+          {
+            label: 'Terlambat',
+            percentage: pOverdue,
+            count: overdueCount,
+            color: '#DC2626',
+            dasharray: `${lenOver.toFixed(1)} ${circ}`,
+            dashoffset: `-${(lenComp + lenInProg + lenPend).toFixed(1)}`,
+          },
+        ];
       }
-    });
 
-    // Tampilkan hingga bulan aktif terakhir yang memiliki rapat (minimal Sep)
-    const currentMonthIdx = now.getMonth();
-    let maxMonthIdx = Math.max(currentMonthIdx, 8);
-    for (let i = 0; i < 12; i++) {
-      if (monthCountMap[i] > 0 && i > maxMonthIdx) {
-        maxMonthIdx = i;
-      }
-    }
+      const metrics: DashboardMetric[] = [
+        {
+          id: 'total-rapat',
+          label: 'Total Rapat (YTD)',
+          value: totalMeetings,
+          unit: 'Rapat',
+          changeValue: '+100%',
+          changeLabel: 'Tersinkronisasi Neon DB',
+          variant: 'default',
+          iconName: 'event_note',
+        },
+        {
+          id: 'rapat-bulan-ini',
+          label: 'Rapat Bulan Ini',
+          value: thisMonthMeetings,
+          unit: 'Agenda',
+          badgeText: `${approvedMeetings} Disetujui`,
+          badgeSubtext: 'Bulan Ini',
+          variant: 'default',
+          iconName: 'calendar_month',
+        },
+        {
+          id: 'tindak-lanjut-aktif',
+          label: 'Tindak Lanjut Aktif',
+          value: totalActionItems > 0 ? inProgressActionItems + pendingActionItems : reviewMeetings,
+          unit: 'Item',
+          badgeText: `${inProgressActionItems} Sedang Jalan`,
+          badgeSubtext: `${pendingActionItems} Menunggu`,
+          variant: 'default',
+          iconName: 'pending_actions',
+        },
+        {
+          id: 'perlu-atensi',
+          label: 'Perlu Atensi (Overdue / Draft)',
+          value: totalActionItems > 0 ? overdueCount : draftMeetings,
+          unit: 'Item',
+          badgeText: overdueCount > 0 ? `${overdueCount} Terlambat` : `${draftMeetings} Draft`,
+          badgeSubtext: 'Biro Terkait',
+          variant: overdueCount > 0 || draftMeetings > 0 ? 'danger' : 'default',
+          iconName: 'warning',
+        },
+        {
+          id: 'tindak-lanjut-selesai',
+          label: 'Tindak Lanjut Selesai',
+          value: totalActionItems > 0 ? completedActionItems : approvedMeetings + finalMeetings,
+          unit: 'Selesai',
+          badgeText: `${totalActionItems > 0 ? Math.round((completedActionItems / totalActionItems) * 100) : totalMeetings > 0 ? Math.round(((approvedMeetings + finalMeetings) / totalMeetings) * 100) : 0}%`,
+          badgeSubtext: 'Tingkat Penyelesaian',
+          variant: 'success',
+          iconName: 'task_alt',
+        },
+      ];
 
-    // Cari bulan dengan frekuensi tertinggi sebagai titik puncak (isPeak)
-    let peakCount = 0;
-    for (let i = 0; i <= maxMonthIdx; i++) {
-      if (monthCountMap[i] > peakCount) {
-        peakCount = monthCountMap[i];
-      }
-    }
+      // -------------------------------------------------------------------------
+      // Real Monthly Activity Trend directly from Database
+      // -------------------------------------------------------------------------
+      const monthLabels = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
 
-    const monthlyActivity: MonthlyActivity[] = [];
-    for (let i = 0; i <= maxMonthIdx; i++) {
-      const count = monthCountMap[i];
-      monthlyActivity.push({
-        month: monthLabels[i],
-        count: count,
-        isPeak: peakCount > 0 && count === peakCount,
+      const allDbMeetingsForTrend = await prisma.meeting.findMany({
+        select: { date: true },
+        orderBy: { date: 'asc' },
       });
-    }
 
-    return {
-      totalMeetings,
-      totalUsers,
-      totalBiros,
-      approvedMeetings,
-      reviewMeetings,
-      draftMeetings,
-      finalMeetings,
-      bureauWorkload,
-      metrics,
-      monthlyActivity,
-      actionItemStats: {
-        total: totalActionItems,
-        completed: completedActionItems,
-        inProgress: inProgressActionItems,
-        pending: pendingActionItems,
-        overdue: overdueCount,
-      },
-      followUpMetrics,
-    };
+      const monthCountMap: Record<number, number> = {};
+      for (let i = 0; i < 12; i++) {
+        monthCountMap[i] = 0;
+      }
+
+      allDbMeetingsForTrend.forEach((m) => {
+        const d = new Date(m.date);
+        const mIdx = d.getMonth();
+        if (mIdx >= 0 && mIdx < 12) {
+          monthCountMap[mIdx]++;
+        }
+      });
+
+      // Tampilkan hingga bulan aktif terakhir yang memiliki rapat (minimal Sep)
+      const currentMonthIdx = now.getMonth();
+      let maxMonthIdx = Math.max(currentMonthIdx, 8);
+      for (let i = 0; i < 12; i++) {
+        if (monthCountMap[i] > 0 && i > maxMonthIdx) {
+          maxMonthIdx = i;
+        }
+      }
+
+      // Cari bulan dengan frekuensi tertinggi sebagai titik puncak (isPeak)
+      let peakCount = 0;
+      for (let i = 0; i <= maxMonthIdx; i++) {
+        if (monthCountMap[i] > peakCount) {
+          peakCount = monthCountMap[i];
+        }
+      }
+
+      const monthlyActivity: MonthlyActivity[] = [];
+      for (let i = 0; i <= maxMonthIdx; i++) {
+        const count = monthCountMap[i];
+        monthlyActivity.push({
+          month: monthLabels[i],
+          count: count,
+          isPeak: peakCount > 0 && count === peakCount,
+        });
+      }
+
+      return {
+        totalMeetings,
+        totalUsers,
+        totalBiros,
+        approvedMeetings,
+        reviewMeetings,
+        draftMeetings,
+        finalMeetings,
+        bureauWorkload,
+        metrics,
+        monthlyActivity,
+        actionItemStats: {
+          total: totalActionItems,
+          completed: completedActionItems,
+          inProgress: inProgressActionItems,
+          pending: pendingActionItems,
+          overdue: overdueCount,
+        },
+        followUpMetrics,
+      };
     });
   } catch (error) {
     console.error('Error calculating dashboard stats from Neon DB:', error);
     return null;
   }
+}
+metrics,
+  monthlyActivity,
+  actionItemStats: {
+  total: totalActionItems,
+    completed: completedActionItems,
+      inProgress: inProgressActionItems,
+        pending: pendingActionItems,
+          overdue: overdueCount,
+      },
+followUpMetrics,
+    };
+    });
+  } catch (error) {
+  console.error('Error calculating dashboard stats from Neon DB:', error);
+  return null;
+}
 }

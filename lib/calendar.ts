@@ -204,7 +204,7 @@ export function generateGoogleCalendarUrl(event: CalendarEventData): string {
   // Auto-inject Zoom meeting link into Google Calendar invitation description
   if (activeZoom) {
     descriptionParts.push(`\n----------------------------------------------------`);
-    descriptionParts.push(`🎥 TAUTAN RAPAT VIRTUAL (ZOOM):`);
+    descriptionParts.push(`TAUTAN RAPAT VIRTUAL (ZOOM):`);
     descriptionParts.push(` ${activeZoom}`);
     if (activeMeetingId) {
       descriptionParts.push(`Meeting ID: ${activeMeetingId}`);

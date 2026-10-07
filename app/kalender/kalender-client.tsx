@@ -46,7 +46,7 @@ const DAY_NAMES = ['Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab', 'Min'];
 
 const STATUS_CONFIG: Record<string, { label: string; badge: string; step: number }> = {
   DRAFT: { label: '1. Draf', badge: 'bg-[#F1F5F9] text-[#475569] border-[#CBD5E1]', step: 1 },
-  REVIEW: { label: '2. Reviu', badge: 'bg-[#FEF9C3] text-[#854D0E] border-[#FDE047]', step: 2 },
+  REVIEW: { label: '2. Review', badge: 'bg-[#FEF9C3] text-[#854D0E] border-[#FDE047]', step: 2 },
   APPROVED: { label: '3. Disetujui', badge: 'bg-[#E0F2FE] text-[#0369A1] border-[#BAE6FD]', step: 3 },
   FINAL: { label: '4. Final', badge: 'bg-[#DCFCE7] text-[#15803D] border-[#86EFAC]', step: 4 },
 };
@@ -337,7 +337,7 @@ export function KalenderClient({ initialMeetings, biros }: KalenderClientProps) 
           >
             <option value="ALL">Semua Tahap</option>
             <option value="DRAFT">1. Draf (Penyusunan)</option>
-            <option value="REVIEW">2. Reviu (Penelaahan)</option>
+            <option value="REVIEW">2. Review (Penelaahan)</option>
             <option value="APPROVED">3. Disetujui (Pimpinan)</option>
             <option value="FINAL">4. Final (Sah &amp; Terbit)</option>
           </select>
@@ -413,10 +413,10 @@ export function KalenderClient({ initialMeetings, biros }: KalenderClientProps) 
                       !cell.isCurrentMonth
                         ? 'bg-slate-50/50 border-slate-100 text-slate-300 opacity-60'
                         : isSelected
-                        ? 'border-[#31889C] bg-[#F0F9FA] ring-2 ring-[#31889C]/20 shadow-xs'
-                        : cell.isToday
-                        ? 'border-[#BCE3EB] bg-[#F0F9FA]/60'
-                        : 'border-slate-100 bg-white hover:border-[#BCE3EB] hover:bg-[#F0F9FA]/30'
+                          ? 'border-[#31889C] bg-[#F0F9FA] ring-2 ring-[#31889C]/20 shadow-xs'
+                          : cell.isToday
+                            ? 'border-[#BCE3EB] bg-[#F0F9FA]/60'
+                            : 'border-slate-100 bg-white hover:border-[#BCE3EB] hover:bg-[#F0F9FA]/30'
                     )}
                   >
                     {/* Day number header */}
@@ -427,8 +427,8 @@ export function KalenderClient({ initialMeetings, biros }: KalenderClientProps) 
                           cell.isToday
                             ? 'bg-[#31889C] text-white font-extrabold'
                             : isSelected
-                            ? 'bg-[#E8F5F7] text-[#215865] font-extrabold'
-                            : 'text-slate-700'
+                              ? 'bg-[#E8F5F7] text-[#215865] font-extrabold'
+                              : 'text-slate-700'
                         )}
                       >
                         {cell.dayNumber}

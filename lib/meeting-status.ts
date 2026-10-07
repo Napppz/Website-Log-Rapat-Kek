@@ -3,10 +3,10 @@ import { MeetingStatus } from './types';
 export interface MeetingStatusDetail {
   key: MeetingStatus;
   step: number;
-  label: string;          // e.g. "Draf", "Reviu", "Disetujui", "Final"
+  label: string;          // e.g. "Draf", "Review", "Disetujui", "Final"
   sublabel: string;       // e.g. "Penyusunan", "Penelaahan", "Validasi Pimpinan", "Disahkan & Terbit"
   fullTitle: string;      // e.g. "Tahap 1: Draf (Penyusunan)"
-  badgeLabel: string;     // e.g. "Draf", "Reviu", "Disetujui", "Final"
+  badgeLabel: string;     // e.g. "Draf", "Review", "Disetujui", "Final"
   variant: 'draft' | 'review' | 'approved' | 'final';
   tagline: string;        // Penjelasan singkat 1 baris
   description: string;    // Penjelasan detail
@@ -42,15 +42,15 @@ export const MEETING_STATUS_DETAILS: Record<MeetingStatus, MeetingStatusDetail> 
       badgeStyle: 'bg-slate-100 border-slate-200 text-slate-700',
     },
     whenToUse: 'Digunakan saat rapat baru dijadwalkan atau risalah notula baru saja mulai ditulis.',
-    nextStepNote: 'Kirim ke tahap "Reviu" jika draf awal sudah selesai disusun dan siap ditelaah bersama tim.',
+    nextStepNote: 'Kirim ke tahap "Review" jika draf awal sudah selesai disusun dan siap ditelaah bersama tim.',
   },
   REVIEW: {
     key: 'REVIEW',
     step: 2,
-    label: 'Reviu',
+    label: 'Review',
     sublabel: 'Penelaahan',
-    fullTitle: 'Tahap 2: Reviu (Penelaahan)',
-    badgeLabel: 'Reviu',
+    fullTitle: 'Tahap 2: Review (Penelaahan)',
+    badgeLabel: 'Review',
     variant: 'review',
     tagline: 'Pemeriksaan & masukan substansi oleh biro/tim perumus',
     description: 'Draf risalah diedarkan kepada tim perumus, peserta rapat, atau staf biro terkait untuk diperiksa keakuratan substansi dan diselaraskan.',

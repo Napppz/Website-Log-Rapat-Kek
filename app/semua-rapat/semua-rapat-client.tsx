@@ -174,12 +174,12 @@ export function SemuaRapatClient({
     sublabel?: string;
     dotColor: string;
   }[] = [
-    { label: 'Semua Status', value: 'ALL', count: countAll, dotColor: 'bg-slate-400' },
-    { label: '1. Draf', value: 'DRAFT', count: countDraft, sublabel: 'Penyusunan', dotColor: 'bg-slate-400' },
-    { label: '2. Reviu', value: 'REVIEW', count: countReview, sublabel: 'Penelaahan', dotColor: 'bg-amber-500' },
-    { label: '3. Disetujui', value: 'APPROVED', count: countApproved, sublabel: 'Validasi Pimpinan', dotColor: 'bg-sky-500' },
-    { label: '4. Final', value: 'FINAL', count: countFinal, sublabel: 'Disahkan & Terbit', dotColor: 'bg-emerald-500' },
-  ];
+      { label: 'Semua Status', value: 'ALL', count: countAll, dotColor: 'bg-slate-400' },
+      { label: '1. Draf', value: 'DRAFT', count: countDraft, sublabel: 'Penyusunan', dotColor: 'bg-slate-400' },
+      { label: '2. Review', value: 'REVIEW', count: countReview, sublabel: 'Penelaahan', dotColor: 'bg-amber-500' },
+      { label: '3. Disetujui', value: 'APPROVED', count: countApproved, sublabel: 'Validasi Pimpinan', dotColor: 'bg-sky-500' },
+      { label: '4. Final', value: 'FINAL', count: countFinal, sublabel: 'Disahkan & Terbit', dotColor: 'bg-emerald-500' },
+    ];
 
   // Presets and date helpers
   const todayIso = new Date().toLocaleDateString('en-CA');
@@ -503,7 +503,7 @@ export function SemuaRapatClient({
               type="button"
               onClick={() => setIsStatusGuideOpen(true)}
               className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl border border-[#BCE3EB] bg-[#F0F9FA] hover:bg-[#E8F5F7] text-[#215865] text-[11.5px] font-bold transition-all cursor-pointer shadow-2xs"
-              title="Buka panduan alur siklus 4 tahap risalah rapat (Draf -> Reviu -> Disetujui -> Final)"
+              title="Buka panduan alur siklus 4 tahap risalah rapat (Draf -> Review -> Disetujui -> Final)"
             >
               <HelpCircle className="w-3.5 h-3.5 text-[#31889C]" />
               <span>Panduan Status Risalah</span>
@@ -665,8 +665,8 @@ export function SemuaRapatClient({
                   isCustomTimeActive
                     ? "bg-[#E8F5F7] border border-[#31889C] text-[#1B5260] font-bold"
                     : isCustomShelfOpen
-                    ? "bg-slate-100 border border-slate-300 text-slate-800"
-                    : "bg-slate-50 border border-slate-200 text-slate-600 hover:bg-slate-100"
+                      ? "bg-slate-100 border border-slate-300 text-slate-800"
+                      : "bg-slate-50 border border-slate-200 text-slate-600 hover:bg-slate-100"
                 )}
                 title="Saring berdasarkan tahun, bulan, hari spesifik, atau tanggal persis"
               >

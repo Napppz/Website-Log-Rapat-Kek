@@ -444,7 +444,7 @@ export function MeetingTable({
               <th className="py-3 px-4">Nomor &amp; Tanggal</th>
               <th className="py-3 px-4">Agenda Rapat</th>
               <th className="py-3 px-4">Biro Pelaksana</th>
-              <th className="py-3 px-4" title="Siklus 4 Tahap Risalah: 1. Draf -> 2. Reviu -> 3. Disetujui -> 4. Final">Tahap Risalah</th>
+              <th className="py-3 px-4" title="Siklus 4 Tahap Risalah: 1. Draf -> 2. Review -> 3. Disetujui -> 4. Final">Tahap Risalah</th>
               <th className="py-3 px-4">Tindak Lanjut</th>
               <th className="py-3 px-4 text-right">Aksi</th>
             </tr>
@@ -689,11 +689,10 @@ export function MeetingTable({
               type="button"
               disabled={safePage <= 1}
               onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
-              className={`px-3 py-1.5 rounded-lg border text-[12px] font-medium shadow-xs transition-all ${
-                safePage <= 1
+              className={`px-3 py-1.5 rounded-lg border text-[12px] font-medium shadow-xs transition-all ${safePage <= 1
                   ? 'bg-white border-slate-200 text-slate-400 opacity-50 cursor-not-allowed'
                   : 'bg-white border-slate-300 text-slate-700 hover:bg-[#F0F9FA] cursor-pointer'
-              }`}
+                }`}
             >
               Sebelumnya
             </button>
@@ -714,11 +713,10 @@ export function MeetingTable({
                   key={pageNum}
                   type="button"
                   onClick={() => setCurrentPage(pageNum)}
-                  className={`px-3 py-1.5 rounded-lg text-[12px] font-bold shadow-xs transition-all cursor-pointer ${
-                    isActive
+                  className={`px-3 py-1.5 rounded-lg text-[12px] font-bold shadow-xs transition-all cursor-pointer ${isActive
                       ? 'bg-[#31889C] text-white border border-[#31889C]'
                       : 'bg-white border border-slate-200 text-slate-700 hover:bg-[#F0F9FA]'
-                  }`}
+                    }`}
                 >
                   {pageNum}
                 </button>
@@ -730,11 +728,10 @@ export function MeetingTable({
               type="button"
               disabled={safePage >= totalPages}
               onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
-              className={`px-3 py-1.5 rounded-lg border text-[12px] font-medium shadow-xs transition-all ${
-                safePage >= totalPages
+              className={`px-3 py-1.5 rounded-lg border text-[12px] font-medium shadow-xs transition-all ${safePage >= totalPages
                   ? 'bg-white border-slate-200 text-slate-400 opacity-50 cursor-not-allowed'
                   : 'bg-white border-slate-300 text-slate-700 hover:bg-[#F0F9FA] cursor-pointer'
-              }`}
+                }`}
             >
               Berikutnya
             </button>
