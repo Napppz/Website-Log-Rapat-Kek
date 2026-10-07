@@ -9,13 +9,13 @@ export const revalidate = 0;
 export default async function DashboardPage() {
   const currentUser = await getCurrentUser();
 
-  // If user is a staff/notulis/viewer belonging to a specific biro,
-  // redirect directly to their dedicated Bureau Dashboard
+  // If user is a staff belonging to another specific biro, redirect to that biro
   if (
     currentUser &&
     currentUser.role !== 'SUPER_ADMIN' &&
     currentUser.role !== 'ADMIN' &&
-    currentUser.biroCode
+    currentUser.biroCode &&
+    !['ikk', 'biro-ikk'].includes(currentUser.biroCode.toLowerCase())
   ) {
     redirect(`/biro/${currentUser.biroCode.toLowerCase()}`);
   }
@@ -33,6 +33,7 @@ export default async function DashboardPage() {
       followUpMetrics={stats?.followUpMetrics}
       monthlyActivity={stats?.monthlyActivity}
       totalResolutions={stats?.actionItemStats?.total}
+      teamWorkload={stats?.teamWorkload}
     />
   );
 }

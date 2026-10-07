@@ -60,9 +60,9 @@ function LoginForm() {
 
   // Demo accounts helper for quick evaluation (Super Admin, Admin, Staf)
   const demoAccounts = [
-    { label: 'Super Admin', email: 'superadmin@simrapat.local', icon: '👑', desc: 'Akses Penuh Semua Biro' },
-    { label: 'Admin', email: 'admin@simrapat.local', icon: '⚙️', desc: 'Pengelola Sistem' },
-    { label: 'Staf', email: 'staff@simrapat.local', icon: '💼', desc: 'PIC Tindak Lanjut' },
+    { label: 'Super Admin (Pak Bambang)', email: 'superadmin@simrapat.local', icon: '👑', desc: 'Akses Penuh 3 Tim IKK' },
+    { label: 'Admin IKK', email: 'admin@simrapat.local', icon: '⚙️', desc: 'Pengelola Sistem IKK' },
+    { label: 'Staf IKK', email: 'staff@simrapat.local', icon: '💼', desc: 'PIC Tindak Lanjut Tim' },
   ];
 
   const handleFillDemo = (demoEmail: string, roleName: string) => {

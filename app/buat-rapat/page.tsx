@@ -679,49 +679,39 @@ export default function BuatRapatPage() {
                     onChange={(e) => setSelectedBiro(e.target.value as BiroCode)}
                     className="w-full px-4 h-[44px] rounded-xl border border-slate-300 bg-white text-slate-800 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-[#1E6B7B]/20 focus:border-[#1E6B7B] shadow-2xs transition-all cursor-pointer"
                   >
-                    {BIRO_LIST.map((biro) => (
-                      <option key={biro.code} value={biro.code}>
-                        {biro.code} — {biro.name}
-                      </option>
-                    ))}
+                    <option value="IKK">IKK — Biro Investasi, Kerja Sama, dan Komunikasi</option>
                   </select>
                 )}
                 <p className="text-xs text-slate-400 mt-1.5">
-                  Biro yang bertanggung jawab atas penyelenggaraan dan penyusunan risalah notula.
+                  Biro Investasi, Kerja Sama, dan Komunikasi (IKK) Sekretariat Dewan Nasional KEK.
                 </p>
               </div>
 
-              {/* Tim Kerja Biro */}
+              {/* Tim Pelaksana (Lingkup 3 Tim Biro IKK) */}
               <div>
                 <label className="font-semibold text-slate-800 mb-2 flex items-center justify-between text-sm">
                   <span className="flex items-center gap-1.5">
-                    <span>Sub-Tim Kerja</span>
-                    <span className="text-slate-400 font-normal text-xs">(Opsional)</span>
+                    <span>Tim Pelaksana</span>
+                    <span className="text-red-500">*</span>
                   </span>
-                  {availableTeams.length > 0 && (
-                    <span className="text-xs font-bold text-[#174853] bg-[#F0F8FA] px-2 py-0.5 rounded-md border border-[#BCE3EB]">
-                      {availableTeams.length} Tim Tersedia
-                    </span>
-                  )}
+                  <span className="text-xs font-bold text-[#174853] bg-[#F0F8FA] px-2 py-0.5 rounded-md border border-[#BCE3EB]">
+                    3 Tim Biro IKK
+                  </span>
                 </label>
                 <select
                   value={selectedTeamId}
                   onChange={(e) => setSelectedTeamId(e.target.value)}
                   className="w-full px-4 h-[44px] rounded-xl border border-slate-300 bg-white text-slate-800 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-[#1E6B7B]/20 focus:border-[#1E6B7B] shadow-2xs transition-all cursor-pointer"
                 >
-                  <option value="">
-                    {availableTeams.length > 0
-                      ? '-- Bebas / Tingkat Biro Utama --'
-                      : '-- Belum ada sub-tim terdaftar --'}
-                  </option>
+                  <option value="">-- Pilih Tim Pelaksana (Investasi, Kerja Sama, Komunikasi) --</option>
                   {availableTeams.map((t) => (
                     <option key={t.id} value={t.id}>
-                      [{t.code}] Tim {t.name}
+                      Tim {t.name} ({t.code})
                     </option>
                   ))}
                 </select>
                 <p className="text-xs text-slate-400 mt-1.5">
-                  Pilih sub-tim kerja jika rapat merupakan lingkup kerja spesifik di dalam biro.
+                  Pilih salah satu dari 3 tim kerja pelaksana: Tim Investasi, Tim Kerja Sama, atau Tim Komunikasi.
                 </p>
               </div>
 

@@ -6,9 +6,11 @@ import { StatsOverview } from '@/components/dashboard/stats-overview';
 import { ActivityTrendChart } from '@/components/dashboard/activity-trend-chart';
 import { FollowUpStatusChart } from '@/components/dashboard/follow-up-status-chart';
 import { BureauDistribution } from '@/components/dashboard/bureau-distribution';
+import { TeamWorkloadGrid } from '@/components/dashboard/team-workload-grid';
+import { TeamDetailModal } from '@/components/dashboard/team-detail-modal';
 import { MeetingTable } from '@/components/meeting/meeting-table';
 import { useRouter } from 'next/navigation';
-import { Meeting, DashboardMetric, BureauWorkload, FollowUpStatusMetric, MonthlyActivity } from '@/lib/types';
+import { Meeting, DashboardMetric, BureauWorkload, FollowUpStatusMetric, MonthlyActivity, TeamWorkloadMetric } from '@/lib/types';
 
 interface DashboardClientProps {
   initialMeetings: Meeting[];
@@ -17,6 +19,7 @@ interface DashboardClientProps {
   followUpMetrics?: FollowUpStatusMetric[];
   monthlyActivity?: MonthlyActivity[];
   totalResolutions?: number;
+  teamWorkload?: TeamWorkloadMetric[];
 }
 
 const MONTH_INDEX_MAP: Record<string, number> = {
@@ -46,10 +49,48 @@ export function DashboardClient({
   followUpMetrics,
   monthlyActivity,
   totalResolutions,
+  teamWorkload: initialTeamWorkload,
 }: DashboardClientProps) {
   const router = useRouter();
   const [deletedIds, setDeletedIds] = useState<Set<string>>(new Set());
   const [meetingsList, setMeetingsList] = useState<Meeting[]>(initialMeetings);
+
+  const [teamWorkload, setTeamWorkload] = useState<TeamWorkloadMetric[]>(
+    initialTeamWorkload || []
+  );
+  const [selectedTeamForModal, setSelectedTeamForModal] = useState<TeamWorkloadMetric | null>(null);
+  const [isTeamModalOpen, setIsTeamModalOpen] = useState(false);
+
+  useEffect(() => {
+    if (initialTeamWorkload && initialTeamWorkload.length > 0) {
+      setTeamWorkload(initialTeamWorkload);
+      return;
+    }
+
+    let isMounted = true;
+    fetch('/api/stats')
+      .then((res) => res.json())
+      .then((data) => {
+        if (
+          isMounted &&
+          data?.teamWorkload &&
+          Array.isArray(data.teamWorkload) &&
+          data.teamWorkload.length > 0
+        ) {
+          setTeamWorkload(data.teamWorkload);
+        }
+      })
+      .catch((e) => console.warn('Could not load team workload:', e));
+
+    return () => {
+      isMounted = false;
+    };
+  }, [initialTeamWorkload]);
+
+  const handleOpenTeamModal = (team: TeamWorkloadMetric) => {
+    setSelectedTeamForModal(team);
+    setIsTeamModalOpen(true);
+  };
 
   useEffect(() => {
     setMeetingsList(initialMeetings.filter((m) => !deletedIds.has(m.id)));
@@ -274,7 +315,13 @@ export function DashboardClient({
         onResetMonth={() => setSelectedMonth(null)}
       />
 
-      {/* 3. Analytics Grid (Monthly Trend + Status Donut + Bureau Workload) */}
+      {/* 3. Executive 3 Tim Kerja Biro IKK (Investasi, Kerja Sama, Komunikasi) - Pak Bambang (Super Admin) */}
+      <TeamWorkloadGrid
+        teams={teamWorkload}
+        onTeamClick={handleOpenTeamModal}
+      />
+
+      {/* 4. Analytics Grid (Monthly Trend + Status Donut + Tim Distribution) */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
         <ActivityTrendChart
           data={yearMonthlyActivity}
@@ -294,11 +341,13 @@ export function DashboardClient({
         />
         <BureauDistribution
           workload={workload}
-          onBiroClick={(code) => router.push(`/biro/${code.toLowerCase()}`)}
+          teamWorkload={teamWorkload}
+          onTeamClick={handleOpenTeamModal}
+          onBiroClick={(code) => router.push(`/semua-rapat?tim=${code}`)}
         />
       </div>
 
-      {/* 4. Recent Meetings Table (Terbaru ke Terlama) - Sinkron dengan Tahun & Bulan Terpilih */}
+      {/* 5. Recent Meetings Table (Terbaru ke Terlama) - Sinkron dengan Tahun & Bulan Terpilih */}
       <MeetingTable
         initialMeetings={yearMeetings}
         filterMonth={selectedMonth}
@@ -307,6 +356,13 @@ export function DashboardClient({
           setDeletedIds((prev) => new Set(prev).add(deletedId));
           setMeetingsList((prev) => prev.filter((m) => m.id !== deletedId));
         }}
+      />
+
+      {/* Interactive Modal Detail Tim (Status Pekerjaan: Selesai/Berjalan/Dalam Proses, Rapat & Staf) */}
+      <TeamDetailModal
+        isOpen={isTeamModalOpen}
+        onClose={() => setIsTeamModalOpen(false)}
+        team={selectedTeamForModal}
       />
     </div>
   );

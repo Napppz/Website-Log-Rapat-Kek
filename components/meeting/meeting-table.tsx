@@ -304,22 +304,35 @@ export function MeetingTable({
 
     return list.filter((m) => {
       if (filterBiro) {
-        const normalize = (c?: string | null) => {
-          if (!c) return '';
-          const upper = c.toUpperCase().trim();
-          if (upper === 'PPK' || upper === 'REN' || upper === 'IT') return 'BPPK';
-          if (upper === 'DAL' || upper === 'OPS') return 'PKKEK';
-          if (upper === 'INV') return 'IKK';
-          if (upper === 'HUK' || upper === 'LEG') return 'HSDMO';
-          if (upper === 'BUK' || upper === 'ADM') return 'UK';
-          return upper;
-        };
-        const targetBiro = normalize(filterBiro);
-        const primaryBiro = normalize(m.biroCode);
-        const matchPrimary = primaryBiro === targetBiro;
-        const matchInvolved = m.involvedBiros && normalize(m.involvedBiros).includes(targetBiro);
-        if (!matchPrimary && !matchInvolved) {
-          return false;
+        const target = String(filterBiro).toUpperCase();
+        if (target === 'INV' || target === 'KS' || target === 'KOM') {
+          const matchTeam =
+            m.primaryTeamCode?.toUpperCase() === target ||
+            m.primaryTeamId?.toUpperCase().includes(target) ||
+            (target === 'INV' && (m.primaryTeamName?.toLowerCase().includes('investasi') || m.primaryTeamCode === 'TIM-001' || m.primaryTeamId === 'TIM-001')) ||
+            (target === 'KS' && (m.primaryTeamName?.toLowerCase().includes('kerja sama') || m.primaryTeamCode === 'TIM-003' || m.primaryTeamId === 'TIM-003')) ||
+            (target === 'KOM' && (m.primaryTeamName?.toLowerCase().includes('komunikasi') || m.primaryTeamCode === 'TIM-002' || m.primaryTeamId === 'TIM-002'));
+          if (!matchTeam) {
+            return false;
+          }
+        } else {
+          const normalize = (c?: string | null) => {
+            if (!c) return '';
+            const upper = c.toUpperCase().trim();
+            if (upper === 'PPK' || upper === 'REN' || upper === 'IT') return 'BPPK';
+            if (upper === 'DAL' || upper === 'OPS') return 'PKKEK';
+            if (upper === 'INV') return 'IKK';
+            if (upper === 'HUK' || upper === 'LEG') return 'HSDMO';
+            if (upper === 'BUK' || upper === 'ADM') return 'UK';
+            return upper;
+          };
+          const targetBiro = normalize(filterBiro);
+          const primaryBiro = normalize(m.biroCode);
+          const matchPrimary = primaryBiro === targetBiro;
+          const matchInvolved = m.involvedBiros && normalize(m.involvedBiros).includes(targetBiro);
+          if (!matchPrimary && !matchInvolved) {
+            return false;
+          }
         }
       }
       if (filterStatus && m.status !== filterStatus) {

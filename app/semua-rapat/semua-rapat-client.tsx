@@ -16,6 +16,7 @@ import {
   Sparkles,
   Calendar,
   Building2,
+  Layers,
   HelpCircle,
   CalendarDays,
   Clock,
@@ -99,8 +100,8 @@ export function SemuaRapatClient({
   // Filter params
   const statusParam = searchParams.get('status') as MeetingStatus | null;
   const kategoriParam = searchParams.get('kategori') as string | null;
-  const rawBiroParam = searchParams.get('biro');
-  const biroParam = rawBiroParam && rawBiroParam !== 'ALL' ? (rawBiroParam as BiroCode) : null;
+  const rawTimParam = searchParams.get('tim') || searchParams.get('biro');
+  const timParam = rawTimParam && rawTimParam !== 'ALL' && rawTimParam !== 'IKK' && rawTimParam !== 'BIRO-IKK' ? rawTimParam.toUpperCase() : null;
   const monthParam = searchParams.get('bulan') || searchParams.get('month');
   const yearParam = searchParams.get('tahun') || searchParams.get('year');
   const dayParam = searchParams.get('hari') || searchParams.get('day');
@@ -124,22 +125,28 @@ export function SemuaRapatClient({
     return Array.from(yearsSet).sort((a, b) => b - a);
   }, [meetingsList]);
 
-  // Meetings filtered by the selected Biro (or all if no biro filter)
-  const biroFilteredMeetings = useMemo(() => {
-    if (!biroParam || lockedBiroCode) {
+  const isMatchTeam = (m: Meeting, code: string) => {
+    const c = code.toUpperCase();
+    if (c === 'ALL' || c === 'IKK' || c === 'BIRO-IKK') return true;
+    if (m.primaryTeamCode?.toUpperCase() === c) return true;
+    if (m.primaryTeamId?.toUpperCase().includes(c)) return true;
+    if (c === 'INV' && (m.primaryTeamName?.toLowerCase().includes('investasi') || m.primaryTeamCode === 'TIM-001' || m.primaryTeamId === 'TIM-001')) return true;
+    if (c === 'KS' && (m.primaryTeamName?.toLowerCase().includes('kerja sama') || m.primaryTeamCode === 'TIM-003' || m.primaryTeamId === 'TIM-003')) return true;
+    if (c === 'KOM' && (m.primaryTeamName?.toLowerCase().includes('komunikasi') || m.primaryTeamCode === 'TIM-002' || m.primaryTeamId === 'TIM-002')) return true;
+    return false;
+  };
+
+  // Meetings filtered by the selected Tim (Investasi, Kerja Sama, Komunikasi)
+  const teamFilteredMeetings = useMemo(() => {
+    if (!timParam) {
       return meetingsList;
     }
-    const target = normalizeBiroCode(biroParam);
-    return meetingsList.filter((m) => {
-      const matchPrimary = normalizeBiroCode(m.biroCode) === target;
-      const matchInvolved = m.involvedBiros && normalizeBiroCode(m.involvedBiros).includes(target);
-      return matchPrimary || matchInvolved;
-    });
-  }, [meetingsList, biroParam, lockedBiroCode]);
+    return meetingsList.filter((m) => isMatchTeam(m, timParam));
+  }, [meetingsList, timParam]);
 
-  // Meetings filtered by Biro AND Date/Month/Day/Year AND Search Filter AND Category
+  // Meetings filtered by Tim AND Date/Month/Day/Year AND Search Filter AND Category
   const fullyFilteredMeetings = useMemo(() => {
-    return biroFilteredMeetings.filter((m) => {
+    return teamFilteredMeetings.filter((m) => {
       if (monthIdx !== null || dayIdx !== null || targetYear !== null || targetDate !== null) {
         const parsed = parseMeetingDate(m.date);
         if (!parsed) return false;
@@ -178,7 +185,7 @@ export function SemuaRapatClient({
       }
       return true;
     });
-  }, [biroFilteredMeetings, monthIdx, dayIdx, targetYear, targetDate, searchFilter, kategoriParam]);
+  }, [teamFilteredMeetings, monthIdx, dayIdx, targetYear, targetDate, searchFilter, kategoriParam]);
 
   const countAll = fullyFilteredMeetings.length;
   const countDraft = fullyFilteredMeetings.filter((m) => m.status === 'DRAFT').length;
@@ -186,18 +193,18 @@ export function SemuaRapatClient({
   const countApproved = fullyFilteredMeetings.filter((m) => m.status === 'APPROVED').length;
   const countFinal = fullyFilteredMeetings.filter((m) => m.status === 'FINAL').length;
 
-  const countUndanganInternal = biroFilteredMeetings.filter(
+  const countUndanganInternal = teamFilteredMeetings.filter(
     (m) => ((m as any).documentCategory || 'UNDANGAN_INTERNAL') === 'UNDANGAN_INTERNAL'
   ).length;
-  const countNaskahMasuk = biroFilteredMeetings.filter(
+  const countNaskahMasuk = teamFilteredMeetings.filter(
     (m) => (m as any).documentCategory === 'NASKAH_MASUK'
   ).length;
-  const countSuratDitunda = biroFilteredMeetings.filter(
+  const countSuratDitunda = teamFilteredMeetings.filter(
     (m) => (m as any).documentCategory === 'SURAT_DITUNDA'
   ).length;
 
   const categoryFilters = [
-    { label: 'Semua Kategori', value: 'ALL', count: biroFilteredMeetings.length, icon: '🏷️' },
+    { label: 'Semua Kategori', value: 'ALL', count: teamFilteredMeetings.length, icon: '🏷️' },
     { label: 'Undangan Internal', value: 'UNDANGAN_INTERNAL', count: countUndanganInternal, icon: '🏢' },
     { label: 'Daftar Naskah Masuk', value: 'NASKAH_MASUK', count: countNaskahMasuk, icon: '📥' },
     { label: 'Surat Ditunda', value: 'SURAT_DITUNDA', count: countSuratDitunda, icon: '⏳' },
@@ -275,7 +282,7 @@ export function SemuaRapatClient({
 
   const hasAnyActiveFilter = Boolean(
     statusParam ||
-    (biroParam && !lockedBiroCode) ||
+    timParam ||
     (kategoriParam && kategoriParam !== 'ALL') ||
     hasActiveTimeFilter ||
     searchFilter.trim()
@@ -334,7 +341,8 @@ export function SemuaRapatClient({
     const params = new URLSearchParams(searchParams.toString());
     params.delete('status');
     params.delete('kategori');
-    if (!lockedBiroCode) params.delete('biro');
+    params.delete('tim');
+    params.delete('biro');
     params.delete('tahun');
     params.delete('year');
     params.delete('bulan');
@@ -347,14 +355,14 @@ export function SemuaRapatClient({
   };
 
   const getYearCount = (yr: number) => {
-    return biroFilteredMeetings.filter((m) => {
+    return teamFilteredMeetings.filter((m) => {
       const parsed = parseMeetingDate(m.date);
       return parsed?.year === yr;
     }).length;
   };
 
   const getMonthCount = (mIndex: number) => {
-    return biroFilteredMeetings.filter((m) => {
+    return teamFilteredMeetings.filter((m) => {
       const parsed = parseMeetingDate(m.date);
       if (!parsed) return false;
       if (targetYear !== null && !isNaN(targetYear) && parsed.year !== targetYear) return false;
@@ -363,7 +371,7 @@ export function SemuaRapatClient({
   };
 
   const getDayCount = (dIndex: number) => {
-    return biroFilteredMeetings.filter((m) => {
+    return teamFilteredMeetings.filter((m) => {
       const parsed = parseMeetingDate(m.date);
       if (!parsed) return false;
       if (targetYear !== null && !isNaN(targetYear) && parsed.year !== targetYear) return false;
@@ -382,14 +390,25 @@ export function SemuaRapatClient({
     router.push(params.toString() ? `/semua-rapat?${params.toString()}` : '/semua-rapat');
   };
 
-  const handleSelectBiro = (val: string) => {
+  const ikkTeamsList = [
+    { code: 'INV', name: 'Tim Investasi', shortName: 'Investasi' },
+    { code: 'KS', name: 'Tim Kerja Sama', shortName: 'Kerja Sama' },
+    { code: 'KOM', name: 'Tim Komunikasi', shortName: 'Komunikasi' },
+  ];
+
+  const handleSelectTeam = (val: string) => {
     const params = new URLSearchParams(searchParams.toString());
+    params.delete('biro');
     if (val === 'ALL' || !val) {
-      params.delete('biro');
+      params.delete('tim');
     } else {
-      params.set('biro', val);
+      params.set('tim', val);
     }
     router.push(params.toString() ? `/semua-rapat?${params.toString()}` : '/semua-rapat');
+  };
+
+  const handleSelectBiro = (val: string) => {
+    handleSelectTeam(val);
   };
 
   const handleDeleteAll = async () => {
@@ -620,67 +639,59 @@ export function SemuaRapatClient({
             </div>
           </div>
 
-          {/* Baris Kontrol: Filter Biro & Filter Waktu */}
+          {/* Baris Kontrol: Filter Tim & Filter Waktu */}
           <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3 pt-0.5 border-t border-slate-100 pt-2.5">
-            {/* Filter Biro (Hanya Super Admin & Admin) */}
-            {!lockedBiroCode && isPrivileged && (
-              <div className="flex items-center gap-2 overflow-x-auto no-scrollbar py-0.5">
-                <span className="text-[11.5px] font-bold text-slate-600 flex items-center gap-1 shrink-0">
-                  <Building2 className="w-3.5 h-3.5 text-[#31889C]" />
-                  Biro:
-                </span>
-                <div className="flex items-center gap-1.5 flex-wrap">
-                  <button
-                    type="button"
-                    onClick={() => handleSelectBiro('ALL')}
-                    className={cn(
-                      "px-2.5 py-1 rounded-lg text-[11.5px] font-semibold transition-all cursor-pointer",
-                      !biroParam
-                        ? "bg-[#31889C] text-white shadow-2xs font-bold"
-                        : "bg-slate-50 border border-slate-200 text-slate-700 hover:bg-[#F0F9FA] hover:text-[#31889C]"
-                    )}
-                  >
-                    Semua ({meetingsList.length})
-                  </button>
+            {/* Filter Tim Pelaksana Biro IKK */}
+            <div className="flex items-center gap-2 overflow-x-auto no-scrollbar py-0.5">
+              <span className="text-[11.5px] font-bold text-slate-600 flex items-center gap-1 shrink-0">
+                <Layers className="w-3.5 h-3.5 text-[#31889C]" />
+                Tim:
+              </span>
+              <div className="flex items-center gap-1.5 flex-wrap">
+                <button
+                  type="button"
+                  onClick={() => handleSelectTeam('ALL')}
+                  className={cn(
+                    "px-2.5 py-1 rounded-lg text-[11.5px] font-semibold transition-all cursor-pointer",
+                    !timParam
+                      ? "bg-[#31889C] text-white shadow-2xs font-bold"
+                      : "bg-slate-50 border border-slate-200 text-slate-700 hover:bg-[#F0F9FA] hover:text-[#31889C]"
+                  )}
+                >
+                  Semua ({meetingsList.length})
+                </button>
 
-                  {birosList.map((b) => {
-                    const isSelected = biroParam === b.code;
-                    const countForBiro = meetingsList.filter((m) => {
-                      const target = normalizeBiroCode(b.code);
-                      return (
-                        normalizeBiroCode(m.biroCode) === target ||
-                        (m.involvedBiros && normalizeBiroCode(m.involvedBiros).includes(target))
-                      );
-                    }).length;
+                {ikkTeamsList.map((t) => {
+                  const isSelected = timParam === t.code;
+                  const countForTeam = meetingsList.filter((m) => isMatchTeam(m, t.code)).length;
 
-                    return (
-                      <button
-                        key={b.code}
-                        type="button"
-                        onClick={() => handleSelectBiro(b.code)}
+                  return (
+                    <button
+                      key={t.code}
+                      type="button"
+                      onClick={() => handleSelectTeam(t.code)}
+                      className={cn(
+                        "px-2.5 py-1 rounded-lg text-[11.5px] font-semibold transition-all cursor-pointer flex items-center gap-1",
+                        isSelected
+                          ? "bg-[#31889C] text-white shadow-2xs font-bold"
+                          : "bg-slate-50 border border-slate-200 text-slate-700 hover:bg-[#F0F9FA] hover:text-[#31889C]"
+                      )}
+                      title={t.name}
+                    >
+                      <span>{t.name}</span>
+                      <span
                         className={cn(
-                          "px-2.5 py-1 rounded-lg text-[11.5px] font-semibold transition-all cursor-pointer flex items-center gap-1",
-                          isSelected
-                            ? "bg-[#31889C] text-white shadow-2xs font-bold"
-                            : "bg-slate-50 border border-slate-200 text-slate-700 hover:bg-[#F0F9FA] hover:text-[#31889C]"
+                          "text-[9.5px] px-1 py-0.1 rounded-full font-bold",
+                          isSelected ? "bg-white/25 text-white" : "bg-slate-200/80 text-slate-600"
                         )}
-                        title={`${b.name} (${b.shortName})`}
                       >
-                        <span>{b.code}</span>
-                        <span
-                          className={cn(
-                            "text-[9.5px] px-1 py-0.1 rounded-full font-bold",
-                            isSelected ? "bg-white/25 text-white" : "bg-slate-200/80 text-slate-600"
-                          )}
-                        >
-                          {countForBiro}
-                        </span>
-                      </button>
-                    );
-                  })}
-                </div>
+                        {countForTeam}
+                      </span>
+                    </button>
+                  );
+                })}
               </div>
-            )}
+            </div>
 
             {/* Filter Periode Waktu: Presets Cepat + Tombol Kustom Tanggal */}
             <div className="flex items-center gap-1.5 flex-wrap shrink-0">
@@ -918,15 +929,15 @@ export function SemuaRapatClient({
                 </span>
               )}
 
-              {/* Biro chip */}
-              {biroParam && !lockedBiroCode && (
+              {/* Tim chip */}
+              {timParam && (
                 <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-white border border-[#BCE3EB] text-[#1B5260] font-semibold text-[11px] shadow-2xs">
-                  Biro: {birosList.find((b) => b.code === biroParam)?.shortName || biroParam}
+                  Tim: {ikkTeamsList.find((t) => t.code === timParam)?.name || timParam}
                   <button
                     type="button"
-                    onClick={() => handleSelectBiro('ALL')}
+                    onClick={() => handleSelectTeam('ALL')}
                     className="hover:text-red-600 ml-0.5 cursor-pointer font-bold"
-                    title="Hapus filter biro"
+                    title="Hapus filter tim"
                   >
                     ✕
                   </button>
@@ -1015,7 +1026,7 @@ export function SemuaRapatClient({
       <MeetingTable
         initialMeetings={meetingsList}
         filterStatus={statusParam}
-        filterBiro={lockedBiroCode ? (lockedBiroCode as BiroCode) : biroParam}
+        filterBiro={timParam || (lockedBiroCode ? (lockedBiroCode as BiroCode) : null)}
         filterMonth={monthParam}
         filterYear={yearParam}
         filterDayOfWeek={dayParam}

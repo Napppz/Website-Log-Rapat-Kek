@@ -257,7 +257,7 @@ export function CreateMeetingDialog({ isOpen, onClose, onSuccess }: CreateMeetin
             />
           </div>
 
-          {/* Biro Pelaksana */}
+          {/* Biro Penyelenggara */}
           <div>
             <label className="block font-semibold text-slate-700 mb-1 flex items-center gap-1.5">
               <Building2 className="w-4 h-4 text-[#31889C]" />
@@ -268,11 +268,7 @@ export function CreateMeetingDialog({ isOpen, onClose, onSuccess }: CreateMeetin
               onChange={(e) => setSelectedBiro(e.target.value as BiroCode)}
               className="w-full px-3 py-2 rounded-lg border border-slate-200 bg-white text-slate-800 focus:outline-none focus:ring-2 focus:ring-[#31889C]/25 focus:border-[#31889C]"
             >
-              {BIRO_LIST.map((biro) => (
-                <option key={biro.code} value={biro.code}>
-                  {biro.code} — {biro.name}
-                </option>
-              ))}
+              <option value="IKK">IKK — Biro Investasi, Kerja Sama, dan Komunikasi</option>
             </select>
           </div>
 

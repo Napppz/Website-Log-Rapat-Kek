@@ -70,11 +70,13 @@ model User {
   password  String?  @map("kata_sandi")
   role      UserRole @default(STAFF) @map("peran")
   biroId    String   @map("id_biro")
+  teamId    String?  @map("id_tim")
   isActive  Boolean  @default(true) @map("status_aktif")
   createdAt DateTime @default(now()) @map("dibuat_pada")
   updatedAt DateTime @updatedAt @map("diperbarui_pada")
 
   biro                Biro                 @relation(fields: [biroId], references: [id], onDelete: Restrict)
+  team                BiroTeam?            @relation(fields: [teamId], references: [id], onDelete: SetNull)
   chairedMeetings     Meeting[]            @relation("ChairpersonMeetings")
   secretaryMeetings   Meeting[]            @relation("SecretaryMeetings")
   meetingParticipants MeetingParticipant[]
@@ -88,6 +90,7 @@ model User {
 
   @@index([email])
   @@index([biroId])
+  @@index([teamId])
   @@index([isActive])
   @@map("pengguna")
 }
@@ -369,6 +372,7 @@ model BiroTeam {
   biro            Biro         @relation(fields: [biroId], references: [id], onDelete: Cascade)
   primaryMeetings Meeting[]    @relation("PrimaryTeamMeetings")
   actionItems     ActionItem[] @relation("TeamActionItems")
+  users           User[]
 
   @@unique([biroId, code])
   @@index([biroId])

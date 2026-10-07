@@ -9,6 +9,7 @@ import {
   CheckSquare,
   Calendar,
   Building2,
+  Layers,
   FileText,
   BarChart3,
   Bell,
@@ -47,16 +48,16 @@ export function Sidebar({
   const isAdmin = userRole === 'ADMIN';
 
   const isRapatRoute = pathname.includes('/semua-rapat') || pathname.includes('/buat-rapat');
-  const isBiroRoute = pathname.includes('/biro');
+  const isTimRoute = pathname.includes('/biro');
 
-  const [toggledSections, setToggledSections] = useState<Record<string, boolean>>({});
+  const [toggledSections, setToggledSections] = useState<Record<string, boolean>>({ tim: true });
 
   const isRapatOpen = toggledSections.rapat !== undefined ? toggledSections.rapat : isRapatRoute;
-  const isBiroOpen = toggledSections.biro !== undefined ? toggledSections.biro : isBiroRoute;
+  const isTimOpen = toggledSections.tim !== undefined ? toggledSections.tim : isTimRoute;
 
   const toggleSection = (section: string) => {
     setToggledSections((prev) => {
-      const current = section === 'rapat' ? isRapatOpen : isBiroOpen;
+      const current = section === 'rapat' ? isRapatOpen : isTimOpen;
       return {
         ...prev,
         [section]: !current,
@@ -268,57 +269,55 @@ export function Sidebar({
                 </Link>
               )}
 
-              {/* Biro (SUPER_ADMIN, ADMIN) */}
+              {/* Tim Kerja Biro IKK (SUPER_ADMIN, ADMIN) */}
               {(isSuperAdmin || isAdmin) && (
                 <div>
                   <button
                     type="button"
-                    onClick={() => toggleSection('biro')}
+                    onClick={() => toggleSection('tim')}
                     className={cn(
                       "w-full flex items-center justify-between px-3 py-2 rounded-lg text-slate-600 hover:bg-[#F0F9FA] hover:text-[#31889C] transition-all font-medium text-[14px] cursor-pointer",
                       pathname.startsWith('/biro') ? "text-[#31889C] font-semibold bg-[#F0F9FA]/60" : ""
                     )}
-                    title="Biro"
+                    title="Tim Kerja Biro IKK"
                   >
                     <div className="flex items-center gap-3">
-                      <Building2 className={cn(
+                      <Layers className={cn(
                         "w-5 h-5 shrink-0",
                         pathname.startsWith('/biro') ? "text-[#31889C]" : "text-slate-400"
                       )} />
-                      {!collapsed && <span>Biro</span>}
+                      {!collapsed && <span>Tim Kerja</span>}
                     </div>
                     {!collapsed && (
                       <ChevronDown
                         className={cn(
                           "w-4 h-4 text-slate-400 transition-transform duration-200",
-                          isBiroOpen ? "rotate-180" : ""
+                          isTimOpen ? "rotate-180" : ""
                         )}
                       />
                     )}
                   </button>
 
-                  {!collapsed && isBiroOpen && (
+                  {!collapsed && isTimOpen && (
                     <div className="pl-7 pr-2 py-1 space-y-1">
-                      {BIRO_LIST.map((biro) => {
-                        const biroHref = `/biro/${biro.code.toLowerCase()}`;
-                        const isActive = pathname === biroHref;
-                        return (
-                          <Link
-                            key={biro.code}
-                            href={biroHref}
-                            onClick={handleLinkClick}
-                            title={biro.name}
-                            className={cn(
-                              "block px-2.5 py-1.5 rounded-md text-[13px] font-medium transition-all leading-snug",
-                              isActive
-                                ? "bg-[#E8F5F7] text-[#215865] font-bold"
-                                : "text-slate-600 hover:bg-[#F0F9FA] hover:text-[#31889C]"
-                            )}
-                          >
-                            {biro.shortName}
-                          </Link>
-                        );
-                      })}
+                      {[
+                        { code: 'INV', name: 'Tim Investasi', href: '/semua-rapat?tim=INV' },
+                        { code: 'KS', name: 'Tim Kerja Sama', href: '/semua-rapat?tim=KS' },
+                        { code: 'KOM', name: 'Tim Komunikasi', href: '/semua-rapat?tim=KOM' },
+                      ].map((tim) => (
+                        <Link
+                          key={tim.code}
+                          href={tim.href}
+                          onClick={handleLinkClick}
+                          title={tim.name}
+                          className={cn(
+                            "block px-2.5 py-1.5 rounded-md text-[13px] font-medium transition-all leading-snug",
+                            "text-slate-600 hover:bg-[#F0F9FA] hover:text-[#31889C]"
+                          )}
+                        >
+                          {tim.name}
+                        </Link>
+                      ))}
                     </div>
                   )}
                 </div>

@@ -1,5 +1,5 @@
 import { prisma } from './prisma';
-import { Biro, Meeting, BiroCode, MeetingStatus, BureauWorkload, DashboardMetric, MonthlyActivity } from './types';
+import { Biro, Meeting, BiroCode, MeetingStatus, BureauWorkload, DashboardMetric, MonthlyActivity, TeamWorkloadMetric } from './types';
 
 /**
  * Service to fetch official data directly from Neon PostgreSQL database.
@@ -372,6 +372,7 @@ export async function getMeetingsFromDb(filters?: {
           biroCode: m.primaryBiro.code as BiroCode,
           biroName: m.primaryBiro.shortName,
           primaryTeamId: m.primaryTeamId,
+          primaryTeamCode: m.primaryTeam?.code || null,
           primaryTeamName: m.primaryTeam?.name || null,
           previousMeetingId: m.previousMeetingId || null,
           status: m.status as MeetingStatus,
@@ -673,6 +674,98 @@ export async function getDashboardStats() {
         });
       }
 
+      // 3 Tim Kerja Biro IKK (Investasi, Kerja Sama, Komunikasi)
+      const rawTeamUsers = await prisma.$queryRaw<
+        Array<{ id: string; nama: string; email: string; peran: string; id_tim: string | null }>
+      >`SELECT id_pengguna as id, nama_lengkap as nama, email, peran, id_tim FROM pengguna WHERE status_aktif = true`;
+
+      const rawTeams = await prisma.biroTeam.findMany({
+        where: { isActive: true },
+        include: {
+          primaryMeetings: {
+            select: {
+              id: true,
+              meetingNumber: true,
+              title: true,
+              date: true,
+              status: true,
+            },
+            orderBy: { date: 'desc' },
+          },
+          actionItems: {
+            select: {
+              id: true,
+              title: true,
+              status: true,
+              dueDate: true,
+              priority: true,
+              picUser: { select: { name: true } },
+              meeting: { select: { meetingNumber: true, title: true } },
+            },
+            orderBy: [{ dueDate: 'asc' }],
+          },
+        },
+        orderBy: { code: 'asc' },
+      });
+
+      const teamWorkload: TeamWorkloadMetric[] = rawTeams.map((t) => {
+        const meetingCount = t.primaryMeetings.length;
+        const meetingPercentage = totalMeetings > 0 ? Math.round((meetingCount / totalMeetings) * 100) : 0;
+        const totalJobs = t.actionItems.length;
+        const completedJobs = t.actionItems.filter((a) => a.status === 'COMPLETED').length;
+        const inProgressJobs = t.actionItems.filter((a) => a.status === 'IN_PROGRESS').length;
+        const pendingJobs = t.actionItems.filter((a) => a.status === 'PENDING').length;
+        const overdueJobs = t.actionItems.filter(
+          (a) => a.status !== 'COMPLETED' && a.dueDate && new Date(a.dueDate).getTime() < Date.now()
+        ).length;
+        const completionRate = totalJobs > 0 ? Math.round((completedJobs / totalJobs) * 100) : 0;
+
+        const teamMembers = rawTeamUsers
+          .filter((u) => u.id_tim === t.id)
+          .map((u) => ({
+            id: u.id,
+            name: u.nama,
+            email: u.email,
+            role: u.peran,
+          }));
+
+        return {
+          id: t.id,
+          code: t.code,
+          name: t.name,
+          fullName: t.name.startsWith('Tim ') ? t.name : `Tim ${t.name}`,
+          description: t.description,
+          meetingCount,
+          meetingPercentage,
+          totalJobs,
+          completedJobs,
+          inProgressJobs,
+          pendingJobs,
+          overdueJobs,
+          completionRate,
+          memberCount: teamMembers.length,
+          members: teamMembers,
+          actionItems: t.actionItems.map((a) => ({
+            id: a.id,
+            title: a.title,
+            status: a.status,
+            dueDate: a.dueDate ? a.dueDate.toISOString().slice(0, 10) : null,
+            priority: a.priority,
+            picName: a.picUser?.name || null,
+            progress: a.status === 'COMPLETED' ? 100 : a.status === 'IN_PROGRESS' ? 50 : 0,
+            meetingNumber: a.meeting?.meetingNumber || null,
+            meetingTitle: a.meeting?.title || null,
+          })),
+          meetings: t.primaryMeetings.map((m) => ({
+            id: m.id,
+            meetingNumber: m.meetingNumber,
+            title: m.title,
+            date: m.date.toISOString().slice(0, 10),
+            status: m.status as any,
+          })),
+        };
+      });
+
       return {
         totalMeetings,
         totalUsers,
@@ -682,6 +775,7 @@ export async function getDashboardStats() {
         draftMeetings,
         finalMeetings,
         bureauWorkload,
+        teamWorkload,
         metrics,
         monthlyActivity,
         actionItemStats: {

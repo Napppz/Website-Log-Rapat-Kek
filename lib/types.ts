@@ -99,6 +99,7 @@ export interface Meeting {
   biroCode: BiroCode;
   biroName: string;
   primaryTeamId?: string | null;
+  primaryTeamCode?: string | null;
   primaryTeamName?: string | null;
   status: MeetingStatus;
   isNew?: boolean;
@@ -274,3 +275,77 @@ export interface NotaDinasData {
   signatureImage?: string | null;
   documentNumber?: string; // NOMOR: ND-...
 }
+
+export interface TeamWorkloadMetric {
+  id: string;
+  code: string; // 'INV' | 'KS' | 'KOM'
+  name: string; // 'Investasi' | 'Kerja Sama' | 'Komunikasi'
+  fullName: string; // 'Tim Investasi'
+  description?: string | null;
+  meetingCount: number;
+  meetingPercentage: number;
+  // Status Tiap Pekerjaan
+  totalJobs: number;
+  completedJobs: number;
+  inProgressJobs: number;
+  pendingJobs: number;
+  overdueJobs: number;
+  completionRate: number;
+  // Detail anggota
+  memberCount: number;
+  members?: Array<{ id: string; name: string; email: string; role: string }>;
+  // Detail pekerjaan
+  actionItems?: Array<{
+    id: string;
+    title: string;
+    status: string;
+    dueDate?: string | null;
+    priority?: string | null;
+    picName?: string | null;
+    progress?: number;
+    meetingNumber?: string | null;
+    meetingTitle?: string | null;
+  }>;
+  // Detail rapat
+  meetings?: Array<{
+    id: string;
+    meetingNumber: string;
+    title: string;
+    date: string;
+    status: MeetingStatus;
+  }>;
+}
+
+export const IKK_TEAMS = [
+  {
+    id: 'TIM-001',
+    code: 'INV',
+    name: 'Investasi',
+    fullName: 'Tim Investasi',
+    description: 'Fasilitasi, promosi, dan akselerasi realisasi investasi strategis Kawasan Ekonomi Khusus.',
+    iconName: 'Briefcase',
+    badgeClass: 'bg-emerald-50 text-emerald-800 border-emerald-200',
+    colorHex: '#31889C',
+  },
+  {
+    id: 'TIM-003',
+    code: 'KS',
+    name: 'Kerja Sama',
+    fullName: 'Tim Kerja Sama',
+    description: 'Penguatan kemitraan strategis, koordinasi lintas kementerian/lembaga, dan kerja sama badan usaha.',
+    iconName: 'Network',
+    badgeClass: 'bg-indigo-50 text-indigo-800 border-indigo-200',
+    colorHex: '#2E7D32',
+  },
+  {
+    id: 'TIM-002',
+    code: 'KOM',
+    name: 'Komunikasi',
+    fullName: 'Tim Komunikasi',
+    description: 'Publikasi komunikasi publik, hubungan media, dokumentasi, dan diseminasi kebijakan Dewan Nasional KEK.',
+    iconName: 'Radio',
+    badgeClass: 'bg-amber-50 text-amber-800 border-amber-200',
+    colorHex: '#D97706',
+  },
+] as const;
+
