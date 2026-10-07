@@ -54,6 +54,7 @@ import { MeetingCommentsSection } from '@/components/meeting/meeting-comments/me
 import { MinutesHistorySection } from '@/components/meeting/meeting-history/minutes-history-section';
 import { GoogleCalendarModal } from '@/components/meeting/google-calendar-modal';
 import { extractVirtualMeetingDetails } from '@/lib/calendar';
+import { extractPlainText } from '@/lib/pdf/pdf-utils';
 import { MeetingStatus } from '@/lib/types';
 import { AttendanceStatus } from '@prisma/client';
 import {
@@ -688,6 +689,29 @@ export function MeetingDetailView({
   const absentCount = participants.filter((p) => p.attendanceStatus === 'ABSENT').length;
   const invitedCount = participants.filter((p) => p.attendanceStatus === 'INVITED').length;
 
+  // Action items & attachments counts for Overview KPI
+  const actionItemList = meeting.actionItems || [];
+  const completedActionCount = actionItemList.filter((a: any) => a.status === 'COMPLETED').length;
+  const totalActionCount = actionItemList.length;
+  const totalAttachmentsCount = Array.isArray(meeting.attachments) ? meeting.attachments.length : 0;
+
+  // Extracted plain text for Overview agenda & decisions
+  const agendaPlainText = extractPlainText(meeting.minutes?.agenda);
+  const agendaItems = agendaPlainText
+    ? agendaPlainText
+        .split('\n')
+        .map((s) => s.trim().replace(/^[-*•\d.]+\s*/, ''))
+        .filter((s) => s.length > 0)
+    : [];
+
+  const decisionsPlainText = extractPlainText(meeting.minutes?.decisions);
+  const decisionItems = decisionsPlainText
+    ? decisionsPlainText
+        .split('\n')
+        .map((s) => s.trim().replace(/^[-*•\d.]+\s*/, ''))
+        .filter((s) => s.length > 0)
+    : [];
+
   // Unadded users for modal
   const unaddedUsers = availableUsers.filter(
     (u: any) => !participants.some((p: any) => p.userId === u.id)
@@ -1253,32 +1277,266 @@ export function MeetingDetailView({
 
       {/* Tab 1: Informasi Rapat / Overview */}
       {activeTab === 'overview' && (
-        <div className="space-y-6">
-          <div className="bg-white rounded-xl border border-slate-200 p-6 shadow-xs space-y-4 text-[13px]">
-            <h3 className="text-[16px] font-bold text-slate-900">Deskripsi &amp; Cakupan Sidang</h3>
-            <p className="text-slate-600 leading-relaxed">
-              Pertemuan koordinasi resmi diprakarsai oleh <strong>{meeting.primaryBiro.name}</strong>.
-              Rapat ini membahas agenda strategis akselerasi kawasan, penataan regulasi, serta pengendalian
-              operasional Kawasan Ekonomi Khusus RI.
-            </p>
-
-            {/* Dokumen Surat Undangan Resmi */}
-            <div className="p-5 bg-gradient-to-br from-[#F0F8FA]/90 via-white to-slate-50 rounded-2xl border border-[#BCE3EB] shadow-xs space-y-4">
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-100 pb-3">
-                <div className="flex items-center gap-2.5">
-                  <div className="w-9 h-9 rounded-xl bg-[#1E6B7B]/10 text-[#1E6B7B] flex items-center justify-center">
-                    <Paperclip className="w-5 h-5" />
-                  </div>
-                  <div>
-                    <h4 className="font-bold text-slate-900 text-sm">
-                      Dokumen Surat Undangan Resmi Sidang
-                    </h4>
-                    <p className="text-[12px] text-slate-500">
-                      Surat edaran atau lampiran fisik undangan resmi pelaksanaan rapat koordinasi ini
-                    </p>
-                  </div>
+        <div className="space-y-5">
+          {/* Executive KPI Bar (4 Ringkasan Metrik Cepat Rapat) */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5">
+            {/* KPI 1: Presensi Kehadiran */}
+            <div
+              onClick={() => handleTabChange('participants')}
+              role="button"
+              tabIndex={0}
+              className="group bg-white hover:bg-emerald-50/40 p-4 rounded-xl border border-slate-200 hover:border-emerald-300 transition-all cursor-pointer shadow-xs flex flex-col justify-between"
+            >
+              <div className="flex items-center justify-between gap-2">
+                <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500 group-hover:text-emerald-700">
+                  Presensi Sidang
+                </span>
+                <div className="w-7 h-7 rounded-lg bg-emerald-100/70 text-emerald-700 flex items-center justify-center">
+                  <Users className="w-3.5 h-3.5" />
                 </div>
+              </div>
+              <div className="mt-2.5">
+                <div className="text-xl font-extrabold text-slate-900 group-hover:text-emerald-800">
+                  {presentCount} <span className="text-xs font-semibold text-slate-400">/ {totalCount} Hadir</span>
+                </div>
+                <div className="flex items-center justify-between text-[11.5px] text-slate-500 mt-1">
+                  <span>{totalCount > 0 ? `${Math.round((presentCount / totalCount) * 100)}% kehadiran` : '0 peserta'}</span>
+                  <span className="font-semibold text-emerald-700 group-hover:underline flex items-center gap-0.5">
+                    Kelola <ChevronRight className="w-3 h-3 inline" />
+                  </span>
+                </div>
+              </div>
+            </div>
 
+            {/* KPI 2: Naskah Notula & Risalah */}
+            <div
+              onClick={() => {
+                handleTabChange('minutes');
+                handleMinutesSubTabChange('document');
+              }}
+              role="button"
+              tabIndex={0}
+              className="group bg-white hover:bg-[#F0F9FA] p-4 rounded-xl border border-slate-200 hover:border-[#BCE3EB] transition-all cursor-pointer shadow-xs flex flex-col justify-between"
+            >
+              <div className="flex items-center justify-between gap-2">
+                <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500 group-hover:text-[#215865]">
+                  Naskah Risalah
+                </span>
+                <div className="w-7 h-7 rounded-lg bg-[#E8F5F7] text-[#1E6B7B] flex items-center justify-center">
+                  <FileText className="w-3.5 h-3.5" />
+                </div>
+              </div>
+              <div className="mt-2.5">
+                <div className="text-xl font-extrabold text-slate-900 group-hover:text-[#1E6B7B]">
+                  {meeting.minutes ? 'Tersedia' : 'Belum Ada'}
+                </div>
+                <div className="flex items-center justify-between text-[11.5px] text-slate-500 mt-1">
+                  <span>
+                    {status === 'FINAL'
+                      ? 'Naskah Disahkan'
+                      : status === 'APPROVED'
+                      ? 'Telah Divalidasi'
+                      : status === 'REVIEW'
+                      ? 'Tahap Telaah'
+                      : 'Draf Penyusunan'}
+                  </span>
+                  <span className="font-semibold text-[#1E6B7B] group-hover:underline flex items-center gap-0.5">
+                    Buka <ChevronRight className="w-3 h-3 inline" />
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            {/* KPI 3: Berkas & Paparan */}
+            <div
+              onClick={() => {
+                handleTabChange('minutes');
+                handleMinutesSubTabChange('materials');
+              }}
+              role="button"
+              tabIndex={0}
+              className="group bg-white hover:bg-sky-50/50 p-4 rounded-xl border border-slate-200 hover:border-sky-300 transition-all cursor-pointer shadow-xs flex flex-col justify-between"
+            >
+              <div className="flex items-center justify-between gap-2">
+                <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500 group-hover:text-sky-700">
+                  Berkas Paparan
+                </span>
+                <div className="w-7 h-7 rounded-lg bg-sky-100/70 text-sky-700 flex items-center justify-center">
+                  <Presentation className="w-3.5 h-3.5" />
+                </div>
+              </div>
+              <div className="mt-2.5">
+                <div className="text-xl font-extrabold text-slate-900 group-hover:text-sky-800">
+                  {totalAttachmentsCount} <span className="text-xs font-semibold text-slate-400">Berkas</span>
+                </div>
+                <div className="flex items-center justify-between text-[11.5px] text-slate-500 mt-1">
+                  <span>{invitationDoc ? '+ Undangan Resmi' : 'Slide & Lampiran'}</span>
+                  <span className="font-semibold text-sky-700 group-hover:underline flex items-center gap-0.5">
+                    Lihat <ChevronRight className="w-3 h-3 inline" />
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            {/* KPI 4: Tindak Lanjut */}
+            <div
+              onClick={() => handleTabChange('actionItems')}
+              role="button"
+              tabIndex={0}
+              className="group bg-white hover:bg-amber-50/40 p-4 rounded-xl border border-slate-200 hover:border-amber-300 transition-all cursor-pointer shadow-xs flex flex-col justify-between"
+            >
+              <div className="flex items-center justify-between gap-2">
+                <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500 group-hover:text-amber-700">
+                  Tindak Lanjut
+                </span>
+                <div className="w-7 h-7 rounded-lg bg-amber-100/70 text-amber-700 flex items-center justify-center">
+                  <CheckSquare className="w-3.5 h-3.5" />
+                </div>
+              </div>
+              <div className="mt-2.5">
+                <div className="text-xl font-extrabold text-slate-900 group-hover:text-amber-800">
+                  {completedActionCount} <span className="text-xs font-semibold text-slate-400">/ {totalActionCount} Selesai</span>
+                </div>
+                <div className="flex items-center justify-between text-[11.5px] text-slate-500 mt-1">
+                  <span>
+                    {totalActionCount > 0
+                      ? `${Math.round((completedActionCount / totalActionCount) * 100)}% tuntas`
+                      : 'Belum ada PIC'}
+                  </span>
+                  <span className="font-semibold text-amber-700 group-hover:underline flex items-center gap-0.5">
+                    Matriks <ChevronRight className="w-3 h-3 inline" />
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Agenda Pembahasan & Ringkasan Sidang */}
+          <div className="bg-white rounded-xl border border-slate-200 p-6 shadow-xs space-y-5">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 pb-4">
+              <div>
+                <h3 className="text-[16px] font-bold text-slate-900">Agenda &amp; Pokok Pembahasan Sidang</h3>
+                <p className="text-[12.5px] text-slate-500 mt-0.5">
+                  Fokus materi dan substansi pokok yang dikoordinasikan oleh{' '}
+                  <strong className="text-slate-700">{meeting.primaryBiro?.name}</strong>
+                </p>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => {
+                  handleTabChange('minutes');
+                  handleMinutesSubTabChange('document');
+                }}
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-[#BCE3EB] bg-[#F0F9FA] hover:bg-[#E0F2F5] text-[#1E6B7B] text-xs font-semibold transition-colors self-start sm:self-auto cursor-pointer"
+              >
+                <FileText className="w-3.5 h-3.5" />
+                <span>{meeting.minutes ? 'Buka Naskah Lengkap' : '+ Susun Naskah Notula'}</span>
+              </button>
+            </div>
+
+            {agendaItems.length > 0 ? (
+              <div className="space-y-2.5">
+                {agendaItems.map((item, idx) => (
+                  <div
+                    key={idx}
+                    className="flex items-start gap-3 p-3 rounded-lg bg-slate-50/70 border border-slate-200/70 hover:bg-white hover:border-slate-300 transition-colors"
+                  >
+                    <span className="w-5 h-5 rounded-full bg-[#1E6B7B]/10 text-[#1E6B7B] text-[11px] font-bold flex items-center justify-center shrink-0 mt-0.5">
+                      {idx + 1}
+                    </span>
+                    <span className="text-[13px] text-slate-800 leading-relaxed font-medium">
+                      {item}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="p-4 rounded-xl bg-slate-50/80 border border-slate-200/80 text-[13px] text-slate-600 flex items-start gap-3">
+                <Info className="w-4 h-4 text-[#31889C] shrink-0 mt-0.5" />
+                <div className="space-y-1">
+                  <p className="font-semibold text-slate-800">
+                    Agenda Utama: {meeting.title}
+                  </p>
+                  <p className="text-slate-500 text-[12px] leading-relaxed">
+                    Rincian butir agenda pembahasan belum dimasukkan ke draf naskah risalah.
+                    Penyusun risalah atau biro dapat menambahkan rincian agenda melalui tab <strong>Notulen Rapat</strong>.
+                  </p>
+                </div>
+              </div>
+            )}
+
+            {/* Poin Kesepakatan / Keputusan Utama (jika ada) */}
+            {decisionItems.length > 0 && (
+              <div className="pt-2">
+                <h4 className="text-[13px] font-bold text-slate-900 mb-2.5 flex items-center gap-2">
+                  <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+                  <span>Ringkasan Kesepakatan &amp; Keputusan Rapat:</span>
+                </h4>
+                <div className="space-y-2">
+                  {decisionItems.slice(0, 4).map((dec, idx) => (
+                    <div
+                      key={idx}
+                      className="flex items-start gap-2.5 text-[12.5px] text-slate-700 bg-emerald-50/40 border border-emerald-200/60 p-2.5 rounded-lg"
+                    >
+                      <Check className="w-3.5 h-3.5 text-emerald-600 shrink-0 mt-0.5" />
+                      <span className="leading-relaxed">{dec}</span>
+                    </div>
+                  ))}
+                  {decisionItems.length > 4 && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        handleTabChange('minutes');
+                        handleMinutesSubTabChange('document');
+                      }}
+                      className="text-xs font-semibold text-[#1E6B7B] hover:underline pt-1 block cursor-pointer"
+                    >
+                      + Lihat {decisionItems.length - 4} keputusan lainnya di naskah notula →
+                    </button>
+                  )}
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Dokumen Surat Undangan Resmi (Slim & Modern Strip) */}
+          <div className="bg-white rounded-xl border border-slate-200 p-5 shadow-xs space-y-3">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+              <div className="flex items-center gap-3 min-w-0">
+                <div className="w-10 h-10 rounded-xl bg-[#1E6B7B]/10 text-[#1E6B7B] flex items-center justify-center shrink-0">
+                  <Mail className="w-5 h-5" />
+                </div>
+                <div className="min-w-0">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <h4 className="font-bold text-slate-900 text-sm">
+                      Surat Undangan Resmi Sidang
+                    </h4>
+                    {invitationDoc ? (
+                      <span className="px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 text-[10px] font-bold">
+                        ✓ Berkas Terlampir
+                      </span>
+                    ) : (
+                      <span className="px-2 py-0.5 rounded-full bg-slate-100 text-slate-600 text-[10px] font-bold">
+                        Belum Diunggah
+                      </span>
+                    )}
+                  </div>
+                  <p className="text-[12px] text-slate-500 truncate mt-0.5">
+                    {invitationDoc ? (
+                      <>
+                        <span className="font-medium text-slate-800">{invitationDoc.name}</span>
+                        {invitationDoc.size ? ` • ${formatFileSize(invitationDoc.size)}` : ''}
+                      </>
+                    ) : (
+                      'Lampiran fisik/digital surat edaran undangan resmi pelaksanaan sidang'
+                    )}
+                  </p>
+                </div>
+              </div>
+
+              {/* Action buttons */}
+              <div className="flex items-center gap-2 shrink-0 self-start sm:self-auto flex-wrap">
                 <input
                   ref={invitationFileInputRef}
                   type="file"
@@ -1290,174 +1548,82 @@ export function MeetingDetailView({
                   }}
                 />
 
-                {canEditMeeting && !isUploadingInvitation && (
-                  <button
-                    type="button"
-                    onClick={() => invitationFileInputRef.current?.click()}
-                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-[#BCE3EB] bg-white hover:bg-[#E8F5F7] text-[#215865] text-xs font-semibold shadow-2xs transition-all cursor-pointer self-start sm:self-auto"
-                  >
-                    <UploadCloud className="w-3.5 h-3.5 text-[#31889C]" />
-                    <span>{invitationDoc ? 'Ganti Berkas Undangan' : '+ Unggah Surat Undangan'}</span>
-                  </button>
-                )}
-              </div>
-
-              {isUploadingInvitation ? (
-                <div className="py-6 flex flex-col items-center justify-center gap-2 text-center bg-white rounded-xl border border-slate-200">
-                  <Loader2 className="w-6 h-6 animate-spin text-[#1E6B7B]" />
-                  <p className="text-xs font-bold text-slate-800">Mengunggah berkas surat undangan...</p>
-                  <p className="text-[11px] text-slate-400">Menyimpan berkas ke repositori digital KEK</p>
-                </div>
-              ) : invitationDoc ? (
-                <div className="p-4 bg-white rounded-xl border border-teal-200 flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-2xs">
-                  <div className="flex items-center gap-3.5 min-w-0">
-                    <div className="w-12 h-12 rounded-xl bg-teal-50 border border-teal-200 text-[#1E6B7B] flex items-center justify-center shrink-0">
-                      <FileText className="w-6 h-6" />
-                    </div>
-                    <div className="min-w-0">
-                      <div className="flex items-center gap-2 flex-wrap">
-                        <p className="font-bold text-slate-900 text-sm truncate max-w-[280px] sm:max-w-md">
-                          {invitationDoc.name}
-                        </p>
-                        <span className="px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 text-[10px] font-bold">
-                          ✓ Berkas Resmi Terlampir
-                        </span>
-                      </div>
-                      <p className="text-[12px] text-slate-500 mt-0.5">
-                        {invitationDoc.size ? `Ukuran: ${formatFileSize(invitationDoc.size)} • ` : ''}
-                        Tersimpan di repositori internal sistem
-                      </p>
-                    </div>
+                {isUploadingInvitation ? (
+                  <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-slate-100 text-slate-600 text-xs font-semibold">
+                    <Loader2 className="w-3.5 h-3.5 animate-spin text-[#1E6B7B]" />
+                    <span>Mengunggah...</span>
                   </div>
-
-                  <div className="flex items-center gap-2 shrink-0 flex-wrap">
+                ) : invitationDoc ? (
+                  <>
                     <a
                       href={invitationDoc.url}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg bg-[#1E6B7B] hover:bg-[#175360] text-white text-xs font-bold transition-all shadow-xs cursor-pointer"
+                      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#1E6B7B] hover:bg-[#175360] text-white text-xs font-bold transition-all shadow-xs cursor-pointer"
                     >
                       <Eye className="w-3.5 h-3.5" />
-                      <span>Buka / Pratinjau</span>
+                      <span>Buka Pratinjau</span>
                     </a>
                     <a
                       href={invitationDoc.url}
                       download={invitationDoc.name}
-                      className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 text-xs font-semibold transition-colors cursor-pointer shadow-2xs"
+                      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 text-xs font-semibold transition-colors cursor-pointer shadow-2xs"
                     >
                       <FileDown className="w-3.5 h-3.5 text-[#1E6B7B]" />
                       <span>Unduh</span>
                     </a>
                     {canEditMeeting && (
-                      <button
-                        type="button"
-                        onClick={handleRemoveInvitation}
-                        className="inline-flex items-center gap-1 px-2.5 py-2 rounded-lg border border-rose-200 text-rose-600 hover:bg-rose-50 text-xs font-semibold transition-colors cursor-pointer"
-                        title="Lepas berkas undangan dari rapat"
-                      >
-                        <Trash2 className="w-3.5 h-3.5" />
-                      </button>
+                      <>
+                        <button
+                          type="button"
+                          onClick={() => invitationFileInputRef.current?.click()}
+                          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 text-xs font-semibold transition-colors cursor-pointer shadow-2xs"
+                          title="Ganti berkas undangan"
+                        >
+                          <UploadCloud className="w-3.5 h-3.5 text-slate-500" />
+                          <span>Ganti</span>
+                        </button>
+                        <button
+                          type="button"
+                          onClick={handleRemoveInvitation}
+                          className="inline-flex items-center justify-center w-8 h-8 rounded-lg border border-rose-200 text-rose-600 hover:bg-rose-50 text-xs transition-colors cursor-pointer"
+                          title="Lepas lampiran undangan"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
+                      </>
                     )}
-                  </div>
-                </div>
-              ) : (
-                <div className="p-4 bg-slate-50/70 rounded-xl border border-dashed border-slate-300 text-center flex flex-col items-center justify-center gap-2">
-                  <div className="w-9 h-9 rounded-full bg-white flex items-center justify-center text-slate-400 border border-slate-200">
-                    <Paperclip className="w-4 h-4" />
-                  </div>
-                  <div>
-                    <p className="text-xs font-bold text-slate-700">Belum Ada Berkas Surat Undangan Resmi</p>
-                    <p className="text-[11.5px] text-slate-500 mt-0.5">
-                      Rapat ini belum memiliki lampiran berkas dokumen surat undangan fisik/digital.
-                    </p>
-                  </div>
-                  {canEditMeeting && (
+                  </>
+                ) : (
+                  canEditMeeting && (
                     <button
                       type="button"
                       onClick={() => invitationFileInputRef.current?.click()}
-                      className="mt-1 inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg bg-[#1E6B7B] hover:bg-[#175360] text-white text-xs font-bold transition-all shadow-xs cursor-pointer"
+                      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#1E6B7B] hover:bg-[#175360] text-white text-xs font-bold transition-all shadow-xs cursor-pointer"
                     >
                       <UploadCloud className="w-3.5 h-3.5" />
-                      <span>+ Unggah Berkas Undangan Sekarang</span>
+                      <span>+ Unggah Surat Undangan</span>
                     </button>
-                  )}
-                </div>
-              )}
+                  )
+                )}
+              </div>
             </div>
 
-            <div className="p-4 bg-[#F0F9FA] rounded-xl border border-[#BCE3EB] flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-              <div>
-                <h4 className="font-bold text-slate-900">Arsip Risalah &amp; Notulen Digital</h4>
-                <p className="text-[12px] text-slate-500">
-                  {meeting.minutes
-                    ? 'Notulen rapat telah tercatat di Neon DB. Klik tab Notulen untuk membaca atau memperbarui.'
-                    : 'Belum ada notulen resmi yang diinputkan untuk rapat ini.'}
-                </p>
-              </div>
+            {/* Bottom link to Berkas & Paparan */}
+            <div className="pt-2 border-t border-slate-100 flex items-center justify-between text-[11.5px] text-slate-500">
+              <span>Materi paparan, presentasi, dan berkas lampiran pendukung lainnya:</span>
               <button
                 type="button"
-                onClick={() => handleTabChange('minutes')}
-                className="px-4 py-2 rounded-lg bg-[#31889C] hover:bg-[#266F80] text-white font-semibold text-[12px] transition-all shrink-0 cursor-pointer shadow-xs"
+                onClick={() => {
+                  handleTabChange('minutes');
+                  handleMinutesSubTabChange('materials');
+                }}
+                className="text-[#1E6B7B] font-semibold hover:underline flex items-center gap-1 cursor-pointer"
               >
-                {meeting.minutes
-                  ? 'Buka Notulen Rapat'
-                  : canEditMinutes
-                    ? '+ Buat Notulen Sekarang'
-                    : 'Lihat Lembar Naskah'}
+                <span>Buka Tab Berkas &amp; Paparan ({totalAttachmentsCount})</span>
+                <ChevronRight className="w-3 h-3" />
               </button>
             </div>
-
-            {/* Matriks Tindak Lanjut Quick Card */}
-            <div className="p-4 bg-[#F0F9FA] rounded-xl border border-[#BCE3EB] flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-              <div>
-                <h4 className="font-bold text-slate-900">Matriks &amp; Komitmen Tindak Lanjut</h4>
-                <p className="text-[12px] text-slate-500">
-                  {meeting.actionItems && meeting.actionItems.length > 0
-                    ? `Terdapat ${meeting.actionItems.length} butir tindak lanjut terdaftar (${meeting.actionItems.filter((a: any) => a.status === 'COMPLETED').length
-                    } selesai).`
-                    : 'Belum ada butir tindak lanjut yang dibuat untuk rapat ini.'}
-                </p>
-              </div>
-              <button
-                type="button"
-                onClick={() => handleTabChange('actionItems')}
-                className="px-4 py-2 rounded-lg bg-white border border-[#BCE3EB] hover:bg-[#E8F5F7] text-[#215865] font-semibold text-[12px] transition-all shrink-0 cursor-pointer shadow-xs"
-              >
-                {meeting.actionItems && meeting.actionItems.length > 0
-                  ? 'Buka Matriks Tindak Lanjut'
-                  : canCreateActionItem
-                    ? '+ Tambah Tindak Lanjut'
-                    : 'Lihat Matriks Tindak Lanjut'}
-              </button>
-            </div>
-
-            {/* Rujukan Rapat Sebelumnya di Overview */}
-            {previousMeeting && (
-              <div className="p-4 bg-[#F0F9FA] rounded-xl border border-[#BCE3EB] flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                <div className="space-y-1">
-                  <div className="flex items-center gap-2 flex-wrap">
-                    <span className="text-[10px] font-bold uppercase tracking-wider text-[#215865] bg-[#E8F5F7] px-2 py-0.5 rounded border border-[#BCE3EB]">
-                      Rapat Rujukan / Sidang Ke-1
-                    </span>
-                    <span className="font-bold text-[12px] text-[#215865]">
-                      {previousMeeting.meetingNumber}
-                    </span>
-                  </div>
-                  <h4 className="font-bold text-slate-900 text-[13px]">{previousMeeting.title}</h4>
-                  <p className="text-[12px] text-slate-600">
-                    Sidang ini diselenggarakan sebagai tindak lanjut resmi dari agenda sebelumnya. Anda dapat meninjau seluruh notula dan progres butir tindak lanjut rapat ke-1.
-                  </p>
-                </div>
-                <button
-                  type="button"
-                  onClick={() => setShowPreviousMeetingModal(true)}
-                  className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg bg-[#31889C] hover:bg-[#266F80] text-white font-semibold text-[12px] transition-all shrink-0 cursor-pointer shadow-xs"
-                >
-                  <Eye className="w-3.5 h-3.5" />
-                  <span>Buka Hasil Rapat 1</span>
-                </button>
-              </div>
-            )}
           </div>
         </div>
       )}
