@@ -39,6 +39,9 @@ interface MeetingTableProps {
   filterYear?: string | number | null;
   filterDayOfWeek?: string | number | null;
   filterDate?: string | null;
+  searchQuery?: string;
+  onSearchChange?: (val: string) => void;
+  hideHeader?: boolean;
   isLoading?: boolean;
   initialMeetings?: Meeting[];
   pageSize?: number;
@@ -54,6 +57,9 @@ export function MeetingTable({
   filterYear,
   filterDayOfWeek,
   filterDate,
+  searchQuery,
+  onSearchChange,
+  hideHeader = false,
   isLoading = false,
   initialMeetings,
   pageSize = 8,
@@ -72,6 +78,14 @@ export function MeetingTable({
   }, [initialMeetings, deletedMeetingIds]);
   const [fetching, setFetching] = useState(false);
   const [searchFilter, setSearchFilter] = useState('');
+  const effectiveSearch = searchQuery !== undefined ? searchQuery : searchFilter;
+  const setEffectiveSearch = (val: string) => {
+    if (onSearchChange) {
+      onSearchChange(val);
+    } else {
+      setSearchFilter(val);
+    }
+  };
   const [seriesModalMeetingId, setSeriesModalMeetingId] = useState<string | null>(null);
   const [isSeriesModalOpen, setIsSeriesModalOpen] = useState<boolean>(false);
   const [currentPage, setCurrentPage] = useState(1);
@@ -331,25 +345,27 @@ export function MeetingTable({
         }
       }
 
-      if (!searchFilter.trim()) return true;
-      const q = searchFilter.toLowerCase();
+      if (!effectiveSearch.trim()) return true;
+      const q = effectiveSearch.toLowerCase();
       return (
         m.code.toLowerCase().includes(q) ||
         m.title.toLowerCase().includes(q) ||
         m.biroName.toLowerCase().includes(q) ||
-        m.location.toLowerCase().includes(q)
+        m.location.toLowerCase().includes(q) ||
+        (m.primaryTeamName && m.primaryTeamName.toLowerCase().includes(q)) ||
+        (m.agendaSummary && m.agendaSummary.toLowerCase().includes(q))
       );
     });
-  }, [meetings, deletedMeetingIds, searchFilter, filterBiro, filterStatus, filterMonth, filterYear, filterDayOfWeek, filterDate]);
+  }, [meetings, deletedMeetingIds, effectiveSearch, filterBiro, filterStatus, filterMonth, filterYear, filterDayOfWeek, filterDate]);
 
   const handleResetFilter = () => {
-    setSearchFilter('');
+    setEffectiveSearch('');
   };
 
   // Reset page when filters change
   React.useEffect(() => {
     setCurrentPage(1);
-  }, [searchFilter, filterBiro, filterStatus, filterMonth, filterYear, filterDayOfWeek, filterDate]);
+  }, [effectiveSearch, filterBiro, filterStatus, filterMonth, filterYear, filterDayOfWeek, filterDate]);
 
   const itemsPerPage = pageSize;
   const totalPages = Math.max(1, Math.ceil(filteredMeetings.length / itemsPerPage));
@@ -374,49 +390,51 @@ export function MeetingTable({
   };
 
   return (
-    <div className="rounded-xl bg-white shadow-sm border border-slate-200 overflow-hidden flex flex-col">
-      {/* Table Card Header */}
-      <div className="p-6 flex flex-col md:flex-row md:items-center md:justify-between gap-3 bg-[#F8FAFC] border-b border-slate-200">
-        <div>
-          <div className="flex items-center gap-2">
-            <span className="w-2.5 h-2.5 rounded-full bg-[#31889C]"></span>
-            <h2 className="font-bold text-[18px] text-slate-900">
-              {onViewAllMeetings ? 'Agenda & Risalah Rapat Terkini' : 'Semua Risalah Rapat KEK'}
-            </h2>
-          </div>
-          <p className="text-[12.5px] text-slate-500 mt-0.5">
-            {onViewAllMeetings
-              ? 'Ringkasan rapat koordinasi terbaru. Untuk mencari data lama atau arsip penuh, klik Buka Semua Arsip.'
-              : 'Daftar lengkap agenda dan risalah pertemuan, diurutkan dari yang paling baru.'}
-          </p>
-        </div>
-
-        <div className="flex items-center gap-3">
-          {/* Quick Filter Input */}
-          <div className="relative">
-            <input
-              type="text"
-              value={searchFilter}
-              onChange={(e) => setSearchFilter(e.target.value)}
-              placeholder="Cari nomor/agenda..."
-              className="pl-8 pr-3 py-1.5 rounded-xl bg-white border border-slate-200 text-slate-800 text-[12.5px] focus:outline-none focus:ring-2 focus:ring-[#31889C]/25 focus:border-[#31889C] shadow-2xs"
-            />
-            <Filter className="w-3.5 h-3.5 absolute left-2.5 top-2.5 text-[#31889C] pointer-events-none" />
+    <div className="rounded-2xl bg-white shadow-xs border border-slate-200/90 overflow-hidden flex flex-col">
+      {/* Table Card Header (Conditional) */}
+      {!hideHeader && (
+        <div className="p-5 sm:p-6 flex flex-col md:flex-row md:items-center md:justify-between gap-3 bg-[#F8FAFC] border-b border-slate-200">
+          <div>
+            <div className="flex items-center gap-2">
+              <span className="w-2.5 h-2.5 rounded-full bg-[#31889C]"></span>
+              <h2 className="font-bold text-[18px] text-slate-900">
+                {onViewAllMeetings ? 'Agenda & Risalah Rapat Terkini' : 'Semua Risalah Rapat KEK'}
+              </h2>
+            </div>
+            <p className="text-[12.5px] text-slate-500 mt-0.5">
+              {onViewAllMeetings
+                ? 'Ringkasan rapat koordinasi terbaru. Untuk mencari data lama atau arsip penuh, klik Buka Semua Arsip.'
+                : 'Daftar lengkap agenda dan risalah pertemuan, diurutkan dari yang paling baru.'}
+            </p>
           </div>
 
-          {/* View All Meetings Link */}
-          {onViewAllMeetings && (
-            <button
-              type="button"
-              onClick={onViewAllMeetings}
-              className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-[#31889C] text-white hover:bg-[#266F80] transition-all text-[12.5px] font-semibold shadow-xs cursor-pointer shrink-0"
-            >
-              <span>Buka Semua Arsip Rapat</span>
-              <ArrowRight className="w-4 h-4" />
-            </button>
-          )}
+          <div className="flex items-center gap-3">
+            {/* Quick Filter Input */}
+            <div className="relative">
+              <input
+                type="text"
+                value={effectiveSearch}
+                onChange={(e) => setEffectiveSearch(e.target.value)}
+                placeholder="Cari nomor/agenda..."
+                className="pl-8 pr-3 py-1.5 rounded-xl bg-white border border-slate-200 text-slate-800 text-[12.5px] focus:outline-none focus:ring-2 focus:ring-[#31889C]/25 focus:border-[#31889C] shadow-2xs"
+              />
+              <Filter className="w-3.5 h-3.5 absolute left-2.5 top-2.5 text-[#31889C] pointer-events-none" />
+            </div>
+
+            {/* View All Meetings Link */}
+            {onViewAllMeetings && (
+              <button
+                type="button"
+                onClick={onViewAllMeetings}
+                className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-[#31889C] text-white hover:bg-[#266F80] transition-all text-[12.5px] font-semibold shadow-xs cursor-pointer shrink-0"
+              >
+                <span>Buka Semua Arsip Rapat</span>
+                <ArrowRight className="w-4 h-4" />
+              </button>
+            )}
+          </div>
         </div>
-      </div>
+      )}
 
       {/* Table Content */}
       <div className="overflow-x-auto">
@@ -476,7 +494,7 @@ export function MeetingTable({
                       </p>
                     </div>
                     <div className="flex items-center gap-2 flex-wrap justify-center">
-                      {searchFilter && (
+                      {effectiveSearch && (
                         <button
                           type="button"
                           onClick={handleResetFilter}

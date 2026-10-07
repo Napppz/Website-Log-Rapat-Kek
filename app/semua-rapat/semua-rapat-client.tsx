@@ -20,6 +20,9 @@ import {
   CalendarDays,
   Clock,
   RotateCcw,
+  Search,
+  ChevronDown,
+  SlidersHorizontal,
 } from 'lucide-react';
 import Link from 'next/link';
 import { useSession } from 'next-auth/react';
@@ -90,6 +93,7 @@ export function SemuaRapatClient({
   const [isStatusGuideOpen, setIsStatusGuideOpen] = useState(false);
   const [confirmInput, setConfirmInput] = useState('');
   const [isDeletingAll, setIsDeletingAll] = useState(false);
+  const [searchFilter, setSearchFilter] = useState('');
 
   // Filter params
   const statusParam = searchParams.get('status') as MeetingStatus | null;
@@ -131,7 +135,7 @@ export function SemuaRapatClient({
     });
   }, [meetingsList, biroParam, lockedBiroCode]);
 
-  // Meetings filtered by Biro AND Date/Month/Day/Year
+  // Meetings filtered by Biro AND Date/Month/Day/Year AND Search Filter
   const fullyFilteredMeetings = useMemo(() => {
     return biroFilteredMeetings.filter((m) => {
       if (monthIdx !== null || dayIdx !== null || targetYear !== null || targetDate !== null) {
@@ -142,9 +146,20 @@ export function SemuaRapatClient({
         if (monthIdx !== null && parsed.month !== monthIdx) return false;
         if (dayIdx !== null && parsed.dayOfWeek !== dayIdx) return false;
       }
+      if (searchFilter.trim()) {
+        const q = searchFilter.toLowerCase();
+        const matches =
+          m.code.toLowerCase().includes(q) ||
+          m.title.toLowerCase().includes(q) ||
+          m.biroName.toLowerCase().includes(q) ||
+          m.location.toLowerCase().includes(q) ||
+          (m.primaryTeamName && m.primaryTeamName.toLowerCase().includes(q)) ||
+          (m.agendaSummary && m.agendaSummary.toLowerCase().includes(q));
+        if (!matches) return false;
+      }
       return true;
     });
-  }, [biroFilteredMeetings, monthIdx, dayIdx, targetYear, targetDate]);
+  }, [biroFilteredMeetings, monthIdx, dayIdx, targetYear, targetDate, searchFilter]);
 
   const countAll = fullyFilteredMeetings.length;
   const countDraft = fullyFilteredMeetings.filter((m) => m.status === 'DRAFT').length;
@@ -152,12 +167,18 @@ export function SemuaRapatClient({
   const countApproved = fullyFilteredMeetings.filter((m) => m.status === 'APPROVED').length;
   const countFinal = fullyFilteredMeetings.filter((m) => m.status === 'FINAL').length;
 
-  const statusFilters: { label: string; value: MeetingStatus | 'ALL'; count: number; sublabel?: string }[] = [
-    { label: 'Semua Status', value: 'ALL', count: countAll },
-    { label: '1. Draf', value: 'DRAFT', count: countDraft, sublabel: 'Penyusunan' },
-    { label: '2. Reviu', value: 'REVIEW', count: countReview, sublabel: 'Penelaahan' },
-    { label: '3. Disetujui', value: 'APPROVED', count: countApproved, sublabel: 'Validasi Pimpinan' },
-    { label: '4. Final', value: 'FINAL', count: countFinal, sublabel: 'Disahkan & Terbit' },
+  const statusFilters: {
+    label: string;
+    value: MeetingStatus | 'ALL';
+    count: number;
+    sublabel?: string;
+    dotColor: string;
+  }[] = [
+    { label: 'Semua Status', value: 'ALL', count: countAll, dotColor: 'bg-slate-400' },
+    { label: '1. Draf', value: 'DRAFT', count: countDraft, sublabel: 'Penyusunan', dotColor: 'bg-slate-400' },
+    { label: '2. Reviu', value: 'REVIEW', count: countReview, sublabel: 'Penelaahan', dotColor: 'bg-amber-500' },
+    { label: '3. Disetujui', value: 'APPROVED', count: countApproved, sublabel: 'Validasi Pimpinan', dotColor: 'bg-sky-500' },
+    { label: '4. Final', value: 'FINAL', count: countFinal, sublabel: 'Disahkan & Terbit', dotColor: 'bg-emerald-500' },
   ];
 
   // Presets and date helpers
@@ -176,6 +197,42 @@ export function SemuaRapatClient({
     monthIdx === null &&
     dayIdx === null &&
     yearParam === currentYear.toString();
+
+  const isCustomTimeActive = Boolean(
+    dateParam ||
+    dayParam ||
+    (yearParam && !isThisYearPresetActive && !isThisMonthPresetActive) ||
+    (monthParam && !isThisMonthPresetActive)
+  );
+
+  const [isCustomShelfOpen, setIsCustomShelfOpen] = useState(isCustomTimeActive);
+
+  // Auto-open custom drawer if custom parameters exist in URL
+  useEffect(() => {
+    if (isCustomTimeActive) {
+      setIsCustomShelfOpen(true);
+    }
+  }, [isCustomTimeActive]);
+
+  const activeTimeLabel = useMemo(() => {
+    if (isTodayPresetActive) return 'Hari Ini';
+    if (isThisMonthPresetActive) return 'Bulan Ini';
+    if (isThisYearPresetActive) return 'Tahun Ini';
+    const parts = [
+      targetYear ? `Tahun ${targetYear}` : null,
+      monthIdx !== null ? MONTH_NAMES_INDONESIA[monthIdx] : null,
+      dayIdx !== null ? `Hari ${DAY_NAMES_INDONESIA[dayIdx]}` : null,
+      dateParam ? `Tgl ${dateParam}` : null,
+    ].filter(Boolean);
+    return parts.length > 0 ? parts.join(' • ') : null;
+  }, [isTodayPresetActive, isThisMonthPresetActive, isThisYearPresetActive, targetYear, monthIdx, dayIdx, dateParam]);
+
+  const hasAnyActiveFilter = Boolean(
+    statusParam ||
+    (biroParam && !lockedBiroCode) ||
+    hasActiveTimeFilter ||
+    searchFilter.trim()
+  );
 
   const handlePreset = (preset: 'ALL' | 'TODAY' | 'THIS_MONTH' | 'THIS_YEAR') => {
     const params = new URLSearchParams(searchParams.toString());
@@ -226,6 +283,7 @@ export function SemuaRapatClient({
   };
 
   const handleClearAllFilters = () => {
+    setSearchFilter('');
     const params = new URLSearchParams(searchParams.toString());
     params.delete('status');
     if (!lockedBiroCode) params.delete('biro');
@@ -326,28 +384,38 @@ export function SemuaRapatClient({
         </div>
       )}
 
-      {/* Header section */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 p-6 bg-white rounded-xl border border-slate-200 shadow-xs">
+      {/* Header section: Judul Halaman & Tombol Aksi Cepat */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 p-5 sm:p-6 bg-white rounded-2xl border border-slate-200/90 shadow-xs">
         <div>
-          <span className="font-semibold text-[12px] text-[#31889C] uppercase tracking-wider flex items-center gap-1.5">
-            {lockedBiroCode ? (
-              <>
-                <Building2 className="w-3.5 h-3.5" />
-                Risalah Biro {lockedBiroCode}
-              </>
-            ) : (
-              'Manajemen Risalah Dewan KEK'
-            )}
-          </span>
-          <h1 className="text-[24px] font-bold text-slate-900 mt-0.5">
+          <div className="flex items-center gap-2 flex-wrap">
+            <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11.5px] font-semibold bg-[#F0F9FA] text-[#215865] border border-[#BCE3EB]">
+              {lockedBiroCode ? (
+                <>
+                  <Building2 className="w-3.5 h-3.5 text-[#31889C]" />
+                  Biro {lockedBiroCode}
+                </>
+              ) : (
+                <>
+                  <Building2 className="w-3.5 h-3.5 text-[#31889C]" />
+                  Sekretariat Jenderal Dewan Nasional KEK
+                </>
+              )}
+            </span>
+            <span className="text-[12px] text-slate-300 hidden sm:inline">•</span>
+            <span className="text-[12px] font-medium text-slate-500">
+              Total <strong>{meetingsList.length}</strong> Risalah Terdaftar
+            </span>
+          </div>
+
+          <h1 className="text-[22px] sm:text-[24px] font-extrabold text-slate-900 mt-1.5 tracking-tight">
             {lockedBiroCode
-              ? `Semua Risalah Rapat — ${currentUserBiroName || `Biro ${lockedBiroCode}`}`
-              : 'Semua Risalah Rapat KEK RI'}
+              ? `Risalah Rapat — ${currentUserBiroName || `Biro ${lockedBiroCode}`}`
+              : 'Daftar Risalah Rapat KEK RI'}
           </h1>
-          <p className="text-[13px] text-slate-500 mt-1">
+          <p className="text-[13px] text-slate-500 mt-1 max-w-2xl leading-relaxed">
             {lockedBiroCode
               ? `Arsip lengkap agenda, risalah keputusan, dan status tindak lanjut khusus penugasan ${currentUserBiroName || `Biro ${lockedBiroCode}`}.`
-              : 'Arsip lengkap agenda, risalah keputusan, dan status tindak lanjut seluruh Biro KEK.'}
+              : 'Pusat kendali agenda sidang, perumusan notula keputusan, dan pemantauan tindak lanjut seluruh Biro KEK.'}
           </p>
         </div>
 
@@ -357,11 +425,11 @@ export function SemuaRapatClient({
             <button
               type="button"
               onClick={() => setIsDeleteModalOpen(true)}
-              className="inline-flex items-center gap-2 px-3.5 py-2.5 rounded-lg border border-red-200 bg-red-50 text-red-700 hover:bg-red-100 hover:border-red-300 font-semibold text-[12.5px] transition-all cursor-pointer shadow-xs"
+              className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl border border-red-200 bg-red-50 text-red-700 hover:bg-red-100 font-semibold text-[12px] transition-all cursor-pointer shadow-2xs"
               title="Hapus seluruh data rapat dari database (Hanya Administrator)"
             >
-              <Trash2 className="w-4 h-4 text-red-600" />
-              <span>Hapus Semua Rapat</span>
+              <Trash2 className="w-3.5 h-3.5 text-red-600" />
+              <span>Hapus Semua</span>
             </button>
           )}
 
@@ -370,361 +438,34 @@ export function SemuaRapatClient({
               <button
                 type="button"
                 onClick={() => setIsUploadDialogOpen(true)}
-                className="inline-flex items-center gap-2 px-3.5 py-2.5 rounded-lg border border-[#31889C] bg-[#F0F9FA] text-[#1B5260] font-semibold text-[13px] hover:bg-[#E8F5F7] shadow-xs transition-all shrink-0 cursor-pointer"
+                className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl border border-[#31889C]/30 bg-[#F0F9FA] text-[#1B5260] font-semibold text-[12.5px] hover:bg-[#E8F5F7] shadow-2xs transition-all cursor-pointer"
                 title="Unggah berkas Word, PDF, atau Teks untuk otomatis membuat rapat dan notula"
               >
                 <UploadCloud className="w-4 h-4 text-[#31889C]" />
-                <span>⚡ Unggah Dokumen Rapat</span>
+                <span>⚡ Unggah Dokumen</span>
               </button>
 
               <Link
                 href="/buat-rapat"
-                className="inline-flex items-center gap-2 px-4 py-2.5 rounded-lg bg-[#31889C] text-white font-semibold text-[13px] hover:bg-[#266F80] shadow-xs transition-all shrink-0 cursor-pointer"
+                className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-[#31889C] text-white font-semibold text-[12.5px] hover:bg-[#266F80] shadow-2xs hover:shadow-xs transition-all cursor-pointer"
               >
                 <PlusCircle className="w-4 h-4" />
-                <span>+ Jadwalkan Rapat Baru</span>
+                <span>+ Jadwalkan Rapat</span>
               </Link>
             </div>
           )}
         </div>
       </div>
 
-      {/* Super Admin & Admin: Filter Biro Pelaksana Dewan KEK */}
-      {!lockedBiroCode && isPrivileged && (
-        <div className="p-3.5 bg-white rounded-xl border border-slate-200 shadow-2xs flex flex-col md:flex-row md:items-center justify-between gap-3 animate-in fade-in">
-          <div className="flex items-center gap-2.5 flex-wrap">
-            <span className="text-[12px] font-bold text-slate-700 flex items-center gap-1.5 shrink-0">
-              <Building2 className="w-4 h-4 text-[#31889C]" />
-              Filter Biro:
-            </span>
-
-            <div className="flex items-center gap-1.5 flex-wrap">
-              <button
-                type="button"
-                onClick={() => handleSelectBiro('ALL')}
-                className={cn(
-                  "px-3 py-1.5 rounded-lg text-[12px] font-semibold transition-all cursor-pointer",
-                  !biroParam
-                    ? "bg-[#31889C] text-white shadow-xs font-bold"
-                    : "bg-[#F8FAFC] border border-slate-200 text-slate-700 hover:bg-[#F0F9FA] hover:text-[#31889C]"
-                )}
-              >
-                Semua Biro ({meetingsList.length})
-              </button>
-
-              {birosList.map((b) => {
-                const isSelected = biroParam === b.code;
-                const countForBiro = meetingsList.filter((m) => {
-                  const target = normalizeBiroCode(b.code);
-                  return (
-                    normalizeBiroCode(m.biroCode) === target ||
-                    (m.involvedBiros && normalizeBiroCode(m.involvedBiros).includes(target))
-                  );
-                }).length;
-
-                return (
-                  <button
-                    key={b.code}
-                    type="button"
-                    onClick={() => handleSelectBiro(b.code)}
-                    className={cn(
-                      "px-3 py-1.5 rounded-lg text-[12px] font-semibold transition-all cursor-pointer flex items-center gap-1.5",
-                      isSelected
-                        ? "bg-[#31889C] text-white shadow-xs font-bold"
-                        : "bg-[#F8FAFC] border border-slate-200 text-slate-700 hover:bg-[#F0F9FA] hover:text-[#31889C]"
-                    )}
-                    title={`${b.name} (${b.shortName})`}
-                  >
-                    <span>{b.code}</span>
-                    <span
-                      className={cn(
-                        "text-[10px] px-1.5 py-0.2 rounded-full font-bold",
-                        isSelected
-                          ? "bg-white/25 text-white"
-                          : "bg-slate-200/70 text-slate-600"
-                      )}
-                    >
-                      {countForBiro}
-                    </span>
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-
-          {/* Active Biro Indicator & Quick Reset */}
-          {biroParam && (
-            <div className="flex items-center gap-2 shrink-0 self-start md:self-auto">
-              <span className="text-[11.5px] text-[#215865] bg-[#E8F5F7] px-2.5 py-1 rounded-md border border-[#BCE3EB] font-medium hidden sm:inline">
-                {birosList.find((b) => b.code === biroParam)?.shortName || `Biro ${biroParam}`}
-              </span>
-              <button
-                type="button"
-                onClick={() => handleSelectBiro('ALL')}
-                className="text-[11.5px] font-bold text-slate-500 hover:text-slate-800 hover:bg-slate-100 px-2 py-1 rounded transition-colors cursor-pointer"
-                title="Hapus filter biro"
-              >
-                ✕ Reset Biro
-              </button>
-            </div>
-          )}
-        </div>
-      )}
-
-      {/* Filter Waktu & Tanggal Rapat — Berlaku untuk Semua Role (Super Admin, Admin, & Staff) */}
-      <div className="p-4 bg-white rounded-xl border border-slate-200 shadow-2xs flex flex-col gap-3.5 animate-in fade-in">
-        {/* Baris Atas: Judul & Preset Cepat */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 pb-2.5 border-b border-slate-100">
-          <div className="flex items-center gap-2">
-            <div className="w-7 h-7 rounded-lg bg-[#F0F9FA] border border-[#BCE3EB] flex items-center justify-center text-[#31889C] shrink-0">
-              <CalendarDays className="w-4 h-4" />
-            </div>
-            <div>
-              <span className="text-[13px] font-bold text-slate-800">
-                Filter Waktu &amp; Tanggal Rapat
-              </span>
-              <span className="text-[11.5px] text-slate-400 ml-2 hidden sm:inline">
-                (Saring menurut Tahun, Bulan, Hari, atau Tanggal Spesifik)
-              </span>
-            </div>
-          </div>
-
-          {/* Preset Tombol Cepat */}
-          <div className="flex items-center gap-1.5 flex-wrap">
-            <span className="text-[11px] font-semibold text-slate-400 mr-1 hidden md:inline">
-              Pilihan Cepat:
-            </span>
-            <button
-              type="button"
-              onClick={() => handlePreset('ALL')}
-              className={cn(
-                "px-2.5 py-1 rounded-md text-[11.5px] font-semibold transition-all cursor-pointer",
-                !hasActiveTimeFilter
-                  ? "bg-[#31889C] text-white shadow-2xs font-bold"
-                  : "bg-slate-50 border border-slate-200 text-slate-600 hover:bg-slate-100 hover:text-slate-900"
-              )}
-            >
-              Semua Waktu
-            </button>
-            <button
-              type="button"
-              onClick={() => handlePreset('TODAY')}
-              className={cn(
-                "px-2.5 py-1 rounded-md text-[11.5px] font-semibold transition-all cursor-pointer",
-                isTodayPresetActive
-                  ? "bg-[#31889C] text-white shadow-2xs font-bold"
-                  : "bg-slate-50 border border-slate-200 text-slate-600 hover:bg-slate-100 hover:text-slate-900"
-              )}
-            >
-              Hari Ini
-            </button>
-            <button
-              type="button"
-              onClick={() => handlePreset('THIS_MONTH')}
-              className={cn(
-                "px-2.5 py-1 rounded-md text-[11.5px] font-semibold transition-all cursor-pointer",
-                isThisMonthPresetActive
-                  ? "bg-[#31889C] text-white shadow-2xs font-bold"
-                  : "bg-slate-50 border border-slate-200 text-slate-600 hover:bg-slate-100 hover:text-slate-900"
-              )}
-            >
-              Bulan Ini
-            </button>
-            <button
-              type="button"
-              onClick={() => handlePreset('THIS_YEAR')}
-              className={cn(
-                "px-2.5 py-1 rounded-md text-[11.5px] font-semibold transition-all cursor-pointer",
-                isThisYearPresetActive
-                  ? "bg-[#31889C] text-white shadow-2xs font-bold"
-                  : "bg-slate-50 border border-slate-200 text-slate-600 hover:bg-slate-100 hover:text-slate-900"
-              )}
-            >
-              Tahun Ini
-            </button>
-            {hasActiveTimeFilter && (
-              <button
-                type="button"
-                onClick={handleClearTimeFilters}
-                className="px-2 py-1 rounded-md text-[11.5px] font-bold text-red-600 hover:bg-red-50 hover:text-red-700 transition-colors ml-1 cursor-pointer flex items-center gap-1"
-                title="Bersihkan seluruh filter waktu"
-              >
-                <RotateCcw className="w-3 h-3" />
-                <span>Reset Waktu</span>
-              </button>
-            )}
-          </div>
-        </div>
-
-        {/* 4 Kolom Kontrol: Tahun, Bulan, Hari, Tanggal */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
-          {/* 1. Tahun */}
-          <div>
-            <label className="block text-[11.5px] font-bold text-slate-600 mb-1">
-              Tahun Penyelenggaraan
-            </label>
-            <select
-              value={targetYear ? targetYear.toString() : 'ALL'}
-              onChange={(e) => {
-                const val = e.target.value;
-                handleUpdateFilter({ tahun: val === 'ALL' ? null : val, year: null });
-              }}
-              className="w-full text-[12.5px] font-medium text-slate-800 bg-white border border-slate-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:ring-2 focus:ring-[#31889C]/25 focus:border-[#31889C] cursor-pointer"
-            >
-              <option value="ALL">Semua Tahun</option>
-              {availableYears.map((yr) => (
-                <option key={yr} value={yr.toString()}>
-                  Tahun {yr} ({getYearCount(yr)})
-                </option>
-              ))}
-            </select>
-          </div>
-
-          {/* 2. Bulan */}
-          <div>
-            <label className="block text-[11.5px] font-bold text-slate-600 mb-1">
-              Bulan Rapat
-            </label>
-            <select
-              value={monthIdx !== null ? (monthIdx + 1).toString() : 'ALL'}
-              onChange={(e) => {
-                const val = e.target.value;
-                handleUpdateFilter({ bulan: val === 'ALL' ? null : val, month: null });
-              }}
-              className="w-full text-[12.5px] font-medium text-slate-800 bg-white border border-slate-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:ring-2 focus:ring-[#31889C]/25 focus:border-[#31889C] cursor-pointer"
-            >
-              <option value="ALL">Semua Bulan (Jan - Des)</option>
-              {MONTH_NAMES_INDONESIA.map((mName, idx) => (
-                <option key={idx} value={(idx + 1).toString()}>
-                  {mName} ({getMonthCount(idx)})
-                </option>
-              ))}
-            </select>
-          </div>
-
-          {/* 3. Hari */}
-          <div>
-            <label className="block text-[11.5px] font-bold text-slate-600 mb-1">
-              Hari Penyelenggaraan
-            </label>
-            <select
-              value={dayIdx !== null ? dayIdx.toString() : 'ALL'}
-              onChange={(e) => {
-                const val = e.target.value;
-                handleUpdateFilter({ hari: val === 'ALL' ? null : val, day: null });
-              }}
-              className="w-full text-[12.5px] font-medium text-slate-800 bg-white border border-slate-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:ring-2 focus:ring-[#31889C]/25 focus:border-[#31889C] cursor-pointer"
-            >
-              <option value="ALL">Semua Hari (Senin - Minggu)</option>
-              {DAY_OPTIONS.map((d) => (
-                <option key={d.value} value={d.index.toString()}>
-                  {d.label} ({getDayCount(d.index)})
-                </option>
-              ))}
-            </select>
-          </div>
-
-          {/* 4. Tanggal Spesifik (Date Picker) */}
-          <div>
-            <div className="flex items-center justify-between mb-1">
-              <label className="text-[11.5px] font-bold text-slate-600">
-                Tanggal Spesifik (Hari H)
-              </label>
-              {dateParam && (
-                <button
-                  type="button"
-                  onClick={() => handleUpdateFilter({ tanggal: null, date: null })}
-                  className="text-[10.5px] text-[#31889C] hover:underline font-semibold cursor-pointer"
-                >
-                  Hapus Tanggal
-                </button>
-              )}
-            </div>
-            <input
-              type="date"
-              value={dateParam || ''}
-              onChange={(e) => {
-                const val = e.target.value;
-                handleUpdateFilter({ tanggal: val || null, date: null });
-              }}
-              className="w-full text-[12.5px] font-medium text-slate-800 bg-white border border-slate-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:ring-2 focus:ring-[#31889C]/25 focus:border-[#31889C] cursor-pointer"
-            />
-          </div>
-        </div>
-
-        {/* Indikator Filter Waktu Aktif */}
-        {hasActiveTimeFilter && (
-          <div className="flex items-center gap-2 flex-wrap pt-2.5 border-t border-slate-100 text-[11.5px]">
-            <span className="font-semibold text-slate-500 flex items-center gap-1">
-              <Clock className="w-3.5 h-3.5 text-[#31889C]" />
-              Filter Waktu Aktif:
-            </span>
-            {targetYear !== null && (
-              <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-[#E8F5F7] text-[#1B5260] border border-[#BCE3EB] font-medium">
-                Tahun: {targetYear}
-                <button
-                  type="button"
-                  onClick={() => handleUpdateFilter({ tahun: null, year: null })}
-                  className="hover:text-red-600 ml-0.5 cursor-pointer font-bold"
-                  title="Hapus filter tahun"
-                >
-                  ✕
-                </button>
-              </span>
-            )}
-            {monthIdx !== null && (
-              <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-[#E8F5F7] text-[#1B5260] border border-[#BCE3EB] font-medium">
-                Bulan: {MONTH_NAMES_INDONESIA[monthIdx]}
-                <button
-                  type="button"
-                  onClick={() => handleUpdateFilter({ bulan: null, month: null })}
-                  className="hover:text-red-600 ml-0.5 cursor-pointer font-bold"
-                  title="Hapus filter bulan"
-                >
-                  ✕
-                </button>
-              </span>
-            )}
-            {dayIdx !== null && (
-              <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-[#E8F5F7] text-[#1B5260] border border-[#BCE3EB] font-medium">
-                Hari: {DAY_NAMES_INDONESIA[dayIdx]}
-                <button
-                  type="button"
-                  onClick={() => handleUpdateFilter({ hari: null, day: null })}
-                  className="hover:text-red-600 ml-0.5 cursor-pointer font-bold"
-                  title="Hapus filter hari"
-                >
-                  ✕
-                </button>
-              </span>
-            )}
-            {dateParam && (
-              <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-[#E8F5F7] text-[#1B5260] border border-[#BCE3EB] font-medium">
-                Tanggal: {dateParam}
-                <button
-                  type="button"
-                  onClick={() => handleUpdateFilter({ tanggal: null, date: null })}
-                  className="hover:text-red-600 ml-0.5 cursor-pointer font-bold"
-                  title="Hapus filter tanggal spesifik"
-                >
-                  ✕
-                </button>
-              </span>
-            )}
-            <span className="text-slate-500 ml-auto font-medium">
-              Ditemukan <strong>{fullyFilteredMeetings.length}</strong> risalah rapat
-            </span>
-          </div>
-        )}
-      </div>
-
-      {/* Filter Tabs, Status Guide Trigger & Active Month Indicator */}
-      <div className="flex flex-col gap-3">
-        <div className="flex flex-wrap items-center justify-between gap-3 pb-1">
-          <div className="flex flex-wrap items-center gap-2">
-            <span className="text-[12px] font-semibold text-slate-500 mr-1 flex items-center gap-1">
+      {/* PANEL FILTER & KONTROL TERPADU (Satu Wadah Bersih & Rapi) */}
+      <div className="bg-white rounded-2xl border border-slate-200/90 shadow-xs overflow-hidden flex flex-col">
+        {/* 1. Baris Atas: Tabs Tahap Risalah & Tombol Panduan */}
+        <div className="p-3 sm:px-4 sm:py-3 bg-slate-50/70 border-b border-slate-200/80 flex flex-col md:flex-row md:items-center justify-between gap-2.5">
+          {/* Status Tabs */}
+          <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar py-0.5">
+            <span className="text-[11.5px] font-bold text-slate-500 mr-1 shrink-0 flex items-center gap-1">
               <Filter className="w-3.5 h-3.5 text-[#31889C]" />
-              Filter Tahap:
+              Tahap:
             </span>
             {statusFilters.map((tab) => {
               const isActive = tab.value === 'ALL' ? !statusParam : statusParam === tab.value;
@@ -733,20 +474,21 @@ export function SemuaRapatClient({
                   key={tab.value}
                   type="button"
                   onClick={() => handleSelectStatus(tab.value)}
-                  className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[12px] font-semibold transition-all cursor-pointer ${
+                  className={cn(
+                    "inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[12px] font-semibold transition-all cursor-pointer shrink-0 select-none",
                     isActive
-                      ? 'bg-[#31889C] text-white shadow-xs'
-                      : 'bg-white border border-slate-200 text-slate-700 hover:bg-[#F0F9FA] hover:text-[#31889C]'
-                  }`}
+                      ? "bg-[#31889C] text-white shadow-xs font-bold"
+                      : "bg-white border border-slate-200/90 text-slate-700 hover:bg-[#F0F9FA] hover:text-[#31889C] hover:border-[#BCE3EB]"
+                  )}
                   title={tab.sublabel ? `${tab.label} (${tab.sublabel})` : tab.label}
                 >
+                  <span className={cn("w-2 h-2 rounded-full shrink-0", tab.dotColor, isActive && "ring-2 ring-white/60")} />
                   <span>{tab.label}</span>
                   <span
-                    className={`text-[10px] px-1.5 py-0.2 rounded-full font-bold ${
-                      isActive
-                        ? 'bg-white/25 text-white'
-                        : 'bg-slate-100 text-slate-600'
-                    }`}
+                    className={cn(
+                      "text-[10px] px-1.5 py-0.2 rounded-full font-bold",
+                      isActive ? "bg-white/25 text-white" : "bg-slate-100 text-slate-600"
+                    )}
                   >
                     {tab.count}
                   </span>
@@ -755,12 +497,13 @@ export function SemuaRapatClient({
             })}
           </div>
 
-          <div className="flex items-center gap-2 flex-wrap">
+          {/* Tombol Panduan Status Risalah */}
+          <div className="flex items-center gap-2 shrink-0 self-end md:self-auto">
             <button
               type="button"
               onClick={() => setIsStatusGuideOpen(true)}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-[#BCE3EB] bg-[#F0F9FA] hover:bg-[#E8F5F7] text-[#215865] text-[12px] font-bold shadow-2xs transition-all cursor-pointer"
-              title="Buka panduan alur status risalah rapat (Draf -> Reviu -> Disetujui -> Final)"
+              className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl border border-[#BCE3EB] bg-[#F0F9FA] hover:bg-[#E8F5F7] text-[#215865] text-[11.5px] font-bold transition-all cursor-pointer shadow-2xs"
+              title="Buka panduan alur siklus 4 tahap risalah rapat (Draf -> Reviu -> Disetujui -> Final)"
             >
               <HelpCircle className="w-3.5 h-3.5 text-[#31889C]" />
               <span>Panduan Status Risalah</span>
@@ -768,58 +511,387 @@ export function SemuaRapatClient({
           </div>
         </div>
 
-        {/* Banner Penjelasan Aktif Saat Filter Biro / Status / Waktu Dipilih */}
-        {(statusParam || (biroParam && !lockedBiroCode) || hasActiveTimeFilter) && (
-          <div className="p-3 bg-gradient-to-r from-[#F0F9FA] via-white to-[#F0F9FA]/60 border border-[#BCE3EB] rounded-xl flex flex-wrap items-center justify-between gap-2 text-xs text-[#215865] shadow-2xs animate-in fade-in">
-            <div className="flex items-center gap-2 min-w-0 flex-wrap">
-              <span className="w-2 h-2 rounded-full bg-[#31889C] animate-pulse shrink-0" />
-              <div className="flex items-center gap-2 flex-wrap">
-                {biroParam && !lockedBiroCode && (
-                  <span>
-                    Biro:{' '}
-                    <strong className="text-slate-900 bg-white px-2 py-0.5 rounded border border-[#BCE3EB]">
-                      {birosList.find((b) => b.code === biroParam)?.shortName || `Biro ${biroParam}`}
-                    </strong>
-                  </span>
-                )}
-                {statusParam && (
-                  <span>
-                    Tahap:{' '}
-                    <strong className="text-slate-900 bg-white px-2 py-0.5 rounded border border-[#BCE3EB]">
-                      {getMeetingStatusDetail(statusParam).fullTitle}
-                    </strong>
-                  </span>
-                )}
-                {hasActiveTimeFilter && (
-                  <span>
-                    Waktu:{' '}
-                    <strong className="text-slate-900 bg-white px-2 py-0.5 rounded border border-[#BCE3EB]">
-                      {[
-                        targetYear ? `Tahun ${targetYear}` : null,
-                        monthIdx !== null ? MONTH_NAMES_INDONESIA[monthIdx] : null,
-                        dayIdx !== null ? `Hari ${DAY_NAMES_INDONESIA[dayIdx]}` : null,
-                        dateParam ? `Tgl ${dateParam}` : null,
-                      ]
-                        .filter(Boolean)
-                        .join(' • ')}
-                    </strong>
-                  </span>
-                )}
-                <span className="text-slate-600">
-                  (Ditemukan <strong>{fullyFilteredMeetings.length}</strong> risalah rapat)
-                </span>
-              </div>
-            </div>
-            <div className="flex items-center gap-2">
+        {/* 2. Baris Utama: Input Pencarian Prominen + Filter Cepat */}
+        <div className="p-4 flex flex-col gap-3.5">
+          {/* Input Pencarian Prominen */}
+          <div className="relative w-full">
+            <Search className="w-4 h-4 text-[#31889C] absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+            <input
+              type="text"
+              value={searchFilter}
+              onChange={(e) => setSearchFilter(e.target.value)}
+              placeholder="Cari agenda rapat, nomor risalah (cth: IKK-001), lokasi, topik bahasan, atau tim..."
+              className="w-full pl-10 pr-9 py-2.5 text-[13px] bg-white border border-slate-200 rounded-xl text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#31889C]/25 focus:border-[#31889C] transition-all shadow-2xs"
+            />
+            {searchFilter && (
               <button
                 type="button"
-                onClick={handleClearAllFilters}
-                className="text-[11px] font-bold text-[#31889C] hover:text-[#215865] bg-white px-2 py-0.5 rounded border border-[#BCE3EB] hover:bg-[#F0F9FA] cursor-pointer transition-colors"
-                title="Bersihkan semua filter"
+                onClick={() => setSearchFilter('')}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-700 p-0.5 rounded cursor-pointer"
+                title="Hapus pencarian"
               >
-                ✕ Reset Semua Filter
+                <X className="w-4 h-4" />
+              </button>
+            )}
+          </div>
+
+          {/* Baris Kontrol: Filter Biro & Filter Waktu */}
+          <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3 pt-0.5">
+            {/* Filter Biro (Hanya Super Admin & Admin) */}
+            {!lockedBiroCode && isPrivileged && (
+              <div className="flex items-center gap-2 overflow-x-auto no-scrollbar py-0.5">
+                <span className="text-[11.5px] font-bold text-slate-600 flex items-center gap-1 shrink-0">
+                  <Building2 className="w-3.5 h-3.5 text-[#31889C]" />
+                  Biro:
+                </span>
+                <div className="flex items-center gap-1.5 flex-wrap">
+                  <button
+                    type="button"
+                    onClick={() => handleSelectBiro('ALL')}
+                    className={cn(
+                      "px-2.5 py-1 rounded-lg text-[11.5px] font-semibold transition-all cursor-pointer",
+                      !biroParam
+                        ? "bg-[#31889C] text-white shadow-2xs font-bold"
+                        : "bg-slate-50 border border-slate-200 text-slate-700 hover:bg-[#F0F9FA] hover:text-[#31889C]"
+                    )}
+                  >
+                    Semua ({meetingsList.length})
+                  </button>
+
+                  {birosList.map((b) => {
+                    const isSelected = biroParam === b.code;
+                    const countForBiro = meetingsList.filter((m) => {
+                      const target = normalizeBiroCode(b.code);
+                      return (
+                        normalizeBiroCode(m.biroCode) === target ||
+                        (m.involvedBiros && normalizeBiroCode(m.involvedBiros).includes(target))
+                      );
+                    }).length;
+
+                    return (
+                      <button
+                        key={b.code}
+                        type="button"
+                        onClick={() => handleSelectBiro(b.code)}
+                        className={cn(
+                          "px-2.5 py-1 rounded-lg text-[11.5px] font-semibold transition-all cursor-pointer flex items-center gap-1",
+                          isSelected
+                            ? "bg-[#31889C] text-white shadow-2xs font-bold"
+                            : "bg-slate-50 border border-slate-200 text-slate-700 hover:bg-[#F0F9FA] hover:text-[#31889C]"
+                        )}
+                        title={`${b.name} (${b.shortName})`}
+                      >
+                        <span>{b.code}</span>
+                        <span
+                          className={cn(
+                            "text-[9.5px] px-1 py-0.1 rounded-full font-bold",
+                            isSelected ? "bg-white/25 text-white" : "bg-slate-200/80 text-slate-600"
+                          )}
+                        >
+                          {countForBiro}
+                        </span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
+            {/* Filter Periode Waktu: Presets Cepat + Tombol Kustom Tanggal */}
+            <div className="flex items-center gap-1.5 flex-wrap shrink-0">
+              <span className="text-[11.5px] font-bold text-slate-600 flex items-center gap-1 mr-1 shrink-0">
+                <CalendarDays className="w-3.5 h-3.5 text-[#31889C]" />
+                Periode:
+              </span>
+
+              <button
+                type="button"
+                onClick={() => handlePreset('ALL')}
+                className={cn(
+                  "px-2.5 py-1 rounded-lg text-[11.5px] font-semibold transition-all cursor-pointer",
+                  !hasActiveTimeFilter
+                    ? "bg-[#31889C] text-white shadow-2xs font-bold"
+                    : "bg-slate-50 border border-slate-200 text-slate-600 hover:bg-slate-100"
+                )}
+              >
+                Semua
+              </button>
+
+              <button
+                type="button"
+                onClick={() => handlePreset('TODAY')}
+                className={cn(
+                  "px-2.5 py-1 rounded-lg text-[11.5px] font-semibold transition-all cursor-pointer",
+                  isTodayPresetActive
+                    ? "bg-[#31889C] text-white shadow-2xs font-bold"
+                    : "bg-slate-50 border border-slate-200 text-slate-600 hover:bg-slate-100"
+                )}
+              >
+                Hari Ini
+              </button>
+
+              <button
+                type="button"
+                onClick={() => handlePreset('THIS_MONTH')}
+                className={cn(
+                  "px-2.5 py-1 rounded-lg text-[11.5px] font-semibold transition-all cursor-pointer",
+                  isThisMonthPresetActive
+                    ? "bg-[#31889C] text-white shadow-2xs font-bold"
+                    : "bg-slate-50 border border-slate-200 text-slate-600 hover:bg-slate-100"
+                )}
+              >
+                Bulan Ini
+              </button>
+
+              <button
+                type="button"
+                onClick={() => handlePreset('THIS_YEAR')}
+                className={cn(
+                  "px-2.5 py-1 rounded-lg text-[11.5px] font-semibold transition-all cursor-pointer",
+                  isThisYearPresetActive
+                    ? "bg-[#31889C] text-white shadow-2xs font-bold"
+                    : "bg-slate-50 border border-slate-200 text-slate-600 hover:bg-slate-100"
+                )}
+              >
+                Tahun Ini
+              </button>
+
+              {/* Tombol Toggle Filter Kustom */}
+              <button
+                type="button"
+                onClick={() => setIsCustomShelfOpen((prev) => !prev)}
+                className={cn(
+                  "inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-[11.5px] font-semibold transition-all cursor-pointer ml-1",
+                  isCustomTimeActive
+                    ? "bg-[#E8F5F7] border border-[#31889C] text-[#1B5260] font-bold"
+                    : isCustomShelfOpen
+                    ? "bg-slate-100 border border-slate-300 text-slate-800"
+                    : "bg-slate-50 border border-slate-200 text-slate-600 hover:bg-slate-100"
+                )}
+                title="Saring berdasarkan tahun, bulan, hari spesifik, atau tanggal persis"
+              >
+                <SlidersHorizontal className="w-3 h-3 text-[#31889C]" />
+                <span>Kustom Tanggal</span>
+                <ChevronDown
+                  className={cn(
+                    "w-3 h-3 transition-transform text-slate-400",
+                    isCustomShelfOpen && "rotate-180 text-[#31889C]"
+                  )}
+                />
               </button>
             </div>
+          </div>
+        </div>
+
+        {/* 3. Panel Lanjutan: Filter Kustom Tanggal/Bulan/Tahun (Collapsible) */}
+        {isCustomShelfOpen && (
+          <div className="p-4 bg-[#F8FAFC] border-t border-slate-200/80 animate-in fade-in duration-150">
+            <div className="flex items-center justify-between pb-2.5 mb-3 border-b border-slate-200/60">
+              <span className="text-[12px] font-bold text-slate-700 flex items-center gap-1.5">
+                <Calendar className="w-3.5 h-3.5 text-[#31889C]" />
+                Pengaturan Periode &amp; Tanggal Spesifik
+              </span>
+              <div className="flex items-center gap-2">
+                {hasActiveTimeFilter && (
+                  <button
+                    type="button"
+                    onClick={handleClearTimeFilters}
+                    className="text-[11px] font-bold text-red-600 hover:underline flex items-center gap-1 cursor-pointer"
+                  >
+                    <RotateCcw className="w-3 h-3" />
+                    Reset Waktu
+                  </button>
+                )}
+                <button
+                  type="button"
+                  onClick={() => setIsCustomShelfOpen(false)}
+                  className="text-[11px] text-slate-500 hover:text-slate-800 font-semibold cursor-pointer ml-2"
+                >
+                  Tutup ✕
+                </button>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+              {/* Tahun */}
+              <div>
+                <label className="block text-[11px] font-bold text-slate-600 mb-1">
+                  Tahun Penyelenggaraan
+                </label>
+                <select
+                  value={targetYear ? targetYear.toString() : 'ALL'}
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    handleUpdateFilter({ tahun: val === 'ALL' ? null : val, year: null });
+                  }}
+                  className="w-full text-[12px] font-medium text-slate-800 bg-white border border-slate-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:ring-2 focus:ring-[#31889C]/25 focus:border-[#31889C] cursor-pointer"
+                >
+                  <option value="ALL">Semua Tahun</option>
+                  {availableYears.map((yr) => (
+                    <option key={yr} value={yr.toString()}>
+                      Tahun {yr} ({getYearCount(yr)})
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Bulan */}
+              <div>
+                <label className="block text-[11px] font-bold text-slate-600 mb-1">
+                  Bulan Rapat
+                </label>
+                <select
+                  value={monthIdx !== null ? (monthIdx + 1).toString() : 'ALL'}
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    handleUpdateFilter({ bulan: val === 'ALL' ? null : val, month: null });
+                  }}
+                  className="w-full text-[12px] font-medium text-slate-800 bg-white border border-slate-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:ring-2 focus:ring-[#31889C]/25 focus:border-[#31889C] cursor-pointer"
+                >
+                  <option value="ALL">Semua Bulan (Jan - Des)</option>
+                  {MONTH_NAMES_INDONESIA.map((mName, idx) => (
+                    <option key={idx} value={(idx + 1).toString()}>
+                      {mName} ({getMonthCount(idx)})
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Tanggal Spesifik */}
+              <div>
+                <div className="flex items-center justify-between mb-1">
+                  <label className="text-[11px] font-bold text-slate-600">
+                    Tanggal Spesifik (Hari H)
+                  </label>
+                  {dateParam && (
+                    <button
+                      type="button"
+                      onClick={() => handleUpdateFilter({ tanggal: null, date: null })}
+                      className="text-[10px] text-[#31889C] hover:underline font-semibold cursor-pointer"
+                    >
+                      Hapus
+                    </button>
+                  )}
+                </div>
+                <input
+                  type="date"
+                  value={dateParam || ''}
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    handleUpdateFilter({ tanggal: val || null, date: null });
+                  }}
+                  className="w-full text-[12px] font-medium text-slate-800 bg-white border border-slate-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:ring-2 focus:ring-[#31889C]/25 focus:border-[#31889C] cursor-pointer"
+                />
+              </div>
+
+              {/* Hari */}
+              <div>
+                <label className="block text-[11px] font-bold text-slate-600 mb-1">
+                  Hari Penyelenggaraan
+                </label>
+                <select
+                  value={dayIdx !== null ? dayIdx.toString() : 'ALL'}
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    handleUpdateFilter({ hari: val === 'ALL' ? null : val, day: null });
+                  }}
+                  className="w-full text-[12px] font-medium text-slate-800 bg-white border border-slate-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:ring-2 focus:ring-[#31889C]/25 focus:border-[#31889C] cursor-pointer"
+                >
+                  <option value="ALL">Semua Hari (Senin - Minggu)</option>
+                  {DAY_OPTIONS.map((d) => (
+                    <option key={d.value} value={d.index.toString()}>
+                      {d.label} ({getDayCount(d.index)})
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* 4. Rangkuman Filter Aktif & Reset Cepat */}
+        {hasAnyActiveFilter && (
+          <div className="px-4 py-2.5 bg-gradient-to-r from-[#F0F9FA]/80 via-white to-[#F0F9FA]/40 border-t border-slate-200/70 flex flex-wrap items-center justify-between gap-2 text-xs">
+            <div className="flex items-center gap-2 flex-wrap">
+              <span className="text-[11.5px] font-bold text-slate-600 flex items-center gap-1.5">
+                <span className="w-2 h-2 rounded-full bg-[#31889C] animate-pulse" />
+                Filter Aktif:
+              </span>
+
+              {/* Search query chip */}
+              {searchFilter && (
+                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-white border border-[#BCE3EB] text-[#1B5260] font-semibold text-[11px] shadow-2xs">
+                  Cari: &ldquo;{searchFilter}&rdquo;
+                  <button
+                    type="button"
+                    onClick={() => setSearchFilter('')}
+                    className="hover:text-red-600 ml-0.5 cursor-pointer font-bold"
+                    title="Hapus kata kunci pencarian"
+                  >
+                    ✕
+                  </button>
+                </span>
+              )}
+
+              {/* Biro chip */}
+              {biroParam && !lockedBiroCode && (
+                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-white border border-[#BCE3EB] text-[#1B5260] font-semibold text-[11px] shadow-2xs">
+                  Biro: {birosList.find((b) => b.code === biroParam)?.shortName || biroParam}
+                  <button
+                    type="button"
+                    onClick={() => handleSelectBiro('ALL')}
+                    className="hover:text-red-600 ml-0.5 cursor-pointer font-bold"
+                    title="Hapus filter biro"
+                  >
+                    ✕
+                  </button>
+                </span>
+              )}
+
+              {/* Status chip */}
+              {statusParam && (
+                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-white border border-[#BCE3EB] text-[#1B5260] font-semibold text-[11px] shadow-2xs">
+                  Tahap: {getMeetingStatusDetail(statusParam).label}
+                  <button
+                    type="button"
+                    onClick={() => handleSelectStatus('ALL')}
+                    className="hover:text-red-600 ml-0.5 cursor-pointer font-bold"
+                    title="Hapus filter tahap"
+                  >
+                    ✕
+                  </button>
+                </span>
+              )}
+
+              {/* Time chip */}
+              {hasActiveTimeFilter && (
+                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-white border border-[#BCE3EB] text-[#1B5260] font-semibold text-[11px] shadow-2xs">
+                  Waktu: {activeTimeLabel}
+                  <button
+                    type="button"
+                    onClick={handleClearTimeFilters}
+                    className="hover:text-red-600 ml-0.5 cursor-pointer font-bold"
+                    title="Hapus filter waktu"
+                  >
+                    ✕
+                  </button>
+                </span>
+              )}
+
+              <span className="text-slate-500 text-[11.5px] ml-1 font-medium">
+                (Ditemukan <strong className="text-slate-800">{statusParam ? fullyFilteredMeetings.filter((m) => m.status === statusParam).length : countAll}</strong> risalah)
+              </span>
+            </div>
+
+            <button
+              type="button"
+              onClick={handleClearAllFilters}
+              className="inline-flex items-center gap-1 text-[11px] font-bold text-[#31889C] hover:text-red-600 bg-white px-2.5 py-1 rounded-lg border border-[#BCE3EB] hover:border-red-200 transition-colors cursor-pointer shadow-2xs ml-auto"
+              title="Reset seluruh filter dan kembalikan ke daftar awal"
+            >
+              <RotateCcw className="w-3 h-3" />
+              <span>Reset Semua Filter</span>
+            </button>
           </div>
         )}
       </div>
@@ -838,6 +910,9 @@ export function SemuaRapatClient({
         filterYear={yearParam}
         filterDayOfWeek={dayParam}
         filterDate={dateParam}
+        searchQuery={searchFilter}
+        onSearchChange={setSearchFilter}
+        hideHeader={true}
         onClearFilters={handleClearAllFilters}
         onMeetingDeleted={(deletedId) => {
           setDeletedIds((prev) => new Set(prev).add(deletedId));
