@@ -37,6 +37,7 @@ import {
   HelpCircle,
   Paperclip,
   UploadCloud,
+  Video,
 } from 'lucide-react';
 
 import { MeetingStatusBadge } from '@/components/meeting/meeting-status-badge';
@@ -50,6 +51,7 @@ import { AgendaSeriesModal } from '@/components/meeting/agenda-series-modal';
 import { MeetingCommentsSection } from '@/components/meeting/meeting-comments/meeting-comments-section';
 import { MinutesHistorySection } from '@/components/meeting/meeting-history/minutes-history-section';
 import { GoogleCalendarModal } from '@/components/meeting/google-calendar-modal';
+import { extractVirtualMeetingDetails } from '@/lib/calendar';
 import { MeetingStatus } from '@/lib/types';
 import { AttendanceStatus } from '@prisma/client';
 import {
@@ -988,13 +990,40 @@ export function MeetingDetailView({
           </div>
 
           {/* Lokasi */}
-          <div className="flex items-start gap-2.5">
-            <MapPin className="w-4 h-4 text-[#31889C] shrink-0 mt-0.5" />
-            <div>
-              <p className="text-[11px] text-slate-400 font-semibold uppercase">Lokasi / Media</p>
-              <p className="font-bold text-slate-800 line-clamp-2">{meeting.location}</p>
-            </div>
-          </div>
+          {(() => {
+            const virtual = extractVirtualMeetingDetails(meeting.location);
+            return (
+              <div className="flex items-start gap-2.5">
+                <MapPin className="w-4 h-4 text-[#31889C] shrink-0 mt-0.5" />
+                <div className="min-w-0">
+                  <p className="text-[11px] text-slate-400 font-semibold uppercase">Lokasi / Media</p>
+                  <p className="font-bold text-slate-800 leading-snug">
+                    {virtual.cleanPhysicalLocation || meeting.location}
+                  </p>
+                  {virtual.zoomUrl && (
+                    <div className="mt-1 flex items-center gap-1.5 flex-wrap">
+                      <a
+                        href={virtual.zoomUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-blue-50 text-[#0B5CFF] hover:bg-blue-100 text-[11px] font-bold border border-blue-200 transition-colors shadow-2xs"
+                        title="Buka Ruang Rapat Zoom di tab baru"
+                      >
+                        <Video className="w-3 h-3 text-[#0B5CFF]" />
+                        <span>Buka Zoom</span>
+                        <ExternalLink className="w-2.5 h-2.5 text-blue-400" />
+                      </a>
+                      {virtual.meetingId && (
+                        <span className="text-[10.5px] font-mono text-slate-500 bg-slate-100 px-1.5 py-0.5 rounded border border-slate-200">
+                          ID: {virtual.meetingId}
+                        </span>
+                      )}
+                    </div>
+                  )}
+                </div>
+              </div>
+            );
+          })()}
 
           {/* Ketua Sidang */}
           <div className="flex items-start gap-2.5">

@@ -22,6 +22,7 @@ import { useRouter } from 'next/navigation';
 import { toast } from '@/components/providers/toast-provider';
 import { uploadInvitationFileAction } from '@/app/actions/meeting-upload-actions';
 import { PreviousMeetingSelector } from './previous-meeting-selector';
+import { LocationPicker, MeetingType } from './location-picker';
 
 interface CreateMeetingDialogProps {
   isOpen: boolean;
@@ -45,6 +46,11 @@ export function CreateMeetingDialog({ isOpen, onClose, onSuccess }: CreateMeetin
   const [title, setTitle] = useState('');
   const [date, setDate] = useState(todayStr);
   const [time, setTime] = useState('09:00 - 12:00 WIB');
+  const [meetingType, setMeetingType] = useState<MeetingType>('HYBRID');
+  const [physicalLocation, setPhysicalLocation] = useState('Ruang Rapat Utama Gedung Posko KEK');
+  const [zoomUrl, setZoomUrl] = useState('');
+  const [zoomMeetingId, setZoomMeetingId] = useState('');
+  const [zoomPasscode, setZoomPasscode] = useState('');
   const [location, setLocation] = useState('Ruang Rapat Utama Gedung Posko KEK & Hybrid Zoom');
   const [previousMeetingId, setPreviousMeetingId] = useState<string>('');
   const [availableMeetings, setAvailableMeetings] = useState<any[]>([]);
@@ -125,6 +131,41 @@ export function CreateMeetingDialog({ isOpen, onClose, onSuccess }: CreateMeetin
         return;
       }
 
+      // Validasi dan konstruksi lokasi
+      let constructedLocation = '';
+      if (meetingType === 'OFFLINE') {
+        if (!physicalLocation.trim()) {
+          toast.error('Mohon tentukan lokasi fisik ruang rapat untuk tatap muka.');
+          setSubmitting(false);
+          return;
+        }
+        constructedLocation = physicalLocation.trim();
+      } else if (meetingType === 'HYBRID') {
+        if (!physicalLocation.trim()) {
+          toast.error('Mohon tentukan lokasi fisik ruang rapat untuk rapat hybrid.');
+          setSubmitting(false);
+          return;
+        }
+        if (!zoomUrl.trim()) {
+          toast.error('Mohon cantumkan tautan / link Zoom untuk rapat hybrid.');
+          setSubmitting(false);
+          return;
+        }
+        constructedLocation = `${physicalLocation.trim()} & Zoom: ${zoomUrl.trim()}`;
+        if (zoomMeetingId.trim()) constructedLocation += ` (ID: ${zoomMeetingId.trim()})`;
+        if (zoomPasscode.trim()) constructedLocation += ` (Pass: ${zoomPasscode.trim()})`;
+      } else {
+        // ONLINE
+        if (!zoomUrl.trim()) {
+          toast.error('Mohon cantumkan tautan / link Zoom untuk rapat daring (online).');
+          setSubmitting(false);
+          return;
+        }
+        const pLoc = physicalLocation.trim();
+        const isCustomPLoc = pLoc && !pLoc.toLowerCase().includes('daring') && !pLoc.toLowerCase().includes('online');
+        constructedLocation = `${isCustomPLoc ? `${pLoc} • ` : ''}Online (Zoom: ${zoomUrl.trim()}${zoomMeetingId.trim() ? ` - ID: ${zoomMeetingId.trim()}` : ''})`;
+      }
+
       const { createMeetingAction } = await import('@/app/actions/meeting-actions');
       const parts = time.split('-').map((s) => s.trim().replace('WIB', '').trim());
       const startTime = parts[0] || '09:00';
@@ -136,7 +177,7 @@ export function CreateMeetingDialog({ isOpen, onClose, onSuccess }: CreateMeetin
         date,
         startTime,
         endTime,
-        location,
+        location: constructedLocation,
         previousMeetingId: previousMeetingId || undefined,
         invitationDocUrl: invitationDoc?.url || undefined,
         invitationDocName: invitationDoc?.name || undefined,
@@ -284,21 +325,19 @@ export function CreateMeetingDialog({ isOpen, onClose, onSuccess }: CreateMeetin
             </div>
           </div>
 
-          {/* Lokasi */}
-          <div>
-            <label className="block font-semibold text-slate-700 mb-1 flex items-center gap-1.5">
-              <MapPin className="w-4 h-4 text-[#31889C]" />
-              Lokasi / Media Pertemuan <span className="text-red-500">*</span>
-            </label>
-            <input
-              type="text"
-              required
-              value={location}
-              onChange={(e) => setLocation(e.target.value)}
-              placeholder="Ruang Rapat Utama & Zoom..."
-              className="w-full px-3 py-2 rounded-lg border border-slate-200 bg-white text-slate-800 focus:outline-none focus:ring-2 focus:ring-[#31889C]/25 focus:border-[#31889C]"
-            />
-          </div>
+          {/* Lokasi / Media Pertemuan & Tautan Zoom */}
+          <LocationPicker
+            meetingType={meetingType}
+            onMeetingTypeChange={setMeetingType}
+            physicalLocation={physicalLocation}
+            onPhysicalLocationChange={setPhysicalLocation}
+            zoomUrl={zoomUrl}
+            onZoomUrlChange={setZoomUrl}
+            zoomMeetingId={zoomMeetingId}
+            onZoomMeetingIdChange={setZoomMeetingId}
+            zoomPasscode={zoomPasscode}
+            onZoomPasscodeChange={setZoomPasscode}
+          />
 
           {/* Lampiran Dokumen Undangan Rapat */}
           <div className="p-3 bg-[#F0F9FA] rounded-xl border border-[#BCE3EB] space-y-2">

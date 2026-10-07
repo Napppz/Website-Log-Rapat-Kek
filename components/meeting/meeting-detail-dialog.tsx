@@ -19,6 +19,7 @@ import {
   FileDown,
   Loader2,
   Paperclip,
+  Video,
 } from 'lucide-react';
 import { Meeting, MeetingStatus } from '@/lib/types';
 import { MeetingStatusBadge } from './meeting-status-badge';
@@ -29,6 +30,7 @@ import { getActionItemsAction, getActionItemFormOptionsAction } from '@/app/acti
 import { useSession } from 'next-auth/react';
 import { toast, confirmModal } from '@/components/providers/toast-provider';
 import { GoogleCalendarModal } from './google-calendar-modal';
+import { extractVirtualMeetingDetails } from '@/lib/calendar';
 
 interface MeetingDetailDialogProps {
   meeting: Meeting | null;
@@ -400,13 +402,35 @@ export function MeetingDetailDialog({
                   </div>
                 </div>
 
-                <div className="flex items-center gap-3">
-                  <MapPin className="w-5 h-5 text-[#31889C] shrink-0" />
-                  <div>
-                    <p className="text-[11px] text-slate-400 font-semibold uppercase">Lokasi / Media</p>
-                    <p className="font-bold text-slate-800 line-clamp-1">{meeting.location}</p>
-                  </div>
-                </div>
+                {(() => {
+                  const virtual = extractVirtualMeetingDetails(meeting.location);
+                  return (
+                    <div className="flex items-center gap-3">
+                      <MapPin className="w-5 h-5 text-[#31889C] shrink-0" />
+                      <div className="min-w-0">
+                        <p className="text-[11px] text-slate-400 font-semibold uppercase">Lokasi / Media</p>
+                        <p className="font-bold text-slate-800 line-clamp-1">
+                          {virtual.cleanPhysicalLocation || meeting.location}
+                        </p>
+                        {virtual.zoomUrl && (
+                          <div className="mt-1 flex items-center gap-1.5">
+                            <a
+                              href={virtual.zoomUrl}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-blue-50 text-[#0B5CFF] hover:bg-blue-100 text-[10.5px] font-bold border border-blue-200 transition-colors"
+                              title="Buka Ruang Rapat Zoom"
+                            >
+                              <Video className="w-3 h-3 text-[#0B5CFF]" />
+                              <span>Buka Zoom</span>
+                              <ExternalLink className="w-2.5 h-2.5 text-blue-400" />
+                            </a>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })()}
 
                 {meeting.primaryTeamName && (
                   <div className="flex items-center gap-3 col-span-1 md:col-span-2 p-2.5 rounded-lg bg-amber-50/80 border border-amber-200">

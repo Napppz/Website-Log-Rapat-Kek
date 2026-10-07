@@ -53,6 +53,8 @@ import { toast } from '@/components/providers/toast-provider';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 import { PreviousMeetingSelector } from '@/components/meeting/previous-meeting-selector';
+import { LocationPicker, MeetingType } from '@/components/meeting/location-picker';
+import { extractVirtualMeetingDetails } from '@/lib/calendar';
 
 interface AvailableUser {
   id: string;
@@ -101,6 +103,15 @@ export default function BuatRapatPage() {
   const [title, setTitle] = useState('');
   const [date, setDate] = useState(todayStr);
   const [time, setTime] = useState('09:00 - 12:00 WIB');
+  
+  // Meeting Type & Location / Zoom States
+  const [meetingType, setMeetingType] = useState<MeetingType>('HYBRID');
+  const [physicalLocation, setPhysicalLocation] = useState(
+    'Ruang Rapat Utama Gedung Posko KEK'
+  );
+  const [zoomUrl, setZoomUrl] = useState('');
+  const [zoomMeetingId, setZoomMeetingId] = useState('');
+  const [zoomPasscode, setZoomPasscode] = useState('');
   const [location, setLocation] = useState(
     'Ruang Rapat Utama Gedung Posko KEK & Hybrid Zoom'
   );
@@ -163,7 +174,28 @@ export default function BuatRapatPage() {
       }
     }
     setTime(`${extractedData.startTime} - ${extractedData.endTime} WIB`);
-    setLocation(extractedData.location);
+    if (extractedData.location) {
+      setLocation(extractedData.location);
+      const virtual = extractVirtualMeetingDetails(extractedData.location);
+      if (virtual.isVirtual) {
+        if (virtual.cleanPhysicalLocation && !virtual.cleanPhysicalLocation.toLowerCase().includes('daring') && !virtual.cleanPhysicalLocation.toLowerCase().includes('online')) {
+          setMeetingType('HYBRID');
+          setPhysicalLocation(virtual.cleanPhysicalLocation);
+        } else {
+          setMeetingType('ONLINE');
+          setPhysicalLocation(virtual.cleanPhysicalLocation || 'Online / Daring (Zoom)');
+        }
+        if (virtual.zoomUrl) setZoomUrl(virtual.zoomUrl);
+        if (virtual.meetingId) setZoomMeetingId(virtual.meetingId);
+        if (virtual.passcode) setZoomPasscode(virtual.passcode);
+      } else {
+        setMeetingType('OFFLINE');
+        setPhysicalLocation(extractedData.location);
+        setZoomUrl('');
+        setZoomMeetingId('');
+        setZoomPasscode('');
+      }
+    }
     if (extractedData.classification) {
       setClassification(extractedData.classification);
     }
@@ -365,7 +397,28 @@ export default function BuatRapatPage() {
     if (ext.meetingNumber) setCustomMeetingNumber(ext.meetingNumber);
     if (ext.date) setDate(ext.date);
     if (ext.startTime && ext.endTime) setTime(`${ext.startTime} - ${ext.endTime} WIB`);
-    if (ext.location) setLocation(ext.location);
+    if (ext.location) {
+      setLocation(ext.location);
+      const virtual = extractVirtualMeetingDetails(ext.location);
+      if (virtual.isVirtual) {
+        if (virtual.cleanPhysicalLocation && !virtual.cleanPhysicalLocation.toLowerCase().includes('daring') && !virtual.cleanPhysicalLocation.toLowerCase().includes('online')) {
+          setMeetingType('HYBRID');
+          setPhysicalLocation(virtual.cleanPhysicalLocation);
+        } else {
+          setMeetingType('ONLINE');
+          setPhysicalLocation(virtual.cleanPhysicalLocation || 'Online / Daring (Zoom)');
+        }
+        if (virtual.zoomUrl) setZoomUrl(virtual.zoomUrl);
+        if (virtual.meetingId) setZoomMeetingId(virtual.meetingId);
+        if (virtual.passcode) setZoomPasscode(virtual.passcode);
+      } else {
+        setMeetingType('OFFLINE');
+        setPhysicalLocation(ext.location);
+        setZoomUrl('');
+        setZoomMeetingId('');
+        setZoomPasscode('');
+      }
+    }
     if (ext.classification) setClassification(ext.classification);
     if (ext.attendees) setAttendees(ext.attendees);
     if (invitationDoc.matchedUserIds && invitationDoc.matchedUserIds.length > 0) {
@@ -394,6 +447,41 @@ export default function BuatRapatPage() {
         return;
       }
 
+      // Validasi dan konstruksi lokasi & tautan Zoom
+      let constructedLocation = '';
+      if (meetingType === 'OFFLINE') {
+        if (!physicalLocation.trim()) {
+          toast.error('Mohon tentukan lokasi fisik ruang rapat untuk pertemuan tatap muka.');
+          setIsSubmitted(false);
+          return;
+        }
+        constructedLocation = physicalLocation.trim();
+      } else if (meetingType === 'HYBRID') {
+        if (!physicalLocation.trim()) {
+          toast.error('Mohon tentukan lokasi fisik ruang rapat untuk pertemuan hybrid.');
+          setIsSubmitted(false);
+          return;
+        }
+        if (!zoomUrl.trim()) {
+          toast.error('Mohon cantumkan tautan / link Zoom untuk pertemuan hybrid.');
+          setIsSubmitted(false);
+          return;
+        }
+        constructedLocation = `${physicalLocation.trim()} & Zoom: ${zoomUrl.trim()}`;
+        if (zoomMeetingId.trim()) constructedLocation += ` (ID: ${zoomMeetingId.trim()})`;
+        if (zoomPasscode.trim()) constructedLocation += ` (Pass: ${zoomPasscode.trim()})`;
+      } else {
+        // ONLINE
+        if (!zoomUrl.trim()) {
+          toast.error('Mohon cantumkan tautan / link Zoom untuk pertemuan daring (online).');
+          setIsSubmitted(false);
+          return;
+        }
+        const pLoc = physicalLocation.trim();
+        const isCustomPLoc = pLoc && !pLoc.toLowerCase().includes('daring') && !pLoc.toLowerCase().includes('online');
+        constructedLocation = `${isCustomPLoc ? `${pLoc} • ` : ''}Online (Zoom: ${zoomUrl.trim()}${zoomMeetingId.trim() ? ` - ID: ${zoomMeetingId.trim()}` : ''})`;
+      }
+
       const parts = time.split('-').map((s) => s.trim().replace('WIB', '').trim());
       const startTime = parts[0] || '09:00';
       const endTime = parts[1] || '12:00';
@@ -411,7 +499,7 @@ export default function BuatRapatPage() {
         date,
         startTime,
         endTime,
-        location,
+        location: constructedLocation,
         attendees,
         participantUserIds: selectedUserIds,
         previousMeetingId: previousMeetingId || undefined,
@@ -953,25 +1041,19 @@ export default function BuatRapatPage() {
               </div>
             </div>
 
-            {/* Lokasi / Media Pertemuan */}
-            <div>
-              <label className="font-semibold text-slate-800 mb-2 flex items-center gap-1.5 text-sm">
-                <MapPin className="w-4 h-4 text-[#1E6B7B]" />
-                <span>Lokasi Fisik / Tautan Media Pertemuan (Hybrid/Zoom)</span>
-                <span className="text-red-500 font-bold">*</span>
-              </label>
-              <input
-                type="text"
-                required
-                value={location}
-                onChange={(e) => setLocation(e.target.value)}
-                placeholder="Contoh: Ruang Rapat Utama Gedung Posko KEK & Zoom Meeting ID: 821 9920 112..."
-                className="w-full px-4 h-[44px] rounded-xl border border-slate-300 bg-white text-slate-800 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-[#1E6B7B]/20 focus:border-[#1E6B7B] shadow-2xs"
-              />
-              <p className="text-xs text-slate-400 mt-1.5">
-                Sertakan nama gedung/ruangan atau informasi tautan rapat virtual jika dilaksanakan secara daring/hybrid.
-              </p>
-            </div>
+            {/* Lokasi / Media Pertemuan & Tautan Zoom */}
+            <LocationPicker
+              meetingType={meetingType}
+              onMeetingTypeChange={setMeetingType}
+              physicalLocation={physicalLocation}
+              onPhysicalLocationChange={setPhysicalLocation}
+              zoomUrl={zoomUrl}
+              onZoomUrlChange={setZoomUrl}
+              zoomMeetingId={zoomMeetingId}
+              onZoomMeetingIdChange={setZoomMeetingId}
+              zoomPasscode={zoomPasscode}
+              onZoomPasscodeChange={setZoomPasscode}
+            />
           </div>
         </div>
 

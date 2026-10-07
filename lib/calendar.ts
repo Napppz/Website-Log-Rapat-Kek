@@ -14,6 +14,10 @@ export interface CalendarEventData {
   location: string;
   description?: string;
   meetingUrl?: string;
+  zoomUrl?: string;
+  meetingIdZoom?: string;
+  passcodeZoom?: string;
+  meetingType?: 'OFFLINE' | 'ONLINE' | 'HYBRID' | string;
   biroName?: string;
   chairpersonName?: string;
   secretaryName?: string;
@@ -21,6 +25,79 @@ export interface CalendarEventData {
     name: string;
     email: string;
   }>;
+}
+
+/**
+ * Utility to extract virtual meeting (Zoom/Teams/Meet) details from
+ * a location string or explicit parameters.
+ */
+export function extractVirtualMeetingDetails(
+  locationOrText?: string,
+  providedZoomUrl?: string,
+  providedMeetingId?: string,
+  providedPasscode?: string
+): {
+  zoomUrl?: string;
+  meetingId?: string;
+  passcode?: string;
+  cleanPhysicalLocation: string;
+  isVirtual: boolean;
+} {
+  const text = locationOrText || '';
+  let zoomUrl = providedZoomUrl?.trim() || '';
+
+  // Match URL if not directly provided
+  if (!zoomUrl) {
+    const urlMatch = text.match(/https?:\/\/[^\s\)\],]+/i);
+    if (urlMatch) {
+      zoomUrl = urlMatch[0];
+    }
+  }
+
+  // Extract Meeting ID if present
+  let meetingId = providedMeetingId?.trim() || '';
+  if (!meetingId) {
+    const idMatch = text.match(/(?:Meeting ID|ID Rapat|ID Zoom|ID)\s*[:=]?\s*([0-9\s]{9,14})/i);
+    if (idMatch) {
+      meetingId = idMatch[1].trim();
+    }
+  }
+
+  // Extract Passcode if present
+  let passcode = providedPasscode?.trim() || '';
+  if (!passcode) {
+    const passMatch = text.match(/(?:Passcode|Password|Sandi|Pass)\s*[:=]?\s*([a-zA-Z0-9]+)/i);
+    if (passMatch) {
+      passcode = passMatch[1].trim();
+    }
+  }
+
+  // Derive clean physical location by stripping zoom links / labels
+  let cleanPhysical = text
+    .replace(/https?:\/\/[^\s\)\],]+/gi, '')
+    .replace(/(?:Meeting ID|ID Rapat|ID Zoom|ID)\s*[:=]?\s*[0-9\s]{9,14}/gi, '')
+    .replace(/(?:Passcode|Password|Sandi|Pass)\s*[:=]?\s*[a-zA-Z0-9]+/gi, '')
+    .replace(/\s*&\s*Zoom\b/gi, '')
+    .replace(/\s*•\s*Zoom\b/gi, '')
+    .replace(/\s*\(Zoom:[^\)]*\)/gi, '')
+    .replace(/\s*Zoom:[^,\n]*/gi, '')
+    .replace(/[,;&•\s]+$/g, '')
+    .replace(/^[,;&•\s]+/g, '')
+    .trim();
+
+  const isVirtual = !!zoomUrl || text.toLowerCase().includes('zoom') || text.toLowerCase().includes('daring') || text.toLowerCase().includes('online');
+
+  if (!cleanPhysical && isVirtual) {
+    cleanPhysical = 'Daring / Online (Zoom Cloud Meeting)';
+  }
+
+  return {
+    zoomUrl: zoomUrl || undefined,
+    meetingId: meetingId || undefined,
+    passcode: passcode || undefined,
+    cleanPhysicalLocation: cleanPhysical || text,
+    isVirtual,
+  };
 }
 
 /**
@@ -102,6 +179,17 @@ export function generateGoogleCalendarUrl(event: CalendarEventData): string {
 
   const title = `[${event.meetingNumber}] ${event.title}`;
 
+  // Virtual / Zoom details extraction
+  const virtual = extractVirtualMeetingDetails(
+    event.location,
+    event.zoomUrl,
+    event.meetingIdZoom,
+    event.passcodeZoom
+  );
+  const activeZoom = event.zoomUrl || virtual.zoomUrl;
+  const activeMeetingId = event.meetingIdZoom || virtual.meetingId;
+  const activePasscode = event.passcodeZoom || virtual.passcode;
+
   // Build structured event description
   const descriptionParts: string[] = [
     `UNDANGAN RAPAT KOORDINASI RESMI`,
@@ -110,8 +198,22 @@ export function generateGoogleCalendarUrl(event: CalendarEventData): string {
     `Nomor Rapat: ${event.meetingNumber}`,
     `Agenda: ${event.title}`,
     `Waktu: ${event.startTime} - ${event.endTime} WIB`,
-    `Lokasi / Media: ${event.location}`,
+    `Lokasi / Ruang: ${virtual.cleanPhysicalLocation || event.location}`,
   ];
+
+  // Auto-inject Zoom meeting link into Google Calendar invitation description
+  if (activeZoom) {
+    descriptionParts.push(`\n----------------------------------------------------`);
+    descriptionParts.push(`🎥 TAUTAN RAPAT VIRTUAL (ZOOM):`);
+    descriptionParts.push(`👉 ${activeZoom}`);
+    if (activeMeetingId) {
+      descriptionParts.push(`Meeting ID: ${activeMeetingId}`);
+    }
+    if (activePasscode) {
+      descriptionParts.push(`Passcode: ${activePasscode}`);
+    }
+    descriptionParts.push(`----------------------------------------------------`);
+  }
 
   if (event.biroName) {
     descriptionParts.push(`Biro Penyelenggara: ${event.biroName}`);
@@ -133,12 +235,18 @@ export function generateGoogleCalendarUrl(event: CalendarEventData): string {
     .map((a) => a.email.trim())
     .filter((email) => email && email.includes('@') && !email.endsWith('.invalid'));
 
+  // Calendar Location: If online-only and zoom exists, set location directly to Zoom link
+  let calendarLocation = event.location;
+  if (activeZoom && (!virtual.cleanPhysicalLocation || virtual.cleanPhysicalLocation.toLowerCase().includes('daring') || virtual.cleanPhysicalLocation.toLowerCase().includes('online'))) {
+    calendarLocation = activeZoom;
+  }
+
   const params = new URLSearchParams({
     action: 'TEMPLATE',
     text: title,
     dates: `${startUtc}/${endUtc}`,
     details: descriptionParts.join('\n'),
-    location: event.location,
+    location: calendarLocation,
     ctz: 'Asia/Jakarta',
   });
 
@@ -164,12 +272,21 @@ export function generateIcsCalendar(event: CalendarEventData): string {
   const cleanTitle = `[${event.meetingNumber}] ${event.title}`.replace(/\r?\n/g, ' ');
   const cleanLocation = event.location.replace(/\r?\n/g, ', ');
 
+  const virtual = extractVirtualMeetingDetails(
+    event.location,
+    event.zoomUrl,
+    event.meetingIdZoom,
+    event.passcodeZoom
+  );
+  const activeZoom = event.zoomUrl || virtual.zoomUrl;
+
   const descriptionLines = [
     `UNDANGAN RAPAT KOORDINASI RESMI KEK`,
     `Nomor: ${event.meetingNumber}`,
     `Agenda: ${event.title}`,
     `Waktu: ${event.startTime} - ${event.endTime} WIB`,
     `Lokasi: ${event.location}`,
+    activeZoom ? `Tautan Zoom: ${activeZoom}` : '',
     event.biroName ? `Biro: ${event.biroName}` : '',
     event.meetingUrl ? `Portal Rapat: ${event.meetingUrl}` : '',
   ]
@@ -228,7 +345,7 @@ export function generateIcsCalendar(event: CalendarEventData): string {
 
 /**
  * Generates an official WhatsApp / messaging invitation template
- * with the direct Google Calendar link and meeting portal URL.
+ * with the direct Google Calendar link, meeting portal URL, and automatic Zoom link.
  */
 export function generateWhatsAppMeetingShareText(event: CalendarEventData, gcalUrl: string): string {
   const d = typeof event.date === 'string' ? new Date(event.date) : event.date;
@@ -241,6 +358,27 @@ export function generateWhatsAppMeetingShareText(event: CalendarEventData, gcalU
 
   const attendeeCount = event.attendees?.length || 0;
 
+  const virtual = extractVirtualMeetingDetails(
+    event.location,
+    event.zoomUrl,
+    event.meetingIdZoom,
+    event.passcodeZoom
+  );
+  const activeZoom = event.zoomUrl || virtual.zoomUrl;
+  const activeMeetingId = event.meetingIdZoom || virtual.meetingId;
+  const activePasscode = event.passcodeZoom || virtual.passcode;
+
+  let zoomSection = '';
+  if (activeZoom) {
+    zoomSection = `\n💻 *Tautan Rapat Virtual (Zoom):*\n🔗 ${activeZoom}\n`;
+    if (activeMeetingId) {
+      zoomSection += `🆔 *Meeting ID:* ${activeMeetingId}\n`;
+    }
+    if (activePasscode) {
+      zoomSection += `🔑 *Passcode:* ${activePasscode}\n`;
+    }
+  }
+
   return `*UNDANGAN RAPAT KOORDINASI SEKRETARIAT DEWAN NASIONAL KEK*
 --------------------------------------------------
 *Nomor:* ${event.meetingNumber}
@@ -248,8 +386,8 @@ export function generateWhatsAppMeetingShareText(event: CalendarEventData, gcalU
 
 📅 *Hari, Tanggal:* ${formattedDate}
 ⏰ *Waktu:* ${event.startTime} - ${event.endTime} WIB
-📍 *Lokasi / Tautan:* ${event.location}
-${event.chairpersonName ? `👤 *Pimpinan Sidang:* ${event.chairpersonName}\n` : ''}${event.biroName ? `🏢 *Penyelenggara:* ${event.biroName}\n` : ''}👥 *Peserta Terdaftar:* ${attendeeCount} Pejabat/Staf
+📍 *Lokasi Fisik:* ${virtual.cleanPhysicalLocation || event.location}
+${zoomSection}${event.chairpersonName ? `👤 *Pimpinan Sidang:* ${event.chairpersonName}\n` : ''}${event.biroName ? `🏢 *Penyelenggara:* ${event.biroName}\n` : ''}👥 *Peserta Terdaftar:* ${attendeeCount} Pejabat/Staf
 
 --------------------------------------------------
 *Tambahkan ke Google Calendar Anda:*
