@@ -65,6 +65,15 @@ export function BureauDistribution({
     };
   }, [initialTeamWorkload]);
 
+  const CANONICAL_CODES = ['INV', 'KS', 'KOM'];
+  const displayTeams = (teamWorkload || [])
+    .filter((t) => CANONICAL_CODES.includes(t.code.toUpperCase()))
+    .sort(
+      (a, b) =>
+        CANONICAL_CODES.indexOf(a.code.toUpperCase()) -
+        CANONICAL_CODES.indexOf(b.code.toUpperCase())
+    );
+
   const teamColors: Record<string, string> = {
     INV: 'bg-[#31889C]',
     KS: 'bg-emerald-600',
@@ -79,13 +88,13 @@ export function BureauDistribution({
           <div>
             <span className="font-semibold text-[11px] text-[#31889C] uppercase tracking-wider flex items-center gap-1.5">
               <Layers className="w-3.5 h-3.5 text-[#31889C]" />
-              <span>Tim Kerja IKK</span>
+              <span>3 Tim Kerja KEK</span>
             </span>
             <h2 className="font-bold text-[18px] text-slate-900 mt-0.5">
               Rapat per Tim
             </h2>
             <p className="text-[12px] text-slate-500 mt-0.5">
-              Distribusi agenda sidang 3 tim Biro IKK
+              Distribusi agenda sidang 3 Tim Kerja KEK
             </p>
           </div>
 
@@ -101,7 +110,7 @@ export function BureauDistribution({
 
         {/* Animated Progress Bars per Team */}
         <div className="mt-4 space-y-2">
-          {teamWorkload.map((team, idx) => (
+          {displayTeams.map((team, idx) => (
             <div
               key={team.id || team.code}
               role="button"

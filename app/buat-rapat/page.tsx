@@ -531,47 +531,6 @@ export default function BuatRapatPage() {
           </div>
         )}
 
-        {/* ========================================================================= */}
-        {/* PANDUAN URUTAN PENGISIAN 11 POIN MASUKAN MENTOR                           */}
-        {/* ========================================================================= */}
-        <div className="bg-white rounded-2xl border border-slate-200 p-4 shadow-2xs">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1 mb-3">
-            <span className="text-xs font-bold text-slate-800 flex items-center gap-2">
-              <span className="w-2.5 h-2.5 rounded-full bg-[#1E6B7B] animate-pulse" />
-              Urutan Pengisian Formulir (Poin 1 s/d 11 Berurutan)
-            </span>
-            <span className="text-[11px] text-slate-500 font-medium">
-              Sesuai 11 Masukan Standar Mentor KEK
-            </span>
-          </div>
-          <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-11 gap-2 text-center">
-            {[
-              { num: 1, label: 'Judul' },
-              { num: 2, label: 'Tanggal' },
-              { num: 3, label: 'Kategori' },
-              { num: 4, label: 'Surat Undangan' },
-              { num: 5, label: 'Paparan' },
-              { num: 6, label: 'Jenis Rapat' },
-              { num: 7, label: 'PIC Rapat' },
-              { num: 8, label: 'Peserta' },
-              { num: 9, label: 'Lokasi' },
-              { num: 10, label: 'No. Registrasi' },
-              { num: 11, label: 'Status' },
-            ].map((st) => (
-              <div
-                key={st.num}
-                className="p-2 rounded-xl bg-slate-50 border border-slate-200/80 flex flex-col items-center justify-center gap-1 hover:bg-[#F0F8FA] hover:border-[#BCE3EB] transition-colors"
-              >
-                <span className="w-5 h-5 rounded-full bg-[#1E6B7B] text-white text-[10px] font-bold flex items-center justify-center shadow-2xs">
-                  {st.num}
-                </span>
-                <span className="text-[10px] font-semibold text-slate-700 truncate max-w-full">
-                  {st.label}
-                </span>
-              </div>
-            ))}
-          </div>
-        </div>
 
         {/* ========================================================================= */}
         {/* BAGIAN I: AGENDA & WAKTU PELAKSANAAN (Poin 1, 2)                          */}

@@ -20,7 +20,7 @@ const ROLE_LABELS: Record<string, { label: string; badgeClass: string }> = {
     badgeClass: 'bg-blue-100 text-blue-900 border-blue-300',
   },
   STAFF: {
-    label: 'Staf Biro',
+    label: 'Staf Tim',
     badgeClass: 'bg-purple-100 text-purple-900 border-purple-300',
   },
 };
@@ -37,9 +37,7 @@ export function WelcomeBanner({
   const userRole = (currentUser?.role as string) || 'SUPER_ADMIN';
   const roleConfig = ROLE_LABELS[userRole] || ROLE_LABELS.SUPER_ADMIN;
 
-  const biroInfo = currentUser?.biroCode
-    ? `Biro ${currentUser.biroCode}`
-    : 'Sekretariat Dewan Nasional KEK';
+  const biroInfo = 'Sekretariat Dewan Nasional KEK';
 
   const todayFormatted = new Date().toLocaleDateString('id-ID', {
     weekday: 'long',

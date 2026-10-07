@@ -683,13 +683,18 @@ export async function getDashboardStats() {
         });
       }
 
-      // 3 Tim Kerja Biro IKK (Investasi, Kerja Sama, Komunikasi)
+      // 3 Tim Kerja KEK (Investasi, Kerja Sama, Komunikasi)
       const rawTeamUsers = await prisma.$queryRaw<
         Array<{ id: string; nama: string; email: string; peran: string; id_tim: string | null }>
       >`SELECT id_pengguna as id, nama_lengkap as nama, email, peran, id_tim FROM pengguna WHERE status_aktif = true`;
 
-      const rawTeams = await prisma.biroTeam.findMany({
-        where: { isActive: true },
+      const CANONICAL_TEAM_CODES = ['INV', 'KS', 'KOM'];
+
+      const fetchedTeams = await prisma.biroTeam.findMany({
+        where: {
+          isActive: true,
+          code: { in: CANONICAL_TEAM_CODES },
+        },
         include: {
           primaryMeetings: {
             select: {
@@ -714,8 +719,14 @@ export async function getDashboardStats() {
             orderBy: [{ dueDate: 'asc' }],
           },
         },
-        orderBy: { code: 'asc' },
       });
+
+      // Sort strictly in canonical order: Tim Investasi (INV), Tim Kerja Sama (KS), Tim Komunikasi (KOM)
+      const rawTeams = fetchedTeams.sort(
+        (a, b) =>
+          CANONICAL_TEAM_CODES.indexOf(a.code.toUpperCase()) -
+          CANONICAL_TEAM_CODES.indexOf(b.code.toUpperCase())
+      );
 
       const teamWorkload: TeamWorkloadMetric[] = rawTeams.map((t) => {
         const meetingCount = t.primaryMeetings.length;

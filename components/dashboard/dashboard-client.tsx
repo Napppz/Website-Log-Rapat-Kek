@@ -87,6 +87,17 @@ export function DashboardClient({
     };
   }, [initialTeamWorkload]);
 
+  const CANONICAL_CODES = ['INV', 'KS', 'KOM'];
+  const sanitizedTeamWorkload = useMemo(() => {
+    return (teamWorkload || [])
+      .filter((t) => CANONICAL_CODES.includes(t.code.toUpperCase()))
+      .sort(
+        (a, b) =>
+          CANONICAL_CODES.indexOf(a.code.toUpperCase()) -
+          CANONICAL_CODES.indexOf(b.code.toUpperCase())
+      );
+  }, [teamWorkload]);
+
   const handleOpenTeamModal = (team: TeamWorkloadMetric) => {
     setSelectedTeamForModal(team);
     setIsTeamModalOpen(true);
@@ -315,9 +326,9 @@ export function DashboardClient({
         onResetMonth={() => setSelectedMonth(null)}
       />
 
-      {/* 3. Executive 3 Tim Kerja Biro IKK (Investasi, Kerja Sama, Komunikasi) - Pak Bambang (Super Admin) */}
+      {/* 3. Executive 3 Tim Kerja KEK (Investasi, Kerja Sama, Komunikasi) - Super Admin */}
       <TeamWorkloadGrid
-        teams={teamWorkload}
+        teams={sanitizedTeamWorkload}
         onTeamClick={handleOpenTeamModal}
       />
 
@@ -341,7 +352,7 @@ export function DashboardClient({
         />
         <BureauDistribution
           workload={workload}
-          teamWorkload={teamWorkload}
+          teamWorkload={sanitizedTeamWorkload}
           onTeamClick={handleOpenTeamModal}
           onBiroClick={(code) => router.push(`/semua-rapat?tim=${code}`)}
         />

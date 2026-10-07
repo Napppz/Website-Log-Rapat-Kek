@@ -24,7 +24,16 @@ interface TeamWorkloadGridProps {
 }
 
 export function TeamWorkloadGrid({ teams, onTeamClick }: TeamWorkloadGridProps) {
-  if (!teams || teams.length === 0) {
+  const CANONICAL_CODES = ['INV', 'KS', 'KOM'];
+  const displayTeams = (teams || [])
+    .filter((t) => CANONICAL_CODES.includes(t.code.toUpperCase()))
+    .sort(
+      (a, b) =>
+        CANONICAL_CODES.indexOf(a.code.toUpperCase()) -
+        CANONICAL_CODES.indexOf(b.code.toUpperCase())
+    );
+
+  if (!displayTeams || displayTeams.length === 0) {
     return null;
   }
 
@@ -94,17 +103,17 @@ export function TeamWorkloadGrid({ teams, onTeamClick }: TeamWorkloadGridProps) 
           <div className="flex items-center gap-2">
             <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-[#E8F5F7] text-[#215865] border border-[#BCE3EB]">
               <Sparkles className="w-3 h-3 text-[#31889C]" />
-              BIRO INVESTASI, KERJA SAMA &amp; KOMUNIKASI (IKK)
+              3 TIM KERJA SEKRETARIAT KEK
             </span>
             <span className="text-[11px] font-semibold text-slate-400">
-              • 3 Tim Kerja
+              • Tim Investasi, Kerja Sama &amp; Komunikasi
             </span>
           </div>
           <h2 className="text-lg md:text-xl font-bold text-slate-900 mt-1">
             Status Kinerja &amp; Beban Kerja per Tim
           </h2>
           <p className="text-[13px] text-slate-500">
-            Pemantauan langsung jumlah rapat dan status tiap pekerjaan tindak lanjut (Pak Bambang / Super Admin)
+            Pemantauan langsung jumlah rapat dan status tiap pekerjaan tindak lanjut 3 Tim Kerja (Super Admin)
           </p>
         </div>
 
@@ -116,7 +125,7 @@ export function TeamWorkloadGrid({ teams, onTeamClick }: TeamWorkloadGridProps) 
 
       {/* 3 Interactive Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-        {teams.map((team) => {
+        {displayTeams.map((team) => {
           const colors = getTeamColors(team.code);
           return (
             <div
