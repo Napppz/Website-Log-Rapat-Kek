@@ -21,6 +21,7 @@ import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { toast } from '@/components/providers/toast-provider';
 import { uploadInvitationFileAction } from '@/app/actions/meeting-upload-actions';
+import { PreviousMeetingSelector } from './previous-meeting-selector';
 
 interface CreateMeetingDialogProps {
   isOpen: boolean;
@@ -207,23 +208,21 @@ export function CreateMeetingDialog({ isOpen, onClose, onSuccess }: CreateMeetin
           </div>
 
           {/* Rapat Sebelumnya (Opsional) */}
-          <div className="p-3 bg-[#F0F9FA] rounded-xl border border-[#BCE3EB] space-y-1">
-            <label className="block font-semibold text-slate-800 text-[12px] flex items-center gap-1.5">
-              <Link2 className="w-3.5 h-3.5 text-[#31889C]" />
-              <span>Rapat Sebelumnya (Opsional — Rapat Lanjutan)</span>
-            </label>
-            <select
+          <div className="p-3 bg-[#F0F9FA] rounded-xl border border-[#BCE3EB] space-y-1.5">
+            <div className="flex items-center justify-between">
+              <label className="font-semibold text-slate-800 text-[12px] flex items-center gap-1.5">
+                <Link2 className="w-3.5 h-3.5 text-[#31889C]" />
+                <span>Rapat Sebelumnya (Opsional — Rapat Lanjutan)</span>
+              </label>
+              <span className="text-[10.5px] font-semibold text-[#1E6B7B] bg-[#1E6B7B]/10 px-2 py-0.5 rounded-full">
+                {availableMeetings.length} Rapat
+              </span>
+            </div>
+            <PreviousMeetingSelector
               value={previousMeetingId}
-              onChange={(e) => setPreviousMeetingId(e.target.value)}
-              className="w-full px-3 py-1.5 rounded-lg border border-slate-200 bg-white text-slate-800 text-[12px] focus:outline-none focus:ring-2 focus:ring-[#31889C]/25 focus:border-[#31889C]"
-            >
-              <option value="">-- Bukan Rapat Lanjutan (Rapat Baru) --</option>
-              {availableMeetings.map((m) => (
-                <option key={m.id} value={m.id}>
-                  [{m.meetingNumber}] {m.title}
-                </option>
-              ))}
-            </select>
+              onChange={setPreviousMeetingId}
+              availableMeetings={availableMeetings}
+            />
           </div>
 
           {/* Agenda / Judul Rapat */}

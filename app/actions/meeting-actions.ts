@@ -856,10 +856,10 @@ export async function getMeetingOptionsAction(excludeMeetingId?: string) {
         title: true,
         date: true,
         status: true,
-        primaryBiro: { select: { code: true, shortName: true } },
+        primaryBiro: { select: { code: true, name: true, shortName: true } },
       },
       orderBy: { date: 'desc' },
-      take: 100,
+      take: 300,
     });
     return { success: true, data: meetings };
   } catch (error: any) {

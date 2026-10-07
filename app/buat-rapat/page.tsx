@@ -52,6 +52,7 @@ import { ExtractedMeetingData } from '@/lib/meeting-extractor';
 import { toast } from '@/components/providers/toast-provider';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
+import { PreviousMeetingSelector } from '@/components/meeting/previous-meeting-selector';
 
 interface AvailableUser {
   id: string;
@@ -695,23 +696,21 @@ export default function BuatRapatPage() {
 
               {/* Tautkan Rapat Sebelumnya */}
               <div className="p-4 bg-[#F0F8FA]/70 rounded-xl border border-[#BCE3EB]/80 space-y-2">
-                <label className="font-semibold text-slate-800 flex items-center gap-2 text-sm">
-                  <Link2 className="w-4 h-4 text-[#1E6B7B]" />
-                  <span>Tautkan Rapat Lanjutan</span>
-                  <span className="text-slate-400 font-normal text-xs">(Opsional)</span>
-                </label>
-                <select
+                <div className="flex items-center justify-between">
+                  <label className="font-semibold text-slate-800 flex items-center gap-2 text-sm">
+                    <Link2 className="w-4 h-4 text-[#1E6B7B]" />
+                    <span>Tautkan Rapat Lanjutan</span>
+                    <span className="text-slate-400 font-normal text-xs">(Opsional)</span>
+                  </label>
+                  <span className="text-[11px] font-semibold text-[#1E6B7B] bg-[#1E6B7B]/10 px-2 py-0.5 rounded-full">
+                    {availableMeetings.length} Rapat Tersedia
+                  </span>
+                </div>
+                <PreviousMeetingSelector
                   value={previousMeetingId}
-                  onChange={(e) => setPreviousMeetingId(e.target.value)}
-                  className="w-full px-3.5 h-[40px] rounded-lg border border-slate-300 bg-white text-slate-800 text-sm focus:outline-none focus:ring-2 focus:ring-[#1E6B7B]/20 focus:border-[#1E6B7B] cursor-pointer"
-                >
-                  <option value="">-- Bukan Rapat Lanjutan (Rapat Mandiri) --</option>
-                  {availableMeetings.map((m) => (
-                    <option key={m.id} value={m.id}>
-                      [{m.meetingNumber}] {m.title.slice(0, 50)}...
-                    </option>
-                  ))}
-                </select>
+                  onChange={setPreviousMeetingId}
+                  availableMeetings={availableMeetings}
+                />
                 <p className="text-[11.5px] text-slate-500 leading-normal">
                   Hubungkan jika rapat ini melanjutkan butir tindak lanjut sesi terdahulu.
                 </p>
