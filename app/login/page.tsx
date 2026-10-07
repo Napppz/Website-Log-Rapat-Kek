@@ -58,13 +58,11 @@ function LoginForm() {
     }
   };
 
-  // Demo accounts helper for quick evaluation
+  // Demo accounts helper for quick evaluation (Super Admin, Admin, Staf)
   const demoAccounts = [
     { label: 'Super Admin', email: 'superadmin@simrapat.local', icon: '👑', desc: 'Akses Penuh Semua Biro' },
-    { label: 'Administrator', email: 'admin@simrapat.local', icon: '⚙️', desc: 'Pengelola Sistem' },
-    { label: 'Notulis', email: 'notulis@simrapat.local', icon: '📝', desc: 'Pembuat & Editor Notula' },
+    { label: 'Admin', email: 'admin@simrapat.local', icon: '⚙️', desc: 'Pengelola Sistem' },
     { label: 'Staf', email: 'staff@simrapat.local', icon: '💼', desc: 'PIC Tindak Lanjut' },
-    { label: 'Viewer', email: 'viewer@simrapat.local', icon: '👁️', desc: 'Akses Baca Saja (Tamu)' },
   ];
 
   const handleFillDemo = (demoEmail: string, roleName: string) => {
@@ -289,21 +287,20 @@ function LoginForm() {
                   Pilih salah satu peran di bawah untuk mengisi kredensial uji coba secara instan:
                 </p>
 
-                <div className="grid grid-cols-2 gap-1.5 text-[11px]">
-                  {demoAccounts.map((acc, idx) => {
+                <div className="grid grid-cols-3 gap-1.5 text-[11px]">
+                  {demoAccounts.map((acc) => {
                     const isSelected = selectedDemoRole === acc.label;
-                    const isLastOdd = idx === demoAccounts.length - 1 && demoAccounts.length % 2 !== 0;
 
                     return (
                       <button
                         key={acc.email}
                         type="button"
                         onClick={() => handleFillDemo(acc.email, acc.label)}
-                        className={`p-2 text-left rounded-xl border transition-all cursor-pointer flex items-center justify-between ${isLastOdd ? 'col-span-2' : ''
-                          } ${isSelected
+                        className={`p-2 text-left rounded-xl border transition-all cursor-pointer flex items-center justify-between ${
+                          isSelected
                             ? 'bg-[#EBF6F8] border-[#31889C] text-[#266F80] font-bold shadow-xs ring-1 ring-[#31889C]'
                             : 'bg-white border-slate-200/90 hover:border-[#31889C]/60 hover:bg-[#F6FBFC] text-slate-700 font-semibold'
-                          }`}
+                        }`}
                       >
                         <div className="flex items-center gap-1.5 truncate">
                           <span className="text-[13px]">{acc.icon}</span>
