@@ -1,7 +1,7 @@
 'use server';
 
 import { prisma } from '@/lib/prisma';
-import { getNextMeetingNumber } from '@/lib/sequence';
+import { getNextMeetingNumber, previewNextMeetingNumber } from '@/lib/sequence';
 import { getMeetingByIdFromDb } from '@/lib/db-service';
 import { MeetingStatus, AttendanceStatus, UserRole } from '@prisma/client';
 import { revalidatePath } from 'next/cache';
@@ -11,10 +11,10 @@ import { getNextMeetingId, getNextUserId, getNextParticipantId, getNextNotificat
 
 export interface CreateMeetingInput {
   title: string;
-  biroCode: string;
+  biroCode?: string;
   date: string;
-  startTime: string;
-  endTime: string;
+  startTime?: string;
+  endTime?: string;
   location: string;
   involvedBiroCodes?: string[];
   attendees?: string;
@@ -23,9 +23,18 @@ export interface CreateMeetingInput {
   chairpersonId?: string | null;
   meetingNumber?: string | null;
   primaryTeamId?: string | null;
+  meetingKind?: string | null;
+  picName?: string | null;
+  progressStatus?: string | null;
   invitationDocUrl?: string | null;
   invitationDocName?: string | null;
   invitationDocSize?: number | null;
+  categoryDocUrl?: string | null;
+  categoryDocName?: string | null;
+  categoryDocSize?: number | null;
+  materialDocUrl?: string | null;
+  materialDocName?: string | null;
+  materialDocSize?: number | null;
   documentCategory?: string | null;
   documentSubCategory?: string | null;
   sourceOrigin?: string | null;
@@ -64,8 +73,15 @@ export async function getActiveUsersAction() {
             shortName: true,
           },
         },
+        team: {
+          select: {
+            id: true,
+            code: true,
+            name: true,
+          },
+        },
       },
-      orderBy: [{ biro: { code: 'asc' } }, { name: 'asc' }],
+      orderBy: [{ name: 'asc' }],
     });
     return { success: true, data: users };
   } catch (error: any) {
@@ -85,8 +101,10 @@ export async function createMeetingAction(input: CreateMeetingInput) {
     const isPrivileged =
       currentUser.role === 'SUPER_ADMIN' || currentUser.role === 'ADMIN';
 
+    const effectiveBiroCode = (input.biroCode || currentUser.biroCode || 'IKK').toUpperCase();
+
     // Bureau Scoping: Non-admin users can only create meetings for their own bureau
-    if (!isPrivileged && currentUser.biroCode && input.biroCode.toUpperCase() !== currentUser.biroCode.toUpperCase()) {
+    if (!isPrivileged && currentUser.biroCode && effectiveBiroCode !== currentUser.biroCode.toUpperCase()) {
       return {
         success: false,
         error: `Anda hanya dapat menjadwalkan rapat untuk biro Anda sendiri (${currentUser.biroCode}).`,
@@ -111,6 +129,16 @@ export async function createMeetingAction(input: CreateMeetingInput) {
     }
 
     const result = await prisma.$transaction(async (tx) => {
+      // Resolve team code if primaryTeamId provided
+      let teamCode: string | null = null;
+      if (input.primaryTeamId) {
+        const team = await tx.biroTeam.findUnique({
+          where: { id: input.primaryTeamId },
+          select: { code: true },
+        });
+        if (team) teamCode = team.code;
+      }
+
       // 1. Generate sequence atomically or use custom meetingNumber if provided (and not '-' or empty)
       let finalMeetingNumber = input.meetingNumber?.trim();
       if (finalMeetingNumber && finalMeetingNumber !== '-' && finalMeetingNumber !== '—') {
@@ -123,18 +151,32 @@ export async function createMeetingAction(input: CreateMeetingInput) {
           );
         }
       } else {
-        const seq = await getNextMeetingNumber(input.biroCode, tx);
+        const seq = await getNextMeetingNumber(effectiveBiroCode, tx, teamCode);
         finalMeetingNumber = seq.meetingNumber;
       }
 
       // 2. Find primary biro
       const primaryBiro = await tx.biro.findUnique({
-        where: { code: input.biroCode.toUpperCase() },
+        where: { code: effectiveBiroCode },
       });
 
       if (!primaryBiro) {
-        throw new Error(`Biro ${input.biroCode} tidak ditemukan.`);
+        throw new Error(`Biro ${effectiveBiroCode} tidak ditemukan.`);
       }
+
+      // Map progressStatus to MeetingStatus
+      let finalStatus: MeetingStatus = MeetingStatus.DRAFT;
+      const rawProg = (input.progressStatus || '').trim().toLowerCase();
+      if (rawProg === 'finish' || rawProg === 'selesai') {
+        finalStatus = MeetingStatus.FINAL;
+      } else if (rawProg === 'on progres' || rawProg === 'on progress' || rawProg === 'review') {
+        finalStatus = MeetingStatus.REVIEW;
+      } else {
+        finalStatus = MeetingStatus.DRAFT;
+      }
+
+      const finalStartTime = input.startTime?.trim() || '09:00';
+      const finalEndTime = input.endTime?.trim() || '12:00';
 
       // 3. Create meeting record with clean sequential ID
       const nextMeetingId = await getNextMeetingId(tx);
@@ -146,15 +188,24 @@ export async function createMeetingAction(input: CreateMeetingInput) {
           primaryBiroId: primaryBiro.id,
           primaryTeamId: input.primaryTeamId || null,
           date: new Date(input.date),
-          startTime: input.startTime,
-          endTime: input.endTime,
+          startTime: finalStartTime,
+          endTime: finalEndTime,
           location: input.location,
-          status: MeetingStatus.DRAFT,
+          status: finalStatus,
+          meetingKind: input.meetingKind || null,
+          picName: input.picName || null,
+          progressStatus: input.progressStatus || 'Start',
           previousMeetingId: input.previousMeetingId || null,
           chairpersonId: input.chairpersonId || null,
           invitationDocUrl: input.invitationDocUrl || null,
           invitationDocName: input.invitationDocName || null,
           invitationDocSize: input.invitationDocSize || null,
+          categoryDocUrl: input.categoryDocUrl || null,
+          categoryDocName: input.categoryDocName || null,
+          categoryDocSize: input.categoryDocSize || null,
+          materialDocUrl: input.materialDocUrl || null,
+          materialDocName: input.materialDocName || null,
+          materialDocSize: input.materialDocSize || null,
           documentCategory: input.documentCategory || 'UNDANGAN_INTERNAL',
           documentSubCategory: input.documentSubCategory || null,
           sourceOrigin: input.sourceOrigin || null,
@@ -317,7 +368,7 @@ export async function createMeetingAction(input: CreateMeetingInput) {
       '/',
       '/semua-rapat',
       '/notifikasi',
-      `/biro/${input.biroCode.toLowerCase()}`,
+      `/biro/${effectiveBiroCode.toLowerCase()}`,
     ]);
 
     return { success: true, data: result };
@@ -1202,6 +1253,30 @@ export async function getAgendaSeriesAction(meetingId: string) {
   } catch (error: any) {
     console.error('Error fetching agenda series:', error);
     return { success: false, error: error?.message || 'Gagal memuat rangkaian rapat' };
+  }
+}
+
+/**
+ * Server action to preview the next meeting registration number based on Biro and Team
+ */
+export async function previewNextMeetingNumberAction(biroCode?: string, teamId?: string | null) {
+  try {
+    let teamCode: string | null = null;
+    let resolvedBiro = biroCode || 'IKK';
+    if (teamId) {
+      const team = await prisma.biroTeam.findUnique({
+        where: { id: teamId },
+        select: { code: true, biro: { select: { code: true } } },
+      });
+      if (team) {
+        teamCode = team.code;
+        if (team.biro) resolvedBiro = team.biro.code;
+      }
+    }
+    const nextNumber = await previewNextMeetingNumber(resolvedBiro, teamCode);
+    return { success: true, data: nextNumber };
+  } catch (error: any) {
+    return { success: false, error: error?.message || 'Gagal membuat nomor registrasi rapat' };
   }
 }
 

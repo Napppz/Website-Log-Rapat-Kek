@@ -402,6 +402,15 @@ export async function getMeetingsFromDb(filters?: {
           documentSubCategory: (m as any).documentSubCategory || null,
           sourceOrigin: (m as any).sourceOrigin || null,
           postponeReason: (m as any).postponeReason || null,
+          meetingKind: (m as any).meetingKind || null,
+          picName: (m as any).picName || null,
+          progressStatus: (m as any).progressStatus || 'Start',
+          categoryDocUrl: (m as any).categoryDocUrl || null,
+          categoryDocName: (m as any).categoryDocName || null,
+          categoryDocSize: (m as any).categoryDocSize || null,
+          materialDocUrl: (m as any).materialDocUrl || null,
+          materialDocName: (m as any).materialDocName || null,
+          materialDocSize: (m as any).materialDocSize || null,
         };
       });
     });

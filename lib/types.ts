@@ -117,6 +117,15 @@ export interface Meeting {
   documentSubCategory?: MeetingDocumentSubCategory | string | null;
   sourceOrigin?: string | null;
   postponeReason?: string | null;
+  meetingKind?: string | null;
+  picName?: string | null;
+  progressStatus?: string | null;
+  categoryDocUrl?: string | null;
+  categoryDocName?: string | null;
+  categoryDocSize?: number | null;
+  materialDocUrl?: string | null;
+  materialDocName?: string | null;
+  materialDocSize?: number | null;
 }
 
 export function getMeetingCategoryInfo(

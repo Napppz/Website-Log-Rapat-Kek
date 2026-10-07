@@ -4,48 +4,41 @@ import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import {
   Calendar,
-  Clock,
-  MapPin,
   Building2,
-  Plus,
   ArrowLeft,
-  Shield,
   Users,
   CheckCircle,
-  ShieldAlert,
   Loader2,
   AlertCircle,
-  LogIn,
   Check,
   UserCheck,
   Link2,
   FileText,
   UploadCloud,
   Sparkles,
-  Layers,
   Search,
-  User,
-  Filter,
   Paperclip,
   ExternalLink,
   Trash2,
   FileCheck,
-  FileSpreadsheet,
-  Upload,
+  RefreshCw,
+  FolderOpen,
+  MapPin,
+  Tag,
+  Clock,
 } from 'lucide-react';
-import { BIRO_LIST } from '@/lib/mock-data';
-import { BiroCode } from '@/lib/types';
 import Link from 'next/link';
 import { useSession } from 'next-auth/react';
 import {
   getActiveUsersAction,
   createMeetingAction,
   getMeetingOptionsAction,
-  getBiroTeamsAction,
+  previewNextMeetingNumberAction,
 } from '@/app/actions/meeting-actions';
 import {
   saveMinutesAndActionsToMeetingAction,
   uploadInvitationFileAction,
+  uploadGenericMeetingFileAction,
 } from '@/app/actions/meeting-upload-actions';
 import { UploadMeetingDialog } from '@/components/meeting/upload-meeting-dialog';
 import { ExtractedMeetingData } from '@/lib/meeting-extractor';
@@ -53,12 +46,6 @@ import { toast } from '@/components/providers/toast-provider';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 import { PreviousMeetingSelector } from '@/components/meeting/previous-meeting-selector';
-import { LocationPicker, MeetingType } from '@/components/meeting/location-picker';
-import { extractVirtualMeetingDetails } from '@/lib/calendar';
-import {
-  MeetingCategorySelector,
-  CategorySelectionData,
-} from '@/components/meeting/meeting-category-selector';
 
 interface AvailableUser {
   id: string;
@@ -70,170 +57,163 @@ interface AvailableUser {
     code: string;
     shortName: string;
   } | null;
+  team?: {
+    id: string;
+    code: string;
+    name: string;
+  } | null;
+}
+
+interface UploadedFileState {
+  url: string;
+  name: string;
+  size: number;
+}
+
+const JENIS_RAPAT_OPTIONS = [
+  'Media Gathering',
+  'Kunker',
+  'Penandatanganan Mou',
+  'Groundbreaking',
+  'Rapat Kerja',
+  'Seminar/Forum',
+  'Rapat/Audiensi',
+  'Pelantikan',
+  'Seremoni',
+  'Other',
+];
+
+const LOKASI_OPTIONS = [
+  'Graha Satwika',
+  'Loka Jagatsaksana',
+  'Lokasandhi',
+  'Antawacana',
+  'Other',
+];
+
+const STATUS_OPTIONS = [
+  { value: 'Start', label: 'Start', color: 'bg-blue-50 text-blue-700 border-blue-200' },
+  { value: 'On Progres', label: 'On Progres', color: 'bg-amber-50 text-amber-700 border-amber-200' },
+  { value: 'Finish', label: 'Finish', color: 'bg-emerald-50 text-emerald-700 border-emerald-200' },
+];
+
+export const TIM_OPTIONS = [
+  {
+    id: 'TIM-001',
+    code: 'INV',
+    name: 'Tim Investasi',
+    shortName: 'Investasi',
+    description: 'Fasilitasi, promosi, dan percepatan realisasi investasi strategis KEK',
+  },
+  {
+    id: 'TIM-003',
+    code: 'KS',
+    name: 'Tim Kerja Sama',
+    shortName: 'Kerja Sama',
+    description: 'Penguatan kemitraan strategis, koordinasi lintas K/L, dan kerja sama badan usaha',
+  },
+  {
+    id: 'TIM-002',
+    code: 'KOM',
+    name: 'Tim Komunikasi',
+    shortName: 'Komunikasi',
+    description: 'Komunikasi publik, hubungan media, dokumentasi, dan diseminasi kebijakan KEK',
+  },
+];
+
+function formatFileSize(bytes: number) {
+  if (!bytes) return '0 B';
+  if (bytes < 1024) return bytes + ' B';
+  if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+  return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
 }
 
 export default function BuatRapatPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { data: session, status } = useSession();
+  const { data: session } = useSession();
   const userRole = session?.user?.role || 'STAFF';
   const isPrivileged = userRole === 'SUPER_ADMIN' || userRole === 'ADMIN';
-  const userBiroCode = !isPrivileged && session?.user?.biroCode ? (session.user.biroCode as BiroCode) : undefined;
-  const canCreate =
-    userRole === 'SUPER_ADMIN' || userRole === 'ADMIN';
 
+  // AI Extraction dialog state
   const [isUploadDialogOpen, setIsUploadDialogOpen] = useState(false);
   const [pendingMinutes, setPendingMinutes] = useState<ExtractedMeetingData | null>(null);
 
-  // Invitation Document Upload States
-  const [invitationDoc, setInvitationDoc] = useState<{
-    url: string;
-    name: string;
-    size: number;
-    extracted?: ExtractedMeetingData;
-    matchedUserIds?: string[];
-  } | null>(null);
-  const [isUploadingDoc, setIsUploadingDoc] = useState(false);
-  const [isDraggingDoc, setIsDraggingDoc] = useState(false);
-  const fileInputRef = useRef<HTMLInputElement>(null);
-
-  // Today's date in YYYY-MM-DD format (prevents past date selection)
+  // Today string for date input
   const todayStr = (() => {
     const d = new Date();
     return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
   })();
 
-  const [selectedBiro, setSelectedBiro] = useState<BiroCode>(userBiroCode || 'IKK');
+  // 1. Judul Rapat
   const [title, setTitle] = useState('');
+
+  // 2. Tanggal Rapat
   const [date, setDate] = useState(todayStr);
-  const [time, setTime] = useState('09:00 - 12:00 WIB');
-  
-  // Meeting Type & Location / Zoom States
-  const [meetingType, setMeetingType] = useState<MeetingType>('HYBRID');
-  const [physicalLocation, setPhysicalLocation] = useState(
-    'Ruang Rapat Utama Gedung Posko KEK'
-  );
-  const [zoomUrl, setZoomUrl] = useState('');
-  const [zoomMeetingId, setZoomMeetingId] = useState('');
-  const [zoomPasscode, setZoomPasscode] = useState('');
-  const [location, setLocation] = useState(
-    'Ruang Rapat Utama Gedung Posko KEK & Hybrid Zoom'
-  );
-  const [classification, setClassification] = useState('STRATEGIS');
-  const [categoryData, setCategoryData] = useState<CategorySelectionData>({
-    category: 'UNDANGAN_INTERNAL',
-    subCategory: null,
-    sourceOrigin: '',
-    postponeReason: '',
-  });
-  const [attendees, setAttendees] = useState(
-    'Dr. Hendra Suprayitno, Maya Puspita, S.Sos, Tim Sekretariat Jenderal'
-  );
-  const [customMeetingNumber, setCustomMeetingNumber] = useState('');
+
+  // 3. Kategori Rapat (Undangan Internal, Daftar Naskah Masuk, Tunda Rapat)
+  const [kategoriRapat, setKategoriRapat] = useState<string>('UNDANGAN_INTERNAL');
+  const [sourceOrigin, setSourceOrigin] = useState<string>('');
+  const [postponeReason, setPostponeReason] = useState<string>('');
+  const [categoryDoc, setCategoryDoc] = useState<UploadedFileState | null>(null);
+  const [isUploadingCategoryDoc, setIsUploadingCategoryDoc] = useState(false);
+  const categoryFileInputRef = useRef<HTMLInputElement>(null);
+
+  // 4. Surat Undangan (Upload File)
+  const [invitationDoc, setInvitationDoc] = useState<UploadedFileState | null>(null);
+  const [isUploadingInvitationDoc, setIsUploadingInvitationDoc] = useState(false);
+  const invitationFileInputRef = useRef<HTMLInputElement>(null);
+
+  // 5. Dokumen Terkait / Paparan Rapat (Upload File)
+  const [materialDoc, setMaterialDoc] = useState<UploadedFileState | null>(null);
+  const [isUploadingMaterialDoc, setIsUploadingMaterialDoc] = useState(false);
+  const materialFileInputRef = useRef<HTMLInputElement>(null);
+
+  // 6. Jenis Rapat (Dropdown + Other)
+  const [jenisRapat, setJenisRapat] = useState<string>('Rapat Kerja');
+  const [customJenisRapat, setCustomJenisRapat] = useState<string>('');
+
+  // 7. PIC Rapat (Dropdown staf + nama PIC)
+  const [picUserId, setPicUserId] = useState<string>('');
+  const [picName, setPicName] = useState<string>('');
+
+  // 8. Undangan Rapat (Peserta Rapat yang Diundang)
+  const [selectedUserIds, setSelectedUserIds] = useState<string[]>([]);
+  const [attendees, setAttendees] = useState<string>('');
+  const [participantSearch, setParticipantSearch] = useState('');
+  const [participantTeamFilter, setParticipantTeamFilter] = useState<string>('ALL');
+
+  // 9. Lokasi Kegiatan (Dropdown + Other)
+  const [lokasiOption, setLokasiOption] = useState<string>('Graha Satwika');
+  const [customLocation, setCustomLocation] = useState<string>('');
+
+  // 10. Kode Nomor Registrasi Per Tim (Tim Investasi, Tim Kerja Sama, Tim Komunikasi)
+  const [selectedTeamId, setSelectedTeamId] = useState<string>('TIM-001');
+  const [registrationNumber, setRegistrationNumber] = useState<string>('');
+  const [isManualNumber, setIsManualNumber] = useState<boolean>(false);
+  const [isLoadingNumber, setIsLoadingNumber] = useState<boolean>(false);
+
+  // 11. Status (Start, On Progres, Finish)
+  const [statusRapat, setStatusRapat] = useState<string>('Start');
+
+  // Optional: Tautkan rapat sebelumnya
+  const [previousMeetingId, setPreviousMeetingId] = useState<string>('');
+
+  // Auxiliary data
   const [availableUsers, setAvailableUsers] = useState<AvailableUser[]>([]);
   const [availableMeetings, setAvailableMeetings] = useState<any[]>([]);
-  const [availableTeams, setAvailableTeams] = useState<Array<{ id: string; code: string; name: string; description?: string | null }>>([]);
-  const [selectedTeamId, setSelectedTeamId] = useState<string>('');
-  const [previousMeetingId, setPreviousMeetingId] = useState<string>('');
-  const [chairpersonId, setChairpersonId] = useState<string>('');
-  const [selectedUserIds, setSelectedUserIds] = useState<string[]>([]);
-  const [participantSearch, setParticipantSearch] = useState('');
-  const [participantBiroFilter, setParticipantBiroFilter] = useState<string>('ALL');
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
-  // Check query params to auto-open upload dialog if ?upload=true
-  useEffect(() => {
-    if (searchParams.get('upload') === 'true') {
-      setIsUploadDialogOpen(true);
-    }
-    const prevId = searchParams.get('previousMeetingId');
-    const paramTitle = searchParams.get('title');
-    const paramBiro = searchParams.get('biro');
-
-    if (prevId) {
-      setPreviousMeetingId(prevId);
-    }
-    if (paramTitle) {
-      setTitle(paramTitle);
-    }
-    if (userBiroCode) {
-      setSelectedBiro(userBiroCode);
-    } else if (paramBiro && ['BPPK', 'PKKEK', 'IKK', 'HSDMO', 'UK'].includes(paramBiro.toUpperCase())) {
-      setSelectedBiro(paramBiro.toUpperCase() as BiroCode);
-    }
-  }, [searchParams, userBiroCode]);
-
-  // Handle data applied from uploaded meeting document
-  const handleApplyExtractedData = (
-    extractedData: ExtractedMeetingData,
-    matchedUserIds: string[]
-  ) => {
-    setTitle(extractedData.title);
-    if (extractedData.biroCode && !userBiroCode) {
-      setSelectedBiro(extractedData.biroCode as BiroCode);
-    }
-    if (extractedData.date) {
-      if (extractedData.date < todayStr) {
-        toast.warning(
-          `Tanggal pada berkas undangan (${extractedData.date}) sudah lewat. Tanggal pelaksanaan disesuaikan ke hari ini.`
-        );
-        setDate(todayStr);
-      } else {
-        setDate(extractedData.date);
-      }
-    }
-    setTime(`${extractedData.startTime} - ${extractedData.endTime} WIB`);
-    if (extractedData.location) {
-      setLocation(extractedData.location);
-      const virtual = extractVirtualMeetingDetails(extractedData.location);
-      if (virtual.isVirtual) {
-        if (virtual.cleanPhysicalLocation && !virtual.cleanPhysicalLocation.toLowerCase().includes('daring') && !virtual.cleanPhysicalLocation.toLowerCase().includes('online')) {
-          setMeetingType('HYBRID');
-          setPhysicalLocation(virtual.cleanPhysicalLocation);
-        } else {
-          setMeetingType('ONLINE');
-          setPhysicalLocation(virtual.cleanPhysicalLocation || 'Online / Daring (Zoom)');
-        }
-        if (virtual.zoomUrl) setZoomUrl(virtual.zoomUrl);
-        if (virtual.meetingId) setZoomMeetingId(virtual.meetingId);
-        if (virtual.passcode) setZoomPasscode(virtual.passcode);
-      } else {
-        setMeetingType('OFFLINE');
-        setPhysicalLocation(extractedData.location);
-        setZoomUrl('');
-        setZoomMeetingId('');
-        setZoomPasscode('');
-      }
-    }
-    if (extractedData.classification) {
-      setClassification(extractedData.classification);
-    }
-    setAttendees(extractedData.attendees);
-    if (extractedData.meetingNumber) {
-      setCustomMeetingNumber(extractedData.meetingNumber);
-    }
-    if (matchedUserIds && matchedUserIds.length > 0) {
-      setSelectedUserIds(matchedUserIds);
-    }
-
-    setPendingMinutes(extractedData);
-  };
-
-  // Fetch available users and existing meetings on mount
+  // Fetch initial data
   useEffect(() => {
     getActiveUsersAction()
       .then((res) => {
         if (res.success && res.data) {
           setAvailableUsers(res.data);
-          const initialLower = 'dr. hendra suprayitno, maya puspita, s.sos'.toLowerCase();
-          const matchedIds = res.data
-            .filter((u) => initialLower.includes(u.name.toLowerCase()))
-            .map((u) => u.id);
-          setSelectedUserIds(matchedIds);
         }
       })
-      .catch((err) => console.warn('Could not load users for meeting:', err));
+      .catch((err) => console.warn('Could not load users:', err));
 
     getMeetingOptionsAction()
       .then((res) => {
@@ -244,290 +224,216 @@ export default function BuatRapatPage() {
       .catch((err) => console.warn('Could not load meetings:', err));
   }, []);
 
-  // Fetch teams whenever selected biro changes
+  // Update registration number preview when selected team changes (unless manually edited)
   useEffect(() => {
-    getBiroTeamsAction(selectedBiro)
+    if (!isManualNumber) {
+      setIsLoadingNumber(true);
+      previewNextMeetingNumberAction('IKK', selectedTeamId)
+        .then((res) => {
+          if (res.success && res.data) {
+            setRegistrationNumber(res.data);
+          }
+        })
+        .catch(() => {})
+        .finally(() => setIsLoadingNumber(false));
+    }
+  }, [selectedTeamId, isManualNumber]);
+
+  // Handle URL query parameters
+  useEffect(() => {
+    if (searchParams.get('upload') === 'true') {
+      setIsUploadDialogOpen(true);
+    }
+    const prevId = searchParams.get('previousMeetingId');
+    const paramTitle = searchParams.get('title');
+    const paramTim = searchParams.get('tim');
+
+    if (prevId) setPreviousMeetingId(prevId);
+    if (paramTitle) setTitle(paramTitle);
+    if (paramTim) {
+      const match = TIM_OPTIONS.find(
+        (t) => t.code.toUpperCase() === paramTim.toUpperCase() || t.id === paramTim
+      );
+      if (match) setSelectedTeamId(match.id);
+    }
+  }, [searchParams]);
+
+  // Handle PIC selection from users list
+  const handleSelectPicUser = (userId: string) => {
+    setPicUserId(userId);
+    const found = availableUsers.find((u) => u.id === userId);
+    if (found) {
+      setPicName(found.name);
+    }
+  };
+
+  // Reset registration number to auto
+  const handleResetToAutoNumber = () => {
+    setIsManualNumber(false);
+    setIsLoadingNumber(true);
+    previewNextMeetingNumberAction('IKK', selectedTeamId)
       .then((res) => {
         if (res.success && res.data) {
-          setAvailableTeams(res.data);
-          setSelectedTeamId('');
-        } else {
-          setAvailableTeams([]);
-          setSelectedTeamId('');
+          setRegistrationNumber(res.data);
+          toast.success(`Nomor registrasi diperbarui: ${res.data}`);
         }
       })
-      .catch(() => {
-        setAvailableTeams([]);
-        setSelectedTeamId('');
-      });
-  }, [selectedBiro]);
-
-  // Filtered available users for participant selector
-  const filteredUsers = useMemo(() => {
-    return availableUsers.filter((user) => {
-      const matchesSearch =
-        !participantSearch.trim() ||
-        user.name.toLowerCase().includes(participantSearch.toLowerCase()) ||
-        user.email.toLowerCase().includes(participantSearch.toLowerCase()) ||
-        (user.biro?.code && user.biro.code.toLowerCase().includes(participantSearch.toLowerCase()));
-
-      const matchesBiro =
-        participantBiroFilter === 'ALL' || user.biro?.code === participantBiroFilter;
-
-      return matchesSearch && matchesBiro;
-    });
-  }, [availableUsers, participantSearch, participantBiroFilter]);
-
-  // Loading session state
-  if (status === 'loading') {
-    return (
-      <div className="flex flex-col items-center justify-center min-h-[350px] gap-3">
-        <Loader2 className="w-8 h-8 animate-spin text-[#1E6B7B]" />
-        <p className="text-sm text-slate-500 font-medium">Memeriksa hak akses...</p>
-      </div>
-    );
-  }
-
-  // Unauthenticated user
-  if (status === 'unauthenticated' || !session) {
-    return (
-      <div className="max-w-md mx-auto my-16 bg-white p-8 rounded-2xl border border-slate-200 text-center shadow-xs space-y-4">
-        <div className="w-12 h-12 rounded-full bg-[#F0F8FA] text-[#1E6B7B] flex items-center justify-center mx-auto">
-          <LogIn className="w-6 h-6" />
-        </div>
-        <h2 className="text-lg font-bold text-slate-800">Autentikasi Diperlukan</h2>
-        <p className="text-sm text-slate-500">
-          Anda harus masuk ke sistem terlebih dahulu untuk menjadwalkan rapat baru.
-        </p>
-        <Link
-          href="/login?callbackUrl=/buat-rapat"
-          className="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-[#1E6B7B] hover:bg-[#175360] text-white font-semibold text-sm transition-all shadow-xs"
-        >
-          <LogIn className="w-4 h-4" />
-          <span>Masuk ke Akun Anda</span>
-        </Link>
-      </div>
-    );
-  }
-
-  // Unauthorized role (STAFF)
-  if (!canCreate) {
-    return (
-      <div className="max-w-md mx-auto my-16 bg-white p-8 rounded-2xl border border-slate-200 text-center shadow-xs space-y-4">
-        <div className="w-12 h-12 rounded-full bg-red-100 text-red-600 flex items-center justify-center mx-auto">
-          <ShieldAlert className="w-6 h-6" />
-        </div>
-        <h2 className="text-lg font-bold text-slate-800">Izin Tidak Mencukupi</h2>
-        <p className="text-sm text-slate-500 leading-relaxed">
-          Peran akun Anda saat ini (<strong>{userRole}</strong>) tidak memiliki akses untuk membuat rapat baru.
-          Hanya peran <strong>SUPER_ADMIN</strong> atau <strong>ADMIN</strong> yang dapat menjadwalkan rapat baru.
-        </p>
-        <Link
-          href="/"
-          className="inline-flex items-center justify-center px-5 py-2.5 rounded-xl bg-[#1E6B7B] hover:bg-[#175360] text-white font-semibold text-sm transition-all shadow-xs"
-        >
-          Kembali ke Dashboard
-        </Link>
-      </div>
-    );
-  }
-
-  // Toggle user participant
-  const handleToggleUser = (user: AvailableUser) => {
-    const isSelected = selectedUserIds.includes(user.id);
-    let nextIds: string[];
-    let currentNames = attendees
-      .split(/[,;\n]/)
-      .map((s) => s.trim())
-      .filter((s) => s.length > 0);
-
-    if (isSelected) {
-      nextIds = selectedUserIds.filter((id) => id !== user.id);
-      currentNames = currentNames.filter(
-        (n) => n.toLowerCase() !== user.name.toLowerCase()
-      );
-    } else {
-      nextIds = [...selectedUserIds, user.id];
-      if (!currentNames.some((n) => n.toLowerCase() === user.name.toLowerCase())) {
-        currentNames.push(user.name);
-      }
-    }
-
-    setSelectedUserIds(nextIds);
-    setAttendees(currentNames.join(', '));
+      .catch(() => {})
+      .finally(() => setIsLoadingNumber(false));
   };
 
-  const formatFileSize = (bytes?: number) => {
-    if (!bytes) return '';
-    if (bytes < 1024) return `${bytes} B`;
-    if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
-    return `${(bytes / (1024 * 1024)).toFixed(2)} MB`;
-  };
+  // Generic file upload helper
+  const handleUploadFile = async (
+    file: File,
+    type: 'kategori' | 'undangan' | 'paparan'
+  ) => {
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('type', type);
 
-  const handleFileUpload = async (file: File) => {
-    const validExtensions = ['pdf', 'docx', 'doc', 'png', 'jpg', 'jpeg', 'txt'];
-    const ext = file.name.split('.').pop()?.toLowerCase() || '';
-    if (!validExtensions.includes(ext)) {
-      toast.error('Format berkas tidak didukung. Mohon unggah PDF, Word (.docx), Teks (.txt), atau Gambar (.png/.jpg).');
-      return;
-    }
-    if (file.size > 25 * 1024 * 1024) {
-      toast.error('Ukuran berkas melebihi batas maksimum 25MB.');
-      return;
-    }
+    if (type === 'kategori') setIsUploadingCategoryDoc(true);
+    if (type === 'undangan') setIsUploadingInvitationDoc(true);
+    if (type === 'paparan') setIsUploadingMaterialDoc(true);
 
-    setIsUploadingDoc(true);
     try {
-      const formData = new FormData();
-      formData.append('file', file);
-      const res = await uploadInvitationFileAction(formData);
+      if (type === 'undangan') {
+        const res = await uploadInvitationFileAction(formData);
+        if (res.success && res.data) {
+          setInvitationDoc({
+            url: res.data.url,
+            name: res.data.name,
+            size: res.data.size,
+          });
+          toast.success(`Surat undangan "${res.data.name}" berhasil diunggah!`);
 
-      if (res.success && res.data) {
-        setInvitationDoc(res.data);
-        toast.success(`Dokumen undangan "${res.data.name}" berhasil diunggah.`);
-
-        // Auto-fill customMeetingNumber if empty and extracted
-        if (res.data.extracted?.meetingNumber && !customMeetingNumber) {
-          setCustomMeetingNumber(res.data.extracted.meetingNumber);
+          // If AI extraction detected details
+          if (res.data.extracted) {
+            if (!title && res.data.extracted.title) setTitle(res.data.extracted.title);
+            if (res.data.extracted.date && res.data.extracted.date >= todayStr) {
+              setDate(res.data.extracted.date);
+            }
+            if (res.data.matchedUserIds && res.data.matchedUserIds.length > 0) {
+              setSelectedUserIds((prev) => Array.from(new Set([...prev, ...res.data!.matchedUserIds!])));
+            }
+          }
+        } else {
+          toast.error(res.error || 'Gagal mengunggah surat undangan');
         }
       } else {
-        toast.error(res.error || 'Gagal mengunggah dokumen undangan');
+        const res = await uploadGenericMeetingFileAction(formData);
+        if (res.success && res.data) {
+          const fileData = {
+            url: res.data.url,
+            name: res.data.name,
+            size: res.data.size,
+          };
+          if (type === 'kategori') {
+            setCategoryDoc(fileData);
+            toast.success(`Berkas kategori "${res.data.name}" berhasil diunggah!`);
+          } else {
+            setMaterialDoc(fileData);
+            toast.success(`Dokumen paparan "${res.data.name}" berhasil diunggah!`);
+          }
+        } else {
+          toast.error(res.error || 'Gagal mengunggah berkas');
+        }
       }
     } catch (err: any) {
-      toast.error(err?.message || 'Terjadi kesalahan sistem saat mengunggah dokumen');
+      toast.error(err?.message || 'Terjadi kesalahan saat mengunggah berkas');
     } finally {
-      setIsUploadingDoc(false);
+      if (type === 'kategori') setIsUploadingCategoryDoc(false);
+      if (type === 'undangan') setIsUploadingInvitationDoc(false);
+      if (type === 'paparan') setIsUploadingMaterialDoc(false);
     }
   };
 
-  const handleApplyFromInvitation = () => {
-    if (!invitationDoc?.extracted) return;
-    const ext = invitationDoc.extracted;
-    if (ext.title) setTitle(ext.title);
-    if (ext.meetingNumber) setCustomMeetingNumber(ext.meetingNumber);
-    if (ext.date) setDate(ext.date);
-    if (ext.startTime && ext.endTime) setTime(`${ext.startTime} - ${ext.endTime} WIB`);
-    if (ext.location) {
-      setLocation(ext.location);
-      const virtual = extractVirtualMeetingDetails(ext.location);
-      if (virtual.isVirtual) {
-        if (virtual.cleanPhysicalLocation && !virtual.cleanPhysicalLocation.toLowerCase().includes('daring') && !virtual.cleanPhysicalLocation.toLowerCase().includes('online')) {
-          setMeetingType('HYBRID');
-          setPhysicalLocation(virtual.cleanPhysicalLocation);
-        } else {
-          setMeetingType('ONLINE');
-          setPhysicalLocation(virtual.cleanPhysicalLocation || 'Online / Daring (Zoom)');
-        }
-        if (virtual.zoomUrl) setZoomUrl(virtual.zoomUrl);
-        if (virtual.meetingId) setZoomMeetingId(virtual.meetingId);
-        if (virtual.passcode) setZoomPasscode(virtual.passcode);
-      } else {
-        setMeetingType('OFFLINE');
-        setPhysicalLocation(ext.location);
-        setZoomUrl('');
-        setZoomMeetingId('');
-        setZoomPasscode('');
-      }
-    }
-    if (ext.classification) setClassification(ext.classification);
-    if (ext.attendees) setAttendees(ext.attendees);
-    if (invitationDoc.matchedUserIds && invitationDoc.matchedUserIds.length > 0) {
-      setSelectedUserIds((prev) => Array.from(new Set([...prev, ...invitationDoc.matchedUserIds!])));
-    }
-    toast.success('Agenda, nomor surat, tanggal, lokasi & peserta berhasil disesuaikan dari surat undangan!');
+  // Filtered users for multi-select
+  const filteredUsers = useMemo(() => {
+    return availableUsers.filter((u) => {
+      const matchSearch =
+        u.name.toLowerCase().includes(participantSearch.toLowerCase()) ||
+        (u.team?.name && u.team.name.toLowerCase().includes(participantSearch.toLowerCase())) ||
+        (u.team?.code && u.team.code.toLowerCase().includes(participantSearch.toLowerCase()));
+      const matchTeam =
+        participantTeamFilter === 'ALL' ||
+        (u.team?.code && u.team.code.toUpperCase() === participantTeamFilter.toUpperCase()) ||
+        (participantTeamFilter === 'INV' && (u.team?.id === 'TIM-001' || u.team?.code === 'INV')) ||
+        (participantTeamFilter === 'KS' && (u.team?.id === 'TIM-003' || u.team?.code === 'KS')) ||
+        (participantTeamFilter === 'KOM' && (u.team?.id === 'TIM-002' || u.team?.code === 'KOM'));
+      return matchSearch && matchTeam;
+    });
+  }, [availableUsers, participantSearch, participantTeamFilter]);
+
+  const toggleUserSelection = (userId: string) => {
+    setSelectedUserIds((prev) =>
+      prev.includes(userId) ? prev.filter((id) => id !== userId) : [...prev, userId]
+    );
   };
 
-  const handleRemoveInvitationDoc = () => {
-    setInvitationDoc(null);
-    if (fileInputRef.current) {
-      fileInputRef.current.value = '';
-    }
-    toast.info('Lampiran dokumen undangan dibatalkan.');
-  };
-
+  // Handle submit form
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitted(true);
     setErrorMessage(null);
 
     try {
+      if (!title.trim()) {
+        toast.error('Judul rapat wajib diisi.');
+        setIsSubmitted(false);
+        return;
+      }
+
       if (date && date < todayStr) {
-        toast.error('Tanggal pelaksanaan rapat tidak boleh sebelum hari ini (tidak bisa mundur).');
+        toast.error('Tanggal pelaksanaan rapat tidak boleh sebelum hari ini.');
         setIsSubmitted(false);
         return;
       }
 
-      if (categoryData.category === 'SURAT_DITUNDA' && !categoryData.postponeReason?.trim()) {
-        toast.error('Mohon cantumkan alasan atau keterangan penundaan rapat untuk kategori Surat Ditunda.');
+      if (kategoriRapat === 'SURAT_DITUNDA' && !postponeReason.trim()) {
+        toast.error('Mohon cantumkan alasan penundaan untuk kategori Tunda Rapat.');
         setIsSubmitted(false);
         return;
       }
 
-      // Validasi dan konstruksi lokasi & tautan Zoom
-      let constructedLocation = '';
-      if (meetingType === 'OFFLINE') {
-        if (!physicalLocation.trim()) {
-          toast.error('Mohon tentukan lokasi fisik ruang rapat untuk pertemuan tatap muka.');
-          setIsSubmitted(false);
-          return;
-        }
-        constructedLocation = physicalLocation.trim();
-      } else if (meetingType === 'HYBRID') {
-        if (!physicalLocation.trim()) {
-          toast.error('Mohon tentukan lokasi fisik ruang rapat untuk pertemuan hybrid.');
-          setIsSubmitted(false);
-          return;
-        }
-        if (!zoomUrl.trim()) {
-          toast.error('Mohon cantumkan tautan / link Zoom untuk pertemuan hybrid.');
-          setIsSubmitted(false);
-          return;
-        }
-        constructedLocation = `${physicalLocation.trim()} & Zoom: ${zoomUrl.trim()}`;
-        if (zoomMeetingId.trim()) constructedLocation += ` (ID: ${zoomMeetingId.trim()})`;
-        if (zoomPasscode.trim()) constructedLocation += ` (Pass: ${zoomPasscode.trim()})`;
-      } else {
-        // ONLINE
-        if (!zoomUrl.trim()) {
-          toast.error('Mohon cantumkan tautan / link Zoom untuk pertemuan daring (online).');
-          setIsSubmitted(false);
-          return;
-        }
-        const pLoc = physicalLocation.trim();
-        const isCustomPLoc = pLoc && !pLoc.toLowerCase().includes('daring') && !pLoc.toLowerCase().includes('online');
-        constructedLocation = `${isCustomPLoc ? `${pLoc} • ` : ''}Online (Zoom: ${zoomUrl.trim()}${zoomMeetingId.trim() ? ` - ID: ${zoomMeetingId.trim()}` : ''})`;
-      }
+      // Determine final jenis rapat
+      const finalJenisRapat =
+        jenisRapat === 'Other' ? (customJenisRapat.trim() || 'Lainnya') : jenisRapat;
 
-      const parts = time.split('-').map((s) => s.trim().replace('WIB', '').trim());
-      const startTime = parts[0] || '09:00';
-      const endTime = parts[1] || '12:00';
+      // Determine final location
+      const finalLocation =
+        lokasiOption === 'Other'
+          ? (customLocation.trim() || 'Lokasi Eksternal Lainnya')
+          : lokasiOption;
 
-      const trimmedCustomNumber = customMeetingNumber.trim();
-      const validMeetingNumber =
-        trimmedCustomNumber && trimmedCustomNumber !== '-' && trimmedCustomNumber !== '—'
-          ? trimmedCustomNumber
-          : undefined;
-
+      // Submit
       const res = await createMeetingAction({
-        title,
-        biroCode: selectedBiro,
-        primaryTeamId: selectedTeamId || undefined,
+        title: title.trim(),
+        biroCode: 'IKK',
+        primaryTeamId: selectedTeamId,
         date,
-        startTime,
-        endTime,
-        location: constructedLocation,
-        attendees,
-        participantUserIds: selectedUserIds,
-        previousMeetingId: previousMeetingId || undefined,
-        chairpersonId: chairpersonId || undefined,
-        meetingNumber: validMeetingNumber,
+        startTime: '09:00',
+        endTime: '12:00',
+        location: finalLocation,
+        meetingKind: finalJenisRapat,
+        picName: picName.trim() || undefined,
+        chairpersonId: picUserId || undefined,
+        progressStatus: statusRapat,
+        meetingNumber: registrationNumber.trim() || undefined,
+        documentCategory: kategoriRapat,
+        sourceOrigin: sourceOrigin.trim() || undefined,
+        postponeReason: postponeReason.trim() || undefined,
         invitationDocUrl: invitationDoc?.url || undefined,
         invitationDocName: invitationDoc?.name || undefined,
         invitationDocSize: invitationDoc?.size || undefined,
-        documentCategory: categoryData.category,
-        documentSubCategory: categoryData.subCategory || undefined,
-        sourceOrigin: categoryData.sourceOrigin?.trim() || undefined,
-        postponeReason: categoryData.postponeReason?.trim() || undefined,
+        categoryDocUrl: categoryDoc?.url || undefined,
+        categoryDocName: categoryDoc?.name || undefined,
+        categoryDocSize: categoryDoc?.size || undefined,
+        materialDocUrl: materialDoc?.url || undefined,
+        materialDocName: materialDoc?.name || undefined,
+        materialDocSize: materialDoc?.size || undefined,
+        attendees: attendees.trim() || undefined,
+        participantUserIds: selectedUserIds,
+        previousMeetingId: previousMeetingId || undefined,
       });
 
       if (res.success && res.data) {
@@ -535,31 +441,29 @@ export default function BuatRapatPage() {
           try {
             await saveMinutesAndActionsToMeetingAction(res.data.id, pendingMinutes);
           } catch (mErr) {
-            console.warn('Could not auto-save minutes to meeting:', mErr);
+            console.warn('Auto-save minutes skipped:', mErr);
           }
         }
 
         toast.success(
-          `Rapat "${title}" (${res.data.meetingNumber}) berhasil dijadwalkan dengan ${res.data.participantCount || 0} peserta terdaftar!`
+          `Rapat "${title}" (${res.data.meetingNumber}) berhasil dijadwalkan dengan status ${statusRapat}!`
         );
         router.refresh();
-        router.push(`/semua-rapat/${res.data.id}?calendar=true`);
+        router.push(`/semua-rapat/${res.data.id}`);
       } else {
-        setErrorMessage(res.error || 'Gagal membuat rapat');
-        toast.error(res.error || 'Gagal membuat rapat');
+        setErrorMessage(res.error || 'Gagal menyimpan rapat');
+        toast.error(res.error || 'Gagal menyimpan rapat');
         setIsSubmitted(false);
       }
     } catch (err: any) {
-      setErrorMessage(
-        err?.message || 'Terjadi kesalahan sistem saat membuat rapat'
-      );
+      setErrorMessage(err?.message || 'Terjadi kesalahan sistem saat membuat rapat');
       setIsSubmitted(false);
     }
   };
 
   return (
-    <div className="max-w-5xl mx-auto flex flex-col gap-6 pb-12">
-      {/* Top Navigation */}
+    <div className="max-w-5xl mx-auto flex flex-col gap-6 pb-16">
+      {/* Top Header & Breadcrumb */}
       <div className="flex items-center justify-between">
         <Link
           href="/semua-rapat"
@@ -570,55 +474,53 @@ export default function BuatRapatPage() {
         </Link>
         <div className="flex items-center gap-2">
           <Badge variant="teal" dot>
-            Birokrasi Resmi KEK RI
+            Formulir Standar Rapat KEK
           </Badge>
         </div>
       </div>
 
-      {/* Quick Upload Action Card */}
-      <div className="bg-gradient-to-r from-[#175360] via-[#1E6B7B] to-[#266F80] rounded-2xl p-6 text-white shadow-md flex flex-col md:flex-row md:items-center justify-between gap-5 border border-white/10">
-        <div className="flex items-start gap-4">
-          <div className="w-12 h-12 rounded-xl bg-white/15 backdrop-blur-md flex items-center justify-center shrink-0 border border-white/20">
-            <Sparkles className="w-6 h-6 text-amber-300" />
-          </div>
-          <div>
-            <div className="flex items-center gap-2 mb-1.5 flex-wrap">
-              <span className="px-2.5 py-0.5 rounded-full bg-amber-400 text-slate-900 text-[11px] font-extrabold uppercase tracking-wider shadow-2xs">
-                ⚡ Ekstraksi Otomatis AI
-              </span>
-              {pendingMinutes && (
-                <span className="px-2.5 py-0.5 rounded-full bg-emerald-500 text-white text-[11px] font-bold shadow-2xs">
-                  ✓ Berkas Dokumen Terpasang
-                </span>
-              )}
-            </div>
-            <h3 className="text-base sm:text-lg font-bold text-white leading-snug">
-              Punya Berkas Hasil Rapat Offline atau Format Undangan?
-            </h3>
-            <p className="text-white/80 text-sm mt-1 max-w-2xl leading-relaxed">
-              Unggah berkas Word (.docx), PDF (.pdf), atau Teks (.txt). Sistem akan otomatis mengekstrak judul, tanggal, lokasi, serta butir naskah notula ke formulir ini.
+      {/* Hero Title & Description */}
+      <div className="bg-gradient-to-br from-[#175360] via-[#1E6B7B] to-[#266F80] rounded-2xl p-6 sm:p-7 text-white shadow-md border border-white/10 relative overflow-hidden">
+        <div className="absolute right-0 top-0 translate-x-10 -translate-y-10 w-64 h-64 bg-white/5 rounded-full blur-2xl pointer-events-none" />
+        <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-5">
+          <div className="max-w-2xl">
+            <span className="px-3 py-1 rounded-full bg-white/20 backdrop-blur-md text-amber-300 text-xs font-bold uppercase tracking-wider inline-flex items-center gap-1.5 mb-2.5">
+              <Sparkles className="w-3.5 h-3.5" />
+              11 Poin Masukan Mentor Terintegrasi
+            </span>
+            <h1 className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight leading-snug">
+              Formulir Penjadwalan &amp; Log Rapat KEK
+            </h1>
+            <p className="text-white/80 text-sm mt-1.5 leading-relaxed">
+              Lengkapi data rapat koordinasi dengan penomoran registrasi per tim, pilihan kategori, multi-upload berkas, status progres, dan pemetaan peserta.
             </p>
           </div>
+          <button
+            type="button"
+            onClick={() => setIsUploadDialogOpen(true)}
+            className="inline-flex items-center justify-center gap-2 px-5 py-3 rounded-xl bg-white text-[#175360] hover:bg-[#F0F8FA] font-bold text-sm transition-all shadow-md shrink-0 cursor-pointer hover:scale-105 active:scale-95"
+          >
+            <UploadCloud className="w-4 h-4 text-[#1E6B7B]" />
+            <span>Ekstrak Otomatis AI</span>
+          </button>
         </div>
-        <button
-          type="button"
-          onClick={() => setIsUploadDialogOpen(true)}
-          className="inline-flex items-center justify-center gap-2 px-5 py-3 rounded-xl bg-white text-[#175360] hover:bg-[#F0F8FA] font-bold text-sm transition-all shadow-md shrink-0 cursor-pointer hover:scale-105 active:scale-95"
-        >
-          <UploadCloud className="w-4 h-4 text-[#1E6B7B]" />
-          <span>Unggah Berkas Rapat</span>
-        </button>
       </div>
 
       <UploadMeetingDialog
         isOpen={isUploadDialogOpen}
         onClose={() => setIsUploadDialogOpen(false)}
-        onApplyToForm={handleApplyExtractedData}
+        onApplyToForm={(extractedData, matchedIds) => {
+          if (extractedData.title) setTitle(extractedData.title);
+          if (extractedData.date && extractedData.date >= todayStr) setDate(extractedData.date);
+          if (matchedIds && matchedIds.length > 0) setSelectedUserIds(matchedIds);
+          if (extractedData.attendees) setAttendees(extractedData.attendees);
+          setPendingMinutes(extractedData);
+          toast.success('Informasi dari dokumen berhasil diterapkan ke formulir!');
+        }}
       />
 
-      {/* Main Form Container */}
+      {/* Main Form */}
       <form onSubmit={handleSubmit} className="space-y-6">
-        {/* Error Alert */}
         {errorMessage && (
           <div className="p-4 bg-red-50 border border-red-200 rounded-2xl flex items-start gap-3.5 text-red-700 text-sm animate-in fade-in">
             <AlertCircle className="w-5 h-5 text-red-600 shrink-0 mt-0.5" />
@@ -629,397 +531,108 @@ export default function BuatRapatPage() {
           </div>
         )}
 
-        {/* ======================================================== */}
-        {/* SECTION 1: Identitas & Informasi Pokok Rapat              */}
-        {/* ======================================================== */}
-        <div className="bg-white rounded-2xl border border-slate-200/90 shadow-2xs overflow-hidden border-t-[4px] border-t-[#1E6B7B]">
-          {/* Section Header */}
-          <div className="px-6 py-5 border-b border-slate-100 bg-slate-50/50 flex items-center justify-between">
+        {/* ========================================================================= */}
+        {/* PANDUAN URUTAN PENGISIAN 11 POIN MASUKAN MENTOR                           */}
+        {/* ========================================================================= */}
+        <div className="bg-white rounded-2xl border border-slate-200 p-4 shadow-2xs">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1 mb-3">
+            <span className="text-xs font-bold text-slate-800 flex items-center gap-2">
+              <span className="w-2.5 h-2.5 rounded-full bg-[#1E6B7B] animate-pulse" />
+              Urutan Pengisian Formulir (Poin 1 s/d 11 Berurutan)
+            </span>
+            <span className="text-[11px] text-slate-500 font-medium">
+              Sesuai 11 Masukan Standar Mentor KEK
+            </span>
+          </div>
+          <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-11 gap-2 text-center">
+            {[
+              { num: 1, label: 'Judul' },
+              { num: 2, label: 'Tanggal' },
+              { num: 3, label: 'Kategori' },
+              { num: 4, label: 'Surat Undangan' },
+              { num: 5, label: 'Paparan' },
+              { num: 6, label: 'Jenis Rapat' },
+              { num: 7, label: 'PIC Rapat' },
+              { num: 8, label: 'Peserta' },
+              { num: 9, label: 'Lokasi' },
+              { num: 10, label: 'No. Registrasi' },
+              { num: 11, label: 'Status' },
+            ].map((st) => (
+              <div
+                key={st.num}
+                className="p-2 rounded-xl bg-slate-50 border border-slate-200/80 flex flex-col items-center justify-center gap-1 hover:bg-[#F0F8FA] hover:border-[#BCE3EB] transition-colors"
+              >
+                <span className="w-5 h-5 rounded-full bg-[#1E6B7B] text-white text-[10px] font-bold flex items-center justify-center shadow-2xs">
+                  {st.num}
+                </span>
+                <span className="text-[10px] font-semibold text-slate-700 truncate max-w-full">
+                  {st.label}
+                </span>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* ========================================================================= */}
+        {/* BAGIAN I: AGENDA & WAKTU PELAKSANAAN (Poin 1, 2)                          */}
+        {/* ========================================================================= */}
+        <div className="bg-white rounded-2xl border border-slate-200 shadow-xs overflow-hidden border-t-4 border-t-[#1E6B7B]">
+          <div className="px-6 py-4.5 border-b border-slate-100 bg-slate-50/60 flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-[#F0F8FA] border border-[#BCE3EB] flex items-center justify-center text-[#1E6B7B]">
-                <Building2 className="w-5 h-5" />
+              <div className="w-9 h-9 rounded-xl bg-[#F0F8FA] border border-[#BCE3EB] flex items-center justify-center text-[#1E6B7B]">
+                <FileText className="w-5 h-5" />
               </div>
               <div>
                 <h2 className="text-base font-bold text-slate-900">
-                  1. Identitas &amp; Pengorganisasian Rapat
+                  Bagian I: Agenda &amp; Waktu Pelaksanaan
                 </h2>
-                <p className="text-xs text-slate-500 mt-0.5">
-                  Tentukan biro penyelenggara, tim kerja, dan sifat prioritas pertemuan
+                <p className="text-xs text-slate-500">
+                  Judul agenda rapat koordinasi dan tanggal pelaksanaan kegiatan
                 </p>
               </div>
             </div>
-            <span className="text-xs font-semibold text-slate-400">Bagian 1 dari 3</span>
+            <span className="text-xs font-semibold text-slate-500 bg-white px-3 py-1 rounded-full border border-slate-200 shadow-2xs">
+              Poin 1 &amp; 2
+            </span>
           </div>
 
           <div className="p-6 sm:p-7 space-y-6">
-            {/* Opsi Inputan Kategori Rapat: Undangan Internal, Daftar Naskah Masuk, Surat Ditunda */}
-            <div className="pb-6 border-b border-slate-100">
-              <MeetingCategorySelector
-                value={categoryData}
-                onChange={setCategoryData}
-              />
-            </div>
-
-            {/* Grid 2 Kolom Lega untuk Dropdowns Pokok */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-5 sm:gap-6">
-              {/* Biro Penyelenggara */}
-              <div>
-                <label className="font-semibold text-slate-800 mb-2 flex items-center gap-1.5 text-sm">
-                  <span>Biro Penyelenggara Utama</span>
-                  <span className="text-red-500 font-bold">*</span>
-                </label>
-                {userBiroCode ? (
-                  <div className="w-full px-4 h-[44px] rounded-xl border border-[#BCE3EB] bg-[#F0F8FA] text-[#174853] font-semibold text-sm flex items-center justify-between shadow-2xs">
-                    <span>Biro {userBiroCode}</span>
-                    <span className="text-xs text-slate-500 font-normal">(Terkunci sesuai akun)</span>
-                  </div>
-                ) : (
-                  <select
-                    value={selectedBiro}
-                    onChange={(e) => setSelectedBiro(e.target.value as BiroCode)}
-                    className="w-full px-4 h-[44px] rounded-xl border border-slate-300 bg-white text-slate-800 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-[#1E6B7B]/20 focus:border-[#1E6B7B] shadow-2xs transition-all cursor-pointer"
-                  >
-                    <option value="IKK">IKK — Biro Investasi, Kerja Sama, dan Komunikasi</option>
-                  </select>
-                )}
-                <p className="text-xs text-slate-400 mt-1.5">
-                  Biro Investasi, Kerja Sama, dan Komunikasi (IKK) Sekretariat Dewan Nasional KEK.
-                </p>
-              </div>
-
-              {/* Tim Pelaksana (Lingkup 3 Tim Biro IKK) */}
-              <div>
-                <label className="font-semibold text-slate-800 mb-2 flex items-center justify-between text-sm">
-                  <span className="flex items-center gap-1.5">
-                    <span>Tim Pelaksana</span>
-                    <span className="text-red-500">*</span>
-                  </span>
-                  <span className="text-xs font-bold text-[#174853] bg-[#F0F8FA] px-2 py-0.5 rounded-md border border-[#BCE3EB]">
-                    3 Tim Biro IKK
-                  </span>
-                </label>
-                <select
-                  value={selectedTeamId}
-                  onChange={(e) => setSelectedTeamId(e.target.value)}
-                  className="w-full px-4 h-[44px] rounded-xl border border-slate-300 bg-white text-slate-800 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-[#1E6B7B]/20 focus:border-[#1E6B7B] shadow-2xs transition-all cursor-pointer"
-                >
-                  <option value="">-- Pilih Tim Pelaksana (Investasi, Kerja Sama, Komunikasi) --</option>
-                  {availableTeams.map((t) => (
-                    <option key={t.id} value={t.id}>
-                      Tim {t.name} ({t.code})
-                    </option>
-                  ))}
-                </select>
-                <p className="text-xs text-slate-400 mt-1.5">
-                  Pilih salah satu dari 3 tim kerja pelaksana: Tim Investasi, Tim Kerja Sama, atau Tim Komunikasi.
-                </p>
-              </div>
-
-              {/* Sifat Pertemuan */}
-              <div>
-                <label className="font-semibold text-slate-800 mb-2 flex items-center gap-1.5 text-sm">
-                  <Shield className="w-4 h-4 text-[#1E6B7B]" />
-                  <span>Sifat / Klasifikasi Rapat</span>
-                  <span className="text-red-500 font-bold">*</span>
-                </label>
-                <select
-                  value={classification}
-                  onChange={(e) => setClassification(e.target.value)}
-                  className="w-full px-4 h-[44px] rounded-xl border border-slate-300 bg-white text-slate-800 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-[#1E6B7B]/20 focus:border-[#1E6B7B] shadow-2xs transition-all cursor-pointer"
-                >
-                  <option value="STRATEGIS">Prioritas Strategis Nasional</option>
-                  <option value="REGULER">Koordinasi Berkala (Reguler)</option>
-                  <option value="DARURAT">Eskalasi Mendesak / Khusus</option>
-                </select>
-                <p className="text-xs text-slate-400 mt-1.5">
-                  Menentukan tingkat urgensi penanganan butir tindak lanjut keputusan.
-                </p>
-              </div>
-
-              {/* Ketua / Pimpinan Sidang */}
-              <div>
-                <label className="font-semibold text-slate-800 mb-2 flex items-center gap-1.5 text-sm">
-                  <UserCheck className="w-4 h-4 text-[#1E6B7B]" />
-                  <span>Ketua / Pimpinan Sidang</span>
-                </label>
-                <select
-                  value={chairpersonId}
-                  onChange={(e) => setChairpersonId(e.target.value)}
-                  className="w-full px-4 h-[44px] rounded-xl border border-slate-300 bg-white text-slate-800 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-[#1E6B7B]/20 focus:border-[#1E6B7B] shadow-2xs transition-all cursor-pointer"
-                >
-                  <option value="">-- Bebas / Ditetapkan dalam Notula --</option>
-                  {availableUsers.map((u) => (
-                    <option key={u.id} value={u.id}>
-                      {u.name} {u.biro?.code ? `[${u.biro.code}]` : ''}
-                    </option>
-                  ))}
-                </select>
-                <p className="text-xs text-slate-400 mt-1.5">
-                  Pejabat yang memimpin jalannya rapat koordinasi.
-                </p>
-              </div>
-            </div>
-
-            {/* Agenda & Topik Pembahasan (Full Width) */}
+            {/* 1. Judul Rapat */}
             <div>
-              <label className="font-semibold text-slate-800 mb-2 flex items-center gap-1.5 text-sm">
-                <span>Agenda &amp; Topik Pembahasan Rapat</span>
-                <span className="text-red-500 font-bold">*</span>
+              <label className="font-bold text-slate-800 mb-2 flex items-center justify-between text-sm">
+                <span className="flex items-center gap-2">
+                  <span className="w-6 h-6 rounded-full bg-[#1E6B7B] text-white text-xs flex items-center justify-center font-bold shadow-2xs">1</span>
+                  <span>Judul Rapat</span>
+                  <span className="text-red-500">*</span>
+                </span>
+                <span className="text-xs text-slate-400 font-normal">Wajib diisi</span>
               </label>
               <textarea
                 required
                 rows={3}
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
-                placeholder="Contoh: Rapat Koordinasi Fasilitasi Investasi Lintas Sektor dan Percepatan Pembangunan Infrastruktur Kawasan Industri KEK..."
+                placeholder="Contoh: Rapat Koordinasi Fasilitasi Investasi Kawasan Ekonomi Khusus dan Percepatan Infrastruktur..."
                 className="w-full px-4 py-3 rounded-xl border border-slate-300 bg-white text-slate-800 text-sm placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-[#1E6B7B]/20 focus:border-[#1E6B7B] shadow-2xs transition-all leading-relaxed"
               />
               <p className="text-xs text-slate-400 mt-1.5">
-                Tuliskan judul atau agenda rapat secara jelas dan lengkap sebagaimana tercantum pada surat undangan.
+                Tuliskan topik atau agenda rapat secara jelas sebagaimana tertera pada naskah undangan.
               </p>
             </div>
 
-            {/* Panel Rujukan & Surat Undangan (Grid 2 Kolom) */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-5 pt-2">
-              {/* Nomor Surat Undangan */}
-              <div className="p-4 bg-slate-50/80 rounded-xl border border-slate-200/80 space-y-2">
-                <label className="font-semibold text-slate-800 flex items-center gap-2 text-sm">
-                  <FileText className="w-4 h-4 text-[#1E6B7B]" />
-                  <span>Nomor Surat Undangan</span>
-                  <span className="text-slate-400 font-normal text-xs">(Opsional)</span>
-                </label>
-                <input
-                  type="text"
-                  value={customMeetingNumber}
-                  onChange={(e) => setCustomMeetingNumber(e.target.value)}
-                  placeholder="Contoh: UND-014/SET.KEK/IX/2026 atau '-'"
-                  className="w-full px-3.5 h-[40px] rounded-lg border border-slate-300 bg-white text-slate-800 text-sm focus:outline-none focus:ring-2 focus:ring-[#1E6B7B]/20 focus:border-[#1E6B7B]"
-                />
-                <p className="text-[11.5px] text-slate-500 leading-normal">
-                  Kosongkan jika rapat internal tanpa nomor surat undangan resmi.
-                </p>
-              </div>
-
-              {/* Tautkan Rapat Sebelumnya */}
-              <div className="p-4 bg-[#F0F8FA]/70 rounded-xl border border-[#BCE3EB]/80 space-y-2">
-                <div className="flex items-center justify-between">
-                  <label className="font-semibold text-slate-800 flex items-center gap-2 text-sm">
-                    <Link2 className="w-4 h-4 text-[#1E6B7B]" />
-                    <span>Tautkan Rapat Lanjutan</span>
-                    <span className="text-slate-400 font-normal text-xs">(Opsional)</span>
-                  </label>
-                  <span className="text-[11px] font-semibold text-[#1E6B7B] bg-[#1E6B7B]/10 px-2 py-0.5 rounded-full">
-                    {availableMeetings.length} Rapat Tersedia
-                  </span>
-                </div>
-                <PreviousMeetingSelector
-                  value={previousMeetingId}
-                  onChange={setPreviousMeetingId}
-                  availableMeetings={availableMeetings}
-                />
-                <p className="text-[11.5px] text-slate-500 leading-normal">
-                  Hubungkan jika rapat ini melanjutkan butir tindak lanjut sesi terdahulu.
-                </p>
-              </div>
-            </div>
-
-            {/* Dokumen Surat Undangan Resmi Upload Section */}
-            <div className="p-5 rounded-2xl border border-teal-100 bg-gradient-to-br from-[#F0F8FA]/80 via-white to-slate-50/70 shadow-2xs space-y-3.5">
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-                <div className="flex items-center gap-2">
-                  <div className="w-8 h-8 rounded-lg bg-[#1E6B7B]/10 flex items-center justify-center text-[#1E6B7B]">
-                    <Paperclip className="w-4 h-4" />
-                  </div>
-                  <div>
-                    <h3 className="font-bold text-slate-900 text-sm flex items-center gap-2">
-                      <span>Dokumen Undangan Rapat Resmi</span>
-                      <span className="text-slate-400 font-normal text-xs">(Opsional)</span>
-                    </h3>
-                    <p className="text-[11.5px] text-slate-500">
-                      Lampirkan berkas fisik/digital surat undangan untuk diakses oleh peserta &amp; pimpinan
-                    </p>
-                  </div>
-                </div>
-                <span className="text-[11px] font-semibold text-slate-400 bg-slate-100 px-2.5 py-1 rounded-full self-start sm:self-auto">
-                  PDF, DOCX, JPG, PNG (Maks 25MB)
+            {/* 2. Tanggal Rapat */}
+            <div>
+              <label className="font-bold text-slate-800 mb-2 flex items-center justify-between text-sm">
+                <span className="flex items-center gap-2">
+                  <span className="w-6 h-6 rounded-full bg-[#1E6B7B] text-white text-xs flex items-center justify-center font-bold shadow-2xs">2</span>
+                  <span>Tanggal Rapat</span>
+                  <span className="text-red-500">*</span>
                 </span>
-              </div>
-
-              {/* Upload Dropzone / State */}
-              {!invitationDoc ? (
-                <div
-                  onDragOver={(e) => {
-                    e.preventDefault();
-                    setIsDraggingDoc(true);
-                  }}
-                  onDragLeave={() => setIsDraggingDoc(false)}
-                  onDrop={(e) => {
-                    e.preventDefault();
-                    setIsDraggingDoc(false);
-                    const file = e.dataTransfer.files?.[0];
-                    if (file) handleFileUpload(file);
-                  }}
-                  onClick={() => !isUploadingDoc && fileInputRef.current?.click()}
-                  className={cn(
-                    'border-2 border-dashed rounded-xl p-6 text-center cursor-pointer transition-all flex flex-col items-center justify-center gap-2.5',
-                    isDraggingDoc
-                      ? 'border-[#1E6B7B] bg-[#F0F8FA] scale-[1.01]'
-                      : 'border-slate-300 hover:border-[#1E6B7B] hover:bg-slate-50/80 bg-white'
-                  )}
-                >
-                  <input
-                    ref={fileInputRef}
-                    type="file"
-                    className="hidden"
-                    accept=".pdf,.docx,.doc,.png,.jpg,.jpeg,.txt"
-                    onChange={(e) => {
-                      const file = e.target.files?.[0];
-                      if (file) handleFileUpload(file);
-                    }}
-                  />
-
-                  {isUploadingDoc ? (
-                    <div className="py-2 flex flex-col items-center gap-2">
-                      <Loader2 className="w-7 h-7 text-[#1E6B7B] animate-spin" />
-                      <p className="text-xs font-bold text-slate-700">
-                        Mengunggah &amp; menganalisis isi dokumen undangan...
-                      </p>
-                      <p className="text-[11px] text-slate-400">
-                        Sistem sedang membaca format dan memeriksa identitas rapat
-                      </p>
-                    </div>
-                  ) : (
-                    <>
-                      <div className="w-11 h-11 rounded-full bg-[#F0F8FA] flex items-center justify-center text-[#1E6B7B] shadow-2xs">
-                        <UploadCloud className="w-5 h-5" />
-                      </div>
-                      <div>
-                        <p className="text-xs font-bold text-slate-800">
-                          Klik untuk memilih berkas atau seret berkas ke area ini
-                        </p>
-                        <p className="text-[11px] text-slate-500 mt-0.5">
-                          Format berkas didukung: Surat format PDF (.pdf), Word (.docx), atau Pindaian Foto (.jpg/.png)
-                        </p>
-                      </div>
-                    </>
-                  )}
-                </div>
-              ) : (
-                <div className="space-y-3 animate-in fade-in">
-                  {/* File Attached Card */}
-                  <div className="p-4 rounded-xl bg-white border border-teal-200/90 shadow-2xs flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                    <div className="flex items-center gap-3 min-w-0">
-                      <div className="w-10 h-10 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-700 flex items-center justify-center shrink-0">
-                        <FileCheck className="w-5 h-5" />
-                      </div>
-                      <div className="min-w-0">
-                        <div className="flex items-center gap-2 flex-wrap">
-                          <p className="text-sm font-bold text-slate-900 truncate max-w-[280px] sm:max-w-md">
-                            {invitationDoc.name}
-                          </p>
-                          <span className="px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 text-[10px] font-bold">
-                            ✓ Terlampir
-                          </span>
-                        </div>
-                        <p className="text-[11.5px] text-slate-500 mt-0.5">
-                          Ukuran: {formatFileSize(invitationDoc.size)} • Siap disimpan bersama data rapat
-                        </p>
-                      </div>
-                    </div>
-
-                    <div className="flex items-center gap-2 self-start sm:self-center shrink-0">
-                      <a
-                        href={invitationDoc.url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 text-xs font-semibold shadow-2xs transition-colors cursor-pointer"
-                        title="Buka dokumen di tab baru"
-                      >
-                        <ExternalLink className="w-3.5 h-3.5 text-[#1E6B7B]" />
-                        <span>Pratinjau</span>
-                      </a>
-                      <button
-                        type="button"
-                        onClick={handleRemoveInvitationDoc}
-                        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-rose-200 bg-rose-50 hover:bg-rose-100 text-rose-700 text-xs font-semibold shadow-2xs transition-colors cursor-pointer"
-                        title="Hapus lampiran dokumen"
-                      >
-                        <Trash2 className="w-3.5 h-3.5" />
-                        <span>Hapus</span>
-                      </button>
-                    </div>
-                  </div>
-
-                  {/* AI Extraction Banner if content parsed */}
-                  {invitationDoc.extracted && (
-                    <div className="p-3.5 rounded-xl bg-gradient-to-r from-amber-50 to-emerald-50 border border-amber-200/80 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
-                      <div className="flex items-start gap-2.5">
-                        <Sparkles className="w-4 h-4 text-amber-600 mt-0.5 shrink-0" />
-                        <div>
-                          <p className="font-bold text-slate-900">
-                            Informasi Rapat Terdeteksi dari Dokumen Undangan
-                          </p>
-                          <p className="text-[11.5px] text-slate-600 mt-0.5 leading-relaxed">
-                            {invitationDoc.extracted.title ? `Agenda: "${invitationDoc.extracted.title.slice(0, 60)}..." • ` : ''}
-                            {invitationDoc.extracted.date ? `Tanggal: ${invitationDoc.extracted.date} • ` : ''}
-                            {invitationDoc.matchedUserIds && invitationDoc.matchedUserIds.length > 0
-                              ? `${invitationDoc.matchedUserIds.length} Pejabat KEK Terdeteksi`
-                              : 'Siap diterapkan ke form'}
-                          </p>
-                        </div>
-                      </div>
-                      <button
-                        type="button"
-                        onClick={handleApplyFromInvitation}
-                        className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg bg-[#1E6B7B] hover:bg-[#175360] text-white font-bold text-xs shadow-xs transition-all shrink-0 cursor-pointer self-start sm:self-center"
-                      >
-                        <Sparkles className="w-3.5 h-3.5 text-amber-300" />
-                        <span>Terapkan ke Form</span>
-                      </button>
-                    </div>
-                  )}
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
-
-        {/* ======================================================== */}
-        {/* SECTION 2: Jadwal & Lokasi Sidang                         */}
-        {/* ======================================================== */}
-        <div className="bg-white rounded-2xl border border-slate-200/90 shadow-2xs overflow-hidden border-t-[4px] border-t-[#7CC563]">
-          {/* Section Header */}
-          <div className="px-6 py-5 border-b border-slate-100 bg-slate-50/50 flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-[#ECF8E9] border border-[#D2EFCA] flex items-center justify-center text-[#15803D]">
-                <Calendar className="w-5 h-5" />
-              </div>
-              <div>
-                <h2 className="text-base font-bold text-slate-900">
-                  2. Jadwal &amp; Lokasi Pelaksanaan Sidang
-                </h2>
-                <p className="text-xs text-slate-500 mt-0.5">
-                  Waktu pelaksanaan, durasi pertemuan, dan media ruang sidang
-                </p>
-              </div>
-            </div>
-            <span className="text-xs font-semibold text-slate-400">Bagian 2 dari 3</span>
-          </div>
-
-          <div className="p-6 sm:p-7 space-y-5">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-5 sm:gap-6">
-              {/* Tanggal Pelaksanaan */}
-              <div>
-                <div className="flex items-center justify-between mb-2">
-                  <label className="font-semibold text-slate-800 flex items-center gap-1.5 text-sm">
-                    <Calendar className="w-4 h-4 text-[#1E6B7B]" />
-                    <span>Tanggal Pelaksanaan</span>
-                    <span className="text-red-500 font-bold">*</span>
-                  </label>
-                  <span className="text-[11px] font-semibold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200">
-                    Min. Hari Ini
-                  </span>
-                </div>
+                <span className="text-[11px] text-emerald-700 bg-emerald-50 px-2.5 py-0.5 rounded border border-emerald-200 font-semibold">
+                  Min. Hari Ini
+                </span>
+              </label>
+              <div className="relative max-w-md">
                 <input
                   type="date"
                   required
@@ -1028,7 +641,7 @@ export default function BuatRapatPage() {
                   onChange={(e) => {
                     const val = e.target.value;
                     if (val && val < todayStr) {
-                      toast.error('Tanggal pelaksanaan rapat tidak bisa mundur (tidak boleh sebelum hari ini).');
+                      toast.error('Tanggal pelaksanaan rapat tidak boleh mundur (sebelum hari ini).');
                       setDate(todayStr);
                     } else {
                       setDate(val);
@@ -1036,147 +649,538 @@ export default function BuatRapatPage() {
                   }}
                   className="w-full px-4 h-[44px] rounded-xl border border-slate-300 bg-white text-slate-800 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-[#1E6B7B]/20 focus:border-[#1E6B7B] shadow-2xs"
                 />
-                <p className="text-[11px] text-slate-500 mt-1">
-                  Tanggal pelaksanaan rapat hanya dapat dijadwalkan mulai hari ini ke depan.
-                </p>
               </div>
-
-              {/* Waktu Pelaksanaan */}
-              <div>
-                <label className="font-semibold text-slate-800 mb-2 flex items-center gap-1.5 text-sm">
-                  <Clock className="w-4 h-4 text-[#1E6B7B]" />
-                  <span>Waktu / Jam Sidang</span>
-                  <span className="text-red-500 font-bold">*</span>
-                </label>
-                <input
-                  type="text"
-                  required
-                  value={time}
-                  onChange={(e) => setTime(e.target.value)}
-                  placeholder="Contoh: 09:00 - 12:00 WIB"
-                  className="w-full px-4 h-[44px] rounded-xl border border-slate-300 bg-white text-slate-800 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-[#1E6B7B]/20 focus:border-[#1E6B7B] shadow-2xs"
-                />
-              </div>
+              <p className="text-xs text-slate-400 mt-1.5">
+                Tanggal pelaksanaan pertemuan koordinasi (tidak dapat memilih tanggal sebelum hari ini).
+              </p>
             </div>
-
-            {/* Lokasi / Media Pertemuan & Tautan Zoom */}
-            <LocationPicker
-              meetingType={meetingType}
-              onMeetingTypeChange={setMeetingType}
-              physicalLocation={physicalLocation}
-              onPhysicalLocationChange={setPhysicalLocation}
-              zoomUrl={zoomUrl}
-              onZoomUrlChange={setZoomUrl}
-              zoomMeetingId={zoomMeetingId}
-              onZoomMeetingIdChange={setZoomMeetingId}
-              zoomPasscode={zoomPasscode}
-              onZoomPasscodeChange={setZoomPasscode}
-            />
           </div>
         </div>
 
-        {/* ======================================================== */}
-        {/* SECTION 3: Daftar Peserta & Notulis                      */}
-        {/* ======================================================== */}
-        <div className="bg-white rounded-2xl border border-slate-200/90 shadow-2xs overflow-hidden border-t-[4px] border-t-[#F99D1C]">
-          {/* Section Header */}
-          <div className="px-6 py-5 border-b border-slate-100 bg-slate-50/50 flex items-center justify-between">
+        {/* ========================================================================= */}
+        {/* BAGIAN 2: KATEGORI & BERKAS DOKUMEN PENDUKUNG (Poin 3, 4, 5)              */}
+        {/* ========================================================================= */}
+        <div className="bg-white rounded-2xl border border-slate-200 shadow-xs overflow-hidden border-t-4 border-t-[#F99D1C]">
+          <div className="px-6 py-4.5 border-b border-slate-100 bg-slate-50/60 flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-[#FFF0DC] border border-[#FEDEBE] flex items-center justify-center text-[#C2410C]">
+              <div className="w-9 h-9 rounded-xl bg-[#FFF0DC] border border-[#FEDEBE] flex items-center justify-center text-[#C2410C]">
+                <FolderOpen className="w-5 h-5" />
+              </div>
+              <div>
+                <h2 className="text-base font-bold text-slate-900">
+                  Bagian II: Kategori Naskah &amp; Berkas Lampiran
+                </h2>
+                <p className="text-xs text-slate-500">
+                  Kategori dasar naskah, unggahan surat undangan resmi, dan berkas materi paparan
+                </p>
+              </div>
+            </div>
+            <span className="text-xs font-semibold text-slate-500 bg-white px-3 py-1 rounded-full border border-slate-200 shadow-2xs">
+              Poin 3, 4, 5
+            </span>
+          </div>
+
+          <div className="p-6 sm:p-7 space-y-6">
+            {/* 3. Kategori Rapat dengan dropdown (Undangan Internal, Daftar Naskah Masuk, Tunda Rapat) */}
+            <div className="p-5 rounded-2xl bg-slate-50/80 border border-slate-200 space-y-4">
+              <div className="flex items-center justify-between">
+                <label className="font-bold text-slate-800 flex items-center gap-2 text-sm">
+                  <span className="w-6 h-6 rounded-full bg-[#1E6B7B] text-white text-xs flex items-center justify-center font-bold shadow-2xs">3</span>
+                  <span>Kategori Rapat</span>
+                  <span className="text-red-500">*</span>
+                </label>
+                <span className="text-xs text-slate-400">Pilih salah satu dasar naskah</span>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                {[
+                  { key: 'UNDANGAN_INTERNAL', label: 'Undangan Internal', desc: 'Rapat koordinasi internal KEK' },
+                  { key: 'NASKAH_MASUK', label: 'Daftar Naskah Masuk', desc: 'Disposisi Sekjen / Surat kementerian' },
+                  { key: 'SURAT_DITUNDA', label: 'Tunda Rapat', desc: 'Penjadwalan ulang / penundaan agenda' },
+                ].map((cat) => {
+                  const isSelected = kategoriRapat === cat.key;
+                  return (
+                    <button
+                      key={cat.key}
+                      type="button"
+                      onClick={() => setKategoriRapat(cat.key)}
+                      className={cn(
+                        'p-3.5 rounded-xl border text-left transition-all cursor-pointer flex flex-col justify-between',
+                        isSelected
+                          ? 'border-[#1E6B7B] bg-[#F0F8FA] ring-2 ring-[#1E6B7B]/20 shadow-xs'
+                          : 'border-slate-200 bg-white hover:border-slate-300'
+                      )}
+                    >
+                      <div className="flex items-center justify-between mb-1">
+                        <span className="font-bold text-sm text-slate-800">{cat.label}</span>
+                        {isSelected && <Check className="w-4 h-4 text-[#1E6B7B]" />}
+                      </div>
+                      <span className="text-xs text-slate-500">{cat.desc}</span>
+                    </button>
+                  );
+                })}
+              </div>
+
+              {/* Conditional Input per kategori */}
+              {kategoriRapat === 'NASKAH_MASUK' && (
+                <div className="mt-3 animate-in fade-in space-y-1.5">
+                  <label className="block text-xs font-semibold text-slate-700">
+                    Asal Naskah Masuk / Instansi Pengirim:
+                  </label>
+                  <input
+                    type="text"
+                    value={sourceOrigin}
+                    onChange={(e) => setSourceOrigin(e.target.value)}
+                    placeholder="Contoh: Surat Menko Perekonomian No. S-114/EKON/2026..."
+                    className="w-full px-3.5 h-[40px] rounded-xl border border-slate-300 bg-white text-sm"
+                  />
+                </div>
+              )}
+
+              {kategoriRapat === 'SURAT_DITUNDA' && (
+                <div className="mt-3 animate-in fade-in space-y-1.5">
+                  <label className="block text-xs font-semibold text-rose-700">
+                    Alasan / Keterangan Penundaan Rapat: <span className="text-red-500">*</span>
+                  </label>
+                  <textarea
+                    required
+                    rows={2}
+                    value={postponeReason}
+                    onChange={(e) => setPostponeReason(e.target.value)}
+                    placeholder="Contoh: Ditunda atas arahan pimpinan menyusul agenda Sidang Kabinet..."
+                    className="w-full px-3.5 py-2.5 rounded-xl border border-rose-300 bg-white text-sm"
+                  />
+                </div>
+              )}
+
+              {/* Upload Berkas Kategori Rapat (bisa dikosongkan jika tidak ada file) */}
+              <div className="pt-2 border-t border-slate-200/80">
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-xs font-bold text-slate-700">
+                    Upload Berkas Kategori Rapat:
+                  </span>
+                  <span className="text-[11px] text-slate-400">(Bisa dikosongkan jika tidak ada upload file)</span>
+                </div>
+
+                {!categoryDoc ? (
+                  <div
+                    onClick={() => !isUploadingCategoryDoc && categoryFileInputRef.current?.click()}
+                    className="border border-dashed border-slate-300 hover:border-[#1E6B7B] bg-white hover:bg-slate-50/50 rounded-xl p-4 text-center cursor-pointer transition-colors flex items-center justify-center gap-3"
+                  >
+                    <input
+                      ref={categoryFileInputRef}
+                      type="file"
+                      className="hidden"
+                      accept=".pdf,.docx,.doc,.txt,.png,.jpg,.jpeg"
+                      onChange={(e) => {
+                        const file = e.target.files?.[0];
+                        if (file) handleUploadFile(file, 'kategori');
+                      }}
+                    />
+                    {isUploadingCategoryDoc ? (
+                      <div className="flex items-center gap-2 text-xs font-semibold text-[#1E6B7B]">
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                        <span>Mengunggah berkas kategori rapat...</span>
+                      </div>
+                    ) : (
+                      <>
+                        <UploadCloud className="w-5 h-5 text-[#1E6B7B]" />
+                        <span className="text-xs font-semibold text-slate-700">
+                          Klik untuk upload berkas kategori ({kategoriRapat === 'NASKAH_MASUK' ? 'Naskah Masuk' : kategoriRapat === 'SURAT_DITUNDA' ? 'Nota Penundaan' : 'Dokumen Internal'})
+                        </span>
+                        <span className="text-[11px] text-slate-400">PDF, Word, Gambar</span>
+                      </>
+                    )}
+                  </div>
+                ) : (
+                  <div className="p-3 bg-white rounded-xl border border-teal-200 flex items-center justify-between gap-3 shadow-2xs">
+                    <div className="flex items-center gap-2.5 min-w-0">
+                      <FileCheck className="w-4 h-4 text-emerald-600 shrink-0" />
+                      <div className="min-w-0">
+                        <p className="text-xs font-bold text-slate-800 truncate">{categoryDoc.name}</p>
+                        <p className="text-[10px] text-slate-400">{formatFileSize(categoryDoc.size)}</p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2 shrink-0">
+                      <a
+                        href={categoryDoc.url}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="px-2.5 py-1 text-xs rounded bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold"
+                      >
+                        Pratinjau
+                      </a>
+                      <button
+                        type="button"
+                        onClick={() => setCategoryDoc(null)}
+                        className="p-1 rounded text-rose-600 hover:bg-rose-50"
+                        title="Hapus berkas"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Grid 2 Kolom untuk Poin 4 (Surat Undangan) dan Poin 5 (Dokumen Terkait / Paparan) */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+              {/* 4. Surat Undangan (Bisa Upload File) */}
+              <div className="p-5 rounded-2xl bg-slate-50/80 border border-slate-200 space-y-3">
+                <div className="flex items-center justify-between">
+                  <label className="font-bold text-slate-800 flex items-center gap-2 text-sm">
+                    <span className="w-6 h-6 rounded-full bg-[#1E6B7B] text-white text-xs flex items-center justify-center font-bold shadow-2xs">4</span>
+                    <span>Surat Undangan</span>
+                  </label>
+                  <span className="text-[11px] text-slate-400">(Bisa Upload File)</span>
+                </div>
+                <p className="text-xs text-slate-500">
+                  Lampiran naskah resmi surat undangan rapat (dapat dikosongkan).
+                </p>
+
+                {!invitationDoc ? (
+                  <div
+                    onClick={() => !isUploadingInvitationDoc && invitationFileInputRef.current?.click()}
+                    className="border border-dashed border-slate-300 hover:border-[#1E6B7B] bg-white hover:bg-slate-50/50 rounded-xl p-4 text-center cursor-pointer transition-colors flex flex-col items-center justify-center gap-1.5"
+                  >
+                    <input
+                      ref={invitationFileInputRef}
+                      type="file"
+                      className="hidden"
+                      accept=".pdf,.docx,.doc,.txt,.png,.jpg,.jpeg"
+                      onChange={(e) => {
+                        const file = e.target.files?.[0];
+                        if (file) handleUploadFile(file, 'undangan');
+                      }}
+                    />
+                    {isUploadingInvitationDoc ? (
+                      <div className="flex items-center gap-2 text-xs font-semibold text-[#1E6B7B]">
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                        <span>Mengunggah berkas surat undangan...</span>
+                      </div>
+                    ) : (
+                      <>
+                        <UploadCloud className="w-5 h-5 text-[#1E6B7B]" />
+                        <span className="text-xs font-semibold text-slate-700">
+                          Klik untuk upload Surat Undangan
+                        </span>
+                        <span className="text-[11px] text-slate-400">PDF, Word (.docx), Gambar</span>
+                      </>
+                    )}
+                  </div>
+                ) : (
+                  <div className="p-3 bg-white rounded-xl border border-teal-200 flex items-center justify-between gap-3 shadow-2xs">
+                    <div className="flex items-center gap-2.5 min-w-0">
+                      <FileCheck className="w-4 h-4 text-emerald-600 shrink-0" />
+                      <div className="min-w-0">
+                        <p className="text-xs font-bold text-slate-800 truncate">{invitationDoc.name}</p>
+                        <p className="text-[10px] text-slate-400">{formatFileSize(invitationDoc.size)}</p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2 shrink-0">
+                      <a
+                        href={invitationDoc.url}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="px-2.5 py-1 text-xs rounded bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold"
+                      >
+                        Lihat
+                      </a>
+                      <button
+                        type="button"
+                        onClick={() => setInvitationDoc(null)}
+                        className="p-1 rounded text-rose-600 hover:bg-rose-50"
+                        title="Hapus berkas"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* 5. Dokumen Terkait / Paparan Rapat (Bisa Upload File) */}
+              <div className="p-5 rounded-2xl bg-slate-50/80 border border-slate-200 space-y-3">
+                <div className="flex items-center justify-between">
+                  <label className="font-bold text-slate-800 flex items-center gap-2 text-sm">
+                    <span className="w-6 h-6 rounded-full bg-[#1E6B7B] text-white text-xs flex items-center justify-center font-bold shadow-2xs">5</span>
+                    <span>Dokumen Terkait / Paparan Rapat</span>
+                  </label>
+                  <span className="text-[11px] text-slate-400">(Bisa Upload File)</span>
+                </div>
+                <p className="text-xs text-slate-500">
+                  Materi presentasi, paparan rapat, atau data lampiran teknis (dapat dikosongkan).
+                </p>
+
+                {!materialDoc ? (
+                  <div
+                    onClick={() => !isUploadingMaterialDoc && materialFileInputRef.current?.click()}
+                    className="border border-dashed border-slate-300 hover:border-[#1E6B7B] bg-white hover:bg-slate-50/50 rounded-xl p-4 text-center cursor-pointer transition-colors flex flex-col items-center justify-center gap-1.5"
+                  >
+                    <input
+                      ref={materialFileInputRef}
+                      type="file"
+                      className="hidden"
+                      accept=".pdf,.pptx,.ppt,.docx,.xlsx,.txt,.png,.jpg"
+                      onChange={(e) => {
+                        const file = e.target.files?.[0];
+                        if (file) handleUploadFile(file, 'paparan');
+                      }}
+                    />
+                    {isUploadingMaterialDoc ? (
+                      <div className="flex items-center gap-2 text-xs font-semibold text-[#1E6B7B]">
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                        <span>Mengunggah dokumen paparan...</span>
+                      </div>
+                    ) : (
+                      <>
+                        <UploadCloud className="w-5 h-5 text-[#1E6B7B]" />
+                        <span className="text-xs font-semibold text-slate-700">
+                          Klik untuk upload Paparan / Bahan Rapat
+                        </span>
+                        <span className="text-[11px] text-slate-400">PDF, PPTX, Word, Excel, Gambar</span>
+                      </>
+                    )}
+                  </div>
+                ) : (
+                  <div className="p-3 bg-white rounded-xl border border-teal-200 flex items-center justify-between gap-3 shadow-2xs">
+                    <div className="flex items-center gap-2.5 min-w-0">
+                      <FileCheck className="w-4 h-4 text-emerald-600 shrink-0" />
+                      <div className="min-w-0">
+                        <p className="text-xs font-bold text-slate-800 truncate">{materialDoc.name}</p>
+                        <p className="text-[10px] text-slate-400">{formatFileSize(materialDoc.size)}</p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2 shrink-0">
+                      <a
+                        href={materialDoc.url}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="px-2.5 py-1 text-xs rounded bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold"
+                      >
+                        Lihat
+                      </a>
+                      <button
+                        type="button"
+                        onClick={() => setMaterialDoc(null)}
+                        className="p-1 rounded text-rose-600 hover:bg-rose-50"
+                        title="Hapus berkas"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* ========================================================================= */}
+        {/* BAGIAN 3: KLASIFIKASI, PIC, PESERTA & LOKASI (Poin 6, 7, 8, 9)            */}
+        {/* ========================================================================= */}
+        <div className="bg-white rounded-2xl border border-slate-200 shadow-xs overflow-hidden border-t-4 border-t-[#31889C]">
+          <div className="px-6 py-4.5 border-b border-slate-100 bg-slate-50/60 flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="w-9 h-9 rounded-xl bg-[#F0F9FA] border border-[#BCE3EB] flex items-center justify-center text-[#1E6B7B]">
                 <Users className="w-5 h-5" />
               </div>
               <div>
                 <h2 className="text-base font-bold text-slate-900">
-                  3. Daftar Peserta &amp; Pemangku Kepentingan
+                  Bagian III: Klasifikasi Rapat, PIC, Undangan &amp; Ruangan
                 </h2>
-                <p className="text-xs text-slate-500 mt-0.5">
-                  Pilih pejabat/staf terdaftar dari database KEK atau input nama manual
+                <p className="text-xs text-slate-500">
+                  Jenis bentuk rapat, PIC teknis, daftar peserta yang diundang, dan lokasi ruangan
                 </p>
               </div>
             </div>
-            <Badge variant="teal" dot className="text-xs">
-              {selectedUserIds.length} Pejabat Dipilih
-            </Badge>
+            <span className="text-xs font-semibold text-slate-500 bg-white px-3 py-1 rounded-full border border-slate-200 shadow-2xs">
+              Poin 6, 7, 8, 9
+            </span>
           </div>
 
           <div className="p-6 sm:p-7 space-y-6">
-            {/* Quick Picker Container */}
-            {availableUsers.length > 0 && (
-              <div className="p-5 bg-slate-50/70 rounded-2xl border border-slate-200 space-y-4">
-                {/* Search & Filter Bar */}
-                <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
-                  {/* Participant Search */}
+            {/* 6. Jenis Rapat (Dropdown + Other) */}
+            <div>
+              <label className="font-bold text-slate-800 mb-2 flex items-center gap-2 text-sm">
+                <span className="w-6 h-6 rounded-full bg-[#1E6B7B] text-white text-xs flex items-center justify-center font-bold shadow-2xs">6</span>
+                <span>Jenis Rapat</span>
+                <span className="text-red-500">*</span>
+              </label>
+              <select
+                value={jenisRapat}
+                onChange={(e) => setJenisRapat(e.target.value)}
+                className="w-full px-4 h-[44px] rounded-xl border border-slate-300 bg-white text-slate-800 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-[#1E6B7B]/20 focus:border-[#1E6B7B] shadow-2xs cursor-pointer"
+              >
+                {JENIS_RAPAT_OPTIONS.map((opt) => (
+                  <option key={opt} value={opt}>
+                    {opt === 'Other' ? 'Other (Kategori Lainnya...)' : opt}
+                  </option>
+                ))}
+              </select>
+
+              {jenisRapat === 'Other' && (
+                <div className="mt-2.5 animate-in fade-in">
+                  <input
+                    type="text"
+                    required
+                    value={customJenisRapat}
+                    onChange={(e) => setCustomJenisRapat(e.target.value)}
+                    placeholder="Ketikkan jenis rapat lainnya di sini..."
+                    className="w-full px-4 h-[40px] rounded-xl border border-[#1E6B7B] bg-white text-slate-800 text-sm focus:outline-none focus:ring-2 focus:ring-[#1E6B7B]/20"
+                  />
+                </div>
+              )}
+              <p className="text-xs text-slate-400 mt-1.5">
+                Pilih bentuk atau format penyelenggaraan kegiatan.
+              </p>
+            </div>
+
+            {/* 7. PIC Rapat */}
+            <div className="pt-2 border-t border-slate-100">
+              <label className="font-bold text-slate-800 mb-2 flex items-center gap-2 text-sm">
+                <span className="w-6 h-6 rounded-full bg-[#1E6B7B] text-white text-xs flex items-center justify-center font-bold shadow-2xs">7</span>
+                <span>PIC Rapat</span>
+                <span className="text-red-500">*</span>
+              </label>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {/* Dropdown Staf/Pengguna Terdaftar */}
+                <div>
+                  <label className="block text-xs font-semibold text-slate-700 mb-1">
+                    Pilih dari Staf / Pengguna Terdaftar:
+                  </label>
+                  <select
+                    value={picUserId}
+                    onChange={(e) => handleSelectPicUser(e.target.value)}
+                    className="w-full px-4 h-[44px] rounded-xl border border-slate-300 bg-white text-slate-800 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-[#1E6B7B]/20 focus:border-[#1E6B7B] shadow-2xs cursor-pointer"
+                  >
+                    <option value="">-- Pilih Staf Penanggung Jawab --</option>
+                    {availableUsers.map((u) => (
+                      <option key={u.id} value={u.id}>
+                        {u.name} {u.team?.name ? `[Tim ${u.team.name}]` : ''}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                {/* Input Teks Nama / Kontak PIC */}
+                <div>
+                  <label className="block text-xs font-semibold text-slate-700 mb-1">
+                    Nama / Keterangan PIC:
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    value={picName}
+                    onChange={(e) => setPicName(e.target.value)}
+                    placeholder="Contoh: Maya Puspita, S.Sos / PIC Tim Investasi..."
+                    className="w-full px-4 h-[44px] rounded-xl border border-slate-300 bg-white text-slate-800 text-sm focus:outline-none focus:ring-2 focus:ring-[#1E6B7B]/20 shadow-2xs"
+                  />
+                </div>
+              </div>
+              <p className="text-xs text-slate-400 mt-1.5">
+                Staf atau pejabat penanggung jawab teknis jalannya rapat koordinasi.
+              </p>
+            </div>
+
+            {/* 8. Undangan Rapat (Peserta Rapat Yang Di Undang) */}
+            <div className="space-y-4 pt-2 border-t border-slate-100">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                <label className="font-bold text-slate-800 flex items-center gap-2 text-sm">
+                  <span className="w-6 h-6 rounded-full bg-[#1E6B7B] text-white text-xs flex items-center justify-center font-bold shadow-2xs">8</span>
+                  <span>Undangan Rapat (Peserta Rapat yang Diundang)</span>
+                </label>
+                <Badge variant="teal" dot className="text-xs">
+                  {selectedUserIds.length} Staf Internal Dipilih
+                </Badge>
+              </div>
+
+              {/* Sub A: Multi-Select Staf Internal */}
+              <div className="p-4 bg-slate-50/70 rounded-2xl border border-slate-200 space-y-3">
+                <p className="text-xs font-bold text-slate-700">
+                  A. Staf &amp; Pejabat Internal KEK yang Diundang:
+                </p>
+
+                {/* Search & Filter Tim */}
+                <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5">
                   <div className="relative flex-1">
-                    <Search className="w-4 h-4 absolute left-3.5 top-3 text-[#1E6B7B]" />
+                    <Search className="w-4 h-4 absolute left-3 top-2.5 text-slate-400" />
                     <input
                       type="text"
                       value={participantSearch}
                       onChange={(e) => setParticipantSearch(e.target.value)}
-                      placeholder="Cari nama pejabat, staf, atau biro..."
-                      className="w-full pl-10 pr-4 h-[40px] rounded-xl bg-white border border-slate-300 text-sm text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-[#1E6B7B]/20 focus:border-[#1E6B7B] shadow-2xs"
+                      placeholder="Cari nama staf atau tim..."
+                      className="w-full pl-9 pr-3 h-[36px] rounded-lg border border-slate-300 bg-white text-xs focus:outline-none focus:ring-2 focus:ring-[#1E6B7B]/20"
                     />
                   </div>
 
-                  {/* Biro Filter Buttons */}
-                  <div className="flex items-center gap-1 overflow-x-auto pb-1 sm:pb-0 text-xs font-semibold">
-                    {['ALL', 'BPPK', 'PKKEK', 'IKK', 'HSDMO', 'UK'].map((code) => {
-                      const isActive = participantBiroFilter === code;
+                  <div className="flex items-center gap-1 overflow-x-auto text-xs font-semibold">
+                    {[
+                      { key: 'ALL', label: 'Semua' },
+                      { key: 'INV', label: 'Tim Investasi' },
+                      { key: 'KS', label: 'Tim Kerja Sama' },
+                      { key: 'KOM', label: 'Tim Komunikasi' },
+                    ].map((tab) => {
+                      const isActive = participantTeamFilter === tab.key;
                       return (
                         <button
-                          key={code}
+                          key={tab.key}
                           type="button"
-                          onClick={() => setParticipantBiroFilter(code)}
+                          onClick={() => setParticipantTeamFilter(tab.key)}
                           className={cn(
-                            'px-3 py-1.5 rounded-lg transition-colors cursor-pointer shrink-0',
+                            'px-2.5 py-1 rounded-md transition-colors cursor-pointer shrink-0 text-xs',
                             isActive
-                              ? 'bg-[#1E6B7B] text-white shadow-2xs'
+                              ? 'bg-[#1E6B7B] text-white shadow-2xs font-bold'
                               : 'bg-white text-slate-600 border border-slate-200 hover:bg-slate-100'
                           )}
                         >
-                          {code === 'ALL' ? 'Semua Biro' : code}
+                          {tab.label}
                         </button>
                       );
                     })}
                   </div>
                 </div>
 
-                {/* Participant Chips Grid */}
-                <div className="flex flex-wrap gap-2 max-h-56 overflow-y-auto pr-1 p-1">
+                {/* Chips Grid */}
+                <div className="flex flex-wrap gap-2 max-h-44 overflow-y-auto p-1">
                   {filteredUsers.length === 0 ? (
-                    <div className="py-6 text-center w-full text-slate-400 text-xs">
-                      Tidak ada pejabat yang cocok dengan pencarian &quot;{participantSearch}&quot;
+                    <div className="text-center py-4 w-full text-xs text-slate-400">
+                      Tidak ada staf yang cocok dengan pencarian / tim yang dipilih
                     </div>
                   ) : (
                     filteredUsers.map((u) => {
                       const isSelected = selectedUserIds.includes(u.id);
                       return (
                         <button
-                          type="button"
                           key={u.id}
-                          onClick={() => handleToggleUser(u)}
+                          type="button"
+                          onClick={() => toggleUserSelection(u.id)}
                           className={cn(
-                            'inline-flex items-center gap-2 h-9 px-3.5 rounded-xl text-[13px] font-medium transition-all cursor-pointer shadow-2xs select-none',
+                            'px-3 py-1.5 rounded-lg text-xs font-medium transition-all flex items-center gap-2 cursor-pointer border',
                             isSelected
-                              ? 'bg-[#1E6B7B] text-white border border-[#175360] shadow-xs'
-                              : 'bg-white text-slate-700 border border-slate-200 hover:border-[#1E6B7B] hover:text-[#1E6B7B]'
+                              ? 'bg-[#1E6B7B] text-white border-[#1E6B7B] shadow-2xs font-semibold'
+                              : 'bg-white text-slate-700 border-slate-200 hover:border-slate-300'
                           )}
                         >
-                          {isSelected ? (
-                            <Check className="w-3.5 h-3.5 text-emerald-300 stroke-[3]" />
-                          ) : (
-                            <User className="w-3.5 h-3.5 text-slate-400" />
-                          )}
-                          <span className="truncate max-w-[200px]">{u.name}</span>
-                          {u.biro?.code && (
+                          <span
+                            className={cn(
+                              'w-3 h-3 rounded flex items-center justify-center border',
+                              isSelected ? 'border-white bg-white/20' : 'border-slate-300'
+                            )}
+                          >
+                            {isSelected && <Check className="w-2.5 h-2.5 text-white" />}
+                          </span>
+                          <span>{u.name}</span>
+                          {u.team?.name && (
                             <span
                               className={cn(
-                                'text-[10px] px-1.5 py-0.5 rounded font-bold tracking-wider',
-                                isSelected
-                                  ? 'bg-[#175360] text-teal-100'
-                                  : 'bg-slate-100 text-slate-500'
+                                'text-[10px] px-1.5 py-0.5 rounded font-bold',
+                                isSelected ? 'bg-white/20 text-white' : 'bg-slate-100 text-slate-600'
                               )}
                             >
-                              {u.biro.code}
+                              Tim {u.team.name}
                             </span>
                           )}
                         </button>
@@ -1185,48 +1189,308 @@ export default function BuatRapatPage() {
                   )}
                 </div>
               </div>
-            )}
 
-            {/* Manual Attendees Textarea */}
-            <div>
-              <label className="font-semibold text-slate-800 mb-2 flex items-center justify-between text-sm">
-                <span>Rangkuman Daftar Peserta / Tamu Eksternal</span>
-                <span className="text-slate-400 font-normal text-xs">
-                  (Dapat disunting manual)
-                </span>
+              {/* Sub B: Peserta Eksternal / Instansi Terkait */}
+              <div>
+                <label className="block text-xs font-bold text-slate-700 mb-1">
+                  B. Peserta Rapat Eksternal &amp; Lembaga Terkait yang Diundang:
+                </label>
+                <textarea
+                  rows={2}
+                  value={attendees}
+                  onChange={(e) => setAttendees(e.target.value)}
+                  placeholder="Contoh: Kementerian Koordinator Bidang Perekonomian, Direksi PT KEK Kendal, Pemprov Jawa Tengah, Dinas Penanaman Modal..."
+                  className="w-full px-4 py-2.5 rounded-xl border border-slate-300 bg-white text-sm text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-[#1E6B7B]/20 focus:border-[#1E6B7B] shadow-2xs leading-relaxed"
+                />
+                <p className="text-xs text-slate-400 mt-1">
+                  Tuliskan nama instansi, kementerian, atau tamu eksternal yang diundang.
+                </p>
+              </div>
+            </div>
+
+            {/* 9. Lokasi Kegiatan (Dropdown + Other) */}
+            <div className="pt-2 border-t border-slate-100">
+              <label className="font-bold text-slate-800 mb-2 flex items-center gap-2 text-sm">
+                <span className="w-6 h-6 rounded-full bg-[#1E6B7B] text-white text-xs flex items-center justify-center font-bold shadow-2xs">9</span>
+                <span>Lokasi Kegiatan</span>
+                <span className="text-red-500">*</span>
               </label>
-              <textarea
-                rows={3}
-                required
-                value={attendees}
-                onChange={(e) => setAttendees(e.target.value)}
-                placeholder="Pisahkan nama peserta dengan tanda koma..."
-                className="w-full px-4 py-3 rounded-xl border border-slate-300 bg-white text-slate-800 text-sm focus:outline-none focus:ring-2 focus:ring-[#1E6B7B]/20 focus:border-[#1E6B7B] shadow-2xs leading-relaxed"
-              />
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <select
+                    value={lokasiOption}
+                    onChange={(e) => setLokasiOption(e.target.value)}
+                    className="w-full px-4 h-[44px] rounded-xl border border-slate-300 bg-white text-slate-800 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-[#1E6B7B]/20 focus:border-[#1E6B7B] shadow-2xs cursor-pointer"
+                  >
+                    {LOKASI_OPTIONS.map((loc) => (
+                      <option key={loc} value={loc}>
+                        {loc === 'Other' ? 'Other (Berada di tempat lain)' : `Ruang ${loc}`}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                {lokasiOption === 'Other' ? (
+                  <div>
+                    <input
+                      type="text"
+                      required
+                      value={customLocation}
+                      onChange={(e) => setCustomLocation(e.target.value)}
+                      placeholder="Masukkan nama ruangan / lokasi di luar gedung..."
+                      className="w-full px-4 h-[44px] rounded-xl border border-[#1E6B7B] bg-white text-slate-800 text-sm focus:outline-none focus:ring-2 focus:ring-[#1E6B7B]/20 shadow-2xs"
+                    />
+                  </div>
+                ) : (
+                  <div className="px-4 h-[44px] rounded-xl border border-slate-200 bg-slate-50 text-slate-600 text-sm flex items-center gap-2">
+                    <MapPin className="w-4 h-4 text-[#1E6B7B]" />
+                    <span>Ruang Rapat Gedung KEK: <strong>{lokasiOption}</strong></span>
+                  </div>
+                )}
+              </div>
               <p className="text-xs text-slate-400 mt-1.5">
-                Ketikkan nama peserta tamu luar atau instansi lintas kementerian/lembaga yang belum terdaftar di sistem. Pisahkan tiap nama dengan tanda koma.
+                Pilih salah satu dari 4 ruangan resmi (Graha Satwika, Loka Jagatsaksana, Lokasandhi, Antawacana) atau pilih Other untuk lokasi luar.
               </p>
             </div>
           </div>
         </div>
 
-        {/* Bottom Submission Bar */}
-        <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex flex-col sm:flex-row items-center justify-between gap-4">
-          <p className="text-xs text-slate-500 text-center sm:text-left">
-            Pastikan seluruh data jadwal dan agenda telah diverifikasi sebelum disimpan.
-          </p>
-          <div className="flex items-center gap-3 w-full sm:w-auto">
+        {/* ========================================================================= */}
+        {/* BAGIAN 4: PENOMORAN TIM & STATUS PROGRES (Poin 10, 11)                    */}
+        {/* ========================================================================= */}
+        <div className="bg-white rounded-2xl border border-slate-200 shadow-xs overflow-hidden border-t-4 border-t-[#2E7D32]">
+          <div className="px-6 py-4.5 border-b border-slate-100 bg-slate-50/60 flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="w-9 h-9 rounded-xl bg-[#ECF8E9] border border-[#D2EFCA] flex items-center justify-center text-[#15803D]">
+                <Tag className="w-5 h-5" />
+              </div>
+              <div>
+                <h2 className="text-base font-bold text-slate-900">
+                  Bagian IV: Penomoran Registrasi Tim &amp; Status Progres
+                </h2>
+                <p className="text-xs text-slate-500">
+                  Penomoran registrasi otomatis per tim kerja dan status pelaksanaan rapat
+                </p>
+              </div>
+            </div>
+            <span className="text-xs font-semibold text-slate-500 bg-white px-3 py-1 rounded-full border border-slate-200 shadow-2xs">
+              Poin 10 &amp; 11
+            </span>
+          </div>
+
+          <div className="p-6 sm:p-7 space-y-6">
+            {/* 10. Kode Nomor Registrasi Per Tim Dibuat Beda */}
+            <div className="p-5 rounded-2xl bg-gradient-to-br from-[#F0F8FA] via-white to-slate-50 border border-[#BCE3EB] space-y-4">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                <label className="font-bold text-slate-800 flex items-center gap-2 text-sm">
+                  <span className="w-6 h-6 rounded-full bg-[#1E6B7B] text-white text-xs flex items-center justify-center font-bold shadow-2xs">10</span>
+                  <span>Kode Nomor Registrasi Per Tim Dibuat Beda</span>
+                  <span className="text-red-500">*</span>
+                </label>
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={handleResetToAutoNumber}
+                    className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-white border border-[#BCE3EB] text-[#1E6B7B] hover:bg-[#F0F8FA] text-xs font-semibold shadow-2xs cursor-pointer transition-all"
+                    title="Hitung ulang nomor urut otomatis sesuai tim"
+                  >
+                    <RefreshCw className={cn("w-3.5 h-3.5", isLoadingNumber && "animate-spin")} />
+                    <span>Reset ke Otomatis</span>
+                  </button>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-12 gap-5 items-start">
+                {/* 3 Teams Selection List (matching the user's design) */}
+                <div className="md:col-span-7 space-y-2">
+                  <label className="block text-xs font-bold text-slate-700">
+                    Pilih Tim Kerja:
+                  </label>
+                  <div className="bg-white p-1.5 rounded-xl border border-slate-200/90 shadow-2xs space-y-1">
+                    {TIM_OPTIONS.map((tim) => {
+                      const isSelected = selectedTeamId === tim.id;
+                      return (
+                        <button
+                          key={tim.id}
+                          type="button"
+                          onClick={() => {
+                            setSelectedTeamId(tim.id);
+                            setIsManualNumber(false);
+                          }}
+                          className={cn(
+                            'w-full px-4 py-2.5 rounded-lg text-sm font-semibold transition-all text-left flex items-center justify-between cursor-pointer',
+                            isSelected
+                              ? 'bg-[#E8F5F7] text-[#1E6B7B] shadow-2xs font-bold'
+                              : 'text-slate-700 hover:bg-slate-50 hover:text-slate-900'
+                          )}
+                        >
+                          <div className="flex items-center gap-2.5">
+                            <span
+                              className={cn(
+                                'w-3 h-3 rounded-full flex items-center justify-center border',
+                                isSelected ? 'border-[#1E6B7B] bg-[#1E6B7B]' : 'border-slate-300 bg-white'
+                              )}
+                            >
+                              {isSelected && <span className="w-1 h-1 rounded-full bg-white" />}
+                            </span>
+                            <span>{tim.name}</span>
+                          </div>
+                          <span
+                            className={cn(
+                              'text-xs font-mono px-2 py-0.5 rounded font-bold',
+                              isSelected ? 'bg-[#1E6B7B] text-white' : 'bg-slate-100 text-slate-500'
+                            )}
+                          >
+                            {tim.code}
+                          </span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                  <p className="text-[11px] text-slate-500">
+                    Pilih salah satu dari 3 tim untuk penomoran registrasi &amp; pengarsipan rapat.
+                  </p>
+                </div>
+
+                {/* Final Registration Code Input (Auto + Editable) */}
+                <div className="md:col-span-5 space-y-2">
+                  <div className="flex items-center justify-between">
+                    <label className="text-xs font-bold text-slate-700">
+                      Nomor Registrasi Rapat:
+                    </label>
+                    {isManualNumber && (
+                      <span className="text-[10px] text-amber-700 font-bold bg-amber-100 px-1.5 py-0.5 rounded">
+                        Manual
+                      </span>
+                    )}
+                  </div>
+                  <div className="relative">
+                    <input
+                      type="text"
+                      required
+                      value={registrationNumber}
+                      onChange={(e) => {
+                        setRegistrationNumber(e.target.value);
+                        setIsManualNumber(true);
+                      }}
+                      placeholder="Contoh: INV-001"
+                      className="w-full px-3.5 h-[44px] rounded-xl border border-slate-300 bg-white text-slate-900 font-mono font-bold text-sm tracking-wide focus:outline-none focus:ring-2 focus:ring-[#1E6B7B]/20 focus:border-[#1E6B7B] shadow-2xs"
+                    />
+                  </div>
+                  <div className="p-3 bg-white/80 rounded-xl border border-[#BCE3EB] text-[11px] text-slate-600 space-y-1">
+                    <div className="flex items-center justify-between font-semibold text-slate-700">
+                      <span>Tim Aktif:</span>
+                      <span className="text-[#1E6B7B] font-bold">
+                        {TIM_OPTIONS.find((t) => t.id === selectedTeamId)?.name || 'Tim Investasi'}
+                      </span>
+                    </div>
+                    <div className="flex items-center justify-between text-slate-500 font-mono">
+                      <span>Format Otomatis:</span>
+                      <span className="font-semibold text-slate-700">
+                        {TIM_OPTIONS.find((t) => t.id === selectedTeamId)?.code || 'INV'}-001
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <p className="text-[11.5px] text-slate-500">
+                💡 Kode nomor registrasi dibuat berbeda per tim (misal: <span className="font-mono font-semibold text-[#1E6B7B]">INV-001</span>, <span className="font-mono font-semibold text-[#1E6B7B]">KS-001</span>, atau <span className="font-mono font-semibold text-[#1E6B7B]">KOM-001</span>). Anda dapat mengedit teks ini langsung bila memiliki penomoran resmi khusus.
+              </p>
+            </div>
+
+            {/* 11. Status (Start, On Progres, Finish) */}
+            <div className="pt-2 border-t border-slate-100">
+              <label className="font-bold text-slate-800 mb-2 flex items-center gap-2 text-sm">
+                <span className="w-6 h-6 rounded-full bg-[#1E6B7B] text-white text-xs flex items-center justify-center font-bold shadow-2xs">11</span>
+                <span>Status Rapat</span>
+                <span className="text-red-500">*</span>
+              </label>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                {STATUS_OPTIONS.map((st) => {
+                  const isSelected = statusRapat === st.value;
+                  return (
+                    <button
+                      key={st.value}
+                      type="button"
+                      onClick={() => setStatusRapat(st.value)}
+                      className={cn(
+                        'p-3.5 rounded-xl border text-left transition-all cursor-pointer flex items-center justify-between',
+                        isSelected
+                          ? 'border-[#1E6B7B] bg-[#F0F8FA] ring-2 ring-[#1E6B7B]/20 shadow-xs'
+                          : 'border-slate-200 bg-white hover:border-slate-300'
+                      )}
+                    >
+                      <div className="flex items-center gap-2.5">
+                        <span
+                          className={cn(
+                            'w-3.5 h-3.5 rounded-full flex items-center justify-center border',
+                            isSelected ? 'border-[#1E6B7B] bg-[#1E6B7B]' : 'border-slate-300 bg-white'
+                          )}
+                        >
+                          {isSelected && <span className="w-1.5 h-1.5 rounded-full bg-white" />}
+                        </span>
+                        <div>
+                          <span className="font-bold text-sm text-slate-800 block">
+                            {st.label}
+                          </span>
+                          <span className="text-[11px] text-slate-500">
+                            {st.value === 'Start' && 'Rapat baru dijadwalkan'}
+                            {st.value === 'On Progres' && 'Dalam pelaksanaan / review'}
+                            {st.value === 'Finish' && 'Selesai & disahkan'}
+                          </span>
+                        </div>
+                      </div>
+                      <span className={cn('px-2 py-0.5 rounded text-[11px] font-bold border', st.color)}>
+                        {st.label}
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Optional: Tautkan Rapat Sebelumnya */}
+            <div className="p-4 bg-slate-50/70 rounded-xl border border-slate-200 space-y-2">
+              <label className="font-semibold text-slate-800 flex items-center gap-2 text-xs">
+                <Link2 className="w-4 h-4 text-[#1E6B7B]" />
+                <span>Tautkan Rapat Lanjutan / Rangkaian Terdahulu (Opsional):</span>
+              </label>
+              <PreviousMeetingSelector
+                value={previousMeetingId}
+                onChange={setPreviousMeetingId}
+                availableMeetings={availableMeetings}
+              />
+            </div>
+          </div>
+        </div>
+
+        {/* ========================================================================= */}
+        {/* SUBMIT BUTTON BAR                                                         */}
+        {/* ========================================================================= */}
+        <div className="bg-white rounded-2xl border border-slate-200 p-5 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4 sticky bottom-4 z-20 backdrop-blur-md bg-white/95">
+          <div className="flex items-center gap-3">
+            <span className="w-3 h-3 rounded-full bg-emerald-500 animate-pulse" />
+            <div>
+              <p className="text-xs font-bold text-slate-800">
+                Semua 11 Poin Data Siap Disimpan
+              </p>
+              <p className="text-[11px] text-slate-500">
+                Nomor: <span className="font-mono font-semibold text-[#1E6B7B]">{registrationNumber || 'Otomatis'}</span> • Status: <span className="font-semibold text-slate-700">{statusRapat}</span>
+              </p>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-3 self-end sm:self-auto">
             <Link
               href="/semua-rapat"
-              className="flex-1 sm:flex-none px-6 h-[46px] rounded-xl border border-slate-200 text-slate-700 hover:bg-slate-50 font-semibold text-sm transition-colors inline-flex items-center justify-center cursor-pointer"
+              className="px-5 py-2.5 rounded-xl border border-slate-300 text-slate-700 hover:bg-slate-50 font-bold text-sm transition-colors cursor-pointer"
             >
               Batal
             </Link>
-
             <button
               type="submit"
               disabled={isSubmitted}
-              className="flex-1 sm:flex-none inline-flex items-center justify-center gap-2 px-7 h-[46px] rounded-xl bg-[#1E6B7B] hover:bg-[#175360] active:bg-[#103C46] text-white font-bold text-sm transition-all shadow-md shadow-[#1E6B7B]/20 cursor-pointer disabled:opacity-50"
+              className="inline-flex items-center gap-2 px-6 py-2.5 rounded-xl bg-gradient-to-r from-[#175360] to-[#1E6B7B] hover:from-[#13424d] hover:to-[#175360] text-white font-bold text-sm shadow-md transition-all cursor-pointer disabled:opacity-50"
             >
               {isSubmitted ? (
                 <>
@@ -1235,8 +1499,8 @@ export default function BuatRapatPage() {
                 </>
               ) : (
                 <>
-                  <Plus className="w-4 h-4" />
-                  <span>Simpan &amp; Jadwalkan Rapat</span>
+                  <CheckCircle className="w-4 h-4" />
+                  <span>Jadwalkan &amp; Simpan Rapat</span>
                 </>
               )}
             </button>

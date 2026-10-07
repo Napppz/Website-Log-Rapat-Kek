@@ -19,8 +19,9 @@ export interface NextMeetingNumberResult {
  * 4. Verifies uniqueness against Meeting table before returning.
  */
 export async function getNextMeetingNumber(
-  biroCode: string,
-  externalTx?: Prisma.TransactionClient
+  biroCode: string = 'IKK',
+  externalTx?: Prisma.TransactionClient,
+  teamCode?: string | null
 ): Promise<NextMeetingNumberResult> {
   const execute = async (tx: Prisma.TransactionClient) => {
     // 1. Get the Biro to resolve its ID and uppercase code
@@ -32,20 +33,27 @@ export async function getNextMeetingNumber(
       throw new Error(`Biro resmi dengan kode "${biroCode}" tidak ditemukan.`);
     }
 
-    // 2. Find max existing meeting number for this biro in the Meeting table
+    const cleanTeamCode = teamCode?.trim().toUpperCase();
+    const prefix = cleanTeamCode || biro.code;
+
+    // 2. Find max existing meeting number for this prefix in the Meeting table
     const existingMeetings = await tx.meeting.findMany({
       where: {
         OR: [
-          { primaryBiroId: biro.id },
-          { meetingNumber: { startsWith: `${biro.code}-` } },
+          { meetingNumber: { startsWith: `${prefix}-` } },
+          cleanTeamCode ? { meetingNumber: { startsWith: `${biro.code}-${cleanTeamCode}-` } } : {},
         ],
       },
       select: { meetingNumber: true },
     });
 
     let maxExistingNum = 0;
+    const regex1 = new RegExp(`^${prefix.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}-(\\d+)$`, 'i');
+    const regex2 = cleanTeamCode ? new RegExp(`^${biro.code}-${cleanTeamCode}-(\\d+)$`, 'i') : null;
+
     for (const m of existingMeetings) {
-      const match = m.meetingNumber.match(new RegExp(`^${biro.code}-(\\d+)$`, 'i'));
+      let match = m.meetingNumber.match(regex1);
+      if (!match && regex2) match = m.meetingNumber.match(regex2);
       if (match) {
         const num = parseInt(match[1], 10);
         if (!isNaN(num) && num > maxExistingNum) {
@@ -54,46 +62,23 @@ export async function getNextMeetingNumber(
       }
     }
 
-    // 3. Atomically increment sequence or initialize if first meeting
-    let sequence = await tx.biroMeetingSequence.upsert({
-      where: { biroId: biro.id },
-      create: {
-        biroId: biro.id,
-        currentNumber: maxExistingNum + 1,
-      },
-      update: {
-        currentNumber: {
-          increment: 1,
-        },
-      },
-    });
+    let nextNum = maxExistingNum + 1;
 
-    // If the sequence was behind maxExistingNum, bump it past maxExistingNum
-    if (sequence.currentNumber <= maxExistingNum) {
-      sequence = await tx.biroMeetingSequence.update({
-        where: { biroId: biro.id },
-        data: { currentNumber: maxExistingNum + 1 },
-      });
-    }
-
-    // Safety loop to ensure uniqueness even if there were gaps or existing records
+    // Safety loop to ensure uniqueness
     while (
       await tx.meeting.findUnique({
-        where: { meetingNumber: `${biro.code}-${String(sequence.currentNumber).padStart(3, '0')}` },
+        where: { meetingNumber: `${prefix}-${String(nextNum).padStart(3, '0')}` },
       })
     ) {
-      sequence = await tx.biroMeetingSequence.update({
-        where: { biroId: biro.id },
-        data: { currentNumber: { increment: 1 } },
-      });
+      nextNum++;
     }
 
-    const paddedNumber = String(sequence.currentNumber).padStart(3, '0');
-    const meetingNumber = `${biro.code}-${paddedNumber}`;
+    const paddedNumber = String(nextNum).padStart(3, '0');
+    const meetingNumber = `${prefix}-${paddedNumber}`;
 
     return {
       meetingNumber,
-      sequenceNumber: sequence.currentNumber,
+      sequenceNumber: nextNum,
       biroId: biro.id,
       biroCode: biro.code,
     };
@@ -106,4 +91,42 @@ export async function getNextMeetingNumber(
   return prisma.$transaction(async (tx) => {
     return execute(tx);
   });
+}
+
+/**
+ * Previews the next meeting number without mutating any sequences or DB state.
+ */
+export async function previewNextMeetingNumber(
+  biroCode: string = 'IKK',
+  teamCode?: string | null
+): Promise<string> {
+  const cleanTeam = teamCode?.trim().toUpperCase();
+  const prefix = cleanTeam || (biroCode?.trim().toUpperCase() || 'INV');
+
+  const existingMeetings = await prisma.meeting.findMany({
+    where: {
+      OR: [
+        { meetingNumber: { startsWith: `${prefix}-` } },
+        cleanTeam ? { meetingNumber: { startsWith: `IKK-${cleanTeam}-` } } : {},
+      ],
+    },
+    select: { meetingNumber: true },
+  });
+
+  let maxNum = 0;
+  const regex1 = new RegExp(`^${prefix.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}-(\\d+)$`, 'i');
+  const regex2 = cleanTeam ? new RegExp(`^IKK-${cleanTeam}-(\\d+)$`, 'i') : null;
+
+  for (const m of existingMeetings) {
+    let match = m.meetingNumber.match(regex1);
+    if (!match && regex2) match = m.meetingNumber.match(regex2);
+    if (match) {
+      const num = parseInt(match[1], 10);
+      if (!isNaN(num) && num > maxNum) {
+        maxNum = num;
+      }
+    }
+  }
+
+  return `${prefix}-${String(maxNum + 1).padStart(3, '0')}`;
 }

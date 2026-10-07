@@ -581,6 +581,11 @@ export function MeetingTable({
                                   <span className={cn('inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-bold border', catInfo.badgeClass)}>
                                     {catInfo.badgeLabel}
                                   </span>
+                                  {meeting.meetingKind && (
+                                    <span className="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-bold bg-indigo-50 text-indigo-700 border border-indigo-200">
+                                      {meeting.meetingKind}
+                                    </span>
+                                  )}
                                   {meeting.documentCategory === 'SURAT_DITUNDA' && meeting.postponeReason && (
                                     <span className="text-[11px] text-rose-600 italic truncate max-w-[200px]" title={meeting.postponeReason}>
                                       • {meeting.postponeReason}
@@ -657,6 +662,22 @@ export function MeetingTable({
                         isNew={meeting.isNew}
                         showStep
                       />
+                      {meeting.progressStatus && (
+                        <div className="mt-1">
+                          <span
+                            className={cn(
+                              'text-[10.5px] font-bold px-2 py-0.5 rounded-full inline-block border',
+                              meeting.progressStatus === 'Finish'
+                                ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                                : meeting.progressStatus === 'On Progres'
+                                ? 'bg-amber-50 text-amber-800 border-amber-200'
+                                : 'bg-blue-50 text-blue-700 border-blue-200'
+                            )}
+                          >
+                            Status: {meeting.progressStatus}
+                          </span>
+                        </div>
+                      )}
                     </td>
 
                     {/* Tindak Lanjut Progress */}

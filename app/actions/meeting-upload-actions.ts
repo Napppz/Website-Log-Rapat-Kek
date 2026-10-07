@@ -570,3 +570,93 @@ export async function updateMeetingInvitationDocAction(
   }
 }
 
+/**
+ * Server Action: Generic upload for category documents, invitations, and presentation materials.
+ */
+export async function uploadGenericMeetingFileAction(
+  formData: FormData
+): Promise<{
+  success: boolean;
+  error?: string;
+  data?: {
+    url: string;
+    name: string;
+    size: number;
+    fileType: string;
+  };
+}> {
+  try {
+    const file = formData.get('file') as File | null;
+    const fileCategory = ((formData.get('type') as string) || 'dokumen').toLowerCase();
+
+    if (!file) {
+      return { success: false, error: 'Tidak ada berkas yang dipilih.' };
+    }
+
+    // Maximum file size: 30MB
+    if (file.size > 30 * 1024 * 1024) {
+      return { success: false, error: 'Ukuran berkas melebihi batas maksimum 30MB.' };
+    }
+
+    const validExtensions = [
+      'pdf',
+      'docx',
+      'doc',
+      'txt',
+      'png',
+      'jpg',
+      'jpeg',
+      'pptx',
+      'ppt',
+      'xlsx',
+      'xls',
+    ];
+    const originalName = file.name;
+    const ext = originalName.split('.').pop()?.toLowerCase() || '';
+
+    if (!validExtensions.includes(ext)) {
+      return {
+        success: false,
+        error:
+          'Format berkas tidak didukung. Mohon unggah berkas PDF, Word, PowerPoint, Excel, Gambar, atau Teks.',
+      };
+    }
+
+    const arrayBuffer = await file.arrayBuffer();
+    const buffer = Buffer.from(arrayBuffer);
+
+    // Save to public/uploads/documents/
+    const uploadDir = path.join(process.cwd(), 'public', 'uploads', 'documents');
+    await fs.mkdir(uploadDir, { recursive: true });
+
+    const sanitizedBase = path
+      .basename(originalName, path.extname(originalName))
+      .replace(/[^a-zA-Z0-9_-]/g, '_')
+      .slice(0, 45);
+    const prefix = fileCategory.toUpperCase().slice(0, 4);
+    const uniqueSuffix = `${Date.now()}_${Math.random().toString(36).substring(2, 7)}`;
+    const finalFileName = `${prefix}_${sanitizedBase}_${uniqueSuffix}.${ext}`;
+    const filePath = path.join(uploadDir, finalFileName);
+
+    await fs.writeFile(filePath, buffer);
+
+    const publicUrl = `/uploads/documents/${finalFileName}`;
+
+    return {
+      success: true,
+      data: {
+        url: publicUrl,
+        name: originalName,
+        size: file.size,
+        fileType: ext,
+      },
+    };
+  } catch (error: any) {
+    console.error('Error uploading meeting file:', error);
+    return {
+      success: false,
+      error: error?.message || 'Gagal mengunggah dokumen rapat.',
+    };
+  }
+}
+
