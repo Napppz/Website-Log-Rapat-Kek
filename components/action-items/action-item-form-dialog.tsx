@@ -23,6 +23,7 @@ import {
   SearchableMeetingSelect,
   MeetingOption,
 } from './searchable-meeting-select';
+import { PicCombobox } from './pic-combobox';
 
 interface ActionItemFormDialogProps {
   isOpen: boolean;
@@ -490,21 +491,28 @@ export function ActionItemFormDialog({
 
               {/* PIC Pengguna (Optional) */}
               <div>
-                <label className="block font-bold text-slate-800 mb-1">
-                  Pejabat / PIC <span className="text-slate-400 font-normal">(Opsional)</span>
+                <label className="block font-bold text-slate-800 mb-1 flex items-center justify-between">
+                  <span>Pejabat / PIC <span className="text-slate-400 font-normal">(Opsional)</span></span>
+                  {picUserId && (
+                    <span className="text-[11px] text-[#1E6B7B] font-semibold">
+                      ✓ Terpilih
+                    </span>
+                  )}
                 </label>
-                <select
+                <PicCombobox
                   value={picUserId}
-                  onChange={(e) => setPicUserId(e.target.value)}
-                  className="w-full px-3 py-2 rounded-lg border border-slate-200 focus:outline-none focus:ring-2 focus:ring-[#31889C]/30 focus:border-[#31889C] bg-white text-slate-800 text-[13px] cursor-pointer"
-                >
-                  <option value="">-- Belum Ditentukan --</option>
-                  {usersList.map((u) => (
-                    <option key={u.id} value={u.id}>
-                      {u.name} {u.email ? `(${u.email})` : ''}
-                    </option>
-                  ))}
-                </select>
+                  onChange={(val) => setPicUserId(val)}
+                  users={usersList}
+                  biros={birosList}
+                  selectedBiroId={
+                    picBiroId ||
+                    (effectiveLockedBiroCode
+                      ? birosList.find((b) => b.code.toUpperCase() === effectiveLockedBiroCode.toUpperCase())?.id
+                      : '')
+                  }
+                  disabled={isLoadingOptions}
+                  placeholder="Pilih Pejabat / PIC..."
+                />
               </div>
             </div>
 
