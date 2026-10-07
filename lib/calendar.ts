@@ -205,7 +205,7 @@ export function generateGoogleCalendarUrl(event: CalendarEventData): string {
   if (activeZoom) {
     descriptionParts.push(`\n----------------------------------------------------`);
     descriptionParts.push(`🎥 TAUTAN RAPAT VIRTUAL (ZOOM):`);
-    descriptionParts.push(`👉 ${activeZoom}`);
+    descriptionParts.push(` ${activeZoom}`);
     if (activeMeetingId) {
       descriptionParts.push(`Meeting ID: ${activeMeetingId}`);
     }

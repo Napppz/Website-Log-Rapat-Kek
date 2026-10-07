@@ -87,35 +87,35 @@ const MEETING_WORKFLOW: {
   sublabel: string;
   description: string;
 }[] = [
-  {
-    key: 'DRAFT',
-    step: 1,
-    label: 'Draf',
-    sublabel: 'Penyusunan',
-    description: 'Penyusunan naskah risalah awal oleh notulis rapat',
-  },
-  {
-    key: 'REVIEW',
-    step: 2,
-    label: 'Reviu',
-    sublabel: 'Penelaahan',
-    description: 'Pemeriksaan substansi oleh biro terkait / tim perumus',
-  },
-  {
-    key: 'APPROVED',
-    step: 3,
-    label: 'Disetujui',
-    sublabel: 'Validasi',
-    description: 'Substansi risalah telah divalidasi pimpinan sidang',
-  },
-  {
-    key: 'FINAL',
-    step: 4,
-    label: 'Final',
-    sublabel: 'Diterbitkan',
-    description: 'Naskah resmi berkekuatan tetap, siap didistribusikan & ditindaklanjuti',
-  },
-];
+    {
+      key: 'DRAFT',
+      step: 1,
+      label: 'Draf',
+      sublabel: 'Penyusunan',
+      description: 'Penyusunan naskah risalah awal oleh notulis rapat',
+    },
+    {
+      key: 'REVIEW',
+      step: 2,
+      label: 'Reviu',
+      sublabel: 'Penelaahan',
+      description: 'Pemeriksaan substansi oleh biro terkait / tim perumus',
+    },
+    {
+      key: 'APPROVED',
+      step: 3,
+      label: 'Disetujui',
+      sublabel: 'Validasi',
+      description: 'Substansi risalah telah divalidasi pimpinan sidang',
+    },
+    {
+      key: 'FINAL',
+      step: 4,
+      label: 'Final',
+      sublabel: 'Diterbitkan',
+      description: 'Naskah resmi berkekuatan tetap, siap didistribusikan & ditindaklanjuti',
+    },
+  ];
 
 const ATTENDANCE_OPTIONS: {
   value: AttendanceStatus;
@@ -125,39 +125,39 @@ const ATTENDANCE_OPTIONS: {
   badgeClass: string;
   desc: string;
 }[] = [
-  {
-    value: 'PRESENT',
-    label: 'Hadir',
-    icon: Check,
-    activeClass: 'bg-[#7CC563] text-white shadow-xs border-[#7CC563]',
-    badgeClass: 'bg-[#ECF8E9] text-[#4D8F3D] border-[#D2EFCA]',
-    desc: 'Peserta hadir mengikuti sidang rapat',
-  },
-  {
-    value: 'EXCUSED',
-    label: 'Izin',
-    icon: Clock3,
-    activeClass: 'bg-[#FFD300] text-slate-900 shadow-xs border-[#FFD300]',
-    badgeClass: 'bg-[#FFF8CC] text-[#8A7200] border-[#FFEE99]',
-    desc: 'Peserta berhalangan hadir dengan konfirmasi izin resmi',
-  },
-  {
-    value: 'ABSENT',
-    label: 'Tidak Hadir',
-    icon: X,
-    activeClass: 'bg-rose-600 text-white shadow-xs border-rose-600',
-    badgeClass: 'bg-rose-50 text-rose-700 border-rose-300',
-    desc: 'Peserta tidak hadir tanpa konfirmasi',
-  },
-  {
-    value: 'INVITED',
-    label: 'Diundang',
-    icon: Mail,
-    activeClass: 'bg-slate-700 text-white shadow-xs border-slate-700',
-    badgeClass: 'bg-slate-100 text-slate-700 border-slate-300',
-    desc: 'Undangan terkirim, menunggu konfirmasi kehadiran',
-  },
-];
+    {
+      value: 'PRESENT',
+      label: 'Hadir',
+      icon: Check,
+      activeClass: 'bg-[#7CC563] text-white shadow-xs border-[#7CC563]',
+      badgeClass: 'bg-[#ECF8E9] text-[#4D8F3D] border-[#D2EFCA]',
+      desc: 'Peserta hadir mengikuti sidang rapat',
+    },
+    {
+      value: 'EXCUSED',
+      label: 'Izin',
+      icon: Clock3,
+      activeClass: 'bg-[#FFD300] text-slate-900 shadow-xs border-[#FFD300]',
+      badgeClass: 'bg-[#FFF8CC] text-[#8A7200] border-[#FFEE99]',
+      desc: 'Peserta berhalangan hadir dengan konfirmasi izin resmi',
+    },
+    {
+      value: 'ABSENT',
+      label: 'Tidak Hadir',
+      icon: X,
+      activeClass: 'bg-rose-600 text-white shadow-xs border-rose-600',
+      badgeClass: 'bg-rose-50 text-rose-700 border-rose-300',
+      desc: 'Peserta tidak hadir tanpa konfirmasi',
+    },
+    {
+      value: 'INVITED',
+      label: 'Diundang',
+      icon: Mail,
+      activeClass: 'bg-slate-700 text-white shadow-xs border-slate-700',
+      badgeClass: 'bg-slate-100 text-slate-700 border-slate-300',
+      desc: 'Undangan terkirim, menunggu konfirmasi kehadiran',
+    },
+  ];
 
 export function MeetingDetailView({
   meeting,
@@ -263,10 +263,10 @@ export function MeetingDetailView({
   } | null>(
     meeting.invitationDocUrl
       ? {
-          url: meeting.invitationDocUrl,
-          name: meeting.invitationDocName || 'Dokumen Undangan Resmi',
-          size: meeting.invitationDocSize || null,
-        }
+        url: meeting.invitationDocUrl,
+        name: meeting.invitationDocName || 'Dokumen Undangan Resmi',
+        size: meeting.invitationDocSize || null,
+      }
       : null
   );
   const [isUploadingInvitation, setIsUploadingInvitation] = useState(false);
@@ -638,15 +638,15 @@ export function MeetingDetailView({
       const payload =
         participantMode === 'registered'
           ? {
-              userId: selectedAddUserId,
-              attendanceStatus: newParticipantStatus,
-            }
+            userId: selectedAddUserId,
+            attendanceStatus: newParticipantStatus,
+          }
           : {
-              customName: customName.trim(),
-              customEmail: customEmail.trim() || undefined,
-              biroId: customBiroId || meeting.primaryBiroId,
-              attendanceStatus: newParticipantStatus,
-            };
+            customName: customName.trim(),
+            customEmail: customEmail.trim() || undefined,
+            biroId: customBiroId || meeting.primaryBiroId,
+            attendanceStatus: newParticipantStatus,
+          };
 
       const res = await addParticipantToMeetingAction(meeting.id, payload);
       if (res.success && res.data) {
@@ -863,13 +863,12 @@ export function MeetingDetailView({
               const content = (
                 <>
                   <div
-                    className={`w-6 h-6 rounded-full flex items-center justify-center text-[11px] font-extrabold shrink-0 ${
-                      isCurrent
+                    className={`w-6 h-6 rounded-full flex items-center justify-center text-[11px] font-extrabold shrink-0 ${isCurrent
                         ? 'bg-white text-[#31889C]'
                         : isPassed
-                        ? 'bg-[#7CC563] text-white'
-                        : 'bg-slate-200 text-slate-600'
-                    }`}
+                          ? 'bg-[#7CC563] text-white'
+                          : 'bg-slate-200 text-slate-600'
+                      }`}
                   >
                     {isPassed ? <Check className="w-3.5 h-3.5 stroke-[3]" /> : wf.step}
                   </div>
@@ -888,13 +887,12 @@ export function MeetingDetailView({
                 return (
                   <div
                     key={wf.key}
-                    className={`flex items-center gap-2.5 p-2.5 rounded-xl border text-left select-none ${
-                      isCurrent
+                    className={`flex items-center gap-2.5 p-2.5 rounded-xl border text-left select-none ${isCurrent
                         ? 'bg-[#31889C] text-white border-[#215865] shadow-xs'
                         : isPassed
-                        ? 'bg-[#ECF8E9] text-[#215865] border-[#D2EFCA]'
-                        : 'bg-white text-slate-600 border-slate-200 opacity-80'
-                    }`}
+                          ? 'bg-[#ECF8E9] text-[#215865] border-[#D2EFCA]'
+                          : 'bg-white text-slate-600 border-slate-200 opacity-80'
+                      }`}
                     title={`${wf.label} (${wf.sublabel}): ${wf.description}`}
                   >
                     {content}
@@ -908,13 +906,12 @@ export function MeetingDetailView({
                   type="button"
                   disabled={isCurrent || isUpdatingStatus}
                   onClick={() => handleStatusChange(wf.key)}
-                  className={`flex items-center gap-2.5 p-2.5 rounded-xl border text-left transition-all ${
-                    isCurrent
+                  className={`flex items-center gap-2.5 p-2.5 rounded-xl border text-left transition-all ${isCurrent
                       ? 'bg-[#31889C] text-white border-[#215865] shadow-xs ring-2 ring-[#31889C]/30 cursor-default'
                       : isPassed
-                      ? 'bg-[#ECF8E9] text-[#215865] border-[#D2EFCA] hover:bg-[#D2EFCA]/50 cursor-pointer hover:border-[#31889C]'
-                      : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50 cursor-pointer hover:border-[#31889C]'
-                  }`}
+                        ? 'bg-[#ECF8E9] text-[#215865] border-[#D2EFCA] hover:bg-[#D2EFCA]/50 cursor-pointer hover:border-[#31889C]'
+                        : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50 cursor-pointer hover:border-[#31889C]'
+                    }`}
                   title={`${wf.label} (${wf.sublabel}): ${wf.description} — Klik untuk ubah ke tahap ini`}
                 >
                   {content}
@@ -935,7 +932,7 @@ export function MeetingDetailView({
                   {getMeetingStatusDetail(status).description}
                 </p>
                 <p className="text-[#215865] font-semibold text-[11.5px] mt-1">
-                  👉 <strong>Langkah Selanjutnya:</strong> {getMeetingStatusDetail(status).nextStepNote}
+                  <strong>Langkah Selanjutnya:</strong> {getMeetingStatusDetail(status).nextStepNote}
                 </p>
               </div>
             </div>
@@ -1195,11 +1192,10 @@ export function MeetingDetailView({
         <button
           type="button"
           onClick={() => handleTabChange('overview')}
-          className={`flex items-center gap-2 px-5 py-3 font-bold text-[13px] border-b-2 transition-all cursor-pointer whitespace-nowrap ${
-            activeTab === 'overview'
+          className={`flex items-center gap-2 px-5 py-3 font-bold text-[13px] border-b-2 transition-all cursor-pointer whitespace-nowrap ${activeTab === 'overview'
               ? 'border-[#31889C] text-[#31889C] bg-[#F0F9FA] rounded-t-lg'
               : 'border-transparent text-slate-600 hover:text-[#31889C] hover:bg-[#F0F9FA]/50'
-          }`}
+            }`}
         >
           <Layers className="w-4 h-4" />
           <span>Informasi Rapat</span>
@@ -1208,11 +1204,10 @@ export function MeetingDetailView({
         <button
           type="button"
           onClick={() => handleTabChange('participants')}
-          className={`flex items-center gap-2 px-5 py-3 font-bold text-[13px] border-b-2 transition-all cursor-pointer whitespace-nowrap ${
-            activeTab === 'participants'
+          className={`flex items-center gap-2 px-5 py-3 font-bold text-[13px] border-b-2 transition-all cursor-pointer whitespace-nowrap ${activeTab === 'participants'
               ? 'border-[#31889C] text-[#31889C] bg-[#F0F9FA] rounded-t-lg'
               : 'border-transparent text-slate-600 hover:text-[#31889C] hover:bg-[#F0F9FA]/50'
-          }`}
+            }`}
         >
           <Users className="w-4 h-4" />
           <span>Peserta &amp; Presensi ({totalCount})</span>
@@ -1221,11 +1216,10 @@ export function MeetingDetailView({
         <button
           type="button"
           onClick={() => handleTabChange('minutes')}
-          className={`flex items-center gap-2 px-5 py-3 font-bold text-[13px] border-b-2 transition-all cursor-pointer whitespace-nowrap ${
-            activeTab === 'minutes'
+          className={`flex items-center gap-2 px-5 py-3 font-bold text-[13px] border-b-2 transition-all cursor-pointer whitespace-nowrap ${activeTab === 'minutes'
               ? 'border-[#31889C] text-[#31889C] bg-[#F0F9FA] rounded-t-lg'
               : 'border-transparent text-slate-600 hover:text-[#31889C] hover:bg-[#F0F9FA]/50'
-          }`}
+            }`}
         >
           <FileText className="w-4 h-4" />
           <span>Notulen &amp; Risalah</span>
@@ -1239,11 +1233,10 @@ export function MeetingDetailView({
         <button
           type="button"
           onClick={() => handleTabChange('actionItems')}
-          className={`flex items-center gap-2 px-5 py-3 font-bold text-[13px] border-b-2 transition-all cursor-pointer whitespace-nowrap ${
-            activeTab === 'actionItems'
+          className={`flex items-center gap-2 px-5 py-3 font-bold text-[13px] border-b-2 transition-all cursor-pointer whitespace-nowrap ${activeTab === 'actionItems'
               ? 'border-[#31889C] text-[#31889C] bg-[#F0F9FA] rounded-t-lg'
               : 'border-transparent text-slate-600 hover:text-[#31889C] hover:bg-[#F0F9FA]/50'
-          }`}
+            }`}
         >
           <CheckSquare className="w-4 h-4" />
           <span>Tindak Lanjut ({meeting.actionItems ? meeting.actionItems.length : 0})</span>
@@ -1401,8 +1394,8 @@ export function MeetingDetailView({
                 {meeting.minutes
                   ? 'Buka Notulen Rapat'
                   : canEditMinutes
-                  ? '+ Buat Notulen Sekarang'
-                  : 'Lihat Lembar Naskah'}
+                    ? '+ Buat Notulen Sekarang'
+                    : 'Lihat Lembar Naskah'}
               </button>
             </div>
 
@@ -1412,9 +1405,8 @@ export function MeetingDetailView({
                 <h4 className="font-bold text-slate-900">Matriks &amp; Komitmen Tindak Lanjut</h4>
                 <p className="text-[12px] text-slate-500">
                   {meeting.actionItems && meeting.actionItems.length > 0
-                    ? `Terdapat ${meeting.actionItems.length} butir tindak lanjut terdaftar (${
-                        meeting.actionItems.filter((a: any) => a.status === 'COMPLETED').length
-                      } selesai).`
+                    ? `Terdapat ${meeting.actionItems.length} butir tindak lanjut terdaftar (${meeting.actionItems.filter((a: any) => a.status === 'COMPLETED').length
+                    } selesai).`
                     : 'Belum ada butir tindak lanjut yang dibuat untuk rapat ini.'}
                 </p>
               </div>
@@ -1426,8 +1418,8 @@ export function MeetingDetailView({
                 {meeting.actionItems && meeting.actionItems.length > 0
                   ? 'Buka Matriks Tindak Lanjut'
                   : canCreateActionItem
-                  ? '+ Tambah Tindak Lanjut'
-                  : 'Lihat Matriks Tindak Lanjut'}
+                    ? '+ Tambah Tindak Lanjut'
+                    : 'Lihat Matriks Tindak Lanjut'}
               </button>
             </div>
 
@@ -1602,10 +1594,10 @@ export function MeetingDetailView({
                         <div className="w-9 h-9 rounded-full bg-[#F0F9FA] text-[#31889C] font-bold flex items-center justify-center text-[11px] border border-[#BCE3EB] shrink-0">
                           {p.user?.name
                             ? p.user.name
-                                .split(' ')
-                                .map((n: string) => n[0])
-                                .slice(0, 2)
-                                .join('')
+                              .split(' ')
+                              .map((n: string) => n[0])
+                              .slice(0, 2)
+                              .join('')
                             : 'P'}
                         </div>
                         <div className="min-w-0">
@@ -1639,11 +1631,10 @@ export function MeetingDetailView({
                                     onClick={() =>
                                       handleUpdateAttendance(p.id, opt.value, p.user?.name || 'Peserta')
                                     }
-                                    className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-md text-[11px] font-bold transition-all cursor-pointer ${
-                                      isActive
+                                    className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-md text-[11px] font-bold transition-all cursor-pointer ${isActive
                                         ? opt.activeClass
                                         : 'text-slate-600 hover:text-slate-900 hover:bg-white/80'
-                                    } ${isUpdating ? 'opacity-50 cursor-wait' : ''}`}
+                                      } ${isUpdating ? 'opacity-50 cursor-wait' : ''}`}
                                     title={opt.desc}
                                   >
                                     <Icon className="w-3 h-3" />
@@ -1706,11 +1697,10 @@ export function MeetingDetailView({
               <button
                 type="button"
                 onClick={() => handleMinutesSubTabChange('document')}
-                className={`flex items-center gap-2 px-3.5 py-1.5 rounded-md transition-all cursor-pointer ${
-                  minutesSubTab === 'document'
+                className={`flex items-center gap-2 px-3.5 py-1.5 rounded-md transition-all cursor-pointer ${minutesSubTab === 'document'
                     ? 'bg-white text-[#31889C] font-bold shadow-xs border border-slate-200/60'
                     : 'text-slate-600 hover:text-slate-900 hover:bg-white/50'
-                }`}
+                  }`}
               >
                 <FileText className="w-4 h-4" />
                 <span>Naskah Risalah &amp; Notulen</span>
@@ -1719,11 +1709,10 @@ export function MeetingDetailView({
               <button
                 type="button"
                 onClick={() => handleMinutesSubTabChange('comments')}
-                className={`flex items-center gap-2 px-3.5 py-1.5 rounded-md transition-all cursor-pointer ${
-                  minutesSubTab === 'comments'
+                className={`flex items-center gap-2 px-3.5 py-1.5 rounded-md transition-all cursor-pointer ${minutesSubTab === 'comments'
                     ? 'bg-white text-[#31889C] font-bold shadow-xs border border-slate-200/60'
                     : 'text-slate-600 hover:text-slate-900 hover:bg-white/50'
-                }`}
+                  }`}
               >
                 <MessageCircle className="w-4 h-4" />
                 <span>Catatan &amp; Komentar</span>
@@ -1732,11 +1721,10 @@ export function MeetingDetailView({
               <button
                 type="button"
                 onClick={() => handleMinutesSubTabChange('history')}
-                className={`flex items-center gap-2 px-3.5 py-1.5 rounded-md transition-all cursor-pointer ${
-                  minutesSubTab === 'history'
+                className={`flex items-center gap-2 px-3.5 py-1.5 rounded-md transition-all cursor-pointer ${minutesSubTab === 'history'
                     ? 'bg-white text-[#31889C] font-bold shadow-xs border border-slate-200/60'
                     : 'text-slate-600 hover:text-slate-900 hover:bg-white/50'
-                }`}
+                  }`}
               >
                 <History className="w-4 h-4" />
                 <span>Riwayat Perubahan</span>
@@ -1811,22 +1799,20 @@ export function MeetingDetailView({
               <button
                 type="button"
                 onClick={() => setParticipantMode('registered')}
-                className={`py-2 px-3 rounded-lg transition-all cursor-pointer ${
-                  participantMode === 'registered'
+                className={`py-2 px-3 rounded-lg transition-all cursor-pointer ${participantMode === 'registered'
                     ? 'bg-white text-[#31889C] shadow-xs border border-slate-200/80'
                     : 'text-slate-600 hover:text-slate-900'
-                }`}
+                  }`}
               >
                 Pegawai Terdaftar
               </button>
               <button
                 type="button"
                 onClick={() => setParticipantMode('unregistered')}
-                className={`py-2 px-3 rounded-lg transition-all cursor-pointer ${
-                  participantMode === 'unregistered'
+                className={`py-2 px-3 rounded-lg transition-all cursor-pointer ${participantMode === 'unregistered'
                     ? 'bg-white text-[#31889C] shadow-xs border border-slate-200/80'
                     : 'text-slate-600 hover:text-slate-900'
-                }`}
+                  }`}
               >
                 Pejabat Baru / Eksternal
               </button>
@@ -1933,11 +1919,10 @@ export function MeetingDetailView({
                         key={opt.value}
                         type="button"
                         onClick={() => setNewParticipantStatus(opt.value)}
-                        className={`flex items-center gap-2 p-2.5 rounded-xl border text-left transition-all cursor-pointer ${
-                          isSelected
+                        className={`flex items-center gap-2 p-2.5 rounded-xl border text-left transition-all cursor-pointer ${isSelected
                             ? 'bg-[#F0F9FA] border-[#31889C] text-[#31889C] font-bold shadow-xs'
                             : 'bg-white border-slate-200 text-slate-700 hover:bg-slate-50'
-                        }`}
+                          }`}
                       >
                         <Icon className="w-3.5 h-3.5 text-[#31889C] shrink-0" />
                         <div>
