@@ -57,6 +57,7 @@ const LOKASI_OPTIONS = [
   'Loka Jagatsaksana',
   'Lokasandhi',
   'Antawacana',
+  'Administrator',
   'Other',
 ];
 
@@ -305,261 +306,11 @@ export function CreateMeetingDialog({ isOpen, onClose }: CreateMeetingDialogProp
 
         {/* Form Body */}
         <form onSubmit={handleSubmit} className="p-6 space-y-5 text-[13px] overflow-y-auto flex-1">
-          {/* 1. Judul Rapat */}
-          <div>
-            <label className="block font-bold text-slate-800 mb-1">
-              1. Judul Rapat <span className="text-red-500">*</span>
-            </label>
-            <textarea
-              required
-              rows={2}
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-              placeholder="Contoh: Rapat Koordinasi Fasilitasi Investasi Kawasan Ekonomi Khusus..."
-              className="w-full px-3 py-2 rounded-xl border border-slate-300 bg-white text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-[#31889C]/25 focus:border-[#31889C]"
-            />
-          </div>
-
-          {/* 2. Tanggal Rapat */}
-          <div>
-            <label className="block font-bold text-slate-800 mb-1 flex items-center gap-1.5">
-              <Calendar className="w-4 h-4 text-[#31889C]" />
-              <span>2. Tanggal Rapat</span> <span className="text-red-500">*</span>
-            </label>
-            <input
-              type="date"
-              required
-              min={todayStr}
-              value={date}
-              onChange={(e) => setDate(e.target.value)}
-              className="w-full px-3 py-2 rounded-xl border border-slate-300 bg-white text-slate-800 focus:outline-none focus:ring-2 focus:ring-[#31889C]/25"
-            />
-          </div>
-
-          {/* 3. Kategori Rapat */}
-          <div className="p-4 rounded-xl bg-slate-50 border border-slate-200 space-y-2.5">
-            <label className="block font-bold text-slate-800">
-              3. Kategori Rapat <span className="text-red-500">*</span>
-            </label>
-            <select
-              value={kategoriRapat}
-              onChange={(e) => setKategoriRapat(e.target.value)}
-              className="w-full px-3 py-2 rounded-xl border border-slate-300 bg-white text-slate-800"
-            >
-              <option value="UNDANGAN_INTERNAL">Undangan Internal</option>
-              <option value="NASKAH_MASUK">Daftar Naskah Masuk</option>
-              <option value="SURAT_DITUNDA">Tunda Rapat</option>
-            </select>
-
-            {kategoriRapat === 'NASKAH_MASUK' && (
-              <input
-                type="text"
-                value={sourceOrigin}
-                onChange={(e) => setSourceOrigin(e.target.value)}
-                placeholder="Asal naskah / kementerian pengirim..."
-                className="w-full px-3 py-1.5 rounded-lg border border-slate-300 bg-white text-xs"
-              />
-            )}
-            {kategoriRapat === 'SURAT_DITUNDA' && (
-              <input
-                type="text"
-                required
-                value={postponeReason}
-                onChange={(e) => setPostponeReason(e.target.value)}
-                placeholder="Alasan penundaan rapat..."
-                className="w-full px-3 py-1.5 rounded-lg border border-rose-300 bg-white text-xs"
-              />
-            )}
-
-          </div>
-
-          {/* 4 & 5. Surat Undangan & Dokumen Terkait */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            {/* 4. Surat Undangan */}
-            <div className="p-3 bg-slate-50 rounded-xl border border-slate-200 space-y-1.5">
-              <label className="block font-bold text-slate-800 text-xs">
-                4. Surat Undangan (Bisa Upload File)
-              </label>
-              <input
-                ref={docInputRef}
-                type="file"
-                className="hidden"
-                accept=".pdf,.docx,.doc,.png,.jpg,.jpeg"
-                onChange={(e) => {
-                  const f = e.target.files?.[0];
-                  if (f) handleUploadFile(f, 'undangan');
-                }}
-              />
-              {invitationDoc ? (
-                <div className="flex items-center justify-between bg-white p-2 rounded border border-teal-200">
-                  <span className="truncate max-w-[180px] text-xs font-bold text-slate-800">
-                    {invitationDoc.name}
-                  </span>
-                  <button type="button" onClick={() => setInvitationDoc(null)} className="text-rose-500 cursor-pointer">
-                    <Trash2 className="w-3.5 h-3.5" />
-                  </button>
-                </div>
-              ) : (
-                <button
-                  type="button"
-                  onClick={() => docInputRef.current?.click()}
-                  className="w-full py-2 border border-dashed border-slate-300 rounded-lg text-xs text-slate-600 hover:border-[#1E6B7B] bg-white cursor-pointer"
-                >
-                  {isUploadingDoc ? 'Mengunggah...' : '+ Unggah Surat Undangan'}
-                </button>
-              )}
-            </div>
-
-            {/* 5. Dokumen Terkait / Paparan Rapat */}
-            <div className="p-3 bg-slate-50 rounded-xl border border-slate-200 space-y-1.5">
-              <label className="block font-bold text-slate-800 text-xs">
-                5. Dokumen Terkait / Paparan (Bisa Upload File)
-              </label>
-              <input
-                ref={matRef}
-                type="file"
-                className="hidden"
-                accept=".pdf,.pptx,.ppt,.docx,.xlsx"
-                onChange={(e) => {
-                  const f = e.target.files?.[0];
-                  if (f) handleUploadFile(f, 'paparan');
-                }}
-              />
-              {materialDoc ? (
-                <div className="flex items-center justify-between bg-white p-2 rounded border border-teal-200">
-                  <span className="truncate max-w-[180px] text-xs font-bold text-slate-800">
-                    {materialDoc.name}
-                  </span>
-                  <button type="button" onClick={() => setMaterialDoc(null)} className="text-rose-500 cursor-pointer">
-                    <Trash2 className="w-3.5 h-3.5" />
-                  </button>
-                </div>
-              ) : (
-                <button
-                  type="button"
-                  onClick={() => matRef.current?.click()}
-                  className="w-full py-2 border border-dashed border-slate-300 rounded-lg text-xs text-slate-600 hover:border-[#1E6B7B] bg-white cursor-pointer"
-                >
-                  {isUploadingMaterial ? 'Mengunggah...' : '+ Unggah Paparan / Materi'}
-                </button>
-              )}
-            </div>
-          </div>
-
-          {/* 6. Jenis Rapat */}
-          <div>
-            <label className="block font-bold text-slate-800 mb-1">
-              6. Jenis Rapat <span className="text-red-500">*</span>
-            </label>
-            <select
-              value={jenisRapat}
-              onChange={(e) => setJenisRapat(e.target.value)}
-              className="w-full px-3 py-2 rounded-xl border border-slate-300 bg-white text-slate-800 focus:outline-none focus:ring-2 focus:ring-[#31889C]/25 cursor-pointer"
-            >
-              {JENIS_RAPAT_OPTIONS.map((opt) => (
-                <option key={opt} value={opt}>
-                  {opt === 'Other' ? 'Other (Kategori Lainnya...)' : opt}
-                </option>
-              ))}
-            </select>
-            {jenisRapat === 'Other' && (
-              <input
-                type="text"
-                required
-                value={customJenisRapat}
-                onChange={(e) => setCustomJenisRapat(e.target.value)}
-                placeholder="Ketik jenis rapat..."
-                className="mt-2 w-full px-3 py-1.5 rounded-lg border border-[#31889C] text-xs"
-              />
-            )}
-          </div>
-
-          {/* 7. PIC Rapat */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div>
-              <label className="block font-bold text-slate-800 mb-1">
-                7. PIC Rapat (Pilih Staf) <span className="text-red-500">*</span>
-              </label>
-              <select
-                value={picUserId}
-                onChange={(e) => {
-                  setPicUserId(e.target.value);
-                  const found = availableUsers.find((u) => u.id === e.target.value);
-                  if (found) setPicName(found.name);
-                }}
-                className="w-full px-3 py-2 rounded-xl border border-slate-300 bg-white text-xs cursor-pointer"
-              >
-                <option value="">-- Pilih Staf Penanggung Jawab --</option>
-                {availableUsers.map((u) => (
-                  <option key={u.id} value={u.id}>
-                    {u.name} {u.team?.name ? `[Tim ${u.team.name}]` : ''}
-                  </option>
-                ))}
-              </select>
-            </div>
-            <div>
-              <label className="block font-bold text-slate-800 mb-1">
-                Nama / Keterangan PIC:
-              </label>
-              <input
-                type="text"
-                required
-                value={picName}
-                onChange={(e) => setPicName(e.target.value)}
-                placeholder="Nama PIC Rapat..."
-                className="w-full px-3 py-2 rounded-xl border border-slate-300 bg-white text-xs"
-              />
-            </div>
-          </div>
-
-          {/* 8. Undangan Rapat (Peserta yang diundang) */}
-          <div>
-            <label className="block font-bold text-slate-800 mb-1">
-              8. Undangan Rapat (Peserta Rapat yang Diundang)
-            </label>
-            <textarea
-              rows={2}
-              value={attendees}
-              onChange={(e) => setAttendees(e.target.value)}
-              placeholder="Daftar peserta eksternal, kementerian, atau perwakilan..."
-              className="w-full px-3 py-2 rounded-xl border border-slate-300 bg-white text-xs"
-            />
-          </div>
-
-          {/* 9. Lokasi Kegiatan */}
-          <div>
-            <label className="block font-bold text-slate-800 mb-1 flex items-center gap-1.5">
-              <MapPin className="w-4 h-4 text-[#31889C]" />
-              <span>9. Lokasi Kegiatan</span> <span className="text-red-500">*</span>
-            </label>
-            <select
-              value={lokasiOption}
-              onChange={(e) => setLokasiOption(e.target.value)}
-              className="w-full px-3 py-2 rounded-xl border border-slate-300 bg-white text-slate-800 cursor-pointer"
-            >
-              {LOKASI_OPTIONS.map((loc) => (
-                <option key={loc} value={loc}>
-                  {loc === 'Other' ? 'Other (Tempat Lain)' : `Ruang ${loc}`}
-                </option>
-              ))}
-            </select>
-            {lokasiOption === 'Other' && (
-              <input
-                type="text"
-                required
-                value={customLocation}
-                onChange={(e) => setCustomLocation(e.target.value)}
-                placeholder="Ketik lokasi kegiatan..."
-                className="mt-2 w-full px-3 py-1.5 rounded-lg border border-[#31889C] text-xs"
-              />
-            )}
-          </div>
-
-          {/* 10. Kode Nomor Registrasi Per Tim */}
+          {/* 1. Kode Nomor Registrasi Per Tim */}
           <div className="p-4 rounded-xl bg-[#F0F8FA] border border-[#BCE3EB] space-y-3">
             <div className="flex items-center justify-between">
               <label className="block font-bold text-slate-800 text-xs">
-                10. Kode Nomor Registrasi Per Tim
+                1. Kode Nomor Registrasi Per Tim <span className="text-red-500">*</span>
               </label>
               <button
                 type="button"
@@ -628,6 +379,260 @@ export function CreateMeetingDialog({ isOpen, onClose }: CreateMeetingDialogProp
                 </span>
               </div>
             </div>
+          </div>
+
+          {/* 2. Judul Rapat */}
+          <div>
+            <label className="block font-bold text-slate-800 mb-1">
+              2. Judul Rapat <span className="text-red-500">*</span>
+            </label>
+            <textarea
+              required
+              rows={2}
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              placeholder="Contoh: Rapat Koordinasi Fasilitasi Investasi Kawasan Ekonomi Khusus..."
+              className="w-full px-3 py-2 rounded-xl border border-slate-300 bg-white text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-[#31889C]/25 focus:border-[#31889C]"
+            />
+          </div>
+
+          {/* 3. Tanggal Rapat */}
+          <div>
+            <label className="block font-bold text-slate-800 mb-1 flex items-center gap-1.5">
+              <Calendar className="w-4 h-4 text-[#31889C]" />
+              <span>3. Tanggal Rapat</span> <span className="text-red-500">*</span>
+            </label>
+            <input
+              type="date"
+              required
+              min={todayStr}
+              value={date}
+              onChange={(e) => setDate(e.target.value)}
+              className="w-full px-3 py-2 rounded-xl border border-slate-300 bg-white text-slate-800 focus:outline-none focus:ring-2 focus:ring-[#31889C]/25"
+            />
+          </div>
+
+          {/* 4. Kategori Rapat */}
+          <div className="p-4 rounded-xl bg-slate-50 border border-slate-200 space-y-2.5">
+            <label className="block font-bold text-slate-800">
+              4. Kategori Rapat <span className="text-red-500">*</span>
+            </label>
+            <select
+              value={kategoriRapat}
+              onChange={(e) => setKategoriRapat(e.target.value)}
+              className="w-full px-3 py-2 rounded-xl border border-slate-300 bg-white text-slate-800"
+            >
+              <option value="UNDANGAN_INTERNAL">Undangan Internal</option>
+              <option value="NASKAH_MASUK">Daftar Naskah Masuk</option>
+              <option value="SURAT_DITUNDA">Tunda Rapat</option>
+            </select>
+
+            {kategoriRapat === 'NASKAH_MASUK' && (
+              <input
+                type="text"
+                value={sourceOrigin}
+                onChange={(e) => setSourceOrigin(e.target.value)}
+                placeholder="Asal naskah / kementerian pengirim..."
+                className="w-full px-3 py-1.5 rounded-lg border border-slate-300 bg-white text-xs"
+              />
+            )}
+            {kategoriRapat === 'SURAT_DITUNDA' && (
+              <input
+                type="text"
+                required
+                value={postponeReason}
+                onChange={(e) => setPostponeReason(e.target.value)}
+                placeholder="Alasan penundaan rapat..."
+                className="w-full px-3 py-1.5 rounded-lg border border-rose-300 bg-white text-xs"
+              />
+            )}
+
+          </div>
+
+          {/* 5 & 6. Surat Undangan & Dokumen Terkait */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            {/* 5. Surat Undangan */}
+            <div className="p-3 bg-slate-50 rounded-xl border border-slate-200 space-y-1.5">
+              <label className="block font-bold text-slate-800 text-xs">
+                5. Surat Undangan (Bisa Upload File)
+              </label>
+              <input
+                ref={docInputRef}
+                type="file"
+                className="hidden"
+                accept=".pdf,.docx,.doc,.png,.jpg,.jpeg"
+                onChange={(e) => {
+                  const f = e.target.files?.[0];
+                  if (f) handleUploadFile(f, 'undangan');
+                }}
+              />
+              {invitationDoc ? (
+                <div className="flex items-center justify-between bg-white p-2 rounded border border-teal-200">
+                  <span className="truncate max-w-[180px] text-xs font-bold text-slate-800">
+                    {invitationDoc.name}
+                  </span>
+                  <button type="button" onClick={() => setInvitationDoc(null)} className="text-rose-500 cursor-pointer">
+                    <Trash2 className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => docInputRef.current?.click()}
+                  className="w-full py-2 border border-dashed border-slate-300 rounded-lg text-xs text-slate-600 hover:border-[#1E6B7B] bg-white cursor-pointer"
+                >
+                  {isUploadingDoc ? 'Mengunggah...' : '+ Unggah Surat Undangan'}
+                </button>
+              )}
+            </div>
+
+            {/* 6. Dokumen Terkait / Paparan Rapat */}
+            <div className="p-3 bg-slate-50 rounded-xl border border-slate-200 space-y-1.5">
+              <label className="block font-bold text-slate-800 text-xs">
+                6. Dokumen Terkait / Paparan (Bisa Upload File)
+              </label>
+              <input
+                ref={matRef}
+                type="file"
+                className="hidden"
+                accept=".pdf,.pptx,.ppt,.docx,.xlsx"
+                onChange={(e) => {
+                  const f = e.target.files?.[0];
+                  if (f) handleUploadFile(f, 'paparan');
+                }}
+              />
+              {materialDoc ? (
+                <div className="flex items-center justify-between bg-white p-2 rounded border border-teal-200">
+                  <span className="truncate max-w-[180px] text-xs font-bold text-slate-800">
+                    {materialDoc.name}
+                  </span>
+                  <button type="button" onClick={() => setMaterialDoc(null)} className="text-rose-500 cursor-pointer">
+                    <Trash2 className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => matRef.current?.click()}
+                  className="w-full py-2 border border-dashed border-slate-300 rounded-lg text-xs text-slate-600 hover:border-[#1E6B7B] bg-white cursor-pointer"
+                >
+                  {isUploadingMaterial ? 'Mengunggah...' : '+ Unggah Paparan / Materi'}
+                </button>
+              )}
+            </div>
+          </div>
+
+          {/* 7. Jenis Rapat */}
+          <div>
+            <label className="block font-bold text-slate-800 mb-1">
+              7. Jenis Rapat <span className="text-red-500">*</span>
+            </label>
+            <select
+              value={jenisRapat}
+              onChange={(e) => setJenisRapat(e.target.value)}
+              className="w-full px-3 py-2 rounded-xl border border-slate-300 bg-white text-slate-800 focus:outline-none focus:ring-2 focus:ring-[#31889C]/25 cursor-pointer"
+            >
+              {JENIS_RAPAT_OPTIONS.map((opt) => (
+                <option key={opt} value={opt}>
+                  {opt === 'Other' ? 'Other (Kategori Lainnya...)' : opt}
+                </option>
+              ))}
+            </select>
+            {jenisRapat === 'Other' && (
+              <input
+                type="text"
+                required
+                value={customJenisRapat}
+                onChange={(e) => setCustomJenisRapat(e.target.value)}
+                placeholder="Ketik jenis rapat..."
+                className="mt-2 w-full px-3 py-1.5 rounded-lg border border-[#31889C] text-xs"
+              />
+            )}
+          </div>
+
+          {/* 8. PIC Rapat */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label className="block font-bold text-slate-800 mb-1">
+                8. PIC Rapat (Pilih Staf) <span className="text-red-500">*</span>
+              </label>
+              <select
+                value={picUserId}
+                onChange={(e) => {
+                  setPicUserId(e.target.value);
+                  const found = availableUsers.find((u) => u.id === e.target.value);
+                  if (found) setPicName(found.name);
+                }}
+                className="w-full px-3 py-2 rounded-xl border border-slate-300 bg-white text-xs cursor-pointer"
+              >
+                <option value="">-- Pilih Staf Penanggung Jawab --</option>
+                {availableUsers.map((u) => (
+                  <option key={u.id} value={u.id}>
+                    {u.name} {u.team?.name ? `[Tim ${u.team.name}]` : ''}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label className="block font-bold text-slate-800 mb-1">
+                Nama / Keterangan PIC:
+              </label>
+              <input
+                type="text"
+                required
+                value={picName}
+                onChange={(e) => setPicName(e.target.value)}
+                placeholder="Nama PIC Rapat..."
+                className="w-full px-3 py-2 rounded-xl border border-slate-300 bg-white text-xs"
+              />
+            </div>
+          </div>
+
+          {/* 9. Undangan Rapat (Peserta yang diundang) */}
+          <div>
+            <label className="block font-bold text-slate-800 mb-1">
+              9. Undangan Rapat (Peserta Rapat yang Diundang)
+            </label>
+            <textarea
+              rows={2}
+              value={attendees}
+              onChange={(e) => setAttendees(e.target.value)}
+              placeholder="Daftar peserta eksternal, kementerian, atau perwakilan..."
+              className="w-full px-3 py-2 rounded-xl border border-slate-300 bg-white text-xs"
+            />
+          </div>
+
+          {/* 10. Lokasi Kegiatan */}
+          <div>
+            <label className="block font-bold text-slate-800 mb-1 flex items-center gap-1.5">
+              <MapPin className="w-4 h-4 text-[#31889C]" />
+              <span>10. Lokasi Kegiatan</span> <span className="text-red-500">*</span>
+            </label>
+            <select
+              value={lokasiOption}
+              onChange={(e) => setLokasiOption(e.target.value)}
+              className="w-full px-3 py-2 rounded-xl border border-slate-300 bg-white text-slate-800 cursor-pointer"
+            >
+              {LOKASI_OPTIONS.map((loc) => (
+                <option key={loc} value={loc}>
+                  {loc === 'Other'
+                    ? 'Other (Tempat Lain)'
+                    : loc === 'Administrator'
+                    ? 'Administrator'
+                    : `Ruang ${loc}`}
+                </option>
+              ))}
+            </select>
+            {lokasiOption === 'Other' && (
+              <input
+                type="text"
+                required
+                value={customLocation}
+                onChange={(e) => setCustomLocation(e.target.value)}
+                placeholder="Ketik lokasi kegiatan..."
+                className="mt-2 w-full px-3 py-1.5 rounded-lg border border-[#31889C] text-xs"
+              />
+            )}
           </div>
 
           {/* 11. Status Rapat */}

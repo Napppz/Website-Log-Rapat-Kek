@@ -89,6 +89,7 @@ const LOKASI_OPTIONS = [
   'Loka Jagatsaksana',
   'Lokasandhi',
   'Antawacana',
+  'Administrator',
   'Other',
 ];
 
@@ -534,7 +535,8 @@ export default function BuatRapatPage() {
 
 
         {/* ========================================================================= */}
-        {/* BAGIAN I: AGENDA & WAKTU PELAKSANAAN (Poin 1, 2)                          */}
+        {/* ========================================================================= */}
+        {/* BAGIAN I: REGISTRASI TIM, AGENDA & WAKTU PELAKSANAAN (Poin 1, 2, 3)       */}
         {/* ========================================================================= */}
         <div className="bg-white rounded-2xl border border-slate-200 shadow-xs overflow-hidden border-t-4 border-t-[#1E6B7B]">
           <div className="px-6 py-4.5 border-b border-slate-100 bg-slate-50/60 flex items-center justify-between">
@@ -544,24 +546,143 @@ export default function BuatRapatPage() {
               </div>
               <div>
                 <h2 className="text-base font-bold text-slate-900">
-                  Bagian I: Agenda &amp; Waktu Pelaksanaan
+                  Bagian I: Registrasi Tim, Agenda &amp; Waktu Pelaksanaan
                 </h2>
                 <p className="text-xs text-slate-500">
-                  Judul agenda rapat koordinasi dan tanggal pelaksanaan kegiatan
+                  Nomor registrasi tim kerja, judul agenda rapat koordinasi, dan tanggal pelaksanaan kegiatan
                 </p>
               </div>
             </div>
             <span className="text-xs font-semibold text-slate-500 bg-white px-3 py-1 rounded-full border border-slate-200 shadow-2xs">
-              Poin 1 &amp; 2
+              Poin 1, 2, 3
             </span>
           </div>
 
           <div className="p-6 sm:p-7 space-y-6">
-            {/* 1. Judul Rapat */}
+            {/* 1. Kode Nomor Registrasi Per Tim Dibuat Beda */}
+            <div className="p-5 rounded-2xl bg-gradient-to-br from-[#F0F8FA] via-white to-slate-50 border border-[#BCE3EB] space-y-4">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                <label className="font-bold text-slate-800 flex items-center gap-2 text-sm">
+                  <span className="w-6 h-6 rounded-full bg-[#1E6B7B] text-white text-xs flex items-center justify-center font-bold shadow-2xs">1</span>
+                  <span>Kode Nomor Registrasi Per Tim Dibuat Beda</span>
+                  <span className="text-red-500">*</span>
+                </label>
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={handleResetToAutoNumber}
+                    className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-white border border-[#BCE3EB] text-[#1E6B7B] hover:bg-[#F0F8FA] text-xs font-semibold shadow-2xs cursor-pointer transition-all"
+                    title="Hitung ulang nomor urut otomatis sesuai tim"
+                  >
+                    <RefreshCw className={cn("w-3.5 h-3.5", isLoadingNumber && "animate-spin")} />
+                    <span>Reset ke Otomatis</span>
+                  </button>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-12 gap-5 items-start">
+                {/* 3 Teams Selection List (matching the user's design) */}
+                <div className="md:col-span-7 space-y-2">
+                  <label className="block text-xs font-bold text-slate-700">
+                    Pilih Tim Kerja:
+                  </label>
+                  <div className="bg-white p-1.5 rounded-xl border border-slate-200/90 shadow-2xs space-y-1">
+                    {TIM_OPTIONS.map((tim) => {
+                      const isSelected = selectedTeamId === tim.id;
+                      return (
+                        <button
+                          key={tim.id}
+                          type="button"
+                          onClick={() => {
+                            setSelectedTeamId(tim.id);
+                            setIsManualNumber(false);
+                          }}
+                          className={cn(
+                            'w-full px-4 py-2.5 rounded-lg text-sm font-semibold transition-all text-left flex items-center justify-between cursor-pointer',
+                            isSelected
+                              ? 'bg-[#E8F5F7] text-[#1E6B7B] shadow-2xs font-bold'
+                              : 'text-slate-700 hover:bg-slate-50 hover:text-slate-900'
+                          )}
+                        >
+                          <div className="flex items-center gap-2.5">
+                            <span
+                              className={cn(
+                                'w-3 h-3 rounded-full flex items-center justify-center border',
+                                isSelected ? 'border-[#1E6B7B] bg-[#1E6B7B]' : 'border-slate-300 bg-white'
+                              )}
+                            >
+                              {isSelected && <span className="w-1 h-1 rounded-full bg-white" />}
+                            </span>
+                            <span>{tim.name}</span>
+                          </div>
+                          <span
+                            className={cn(
+                              'text-xs font-mono px-2 py-0.5 rounded font-bold',
+                              isSelected ? 'bg-[#1E6B7B] text-white' : 'bg-slate-100 text-slate-500'
+                            )}
+                          >
+                            {tim.code}
+                          </span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                  <p className="text-[11px] text-slate-500">
+                    Pilih salah satu dari 3 tim untuk penomoran registrasi &amp; pengarsipan rapat.
+                  </p>
+                </div>
+
+                {/* Final Registration Code Input (Auto + Editable) */}
+                <div className="md:col-span-5 space-y-2">
+                  <div className="flex items-center justify-between">
+                    <label className="text-xs font-bold text-slate-700">
+                      Nomor Registrasi Rapat:
+                    </label>
+                    {isManualNumber && (
+                      <span className="text-[10px] text-amber-700 font-bold bg-amber-100 px-1.5 py-0.5 rounded">
+                        Manual
+                      </span>
+                    )}
+                  </div>
+                  <div className="relative">
+                    <input
+                      type="text"
+                      required
+                      value={registrationNumber}
+                      onChange={(e) => {
+                        setRegistrationNumber(e.target.value);
+                        setIsManualNumber(true);
+                      }}
+                      placeholder="Contoh: INV-001"
+                      className="w-full px-3.5 h-[44px] rounded-xl border border-slate-300 bg-white text-slate-900 font-mono font-bold text-sm tracking-wide focus:outline-none focus:ring-2 focus:ring-[#1E6B7B]/20 focus:border-[#1E6B7B] shadow-2xs"
+                    />
+                  </div>
+                  <div className="p-3 bg-white/80 rounded-xl border border-[#BCE3EB] text-[11px] text-slate-600 space-y-1">
+                    <div className="flex items-center justify-between font-semibold text-slate-700">
+                      <span>Tim Aktif:</span>
+                      <span className="text-[#1E6B7B] font-bold">
+                        {TIM_OPTIONS.find((t) => t.id === selectedTeamId)?.name || 'Tim Investasi'}
+                      </span>
+                    </div>
+                    <div className="flex items-center justify-between text-slate-500 font-mono">
+                      <span>Format Otomatis:</span>
+                      <span className="font-semibold text-slate-700">
+                        {TIM_OPTIONS.find((t) => t.id === selectedTeamId)?.code || 'INV'}-001
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <p className="text-[11.5px] text-slate-500">
+                💡 Kode nomor registrasi dibuat berbeda per tim (misal: <span className="font-mono font-semibold text-[#1E6B7B]">INV-001</span>, <span className="font-mono font-semibold text-[#1E6B7B]">KS-001</span>, atau <span className="font-mono font-semibold text-[#1E6B7B]">KOM-001</span>). Anda dapat mengedit teks ini langsung bila memiliki penomoran resmi khusus.
+              </p>
+            </div>
+
+            {/* 2. Judul Rapat */}
             <div>
               <label className="font-bold text-slate-800 mb-2 flex items-center justify-between text-sm">
                 <span className="flex items-center gap-2">
-                  <span className="w-6 h-6 rounded-full bg-[#1E6B7B] text-white text-xs flex items-center justify-center font-bold shadow-2xs">1</span>
+                  <span className="w-6 h-6 rounded-full bg-[#1E6B7B] text-white text-xs flex items-center justify-center font-bold shadow-2xs">2</span>
                   <span>Judul Rapat</span>
                   <span className="text-red-500">*</span>
                 </span>
@@ -580,11 +701,11 @@ export default function BuatRapatPage() {
               </p>
             </div>
 
-            {/* 2. Tanggal Rapat */}
+            {/* 3. Tanggal Rapat */}
             <div>
               <label className="font-bold text-slate-800 mb-2 flex items-center justify-between text-sm">
                 <span className="flex items-center gap-2">
-                  <span className="w-6 h-6 rounded-full bg-[#1E6B7B] text-white text-xs flex items-center justify-center font-bold shadow-2xs">2</span>
+                  <span className="w-6 h-6 rounded-full bg-[#1E6B7B] text-white text-xs flex items-center justify-center font-bold shadow-2xs">3</span>
                   <span>Tanggal Rapat</span>
                   <span className="text-red-500">*</span>
                 </span>
@@ -618,7 +739,8 @@ export default function BuatRapatPage() {
         </div>
 
         {/* ========================================================================= */}
-        {/* BAGIAN 2: KATEGORI & BERKAS DOKUMEN PENDUKUNG (Poin 3, 4, 5)              */}
+        {/* ========================================================================= */}
+        {/* BAGIAN II: KATEGORI & BERKAS DOKUMEN PENDUKUNG (Poin 4, 5, 6)             */}
         {/* ========================================================================= */}
         <div className="bg-white rounded-2xl border border-slate-200 shadow-xs overflow-hidden border-t-4 border-t-[#F99D1C]">
           <div className="px-6 py-4.5 border-b border-slate-100 bg-slate-50/60 flex items-center justify-between">
@@ -636,16 +758,16 @@ export default function BuatRapatPage() {
               </div>
             </div>
             <span className="text-xs font-semibold text-slate-500 bg-white px-3 py-1 rounded-full border border-slate-200 shadow-2xs">
-              Poin 3, 4, 5
+              Poin 4, 5, 6
             </span>
           </div>
 
           <div className="p-6 sm:p-7 space-y-6">
-            {/* 3. Kategori Rapat (Dropdown Field yang Di-klik) */}
+            {/* 4. Kategori Rapat (Dropdown Field yang Di-klik) */}
             <div className="p-5 rounded-2xl bg-slate-50/80 border border-slate-200 space-y-3.5">
               <div className="flex items-center justify-between">
                 <label htmlFor="kategori-rapat-select" className="font-bold text-slate-800 flex items-center gap-2 text-sm cursor-pointer">
-                  <span className="w-6 h-6 rounded-full bg-[#1E6B7B] text-white text-xs flex items-center justify-center font-bold shadow-2xs">3</span>
+                  <span className="w-6 h-6 rounded-full bg-[#1E6B7B] text-white text-xs flex items-center justify-center font-bold shadow-2xs">4</span>
                   <span>Kategori Rapat</span>
                   <span className="text-red-500">*</span>
                 </label>
@@ -700,13 +822,13 @@ export default function BuatRapatPage() {
               )}
             </div>
 
-            {/* Grid 2 Kolom untuk Poin 4 (Surat Undangan) dan Poin 5 (Dokumen Terkait / Paparan) */}
+            {/* Grid 2 Kolom untuk Poin 5 (Surat Undangan) dan Poin 6 (Dokumen Terkait / Paparan) */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-              {/* 4. Surat Undangan (Bisa Upload File) */}
+              {/* 5. Surat Undangan (Bisa Upload File) */}
               <div className="p-5 rounded-2xl bg-slate-50/80 border border-slate-200 space-y-3">
                 <div className="flex items-center justify-between">
                   <label className="font-bold text-slate-800 flex items-center gap-2 text-sm">
-                    <span className="w-6 h-6 rounded-full bg-[#1E6B7B] text-white text-xs flex items-center justify-center font-bold shadow-2xs">4</span>
+                    <span className="w-6 h-6 rounded-full bg-[#1E6B7B] text-white text-xs flex items-center justify-center font-bold shadow-2xs">5</span>
                     <span>Surat Undangan</span>
                   </label>
                   <span className="text-[11px] text-slate-400">(Bisa Upload File)</span>
@@ -776,11 +898,11 @@ export default function BuatRapatPage() {
                 )}
               </div>
 
-              {/* 5. Dokumen Terkait / Paparan Rapat (Bisa Upload File) */}
+              {/* 6. Dokumen Terkait / Paparan Rapat (Bisa Upload File) */}
               <div className="p-5 rounded-2xl bg-slate-50/80 border border-slate-200 space-y-3">
                 <div className="flex items-center justify-between">
                   <label className="font-bold text-slate-800 flex items-center gap-2 text-sm">
-                    <span className="w-6 h-6 rounded-full bg-[#1E6B7B] text-white text-xs flex items-center justify-center font-bold shadow-2xs">5</span>
+                    <span className="w-6 h-6 rounded-full bg-[#1E6B7B] text-white text-xs flex items-center justify-center font-bold shadow-2xs">6</span>
                     <span>Dokumen Terkait / Paparan Rapat</span>
                   </label>
                   <span className="text-[11px] text-slate-400">(Bisa Upload File)</span>
@@ -854,7 +976,8 @@ export default function BuatRapatPage() {
         </div>
 
         {/* ========================================================================= */}
-        {/* BAGIAN 3: KLASIFIKASI, PIC, PESERTA & LOKASI (Poin 6, 7, 8, 9)            */}
+        {/* ========================================================================= */}
+        {/* BAGIAN III: PARAMETER PELAKSANAAN & PESERTA (Poin 7, 8, 9, 10)            */}
         {/* ========================================================================= */}
         <div className="bg-white rounded-2xl border border-slate-200 shadow-xs overflow-hidden border-t-4 border-t-[#31889C]">
           <div className="px-6 py-4.5 border-b border-slate-100 bg-slate-50/60 flex items-center justify-between">
@@ -872,15 +995,15 @@ export default function BuatRapatPage() {
               </div>
             </div>
             <span className="text-xs font-semibold text-slate-500 bg-white px-3 py-1 rounded-full border border-slate-200 shadow-2xs">
-              Poin 6, 7, 8, 9
+              Poin 7, 8, 9, 10
             </span>
           </div>
 
           <div className="p-6 sm:p-7 space-y-6">
-            {/* 6. Jenis Rapat (Dropdown + Other) */}
+            {/* 7. Jenis Rapat (Dropdown + Other) */}
             <div>
               <label className="font-bold text-slate-800 mb-2 flex items-center gap-2 text-sm">
-                <span className="w-6 h-6 rounded-full bg-[#1E6B7B] text-white text-xs flex items-center justify-center font-bold shadow-2xs">6</span>
+                <span className="w-6 h-6 rounded-full bg-[#1E6B7B] text-white text-xs flex items-center justify-center font-bold shadow-2xs">7</span>
                 <span>Jenis Rapat</span>
                 <span className="text-red-500">*</span>
               </label>
@@ -913,10 +1036,10 @@ export default function BuatRapatPage() {
               </p>
             </div>
 
-            {/* 7. PIC Rapat */}
+            {/* 8. PIC Rapat */}
             <div className="pt-2 border-t border-slate-100">
               <label className="font-bold text-slate-800 mb-2 flex items-center gap-2 text-sm">
-                <span className="w-6 h-6 rounded-full bg-[#1E6B7B] text-white text-xs flex items-center justify-center font-bold shadow-2xs">7</span>
+                <span className="w-6 h-6 rounded-full bg-[#1E6B7B] text-white text-xs flex items-center justify-center font-bold shadow-2xs">8</span>
                 <span>PIC Rapat</span>
                 <span className="text-red-500">*</span>
               </label>
@@ -961,11 +1084,11 @@ export default function BuatRapatPage() {
               </p>
             </div>
 
-            {/* 8. Undangan Rapat (Peserta Rapat Yang Di Undang) */}
+            {/* 9. Undangan Rapat (Peserta Rapat Yang Di Undang) */}
             <div className="space-y-4 pt-2 border-t border-slate-100">
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                 <label className="font-bold text-slate-800 flex items-center gap-2 text-sm">
-                  <span className="w-6 h-6 rounded-full bg-[#1E6B7B] text-white text-xs flex items-center justify-center font-bold shadow-2xs">8</span>
+                  <span className="w-6 h-6 rounded-full bg-[#1E6B7B] text-white text-xs flex items-center justify-center font-bold shadow-2xs">9</span>
                   <span>Undangan Rapat (Peserta Rapat yang Diundang)</span>
                 </label>
                 <Badge variant="teal" dot className="text-xs">
@@ -1084,10 +1207,10 @@ export default function BuatRapatPage() {
               </div>
             </div>
 
-            {/* 9. Lokasi Kegiatan (Dropdown + Other) */}
+            {/* 10. Lokasi Kegiatan (Dropdown + Other) */}
             <div className="pt-2 border-t border-slate-100">
               <label className="font-bold text-slate-800 mb-2 flex items-center gap-2 text-sm">
-                <span className="w-6 h-6 rounded-full bg-[#1E6B7B] text-white text-xs flex items-center justify-center font-bold shadow-2xs">9</span>
+                <span className="w-6 h-6 rounded-full bg-[#1E6B7B] text-white text-xs flex items-center justify-center font-bold shadow-2xs">10</span>
                 <span>Lokasi Kegiatan</span>
                 <span className="text-red-500">*</span>
               </label>
@@ -1100,7 +1223,11 @@ export default function BuatRapatPage() {
                   >
                     {LOKASI_OPTIONS.map((loc) => (
                       <option key={loc} value={loc}>
-                        {loc === 'Other' ? 'Other (Berada di tempat lain)' : `Ruang ${loc}`}
+                        {loc === 'Other'
+                          ? 'Other (Berada di tempat lain)'
+                          : loc === 'Administrator'
+                          ? 'Administrator'
+                          : `Ruang ${loc}`}
                       </option>
                     ))}
                   </select>
@@ -1120,19 +1247,19 @@ export default function BuatRapatPage() {
                 ) : (
                   <div className="px-4 h-[44px] rounded-xl border border-slate-200 bg-slate-50 text-slate-600 text-sm flex items-center gap-2">
                     <MapPin className="w-4 h-4 text-[#1E6B7B]" />
-                    <span>Ruang Rapat Gedung KEK: <strong>{lokasiOption}</strong></span>
+                    <span>Ruang / Lokasi KEK: <strong>{lokasiOption === 'Administrator' ? 'Administrator' : `Ruang ${lokasiOption}`}</strong></span>
                   </div>
                 )}
               </div>
               <p className="text-xs text-slate-400 mt-1.5">
-                Pilih salah satu dari 4 ruangan resmi (Graha Satwika, Loka Jagatsaksana, Lokasandhi, Antawacana) atau pilih Other untuk lokasi luar.
+                Pilih salah satu dari 5 ruangan/lokasi resmi (Graha Satwika, Loka Jagatsaksana, Lokasandhi, Antawacana, Administrator) atau pilih Other untuk lokasi luar.
               </p>
             </div>
           </div>
         </div>
 
         {/* ========================================================================= */}
-        {/* BAGIAN 4: PENOMORAN TIM & STATUS PROGRES (Poin 10, 11)                    */}
+        {/* BAGIAN IV: STATUS PELAKSANAAN RAPAT (Poin 11)                             */}
         {/* ========================================================================= */}
         <div className="bg-white rounded-2xl border border-slate-200 shadow-xs overflow-hidden border-t-4 border-t-[#2E7D32]">
           <div className="px-6 py-4.5 border-b border-slate-100 bg-slate-50/60 flex items-center justify-between">
@@ -1142,140 +1269,21 @@ export default function BuatRapatPage() {
               </div>
               <div>
                 <h2 className="text-base font-bold text-slate-900">
-                  Bagian IV: Penomoran Registrasi Tim &amp; Status Progres
+                  Bagian IV: Status Pelaksanaan Rapat
                 </h2>
                 <p className="text-xs text-slate-500">
-                  Penomoran registrasi otomatis per tim kerja dan status pelaksanaan rapat
+                  Penetapan status pelaksanaan rapat koordinasi (Start, On Progres, Finish)
                 </p>
               </div>
             </div>
             <span className="text-xs font-semibold text-slate-500 bg-white px-3 py-1 rounded-full border border-slate-200 shadow-2xs">
-              Poin 10 &amp; 11
+              Poin 11
             </span>
           </div>
 
           <div className="p-6 sm:p-7 space-y-6">
-            {/* 10. Kode Nomor Registrasi Per Tim Dibuat Beda */}
-            <div className="p-5 rounded-2xl bg-gradient-to-br from-[#F0F8FA] via-white to-slate-50 border border-[#BCE3EB] space-y-4">
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-                <label className="font-bold text-slate-800 flex items-center gap-2 text-sm">
-                  <span className="w-6 h-6 rounded-full bg-[#1E6B7B] text-white text-xs flex items-center justify-center font-bold shadow-2xs">10</span>
-                  <span>Kode Nomor Registrasi Per Tim Dibuat Beda</span>
-                  <span className="text-red-500">*</span>
-                </label>
-                <div className="flex items-center gap-2">
-                  <button
-                    type="button"
-                    onClick={handleResetToAutoNumber}
-                    className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-white border border-[#BCE3EB] text-[#1E6B7B] hover:bg-[#F0F8FA] text-xs font-semibold shadow-2xs cursor-pointer transition-all"
-                    title="Hitung ulang nomor urut otomatis sesuai tim"
-                  >
-                    <RefreshCw className={cn("w-3.5 h-3.5", isLoadingNumber && "animate-spin")} />
-                    <span>Reset ke Otomatis</span>
-                  </button>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-12 gap-5 items-start">
-                {/* 3 Teams Selection List (matching the user's design) */}
-                <div className="md:col-span-7 space-y-2">
-                  <label className="block text-xs font-bold text-slate-700">
-                    Pilih Tim Kerja:
-                  </label>
-                  <div className="bg-white p-1.5 rounded-xl border border-slate-200/90 shadow-2xs space-y-1">
-                    {TIM_OPTIONS.map((tim) => {
-                      const isSelected = selectedTeamId === tim.id;
-                      return (
-                        <button
-                          key={tim.id}
-                          type="button"
-                          onClick={() => {
-                            setSelectedTeamId(tim.id);
-                            setIsManualNumber(false);
-                          }}
-                          className={cn(
-                            'w-full px-4 py-2.5 rounded-lg text-sm font-semibold transition-all text-left flex items-center justify-between cursor-pointer',
-                            isSelected
-                              ? 'bg-[#E8F5F7] text-[#1E6B7B] shadow-2xs font-bold'
-                              : 'text-slate-700 hover:bg-slate-50 hover:text-slate-900'
-                          )}
-                        >
-                          <div className="flex items-center gap-2.5">
-                            <span
-                              className={cn(
-                                'w-3 h-3 rounded-full flex items-center justify-center border',
-                                isSelected ? 'border-[#1E6B7B] bg-[#1E6B7B]' : 'border-slate-300 bg-white'
-                              )}
-                            >
-                              {isSelected && <span className="w-1 h-1 rounded-full bg-white" />}
-                            </span>
-                            <span>{tim.name}</span>
-                          </div>
-                          <span
-                            className={cn(
-                              'text-xs font-mono px-2 py-0.5 rounded font-bold',
-                              isSelected ? 'bg-[#1E6B7B] text-white' : 'bg-slate-100 text-slate-500'
-                            )}
-                          >
-                            {tim.code}
-                          </span>
-                        </button>
-                      );
-                    })}
-                  </div>
-                  <p className="text-[11px] text-slate-500">
-                    Pilih salah satu dari 3 tim untuk penomoran registrasi &amp; pengarsipan rapat.
-                  </p>
-                </div>
-
-                {/* Final Registration Code Input (Auto + Editable) */}
-                <div className="md:col-span-5 space-y-2">
-                  <div className="flex items-center justify-between">
-                    <label className="text-xs font-bold text-slate-700">
-                      Nomor Registrasi Rapat:
-                    </label>
-                    {isManualNumber && (
-                      <span className="text-[10px] text-amber-700 font-bold bg-amber-100 px-1.5 py-0.5 rounded">
-                        Manual
-                      </span>
-                    )}
-                  </div>
-                  <div className="relative">
-                    <input
-                      type="text"
-                      required
-                      value={registrationNumber}
-                      onChange={(e) => {
-                        setRegistrationNumber(e.target.value);
-                        setIsManualNumber(true);
-                      }}
-                      placeholder="Contoh: INV-001"
-                      className="w-full px-3.5 h-[44px] rounded-xl border border-slate-300 bg-white text-slate-900 font-mono font-bold text-sm tracking-wide focus:outline-none focus:ring-2 focus:ring-[#1E6B7B]/20 focus:border-[#1E6B7B] shadow-2xs"
-                    />
-                  </div>
-                  <div className="p-3 bg-white/80 rounded-xl border border-[#BCE3EB] text-[11px] text-slate-600 space-y-1">
-                    <div className="flex items-center justify-between font-semibold text-slate-700">
-                      <span>Tim Aktif:</span>
-                      <span className="text-[#1E6B7B] font-bold">
-                        {TIM_OPTIONS.find((t) => t.id === selectedTeamId)?.name || 'Tim Investasi'}
-                      </span>
-                    </div>
-                    <div className="flex items-center justify-between text-slate-500 font-mono">
-                      <span>Format Otomatis:</span>
-                      <span className="font-semibold text-slate-700">
-                        {TIM_OPTIONS.find((t) => t.id === selectedTeamId)?.code || 'INV'}-001
-                      </span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-              <p className="text-[11.5px] text-slate-500">
-                💡 Kode nomor registrasi dibuat berbeda per tim (misal: <span className="font-mono font-semibold text-[#1E6B7B]">INV-001</span>, <span className="font-mono font-semibold text-[#1E6B7B]">KS-001</span>, atau <span className="font-mono font-semibold text-[#1E6B7B]">KOM-001</span>). Anda dapat mengedit teks ini langsung bila memiliki penomoran resmi khusus.
-              </p>
-            </div>
-
             {/* 11. Status (Start, On Progres, Finish) */}
-            <div className="pt-2 border-t border-slate-100">
+            <div>
               <label className="font-bold text-slate-800 mb-2 flex items-center gap-2 text-sm">
                 <span className="w-6 h-6 rounded-full bg-[#1E6B7B] text-white text-xs flex items-center justify-center font-bold shadow-2xs">11</span>
                 <span>Status Rapat</span>
