@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { MOCK_MONTHLY_ACTIVITY } from '@/lib/mock-data';
 import { MonthlyActivity } from '@/lib/types';
 import { cn } from '@/lib/utils';
-import { RotateCcw, TrendingUp, Calendar } from 'lucide-react';
+import { RotateCcw, TrendingUp, Calendar, ArrowUp } from 'lucide-react';
 
 const FULL_MONTH_NAMES: Record<string, string> = {
   Jan: 'Januari',
@@ -21,6 +21,42 @@ const FULL_MONTH_NAMES: Record<string, string> = {
   Des: 'Desember',
 };
 
+/**
+ * Smoothly scrolls the window back up to the top or to the statistics overview
+ * so that users and executives immediately see real-time metric cards.
+ */
+export function scrollToStatsTop() {
+  if (typeof window === 'undefined') return;
+
+  requestAnimationFrame(() => {
+    const statsElement = document.getElementById('stats-overview');
+    if (statsElement) {
+      const rect = statsElement.getBoundingClientRect();
+      const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+      const absoluteTop = rect.top + scrollTop;
+
+      // In superadmin dashboard, stats is ~200px from top: scrolling to top: 0 gives full view of banner + stats cards
+      if (absoluteTop < 320) {
+        window.scrollTo({
+          top: 0,
+          behavior: 'smooth',
+        });
+      } else {
+        // In biro dashboard or deeper pages, offset for the sticky header (64px + 16px buffer)
+        window.scrollTo({
+          top: Math.max(0, absoluteTop - 80),
+          behavior: 'smooth',
+        });
+      }
+    } else {
+      window.scrollTo({
+        top: 0,
+        behavior: 'smooth',
+      });
+    }
+  });
+}
+
 interface ActivityTrendChartProps {
   data?: MonthlyActivity[];
   selectedMonth?: string | null;
@@ -29,6 +65,7 @@ interface ActivityTrendChartProps {
   selectedYear?: number;
   availableYears?: number[];
   onYearChange?: (year: number) => void;
+  autoScrollToTop?: boolean;
 }
 
 export function ActivityTrendChart({
@@ -39,6 +76,7 @@ export function ActivityTrendChart({
   selectedYear = 2026,
   availableYears = [2026, 2027],
   onYearChange,
+  autoScrollToTop = true,
 }: ActivityTrendChartProps) {
   const chartData = data && data.length > 0 ? data : MOCK_MONTHLY_ACTIVITY;
 
@@ -72,6 +110,9 @@ export function ActivityTrendChart({
     if (onMonthClick) {
       onMonthClick(month);
     }
+
+    // Smoothly scroll back to top so supervisor immediately sees real-time stats
+    scrollToStatsTop();
   };
 
   const handleReplay = (e: React.MouseEvent) => {
@@ -192,7 +233,7 @@ export function ActivityTrendChart({
                       handleMonthClick(item.month);
                     }
                   }}
-                  title={`Klik untuk melihat & memfilter rapat bulan ${FULL_MONTH_NAMES[item.month] || item.month} (${item.count} rapat)`}
+                  title={`Klik untuk memfilter & kembali ke atas melihat statistik bulan ${FULL_MONTH_NAMES[item.month] || item.month} (${item.count} rapat)`}
                 >
                   {/* Tooltip / Value on top of bar */}
                   <div className="h-8 w-full flex items-end justify-center mb-1.5 relative">
@@ -300,8 +341,8 @@ export function ActivityTrendChart({
             </div>
             <p className="text-[11.5px] text-slate-500 truncate">
               {effectiveSelectedMonth
-                ? `${activeItem?.count || 0} rapat (${monthPercentage}% dari total) • Kartu statistik di atas otomatis terfilter`
-                : 'Klik batang bulan di atas untuk melihat & memfilter statistik'}
+                ? `${activeItem?.count || 0} rapat (${monthPercentage}% dari total)`
+                : 'Klik grafik batang setiap bulan untuk melihat rincian'}
             </p>
           </div>
         </div>
@@ -311,20 +352,31 @@ export function ActivityTrendChart({
             <button
               type="button"
               onClick={() => handleMonthClick(effectiveSelectedMonth)}
-              className="text-[11px] font-semibold text-[#31889C] hover:text-[#215865] underline cursor-pointer mr-1 hidden sm:inline"
+              className="text-[11px] font-semibold text-slate-400 hover:text-slate-700 underline cursor-pointer mr-0.5"
               title="Reset pilihan bulan"
             >
               Reset
             </button>
           )}
-          <div className="bg-[#215865] text-white px-3 py-1.5 rounded-xl shadow-xs flex items-baseline gap-1">
+          <button
+            type="button"
+            onClick={scrollToStatsTop}
+            className={cn(
+              "bg-[#215865] hover:bg-[#1b4853] text-white px-3 py-1.5 rounded-xl shadow-xs flex items-center gap-1.5 transition-all cursor-pointer",
+              effectiveSelectedMonth ? "hover:scale-[1.02] active:scale-95 group" : ""
+            )}
+            title={effectiveSelectedMonth ? "Kembali ke ringkasan statistik di atas" : "Total rapat"}
+          >
             <span className="text-[15px] font-extrabold tracking-tight">
               {effectiveSelectedMonth ? activeItem?.count ?? 0 : totalYearCount}
             </span>
             <span className="text-[11px] font-medium text-[#BCE3EB]">
               Rapat
             </span>
-          </div>
+            {effectiveSelectedMonth && (
+              <ArrowUp className="w-3.5 h-3.5 text-[#7CC563] group-hover:-translate-y-0.5 transition-transform" />
+            )}
+          </button>
         </div>
       </div>
     </div>

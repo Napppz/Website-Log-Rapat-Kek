@@ -55,6 +55,7 @@ export function StatsOverview({
   onResetMonth,
 }: StatsOverviewProps) {
   const [isAnimated, setIsAnimated] = useState(false);
+  const [isHighlighted, setIsHighlighted] = useState(false);
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -63,32 +64,21 @@ export function StatsOverview({
     return () => clearTimeout(timer);
   }, []);
 
+  // Visual pulse whenever selectedMonth changes so user/supervisor immediately notices real-time update
+  useEffect(() => {
+    if (selectedMonth) {
+      setIsHighlighted(true);
+      const timer = setTimeout(() => {
+        setIsHighlighted(false);
+      }, 2000);
+      return () => clearTimeout(timer);
+    }
+  }, [selectedMonth]);
+
   const fullMonthName = selectedMonth ? (FULL_MONTH_NAMES[selectedMonth] || selectedMonth) : '';
 
   return (
-    <div className="flex flex-col gap-3">
-      {/* Active Month Filter Pill Indicator */}
-      {selectedMonth && (
-        <div className="flex items-center justify-between px-3.5 py-2 bg-gradient-to-r from-[#F0F9FA] via-white to-[#F0F9FA]/60 border border-[#BCE3EB] rounded-xl text-xs shadow-2xs animate-in fade-in duration-200">
-          <div className="flex items-center gap-2 text-[#215865] font-semibold min-w-0">
-            <span className="w-2 h-2 rounded-full bg-[#31889C] animate-pulse shrink-0" />
-            <span className="truncate">
-              Menampilkan data statistik untuk: <strong className="text-[#215865]">Bulan {fullMonthName} {selectedYear}</strong>
-            </span>
-          </div>
-          {onResetMonth && (
-            <button
-              type="button"
-              onClick={onResetMonth}
-              className="inline-flex items-center gap-1 text-[11px] font-bold text-[#31889C] hover:text-[#215865] bg-white px-2.5 py-1 rounded-lg border border-[#BCE3EB] hover:bg-[#F0F9FA] transition-all cursor-pointer shadow-2xs shrink-0 ml-2"
-              title={`Kembali ke tampilan statistik tahunan (YTD ${selectedYear})`}
-            >
-              <span>✕</span>
-              <span>Tampilkan Semua (YTD {selectedYear})</span>
-            </button>
-          )}
-        </div>
-      )}
+    <div id="stats-overview" className="flex flex-col gap-3 scroll-mt-24">
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
       {metrics.map((metric, idx) => {
@@ -115,7 +105,8 @@ export function StatsOverview({
               opacity: isAnimated ? 1 : 0,
             }}
             className={cn(
-              'group relative rounded-2xl bg-white p-4 shadow-2xs hover:-translate-y-1 hover:shadow-md transition-all duration-200 cursor-pointer block overflow-hidden border border-slate-200/90',
+              'group relative rounded-2xl bg-white p-4 shadow-2xs hover:-translate-y-1 hover:shadow-md transition-all duration-200 cursor-pointer block overflow-hidden border',
+              isHighlighted ? 'border-[#31889C]/70 shadow-sm shadow-[#31889C]/15 ring-1 ring-[#31889C]/20' : 'border-slate-200/90',
               // KEK 4-Quadrant Accent Top Stripes
               metric.id === 'total-rapat' && 'border-t-[3px] border-t-[#1E6B7B] hover:border-[#1E6B7B]/40 hover:bg-[#F0F8FA]/30',
               metric.id === 'rapat-bulan-ini' && 'border-t-[3px] border-t-[#7CC563] hover:border-[#7CC563]/40 hover:bg-[#ECF8E9]/30',
