@@ -90,11 +90,67 @@ export interface ActionItemProgressData {
 export type MeetingDocumentCategory =
   | 'UNDANGAN_INTERNAL'
   | 'NASKAH_MASUK'
-  | 'SURAT_DITUNDA';
+  | 'DISPOSISI_SEKJEN'
+  | 'DISPOSISI_BIRO'
+  | 'SURAT_DITUNDA'
+  | 'TUNDA_RAPAT';
 
 export type MeetingDocumentSubCategory =
   | 'DISPOSISI_SEKJEN'
+  | 'DISPOSISI_BIRO'
   | 'SURAT_EKSTERNAL';
+
+export interface MeetingCategoryOption {
+  key: MeetingDocumentCategory;
+  label: string;
+  badgeLabel: string;
+  badgeClass: string;
+  badgeIcon: string;
+  description: string;
+}
+
+export const MEETING_CATEGORY_OPTIONS: MeetingCategoryOption[] = [
+  {
+    key: 'UNDANGAN_INTERNAL',
+    label: 'Undangan Internal',
+    badgeLabel: 'Undangan Internal',
+    badgeClass: 'bg-[#E8F5F7] text-[#215865] border-[#BCE3EB]',
+    badgeIcon: '🏢',
+    description: 'Rapat koordinasi antar unit kerja internal Sekretariat Dewan Nasional KEK.',
+  },
+  {
+    key: 'NASKAH_MASUK',
+    label: 'Daftar Naskah Masuk',
+    badgeLabel: 'Daftar Naskah Masuk',
+    badgeClass: 'bg-amber-50 text-amber-800 border-amber-200',
+    badgeIcon: '📥',
+    description: 'Rapat koordinasi berdasarkan agenda daftar naskah dinas atau surat masuk via SRIKANDI.',
+  },
+  {
+    key: 'DISPOSISI_SEKJEN',
+    label: 'Disposisi Sekjen',
+    badgeLabel: 'Disposisi Sekjen',
+    badgeClass: 'bg-indigo-50 text-indigo-700 border-indigo-200',
+    badgeIcon: '🏛️',
+    description: 'Tindak lanjut arahan atau disposisi resmi dari Sekretaris Jenderal Dewan Nasional KEK.',
+  },
+  {
+    key: 'DISPOSISI_BIRO',
+    label: 'Disposisi Biro',
+    badgeLabel: 'Disposisi Biro',
+    badgeClass: 'bg-purple-50 text-purple-700 border-purple-200',
+    badgeIcon: '📑',
+    description: 'Tindak lanjut arahan atau disposisi internal dari Kepala Biro / Pimpinan Unit Kerja.',
+  },
+  {
+    key: 'SURAT_DITUNDA',
+    label: 'Tunda Rapat',
+    badgeLabel: 'Tunda Rapat',
+    badgeClass: 'bg-rose-50 text-rose-700 border-rose-200',
+    badgeIcon: '⏳',
+    description: 'Agenda rapat mengalami penundaan jadwal atau penjadwalan ulang.',
+  },
+];
 
 export interface Meeting {
   id: string;
@@ -150,38 +206,51 @@ export function getMeetingCategoryInfo(
   const cat = (category || 'UNDANGAN_INTERNAL').toUpperCase();
   const sub = subCategory ? subCategory.toUpperCase() : null;
 
-  if (cat === 'SURAT_DITUNDA') {
+  if (cat === 'SURAT_DITUNDA' || cat === 'TUNDA_RAPAT') {
     return {
       key: 'SURAT_DITUNDA',
-      label: 'Surat Ditunda',
+      label: 'Tunda Rapat',
       subLabel: 'Rapat Ditunda',
-      badgeLabel: 'Surat Ditunda',
+      badgeLabel: 'Tunda Rapat',
       badgeClass: 'bg-rose-50 text-rose-700 border-rose-200',
       badgeIcon: '⏳',
       description: 'Agenda rapat mengalami penundaan jadwal atau penjadwalan ulang.',
     };
   }
 
-  if (cat === 'NASKAH_MASUK') {
-    if (sub === 'DISPOSISI_SEKJEN') {
-      return {
-        key: 'NASKAH_MASUK_DISPOSISI_SEKJEN',
-        label: 'Daftar Naskah Masuk / Disposisi SRIKANDI',
-        subLabel: 'Disposisi Sekjen (SRIKANDI)',
-        badgeLabel: 'Disposisi SRIKANDI • Sekjen',
-        badgeClass: 'bg-indigo-50 text-indigo-700 border-indigo-200',
-        badgeIcon: '📥',
-        description: 'Tindak lanjut arahan atau disposisi resmi dari Sekretaris Jenderal Dewan Nasional KEK via SRIKANDI.',
-      };
-    }
+  if (cat === 'DISPOSISI_SEKJEN' || (cat === 'NASKAH_MASUK' && sub === 'DISPOSISI_SEKJEN')) {
     return {
-      key: 'NASKAH_MASUK_SURAT_EKSTERNAL',
-      label: 'Daftar Naskah Masuk / Disposisi SRIKANDI',
-      subLabel: 'Surat Masuk SRIKANDI / Eksternal',
-      badgeLabel: 'Naskah Masuk • SRIKANDI',
+      key: 'DISPOSISI_SEKJEN',
+      label: 'Disposisi Sekjen',
+      subLabel: 'Disposisi Sekjen (SRIKANDI)',
+      badgeLabel: 'Disposisi Sekjen',
+      badgeClass: 'bg-indigo-50 text-indigo-700 border-indigo-200',
+      badgeIcon: '🏛️',
+      description: 'Tindak lanjut arahan atau disposisi resmi dari Sekretaris Jenderal Dewan Nasional KEK.',
+    };
+  }
+
+  if (cat === 'DISPOSISI_BIRO' || (cat === 'NASKAH_MASUK' && sub === 'DISPOSISI_BIRO')) {
+    return {
+      key: 'DISPOSISI_BIRO',
+      label: 'Disposisi Biro',
+      subLabel: 'Disposisi Internal Biro',
+      badgeLabel: 'Disposisi Biro',
+      badgeClass: 'bg-purple-50 text-purple-700 border-purple-200',
+      badgeIcon: '📑',
+      description: 'Tindak lanjut arahan atau disposisi internal dari Kepala Biro / Pimpinan Unit Kerja.',
+    };
+  }
+
+  if (cat === 'NASKAH_MASUK' || cat === 'DAFTAR_NASKAH_MASUK') {
+    return {
+      key: 'NASKAH_MASUK',
+      label: 'Daftar Naskah Masuk',
+      subLabel: sub === 'SURAT_EKSTERNAL' ? 'Surat Masuk Eksternal' : null,
+      badgeLabel: 'Daftar Naskah Masuk',
       badgeClass: 'bg-amber-50 text-amber-800 border-amber-200',
-      badgeIcon: '✉️',
-      description: 'Rapat koordinasi berdasarkan disposisi naskah dinas atau surat masuk via SRIKANDI.',
+      badgeIcon: '📥',
+      description: 'Rapat koordinasi berdasarkan agenda daftar naskah dinas atau surat masuk via SRIKANDI.',
     };
   }
 

@@ -232,6 +232,12 @@ export function CreateMeetingDialog({ isOpen, onClose }: CreateMeetingDialogProp
         progressStatus: statusRapat,
         meetingNumber: registrationNumber.trim() || undefined,
         documentCategory: kategoriRapat,
+        documentSubCategory:
+          kategoriRapat === 'DISPOSISI_SEKJEN'
+            ? 'DISPOSISI_SEKJEN'
+            : kategoriRapat === 'DISPOSISI_BIRO'
+            ? 'DISPOSISI_BIRO'
+            : undefined,
         sourceOrigin: sourceOrigin.trim() || undefined,
         postponeReason: postponeReason.trim() || undefined,
         invitationDocUrl: invitationDoc?.url || undefined,
@@ -418,10 +424,12 @@ export function CreateMeetingDialog({ isOpen, onClose }: CreateMeetingDialogProp
             <select
               value={kategoriRapat}
               onChange={(e) => setKategoriRapat(e.target.value)}
-              className="w-full px-3 py-2 rounded-xl border border-slate-300 bg-white text-slate-800"
+              className="w-full px-3 py-2 rounded-xl border border-slate-300 bg-white text-slate-800 text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-[#31889C]/25"
             >
               <option value="UNDANGAN_INTERNAL">Undangan Internal</option>
-              <option value="NASKAH_MASUK">Daftar Naskah Masuk / Disposisi SRIKANDI</option>
+              <option value="NASKAH_MASUK">Daftar Naskah Masuk</option>
+              <option value="DISPOSISI_SEKJEN">Disposisi Sekjen</option>
+              <option value="DISPOSISI_BIRO">Disposisi Biro</option>
               <option value="SURAT_DITUNDA">Tunda Rapat</option>
             </select>
 
@@ -430,17 +438,35 @@ export function CreateMeetingDialog({ isOpen, onClose }: CreateMeetingDialogProp
                 type="text"
                 value={sourceOrigin}
                 onChange={(e) => setSourceOrigin(e.target.value)}
-                placeholder="Asal naskah / Disposisi SRIKANDI / instansi pengirim..."
+                placeholder="Asal naskah masuk / instansi pengirim (opsional)..."
                 className="w-full px-3 py-1.5 rounded-lg border border-slate-300 bg-white text-xs"
               />
             )}
-            {kategoriRapat === 'SURAT_DITUNDA' && (
+            {kategoriRapat === 'DISPOSISI_SEKJEN' && (
+              <input
+                type="text"
+                value={sourceOrigin}
+                onChange={(e) => setSourceOrigin(e.target.value)}
+                placeholder="Nomor agenda / catatan Disposisi Sekjen via SRIKANDI (opsional)..."
+                className="w-full px-3 py-1.5 rounded-lg border border-indigo-200 bg-white text-xs"
+              />
+            )}
+            {kategoriRapat === 'DISPOSISI_BIRO' && (
+              <input
+                type="text"
+                value={sourceOrigin}
+                onChange={(e) => setSourceOrigin(e.target.value)}
+                placeholder="Nomor / catatan Disposisi Biro (opsional)..."
+                className="w-full px-3 py-1.5 rounded-lg border border-purple-200 bg-white text-xs"
+              />
+            )}
+            {(kategoriRapat === 'SURAT_DITUNDA' || kategoriRapat === 'TUNDA_RAPAT') && (
               <input
                 type="text"
                 required
                 value={postponeReason}
                 onChange={(e) => setPostponeReason(e.target.value)}
-                placeholder="Alasan penundaan rapat..."
+                placeholder="Alasan / keterangan penundaan rapat *..."
                 className="w-full px-3 py-1.5 rounded-lg border border-rose-300 bg-white text-xs"
               />
             )}

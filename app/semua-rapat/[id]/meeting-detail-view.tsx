@@ -484,16 +484,10 @@ export function MeetingDetailView({
   };
 
   const handleSaveCategory = async () => {
-    if (editCategoryForm.category === 'SURAT_DITUNDA' && !editCategoryForm.postponeReason?.trim()) {
+    const isPostponed =
+      editCategoryForm.category === 'SURAT_DITUNDA' || editCategoryForm.category === 'TUNDA_RAPAT';
+    if (isPostponed && !editCategoryForm.postponeReason?.trim()) {
       toast.warning('Mohon isi alasan penundaan rapat');
-      return;
-    }
-    if (
-      editCategoryForm.category === 'NASKAH_MASUK' &&
-      editCategoryForm.subCategory === 'SURAT_EKSTERNAL' &&
-      !editCategoryForm.sourceOrigin?.trim()
-    ) {
-      toast.warning('Mohon isi instansi pengirim surat eksternal');
       return;
     }
 
@@ -934,7 +928,7 @@ export function MeetingDetailView({
               </div>
             )}
             <MeetingProgressBadge progressStatus={(meeting as any).progressStatus} status={status} size="lg" showSubtitle />
-            {/* Kategori Naskah / Status Penundaan */}
+            {/* Kategori Rapat */}
             {(() => {
               const catInfo = getMeetingCategoryInfo(categoryData.category, categoryData.subCategory);
               return (
@@ -945,9 +939,6 @@ export function MeetingDetailView({
                   >
                     <span>{catInfo.badgeIcon}</span>
                     <span>{catInfo.label}</span>
-                    {categoryData.category === 'NASKAH_MASUK' && catInfo.subLabel && (
-                      <span className="opacity-90 font-medium">({catInfo.subLabel})</span>
-                    )}
                   </span>
                   {canEditMeeting && (
                     <button
@@ -957,7 +948,7 @@ export function MeetingDetailView({
                         setIsEditCategoryModalOpen(true);
                       }}
                       className="p-1.5 rounded-lg text-slate-400 hover:text-[#31889C] hover:bg-[#F0F9FA] transition-colors cursor-pointer"
-                      title="Ubah Kategori Naskah / Status Penundaan"
+                      title="Ubah Kategori Rapat"
                     >
                       <Edit3 className="w-3.5 h-3.5" />
                     </button>
@@ -1104,15 +1095,16 @@ export function MeetingDetailView({
         </div>
 
         {/* Banner Khusus: Surat Ditunda */}
-        {categoryData.category === 'SURAT_DITUNDA' && (
+        {/* Banner Khusus: Tunda Rapat */}
+        {(categoryData.category === 'SURAT_DITUNDA' || categoryData.category === 'TUNDA_RAPAT') && (
           <div className="bg-gradient-to-r from-amber-50 to-orange-50 border-2 border-amber-300/80 rounded-xl p-4 text-amber-950 shadow-xs flex items-start gap-3.5">
             <div className="p-2 bg-amber-500 text-white rounded-lg font-bold shrink-0 text-base shadow-xs">
-              ⚠️
+              ⏳
             </div>
             <div className="flex-1 min-w-0">
               <div className="flex items-center justify-between gap-2 flex-wrap">
                 <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-black bg-amber-200/80 text-amber-900 uppercase tracking-wide">
-                  Rapat Ditunda
+                  Tunda Rapat
                 </span>
                 {canEditMeeting && (
                   <button
@@ -1141,24 +1133,18 @@ export function MeetingDetailView({
           </div>
         )}
 
-        {/* Banner Khusus: Naskah Masuk */}
-        {categoryData.category === 'NASKAH_MASUK' && (
+        {/* Banner Khusus: Disposisi Sekjen */}
+        {(categoryData.category === 'DISPOSISI_SEKJEN' ||
+          (categoryData.category === 'NASKAH_MASUK' && categoryData.subCategory === 'DISPOSISI_SEKJEN')) && (
           <div className="bg-gradient-to-r from-indigo-50/70 via-sky-50/50 to-blue-50/70 border border-indigo-200 rounded-xl p-3.5 text-indigo-950 shadow-xs flex items-start gap-3">
             <div className="p-2 bg-indigo-600 text-white rounded-lg font-bold shrink-0 text-sm shadow-xs">
-              📥
+              🏛️
             </div>
             <div className="flex-1 min-w-0">
               <div className="flex items-center justify-between gap-2 flex-wrap">
-                <div className="flex items-center gap-2">
-                  <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold bg-indigo-100 text-indigo-900">
-                    Daftar Naskah Masuk
-                  </span>
-                  <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold bg-white border border-indigo-200 text-indigo-800">
-                    {categoryData.subCategory === 'DISPOSISI_SEKJEN'
-                      ? 'Disposisi Sekjen'
-                      : 'Surat Eksternal (Surat Masuk Luar)'}
-                  </span>
-                </div>
+                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold bg-indigo-100 text-indigo-900">
+                  Disposisi Sekjen
+                </span>
                 {canEditMeeting && (
                   <button
                     type="button"
@@ -1168,33 +1154,96 @@ export function MeetingDetailView({
                     }}
                     className="text-xs font-bold text-indigo-700 hover:text-indigo-950 underline cursor-pointer"
                   >
-                    Edit Naskah Masuk
+                    Edit Kategori
                   </button>
                 )}
               </div>
               <p className="text-xs text-indigo-900 mt-1.5 leading-relaxed">
-                {categoryData.subCategory === 'DISPOSISI_SEKJEN' ? (
-                  <>
-                    <span className="font-semibold">Mandat Pimpinan:</span> Rapat koordinasi tindak lanjut berdasarkan arahan dan disposisi Sekretariat Jenderal Dewan Nasional KEK.
-                    {categoryData.sourceOrigin && (
-                      <span className="block mt-1 font-mono text-[11.5px] text-indigo-950 bg-white/80 px-2.5 py-1 rounded border border-indigo-100">
-                        No. Disposisi / Agenda: {categoryData.sourceOrigin}
-                      </span>
-                    )}
-                  </>
-                ) : (
-                  <>
-                    <span className="font-semibold">Instansi Pengirim:</span>{' '}
-                    <span className="font-bold text-indigo-950">{categoryData.sourceOrigin || 'Instansi Luar'}</span>
-                    <span className="block mt-0.5 text-[11.5px] text-indigo-800">
-                      Rapat pembahasan atas permohonan atau surat naskah masuk dari kementerian/lembaga/badan usaha luar Sekretariat KEK.
-                    </span>
-                  </>
+                <span className="font-semibold">Mandat Pimpinan:</span> Rapat koordinasi tindak lanjut berdasarkan arahan dan disposisi Sekretariat Jenderal Dewan Nasional KEK.
+                {categoryData.sourceOrigin && (
+                  <span className="block mt-1 font-mono text-[11.5px] text-indigo-950 bg-white/80 px-2.5 py-1 rounded border border-indigo-100">
+                    No. Disposisi / Agenda: {categoryData.sourceOrigin}
+                  </span>
                 )}
               </p>
             </div>
           </div>
         )}
+
+        {/* Banner Khusus: Disposisi Biro */}
+        {(categoryData.category === 'DISPOSISI_BIRO' ||
+          (categoryData.category === 'NASKAH_MASUK' && categoryData.subCategory === 'DISPOSISI_BIRO')) && (
+          <div className="bg-gradient-to-r from-purple-50/70 via-fuchsia-50/30 to-pink-50/50 border border-purple-200 rounded-xl p-3.5 text-purple-950 shadow-xs flex items-start gap-3">
+            <div className="p-2 bg-purple-600 text-white rounded-lg font-bold shrink-0 text-sm shadow-xs">
+              📑
+            </div>
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center justify-between gap-2 flex-wrap">
+                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold bg-purple-100 text-purple-900">
+                  Disposisi Biro
+                </span>
+                {canEditMeeting && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setEditCategoryForm({ ...categoryData });
+                      setIsEditCategoryModalOpen(true);
+                    }}
+                    className="text-xs font-bold text-purple-700 hover:text-purple-950 underline cursor-pointer"
+                  >
+                    Edit Kategori
+                  </button>
+                )}
+              </div>
+              <p className="text-xs text-purple-900 mt-1.5 leading-relaxed">
+                <span className="font-semibold">Arahan Unit Kerja:</span> Rapat koordinasi berdasarkan disposisi atau arahan Kepala Biro.
+                {categoryData.sourceOrigin && (
+                  <span className="block mt-1 font-mono text-[11.5px] text-purple-950 bg-white/80 px-2.5 py-1 rounded border border-purple-100">
+                    No. / Catatan Disposisi: {categoryData.sourceOrigin}
+                  </span>
+                )}
+              </p>
+            </div>
+          </div>
+        )}
+
+        {/* Banner Khusus: Daftar Naskah Masuk */}
+        {categoryData.category === 'NASKAH_MASUK' &&
+          categoryData.subCategory !== 'DISPOSISI_SEKJEN' &&
+          categoryData.subCategory !== 'DISPOSISI_BIRO' && (
+            <div className="bg-gradient-to-r from-amber-50/70 via-yellow-50/40 to-orange-50/50 border border-amber-200 rounded-xl p-3.5 text-amber-950 shadow-xs flex items-start gap-3">
+              <div className="p-2 bg-amber-600 text-white rounded-lg font-bold shrink-0 text-sm shadow-xs">
+                📥
+              </div>
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center justify-between gap-2 flex-wrap">
+                  <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold bg-amber-100 text-amber-900">
+                    Daftar Naskah Masuk
+                  </span>
+                  {canEditMeeting && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setEditCategoryForm({ ...categoryData });
+                        setIsEditCategoryModalOpen(true);
+                      }}
+                      className="text-xs font-bold text-amber-700 hover:text-amber-950 underline cursor-pointer"
+                    >
+                      Edit Kategori
+                    </button>
+                  )}
+                </div>
+                <p className="text-xs text-amber-900 mt-1.5 leading-relaxed">
+                  <span className="font-semibold">Naskah Dinas Masuk:</span> Rapat koordinasi tindak lanjut atas surat naskah dinas masuk via SRIKANDI.
+                  {categoryData.sourceOrigin && (
+                    <span className="block mt-1 text-[11.5px] text-amber-950 bg-white/80 px-2.5 py-1 rounded border border-amber-100">
+                      Asal Instansi / No. Surat: {categoryData.sourceOrigin}
+                    </span>
+                  )}
+                </p>
+              </div>
+            </div>
+          )}
 
         <div>
           <span className="text-[12px] font-bold text-[#31889C] uppercase tracking-wider block">

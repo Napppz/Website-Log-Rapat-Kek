@@ -623,13 +623,23 @@ export async function updateMeetingCategoryAction(
     const resolvedCategory = data.category || data.documentCategory || 'UNDANGAN_INTERNAL';
     const resolvedSubCategory = data.subCategory || data.documentSubCategory || null;
 
+    const isPostponed = resolvedCategory === 'SURAT_DITUNDA' || resolvedCategory === 'TUNDA_RAPAT';
+    const hasSourceOrigin = ['NASKAH_MASUK', 'DISPOSISI_SEKJEN', 'DISPOSISI_BIRO'].includes(resolvedCategory);
+
     const updated = await prisma.meeting.update({
       where: { id: meetingId },
       data: {
         documentCategory: resolvedCategory,
-        documentSubCategory: resolvedCategory === 'NASKAH_MASUK' ? resolvedSubCategory : null,
-        sourceOrigin: resolvedCategory === 'NASKAH_MASUK' ? (data.sourceOrigin || null) : null,
-        postponeReason: resolvedCategory === 'SURAT_DITUNDA' ? (data.postponeReason || null) : null,
+        documentSubCategory:
+          resolvedCategory === 'NASKAH_MASUK'
+            ? resolvedSubCategory
+            : resolvedCategory === 'DISPOSISI_SEKJEN'
+            ? 'DISPOSISI_SEKJEN'
+            : resolvedCategory === 'DISPOSISI_BIRO'
+            ? 'DISPOSISI_BIRO'
+            : null,
+        sourceOrigin: hasSourceOrigin ? (data.sourceOrigin || null) : null,
+        postponeReason: isPostponed ? (data.postponeReason || null) : null,
       },
       include: { primaryBiro: true },
     });

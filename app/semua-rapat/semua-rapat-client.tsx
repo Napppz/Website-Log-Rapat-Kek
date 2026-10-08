@@ -157,18 +157,19 @@ export function SemuaRapatClient({
         if (dayIdx !== null && parsed.dayOfWeek !== dayIdx) return false;
       }
       if (kategoriParam && kategoriParam !== 'ALL') {
-        const cat = (m as any).documentCategory || 'UNDANGAN_INTERNAL';
-        const subCat = (m as any).documentSubCategory;
-        if (kategoriParam === 'UNDANGAN_INTERNAL' && cat !== 'UNDANGAN_INTERNAL') {
-          return false;
-        } else if (kategoriParam === 'NASKAH_MASUK' && cat !== 'NASKAH_MASUK') {
-          return false;
-        } else if (kategoriParam === 'DISPOSISI_SEKJEN' && (cat !== 'NASKAH_MASUK' || subCat !== 'DISPOSISI_SEKJEN')) {
-          return false;
-        } else if (kategoriParam === 'SURAT_EKSTERNAL' && (cat !== 'NASKAH_MASUK' || subCat !== 'SURAT_EKSTERNAL')) {
-          return false;
-        } else if (kategoriParam === 'SURAT_DITUNDA' && cat !== 'SURAT_DITUNDA') {
-          return false;
+        const cat = ((m as any).documentCategory || 'UNDANGAN_INTERNAL').toUpperCase();
+        const subCat = ((m as any).documentSubCategory || '').toUpperCase();
+        if (kategoriParam === 'UNDANGAN_INTERNAL') {
+          if (cat !== 'UNDANGAN_INTERNAL') return false;
+        } else if (kategoriParam === 'NASKAH_MASUK') {
+          if (cat !== 'NASKAH_MASUK' && cat !== 'DAFTAR_NASKAH_MASUK') return false;
+          if (subCat === 'DISPOSISI_SEKJEN' || subCat === 'DISPOSISI_BIRO') return false;
+        } else if (kategoriParam === 'DISPOSISI_SEKJEN') {
+          if (cat !== 'DISPOSISI_SEKJEN' && !(cat === 'NASKAH_MASUK' && subCat === 'DISPOSISI_SEKJEN')) return false;
+        } else if (kategoriParam === 'DISPOSISI_BIRO') {
+          if (cat !== 'DISPOSISI_BIRO' && !(cat === 'NASKAH_MASUK' && subCat === 'DISPOSISI_BIRO')) return false;
+        } else if (kategoriParam === 'SURAT_DITUNDA' || kategoriParam === 'TUNDA_RAPAT') {
+          if (cat !== 'SURAT_DITUNDA' && cat !== 'TUNDA_RAPAT') return false;
         }
       }
       if (searchFilter.trim()) {
@@ -199,21 +200,41 @@ export function SemuaRapatClient({
     (m) => normalizeProgressStatus(m.progressStatus || mapStatusToProgress(m.status)) === 'Selesai'
   ).length;
 
-  const countUndanganInternal = teamFilteredMeetings.filter(
-    (m) => ((m as any).documentCategory || 'UNDANGAN_INTERNAL') === 'UNDANGAN_INTERNAL'
-  ).length;
-  const countNaskahMasuk = teamFilteredMeetings.filter(
-    (m) => (m as any).documentCategory === 'NASKAH_MASUK'
-  ).length;
-  const countSuratDitunda = teamFilteredMeetings.filter(
-    (m) => (m as any).documentCategory === 'SURAT_DITUNDA'
-  ).length;
+  const countUndanganInternal = teamFilteredMeetings.filter((m) => {
+    const cat = ((m as any).documentCategory || 'UNDANGAN_INTERNAL').toUpperCase();
+    return cat === 'UNDANGAN_INTERNAL';
+  }).length;
+
+  const countNaskahMasuk = teamFilteredMeetings.filter((m) => {
+    const cat = ((m as any).documentCategory || '').toUpperCase();
+    const sub = ((m as any).documentSubCategory || '').toUpperCase();
+    return (cat === 'NASKAH_MASUK' || cat === 'DAFTAR_NASKAH_MASUK') && sub !== 'DISPOSISI_SEKJEN' && sub !== 'DISPOSISI_BIRO';
+  }).length;
+
+  const countDisposisiSekjen = teamFilteredMeetings.filter((m) => {
+    const cat = ((m as any).documentCategory || '').toUpperCase();
+    const sub = ((m as any).documentSubCategory || '').toUpperCase();
+    return cat === 'DISPOSISI_SEKJEN' || (cat === 'NASKAH_MASUK' && sub === 'DISPOSISI_SEKJEN');
+  }).length;
+
+  const countDisposisiBiro = teamFilteredMeetings.filter((m) => {
+    const cat = ((m as any).documentCategory || '').toUpperCase();
+    const sub = ((m as any).documentSubCategory || '').toUpperCase();
+    return cat === 'DISPOSISI_BIRO' || (cat === 'NASKAH_MASUK' && sub === 'DISPOSISI_BIRO');
+  }).length;
+
+  const countTundaRapat = teamFilteredMeetings.filter((m) => {
+    const cat = ((m as any).documentCategory || '').toUpperCase();
+    return cat === 'SURAT_DITUNDA' || cat === 'TUNDA_RAPAT';
+  }).length;
 
   const categoryFilters = [
     { label: 'Semua Kategori', value: 'ALL', count: teamFilteredMeetings.length, icon: '🏷️' },
     { label: 'Undangan Internal', value: 'UNDANGAN_INTERNAL', count: countUndanganInternal, icon: '🏢' },
     { label: 'Daftar Naskah Masuk', value: 'NASKAH_MASUK', count: countNaskahMasuk, icon: '📥' },
-    { label: 'Surat Ditunda', value: 'SURAT_DITUNDA', count: countSuratDitunda, icon: '⏳' },
+    { label: 'Disposisi Sekjen', value: 'DISPOSISI_SEKJEN', count: countDisposisiSekjen, icon: '🏛️' },
+    { label: 'Disposisi Biro', value: 'DISPOSISI_BIRO', count: countDisposisiBiro, icon: '📑' },
+    { label: 'Tunda Rapat', value: 'SURAT_DITUNDA', count: countTundaRapat, icon: '⏳' },
   ];
 
   const handleSelectCategory = (val: string) => {

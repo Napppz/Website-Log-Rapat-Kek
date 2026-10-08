@@ -416,6 +416,12 @@ export default function BuatRapatPage() {
         progressStatus: statusRapat,
         meetingNumber: registrationNumber.trim() || undefined,
         documentCategory: kategoriRapat,
+        documentSubCategory:
+          kategoriRapat === 'DISPOSISI_SEKJEN'
+            ? 'DISPOSISI_SEKJEN'
+            : kategoriRapat === 'DISPOSISI_BIRO'
+            ? 'DISPOSISI_BIRO'
+            : undefined,
         sourceOrigin: sourceOrigin.trim() || undefined,
         postponeReason: postponeReason.trim() || undefined,
         invitationDocUrl: invitationDoc?.url || undefined,
@@ -774,11 +780,13 @@ export default function BuatRapatPage() {
                   id="kategori-rapat-select"
                   value={kategoriRapat}
                   onChange={(e) => setKategoriRapat(e.target.value)}
-                  className="w-full px-4 pr-10 h-[46px] rounded-xl border border-slate-300 bg-white text-slate-800 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-[#1E6B7B]/25 focus:border-[#1E6B7B] shadow-2xs cursor-pointer appearance-none transition-all hover:border-slate-400"
+                  className="w-full px-4 pr-10 h-[46px] rounded-xl border border-slate-300 bg-white text-slate-800 text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-[#1E6B7B]/25 focus:border-[#1E6B7B] shadow-2xs cursor-pointer appearance-none transition-all hover:border-slate-400"
                 >
-                  <option value="UNDANGAN_INTERNAL">Undangan Internal — Rapat koordinasi internal KEK</option>
-                  <option value="NASKAH_MASUK">Daftar Naskah Masuk / Disposisi SRIKANDI — Disposisi Sekjen &amp; Surat Dinas Masuk</option>
-                  <option value="SURAT_DITUNDA">Tunda Rapat — Penjadwalan ulang / penundaan agenda</option>
+                  <option value="UNDANGAN_INTERNAL">Undangan Internal</option>
+                  <option value="NASKAH_MASUK">Daftar Naskah Masuk</option>
+                  <option value="DISPOSISI_SEKJEN">Disposisi Sekjen</option>
+                  <option value="DISPOSISI_BIRO">Disposisi Biro</option>
+                  <option value="SURAT_DITUNDA">Tunda Rapat</option>
                 </select>
                 <ChevronDown className="w-4 h-4 text-slate-400 absolute right-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
               </div>
@@ -787,19 +795,49 @@ export default function BuatRapatPage() {
               {kategoriRapat === 'NASKAH_MASUK' && (
                 <div className="mt-3 animate-in fade-in space-y-1.5 pt-2 border-t border-slate-200/80">
                   <label className="block text-xs font-semibold text-slate-700">
-                    Asal Naskah Masuk / Disposisi SRIKANDI (Instansi / No. Surat):
+                    Asal Naskah Masuk / Instansi Pengirim (Opsional):
                   </label>
                   <input
                     type="text"
                     value={sourceOrigin}
                     onChange={(e) => setSourceOrigin(e.target.value)}
-                    placeholder="Contoh: Disposisi SRIKANDI No. ND-142/SES.KEK/2026 atau Surat Kemenko..."
+                    placeholder="Contoh: Kementerian Koordinator Bidang Perekonomian / BUPP KEK Batam..."
                     className="w-full px-3.5 h-[40px] rounded-xl border border-slate-300 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-[#1E6B7B]/20 focus:border-[#1E6B7B]"
                   />
                 </div>
               )}
 
-              {kategoriRapat === 'SURAT_DITUNDA' && (
+              {kategoriRapat === 'DISPOSISI_SEKJEN' && (
+                <div className="mt-3 animate-in fade-in space-y-1.5 pt-2 border-t border-indigo-200/80">
+                  <label className="block text-xs font-semibold text-indigo-900">
+                    Nomor Agenda / Catatan Disposisi Sekjen (Opsional):
+                  </label>
+                  <input
+                    type="text"
+                    value={sourceOrigin}
+                    onChange={(e) => setSourceOrigin(e.target.value)}
+                    placeholder="Contoh: No. Agenda 184 / Disposisi Sekjen via SRIKANDI..."
+                    className="w-full px-3.5 h-[40px] rounded-xl border border-slate-300 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-600"
+                  />
+                </div>
+              )}
+
+              {kategoriRapat === 'DISPOSISI_BIRO' && (
+                <div className="mt-3 animate-in fade-in space-y-1.5 pt-2 border-t border-purple-200/80">
+                  <label className="block text-xs font-semibold text-purple-900">
+                    Nomor / Catatan Disposisi Biro (Opsional):
+                  </label>
+                  <input
+                    type="text"
+                    value={sourceOrigin}
+                    onChange={(e) => setSourceOrigin(e.target.value)}
+                    placeholder="Contoh: Disposisi Kepala Biro IKK No. ND-082 / Nota Dinas Internal..."
+                    className="w-full px-3.5 h-[40px] rounded-xl border border-slate-300 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-purple-600"
+                  />
+                </div>
+              )}
+
+              {(kategoriRapat === 'SURAT_DITUNDA' || kategoriRapat === 'TUNDA_RAPAT') && (
                 <div className="mt-3 animate-in fade-in space-y-1.5 pt-2 border-t border-rose-200/80">
                   <label className="block text-xs font-semibold text-rose-700">
                     Alasan / Keterangan Penundaan Rapat: <span className="text-red-500">*</span>

@@ -455,13 +455,19 @@ export function MeetingTable({
 
       // Check category filter
       if (filterCategory && filterCategory !== 'ALL') {
-        const cat = (m as any).documentCategory || 'UNDANGAN_INTERNAL';
-        if (filterCategory === 'UNDANGAN_INTERNAL' && cat !== 'UNDANGAN_INTERNAL') {
-          return false;
-        } else if (filterCategory === 'NASKAH_MASUK' && cat !== 'NASKAH_MASUK') {
-          return false;
-        } else if (filterCategory === 'SURAT_DITUNDA' && cat !== 'SURAT_DITUNDA') {
-          return false;
+        const cat = ((m as any).documentCategory || 'UNDANGAN_INTERNAL').toUpperCase();
+        const subCat = ((m as any).documentSubCategory || '').toUpperCase();
+        if (filterCategory === 'UNDANGAN_INTERNAL') {
+          if (cat !== 'UNDANGAN_INTERNAL') return false;
+        } else if (filterCategory === 'NASKAH_MASUK') {
+          if (cat !== 'NASKAH_MASUK' && cat !== 'DAFTAR_NASKAH_MASUK') return false;
+          if (subCat === 'DISPOSISI_SEKJEN' || subCat === 'DISPOSISI_BIRO') return false;
+        } else if (filterCategory === 'DISPOSISI_SEKJEN') {
+          if (cat !== 'DISPOSISI_SEKJEN' && !(cat === 'NASKAH_MASUK' && subCat === 'DISPOSISI_SEKJEN')) return false;
+        } else if (filterCategory === 'DISPOSISI_BIRO') {
+          if (cat !== 'DISPOSISI_BIRO' && !(cat === 'NASKAH_MASUK' && subCat === 'DISPOSISI_BIRO')) return false;
+        } else if (filterCategory === 'SURAT_DITUNDA' || filterCategory === 'TUNDA_RAPAT') {
+          if (cat !== 'SURAT_DITUNDA' && cat !== 'TUNDA_RAPAT') return false;
         }
       }
 
@@ -782,25 +788,27 @@ export function MeetingTable({
                               {meeting.title}
                             </Link>
 
-                            {/* Kategori Naskah & Status Penundaan */}
+                            {/* Kategori Rapat */}
                             {(() => {
                               const catInfo = getMeetingCategoryInfo(meeting.documentCategory, meeting.documentSubCategory);
+                              const isPostponed = meeting.documentCategory === 'SURAT_DITUNDA' || meeting.documentCategory === 'TUNDA_RAPAT';
                               return (
                                 <div className="flex items-center gap-1.5 flex-wrap">
                                   <span className={cn('inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-bold border', catInfo.badgeClass)}>
-                                    {catInfo.badgeLabel}
+                                    <span>{catInfo.badgeIcon}</span>
+                                    <span>{catInfo.badgeLabel}</span>
                                   </span>
                                   {meeting.meetingKind && (
                                     <span className="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-bold bg-indigo-50 text-indigo-700 border border-indigo-200">
                                       {meeting.meetingKind}
                                     </span>
                                   )}
-                                  {meeting.documentCategory === 'SURAT_DITUNDA' && meeting.postponeReason && (
+                                  {isPostponed && meeting.postponeReason && (
                                     <span className="text-[11px] text-rose-600 italic truncate max-w-[200px]" title={meeting.postponeReason}>
                                       • {meeting.postponeReason}
                                     </span>
                                   )}
-                                  {meeting.documentCategory === 'NASKAH_MASUK' && meeting.sourceOrigin && (
+                                  {!isPostponed && meeting.sourceOrigin && (
                                     <span className="text-[11px] text-slate-500 truncate max-w-[200px]" title={meeting.sourceOrigin}>
                                       • {meeting.sourceOrigin}
                                     </span>
