@@ -11,7 +11,8 @@ export const createUserSchema = z.object({
   email: z.string().trim().toLowerCase().email('Format email tidak valid'),
   password: z.string().min(6, 'Password minimal 6 karakter'),
   role: userRoleEnum.default('STAFF'),
-  biroId: z.string().min(1, 'Biro penempatan wajib dipilih'),
+  biroId: z.string().optional().default('BIRO-IKK'),
+  teamId: z.string().optional().nullable(),
   isActive: z.boolean().default(true),
 });
 
@@ -25,7 +26,8 @@ export const updateUserSchema = z.object({
     .nullable()
     .transform((val) => (val && val.trim().length > 0 ? val.trim() : null)),
   role: userRoleEnum,
-  biroId: z.string().min(1, 'Biro penempatan wajib dipilih'),
+  biroId: z.string().optional().default('BIRO-IKK'),
+  teamId: z.string().optional().nullable(),
   isActive: z.boolean().default(true),
 });
 

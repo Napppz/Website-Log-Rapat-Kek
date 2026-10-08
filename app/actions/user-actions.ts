@@ -36,6 +36,7 @@ export async function getUsersAction() {
         email: true,
         role: true,
         biroId: true,
+        teamId: true,
         isActive: true,
         createdAt: true,
         updatedAt: true,
@@ -45,6 +46,13 @@ export async function getUsersAction() {
             code: true,
             name: true,
             shortName: true,
+          },
+        },
+        team: {
+          select: {
+            id: true,
+            code: true,
+            name: true,
           },
         },
       },
@@ -71,7 +79,7 @@ export async function createUserAction(input: CreateUserInput) {
       return { success: false, error: `Validasi gagal: ${errorMsg}` };
     }
 
-    const { name, email, password, role, biroId, isActive } = parsed.data;
+    const { name, email, password, role, teamId, isActive } = parsed.data;
 
     // Check unique email
     const existing = await prisma.user.findUnique({
@@ -79,6 +87,15 @@ export async function createUserAction(input: CreateUserInput) {
     });
     if (existing) {
       return { success: false, error: 'Email tersebut sudah terdaftar di sistem.' };
+    }
+
+    // Resolve biroId from team if teamId is provided, or default to BIRO-IKK
+    let biroId = parsed.data.biroId || 'BIRO-IKK';
+    if (teamId) {
+      const team = await prisma.biroTeam.findUnique({ where: { id: teamId } });
+      if (team) {
+        biroId = team.biroId;
+      }
     }
 
     // Check biro exists
@@ -101,6 +118,7 @@ export async function createUserAction(input: CreateUserInput) {
         password: hashedPassword,
         role,
         biroId,
+        teamId: teamId || null,
         isActive,
       },
       select: {
@@ -109,9 +127,11 @@ export async function createUserAction(input: CreateUserInput) {
         email: true,
         role: true,
         biroId: true,
+        teamId: true,
         isActive: true,
         createdAt: true,
         biro: true,
+        team: true,
       },
     });
 
@@ -137,7 +157,7 @@ export async function updateUserAction(input: UpdateUserInput) {
       return { success: false, error: `Validasi gagal: ${errorMsg}` };
     }
 
-    const { id, name, email, password, role, biroId, isActive } = parsed.data;
+    const { id, name, email, password, role, teamId, isActive } = parsed.data;
 
     const existing = await prisma.user.findUnique({
       where: { id },
@@ -156,6 +176,14 @@ export async function updateUserAction(input: UpdateUserInput) {
       }
     }
 
+    let biroId = parsed.data.biroId || existing.biroId || 'BIRO-IKK';
+    if (teamId) {
+      const team = await prisma.biroTeam.findUnique({ where: { id: teamId } });
+      if (team) {
+        biroId = team.biroId;
+      }
+    }
+
     // Ensure biro exists
     const biro = await prisma.biro.findUnique({
       where: { id: biroId },
@@ -170,6 +198,7 @@ export async function updateUserAction(input: UpdateUserInput) {
       email,
       role,
       biroId,
+      teamId: teamId !== undefined ? teamId : existing.teamId,
       isActive,
     };
 
@@ -186,10 +215,12 @@ export async function updateUserAction(input: UpdateUserInput) {
         email: true,
         role: true,
         biroId: true,
+        teamId: true,
         isActive: true,
         createdAt: true,
         updatedAt: true,
         biro: true,
+        team: true,
       },
     });
 

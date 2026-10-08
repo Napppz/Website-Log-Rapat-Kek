@@ -42,8 +42,8 @@ export default async function PenggunaPage() {
     );
   }
 
-  // Fetch users & biros for SUPER_ADMIN
-  const [users, biros] = await withDbRetry(async () =>
+  // Fetch users & 3 canonical teams for SUPER_ADMIN
+  const [users, dbTeams] = await withDbRetry(async () =>
     Promise.all([
       prisma.user.findMany({
         select: {
@@ -52,6 +52,7 @@ export default async function PenggunaPage() {
           email: true,
           role: true,
           biroId: true,
+          teamId: true,
           isActive: true,
           createdAt: true,
           biro: {
@@ -62,21 +63,41 @@ export default async function PenggunaPage() {
               shortName: true,
             },
           },
+          team: {
+            select: {
+              id: true,
+              code: true,
+              name: true,
+            },
+          },
         },
         orderBy: [{ isActive: 'desc' }, { role: 'asc' }, { name: 'asc' }],
       }),
-      prisma.biro.findMany({
-        where: { isActive: true },
-        select: { id: true, code: true, shortName: true, name: true },
-        orderBy: { code: 'asc' },
+      prisma.biroTeam.findMany({
+        where: {
+          code: { in: ['INV', 'KS', 'KOM'] },
+          isActive: true,
+        },
+        select: { id: true, code: true, name: true, biroId: true },
       }),
     ])
   );
 
+  const teamOrder: Record<string, number> = { INV: 1, KS: 2, KOM: 3 };
+  const sortedTeams = dbTeams
+    .sort((a, b) => (teamOrder[a.code] || 99) - (teamOrder[b.code] || 99))
+    .map((t) => ({
+      id: t.id,
+      code: t.code,
+      name: t.name.startsWith('Tim ') ? t.name : `Tim ${t.name}`,
+      shortName: t.name.replace(/^Tim\s+/, ''),
+      biroId: t.biroId,
+    }));
+
   return (
     <UserManagementView
       initialUsers={users}
-      availableBiros={biros}
+      availableTeams={sortedTeams}
       currentUserId={currentUser.id}
     />
   );

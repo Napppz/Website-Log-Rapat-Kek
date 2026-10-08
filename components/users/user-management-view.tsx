@@ -19,8 +19,10 @@ import {
   AlertCircle,
   Trash2,
   Loader2,
+  Briefcase,
 } from 'lucide-react';
 import { UserRole } from '@prisma/client';
+import { cn } from '@/lib/utils';
 import {
   createUserAction,
   updateUserAction,
@@ -29,12 +31,27 @@ import {
 } from '@/app/actions/user-actions';
 import { toast, confirmModal } from '@/components/providers/toast-provider';
 
+export interface TeamItem {
+  id: string;
+  code: string;
+  name: string;
+  shortName: string;
+  biroId: string;
+}
+
+const CANONICAL_TEAMS: TeamItem[] = [
+  { id: 'TIM-001', code: 'INV', name: 'Tim Investasi', shortName: 'Investasi', biroId: 'BIRO-IKK' },
+  { id: 'TIM-003', code: 'KS', name: 'Tim Kerja Sama', shortName: 'Kerja Sama', biroId: 'BIRO-IKK' },
+  { id: 'TIM-002', code: 'KOM', name: 'Tim Komunikasi', shortName: 'Komunikasi', biroId: 'BIRO-IKK' },
+];
+
 interface UserItem {
   id: string;
   name: string;
   email: string;
   role: UserRole;
   biroId: string;
+  teamId?: string | null;
   isActive: boolean;
   createdAt: Date | string;
   biro?: {
@@ -43,16 +60,23 @@ interface UserItem {
     name: string;
     shortName: string;
   } | null;
+  team?: {
+    id: string;
+    code: string;
+    name: string;
+  } | null;
 }
 
 interface UserManagementViewProps {
   initialUsers: UserItem[];
-  availableBiros: { id: string; code: string; shortName: string; name: string }[];
+  availableTeams?: TeamItem[];
+  availableBiros?: { id: string; code: string; shortName: string; name: string }[];
   currentUserId: string;
 }
 
 export function UserManagementView({
   initialUsers = [],
+  availableTeams = [],
   availableBiros = [],
   currentUserId,
 }: UserManagementViewProps) {
@@ -60,7 +84,12 @@ export function UserManagementView({
   const [users, setUsers] = useState<UserItem[]>(initialUsers);
   const [search, setSearch] = useState('');
   const [selectedRole, setSelectedRole] = useState<string>('ALL');
-  const [selectedBiro, setSelectedBiro] = useState<string>('ALL');
+  const [selectedTeam, setSelectedTeam] = useState<string>('ALL');
+
+  const teamsList: TeamItem[] = useMemo(() => {
+    if (availableTeams && availableTeams.length > 0) return availableTeams;
+    return CANONICAL_TEAMS;
+  }, [availableTeams]);
 
   // Modal State
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -74,7 +103,7 @@ export function UserManagementView({
   const [formEmail, setFormEmail] = useState('');
   const [formPassword, setFormPassword] = useState('');
   const [formRole, setFormRole] = useState<UserRole>('STAFF');
-  const [formBiroId, setFormBiroId] = useState('');
+  const [formTeamId, setFormTeamId] = useState<string>(teamsList[0]?.id || 'TIM-001');
   const [formIsActive, setFormIsActive] = useState(true);
 
   // Open Create Dialog
@@ -84,7 +113,7 @@ export function UserManagementView({
     setFormEmail('');
     setFormPassword('');
     setFormRole('STAFF');
-    setFormBiroId(availableBiros[0]?.id || '');
+    setFormTeamId(teamsList[0]?.id || 'TIM-001');
     setFormIsActive(true);
     setFormError(null);
     setIsDialogOpen(true);
@@ -97,7 +126,10 @@ export function UserManagementView({
     setFormEmail(user.email);
     setFormPassword('');
     setFormRole(user.role);
-    setFormBiroId(user.biroId);
+    const matchedTeam = teamsList.find(
+      (t) => t.id === user.teamId || t.code === user.team?.code
+    );
+    setFormTeamId(matchedTeam?.id || user.teamId || teamsList[0]?.id || 'TIM-001');
     setFormIsActive(user.isActive);
     setFormError(null);
     setIsDialogOpen(true);
@@ -109,6 +141,9 @@ export function UserManagementView({
     setIsSubmitting(true);
     setFormError(null);
 
+    const selectedTeamObj = teamsList.find((t) => t.id === formTeamId);
+    const resolvedBiroId = selectedTeamObj?.biroId || 'BIRO-IKK';
+
     try {
       if (editingUser) {
         const res = await updateUserAction({
@@ -117,7 +152,8 @@ export function UserManagementView({
           email: formEmail,
           password: formPassword || null,
           role: formRole,
-          biroId: formBiroId,
+          biroId: resolvedBiroId,
+          teamId: formTeamId,
           isActive: formIsActive,
         });
 
@@ -137,7 +173,8 @@ export function UserManagementView({
           email: formEmail,
           password: formPassword,
           role: formRole,
-          biroId: formBiroId,
+          biroId: resolvedBiroId,
+          teamId: formTeamId,
           isActive: formIsActive,
         });
 
@@ -223,18 +260,18 @@ export function UserManagementView({
   const filteredUsers = useMemo(() => {
     return users.filter((u) => {
       if (selectedRole !== 'ALL' && u.role !== selectedRole) return false;
-      if (selectedBiro !== 'ALL' && u.biro?.code !== selectedBiro) return false;
+      if (selectedTeam !== 'ALL' && u.team?.code !== selectedTeam) return false;
 
       if (!search.trim()) return true;
       const q = search.toLowerCase();
       return (
         u.name.toLowerCase().includes(q) ||
         u.email.toLowerCase().includes(q) ||
-        u.biro?.code.toLowerCase().includes(q) ||
-        u.biro?.shortName.toLowerCase().includes(q)
+        u.team?.code?.toLowerCase().includes(q) ||
+        u.team?.name?.toLowerCase().includes(q)
       );
     });
-  }, [users, selectedRole, selectedBiro, search]);
+  }, [users, selectedRole, selectedTeam, search]);
 
   const getRoleBadge = (role: UserRole) => {
     switch (role) {
@@ -272,7 +309,7 @@ export function UserManagementView({
             Manajemen Pengguna &amp; Hak Akses
           </h1>
           <p className="text-[13px] text-slate-500 mt-1">
-            Kelola akun kedinasan, peran pengguna (RBAC), penempatan biro, dan status keaktifan user.
+            Kelola akun kedinasan, peran pengguna (RBAC), penempatan tim kerja, dan status keaktifan user.
           </p>
         </div>
 
@@ -306,16 +343,16 @@ export function UserManagementView({
             <option value="STAFF">Staf</option>
           </select>
 
-          {/* Biro Filter */}
+          {/* Tim Filter */}
           <select
-            value={selectedBiro}
-            onChange={(e) => setSelectedBiro(e.target.value)}
+            value={selectedTeam}
+            onChange={(e) => setSelectedTeam(e.target.value)}
             className="px-3 py-1.5 rounded-lg bg-white border border-slate-200 text-slate-800 text-[12px] font-medium focus:outline-none focus:ring-2 focus:ring-[#31889C]/30 focus:border-[#31889C] shadow-xs cursor-pointer"
           >
-            <option value="ALL">Semua Biro KEK</option>
-            {availableBiros.map((b) => (
-              <option key={b.code} value={b.code}>
-                {b.code} — {b.shortName}
+            <option value="ALL">Semua Tim Kerja</option>
+            {teamsList.map((t) => (
+              <option key={t.code} value={t.code}>
+                {t.name} ({t.code})
               </option>
             ))}
           </select>
@@ -327,10 +364,9 @@ export function UserManagementView({
             type="text"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            placeholder="Cari nama, email, biro..."
+            placeholder="Cari nama, email, tim kerja..."
             className="w-full pl-8 pr-3 py-1.5 rounded-lg bg-white border border-slate-200 text-slate-800 text-[12px] focus:outline-none focus:ring-2 focus:ring-[#31889C]/30 focus:border-[#31889C] shadow-xs"
-          >
-          </input>
+          />
           <Search className="w-3.5 h-3.5 absolute left-2.5 top-2.5 text-[#31889C] pointer-events-none" />
         </div>
       </div>
@@ -343,7 +379,7 @@ export function UserManagementView({
               <tr>
                 <th className="py-3.5 px-4">Nama Lengkap &amp; Email</th>
                 <th className="py-3.5 px-4">Peran (Role)</th>
-                <th className="py-3.5 px-4">Biro Penempatan</th>
+                <th className="py-3.5 px-4">Tim Kerja</th>
                 <th className="py-3.5 px-4">Status Akun</th>
                 <th className="py-3.5 px-4 text-right">Aksi</th>
               </tr>
@@ -359,7 +395,7 @@ export function UserManagementView({
                         onClick={() => {
                           setSearch('');
                           setSelectedRole('ALL');
-                          setSelectedBiro('ALL');
+                          setSelectedTeam('ALL');
                         }}
                         className="inline-flex items-center gap-1 text-[12px] text-[#31889C] font-semibold hover:underline cursor-pointer"
                       >
@@ -393,19 +429,42 @@ export function UserManagementView({
                     {/* Role */}
                     <td className="py-3.5 px-4">{getRoleBadge(user.role)}</td>
 
-                    {/* Biro */}
+                    {/* Tim Kerja */}
                     <td className="py-3.5 px-4">
-                      {user.biro ? (
+                      {user.team ? (
                         <div className="flex flex-col">
-                          <span className="font-bold text-[#215865] text-[12px]">
-                            {user.biro.code}
+                          <span
+                            className={cn(
+                              "font-bold text-[12px] inline-flex items-center gap-1.5",
+                              user.team.code === 'INV'
+                                ? "text-emerald-700"
+                                : user.team.code === 'KS'
+                                ? "text-indigo-700"
+                                : "text-amber-700"
+                            )}
+                          >
+                            <span
+                              className={cn(
+                                "w-2 h-2 rounded-full shrink-0",
+                                user.team.code === 'INV'
+                                  ? "bg-emerald-500"
+                                  : user.team.code === 'KS'
+                                  ? "bg-indigo-500"
+                                  : "bg-amber-500"
+                              )}
+                            />
+                            <span>
+                              {user.team.name.startsWith('Tim ')
+                                ? user.team.name
+                                : `Tim ${user.team.name}`}
+                            </span>
                           </span>
-                          <span className="text-[11px] text-slate-500">
-                            {user.biro.shortName}
+                          <span className="text-[11px] text-slate-400 pl-3.5">
+                            Kode: {user.team.code}
                           </span>
                         </div>
                       ) : (
-                        <span className="text-slate-400">-</span>
+                        <span className="text-slate-400 italic text-[12px]">Belum Ditugaskan</span>
                       )}
                     </td>
 
@@ -584,19 +643,19 @@ export function UserManagementView({
                   </select>
                 </div>
 
-                {/* Biro */}
+                {/* Tim Kerja */}
                 <div>
                   <label className="block font-bold text-slate-800 mb-1">
-                    Biro Penempatan <span className="text-red-500">*</span>
+                    Tim Kerja <span className="text-red-500">*</span>
                   </label>
                   <select
-                    value={formBiroId}
-                    onChange={(e) => setFormBiroId(e.target.value)}
+                    value={formTeamId}
+                    onChange={(e) => setFormTeamId(e.target.value)}
                     className="w-full px-3 py-2 rounded-lg border border-slate-200 focus:outline-none focus:ring-2 focus:ring-[#31889C]/30 focus:border-[#31889C] bg-white font-medium text-slate-800 text-[13px] cursor-pointer"
                   >
-                    {availableBiros.map((b) => (
-                      <option key={b.id} value={b.id}>
-                        {b.code} — {b.shortName}
+                    {teamsList.map((t) => (
+                      <option key={t.id} value={t.id}>
+                        {t.code} — {t.name}
                       </option>
                     ))}
                   </select>
