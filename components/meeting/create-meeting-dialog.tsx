@@ -371,36 +371,6 @@ export function CreateMeetingDialog({ isOpen, onClose }: CreateMeetingDialogProp
               />
             )}
 
-            {/* Upload per kategori */}
-            <div className="pt-1.5 flex items-center justify-between text-xs">
-              <span className="text-slate-500">Berkas Kategori:</span>
-              <input
-                ref={catRef}
-                type="file"
-                className="hidden"
-                accept=".pdf,.docx,.doc,.txt,.png,.jpg"
-                onChange={(e) => {
-                  const f = e.target.files?.[0];
-                  if (f) handleUploadFile(f, 'kategori');
-                }}
-              />
-              {categoryDoc ? (
-                <div className="flex items-center gap-1.5 text-emerald-700 font-bold">
-                  <span className="truncate max-w-[180px]">{categoryDoc.name}</span>
-                  <button type="button" onClick={() => setCategoryDoc(null)} className="text-rose-500 cursor-pointer">
-                    <Trash2 className="w-3.5 h-3.5" />
-                  </button>
-                </div>
-              ) : (
-                <button
-                  type="button"
-                  onClick={() => catRef.current?.click()}
-                  className="text-[#1E6B7B] font-semibold hover:underline cursor-pointer"
-                >
-                  {isUploadingCategory ? 'Mengunggah...' : '+ Upload Berkas (Bisa dikosongkan)'}
-                </button>
-              )}
-            </div>
           </div>
 
           {/* 4 & 5. Surat Undangan & Dokumen Terkait */}
