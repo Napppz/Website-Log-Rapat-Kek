@@ -315,6 +315,48 @@ export function MeetingTable({
     };
   }, [initialMeetings, deletedMeetingIds]);
 
+  // Helper for distinct Tim Kerja styling and metadata
+  const getTeamBadgeInfo = (code: string, primaryTeamCode?: string | null, primaryTeamName?: string | null) => {
+    const upperCode = (code || '').toUpperCase();
+    const upperTeam = (primaryTeamCode || '').toUpperCase();
+    const nameLower = (primaryTeamName || '').toLowerCase();
+
+    if (upperCode.startsWith('INV-') || upperTeam === 'INV' || nameLower.includes('investasi')) {
+      return {
+        teamName: 'Tim Investasi',
+        code: 'INV',
+        badgeClass: 'bg-emerald-50 text-emerald-800 border-emerald-200/90',
+        pillClass: 'bg-emerald-50 text-emerald-800 border-emerald-200 group-hover/link:border-emerald-400 group-hover/link:bg-emerald-100/60',
+        tagClass: 'bg-emerald-600 text-white',
+      };
+    }
+    if (upperCode.startsWith('KS-') || upperTeam === 'KS' || nameLower.includes('kerja sama') || nameLower.includes('kerjasama')) {
+      return {
+        teamName: 'Tim Kerja Sama',
+        code: 'KS',
+        badgeClass: 'bg-sky-50 text-sky-800 border-sky-200/90',
+        pillClass: 'bg-sky-50 text-sky-800 border-sky-200 group-hover/link:border-sky-400 group-hover/link:bg-sky-100/60',
+        tagClass: 'bg-sky-600 text-white',
+      };
+    }
+    if (upperCode.startsWith('KOM-') || upperTeam === 'KOM' || nameLower.includes('komunikasi')) {
+      return {
+        teamName: 'Tim Komunikasi',
+        code: 'KOM',
+        badgeClass: 'bg-amber-50 text-amber-800 border-amber-200/90',
+        pillClass: 'bg-amber-50 text-amber-800 border-amber-200 group-hover/link:border-amber-400 group-hover/link:bg-amber-100/60',
+        tagClass: 'bg-amber-600 text-white',
+      };
+    }
+    return {
+      teamName: primaryTeamName || 'Tim Investasi',
+      code: primaryTeamCode || 'INV',
+      badgeClass: 'bg-slate-50 text-slate-800 border-slate-200',
+      pillClass: 'bg-slate-50 text-slate-800 border-slate-200 group-hover/link:border-slate-400',
+      tagClass: 'bg-slate-600 text-white',
+    };
+  };
+
   // Biro icon mapping
   const getBiroIcon = (code: BiroCode) => {
     switch (code) {
@@ -357,6 +399,7 @@ export function MeetingTable({
         const target = String(filterBiro).toUpperCase();
         if (target === 'INV' || target === 'KS' || target === 'KOM') {
           const matchTeam =
+            m.code.toUpperCase().startsWith(`${target}-`) ||
             m.primaryTeamCode?.toUpperCase() === target ||
             m.primaryTeamId?.toUpperCase().includes(target) ||
             (target === 'INV' && (m.primaryTeamName?.toLowerCase().includes('investasi') || m.primaryTeamCode === 'TIM-001' || m.primaryTeamId === 'TIM-001')) ||
@@ -373,7 +416,7 @@ export function MeetingTable({
             if (upper === 'DAL' || upper === 'OPS') return 'PKKEK';
             if (upper === 'INV') return 'IKK';
             if (upper === 'HUK' || upper === 'LEG') return 'HSDMO';
-            if (upper === 'BUK' || upper === 'ADM') return 'UK';
+            if (upper === 'ADM' || upper === 'BUK') return 'UK';
             return upper;
           };
           const targetBiro = normalize(filterBiro);
@@ -599,7 +642,7 @@ export function MeetingTable({
             <tr>
               <th className="py-3 px-4">Nomor &amp; Tanggal</th>
               <th className="py-3 px-4">Agenda Rapat</th>
-              <th className="py-3 px-4">Tim / Biro Pelaksana</th>
+              <th className="py-3 px-4">Tim Kerja Pelaksana</th>
               <th className="py-3 px-4" title="Status Pemantauan Rapat: Start -> On Progres -> Finish">Status Rapat</th>
               <th className="py-3 px-4">Tindak Lanjut</th>
               <th className="py-3 px-4 text-right">Aksi</th>
@@ -684,22 +727,30 @@ export function MeetingTable({
                   >
                     {/* Nomor & Tanggal */}
                     <td className="py-3.5 px-4 align-top whitespace-nowrap">
-                      <Link
-                        href={`/semua-rapat/${meeting.id}`}
-                        className="group/link inline-flex flex-col cursor-pointer"
-                        title={`Buka Risalah Rapat ${meeting.code}`}
-                      >
-                        <span className="font-bold text-[12.5px] font-mono tracking-tight text-[#1E6B7B] group-hover/link:text-[#174853] group-hover/link:underline inline-flex items-center gap-1 transition-colors">
-                          {meeting.code}
-                          <ExternalLink className="w-3 h-3 opacity-0 group-hover/link:opacity-100 transition-opacity text-[#1E6B7B]" />
-                        </span>
-                        <span className="text-slate-600 text-[12px] font-medium group-hover/link:text-[#1E6B7B] group-hover/link:underline transition-colors mt-0.5">
-                          {meeting.date}
-                        </span>
-                        <span className="text-[11px] text-slate-400">
-                          {meeting.time}
-                        </span>
-                      </Link>
+                      {(() => {
+                        const teamInfo = getTeamBadgeInfo(meeting.code, meeting.primaryTeamCode, meeting.primaryTeamName);
+                        return (
+                          <Link
+                            href={`/semua-rapat/${meeting.id}`}
+                            className="group/link inline-flex flex-col cursor-pointer"
+                            title={`Buka Risalah Rapat ${meeting.code}`}
+                          >
+                            <span className={cn(
+                              "font-bold text-[12px] font-mono tracking-tight px-2 py-0.5 rounded border inline-flex items-center gap-1.5 transition-all shadow-2xs w-fit",
+                              teamInfo.pillClass
+                            )}>
+                              {meeting.code}
+                              <ExternalLink className="w-2.5 h-2.5 opacity-0 group-hover/link:opacity-100 transition-opacity text-slate-500" />
+                            </span>
+                            <span className="text-slate-600 text-[12px] font-medium group-hover/link:text-[#1E6B7B] group-hover/link:underline transition-colors mt-1">
+                              {meeting.date}
+                            </span>
+                            <span className="text-[11px] text-slate-400">
+                              {meeting.time}
+                            </span>
+                          </Link>
+                        );
+                      })()}
                     </td>
 
                     {/* Agenda Rapat & Lokasi */}
@@ -783,19 +834,27 @@ export function MeetingTable({
                       })()}
                     </td>
 
-                    {/* Biro Pelaksana */}
+                    {/* Tim Kerja Pelaksana */}
                     <td className="py-3.5 px-4 align-top whitespace-nowrap">
-                      <div className="flex flex-col items-start gap-1">
-                        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-[#F0F9FA] border border-[#BCE3EB] text-[12px] font-bold text-[#215865]">
-                          {getBiroIcon(meeting.biroCode)}
-                          {meeting.biroName}
-                        </span>
-                        {meeting.primaryTeamName && (
-                          <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10.5px] font-semibold bg-amber-50 text-amber-900 border border-amber-200">
-                            Tim {meeting.primaryTeamName}
-                          </span>
-                        )}
-                      </div>
+                      {(() => {
+                        const teamInfo = getTeamBadgeInfo(meeting.code, meeting.primaryTeamCode, meeting.primaryTeamName);
+                        return (
+                          <div className="flex flex-col items-start gap-1">
+                            <span className={cn(
+                              "inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md border text-[12px] font-bold shadow-2xs",
+                              teamInfo.badgeClass
+                            )}>
+                              <span className={cn("text-[9.5px] font-mono px-1.5 py-0.2 rounded font-bold", teamInfo.tagClass)}>
+                                {teamInfo.code}
+                              </span>
+                              <span>{teamInfo.teamName}</span>
+                            </span>
+                            <span className="text-[10px] text-slate-400 font-medium px-0.5">
+                              Biro IKK KEK
+                            </span>
+                          </div>
+                        );
+                      })()}
                     </td>
 
                     {/* Status Rapat (Start, On Progres, Finish) */}

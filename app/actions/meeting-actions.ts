@@ -129,15 +129,14 @@ export async function createMeetingAction(input: CreateMeetingInput) {
     }
 
     const result = await prisma.$transaction(async (tx) => {
-      // Resolve team code if primaryTeamId provided
+      // Resolve canonical team code (Investasi: INV, Kerja Sama: KS, Komunikasi: KOM)
+      const effectiveTeamId = input.primaryTeamId || 'TIM-001';
       let teamCode: string | null = null;
-      if (input.primaryTeamId) {
-        const team = await tx.biroTeam.findUnique({
-          where: { id: input.primaryTeamId },
-          select: { code: true },
-        });
-        if (team) teamCode = team.code;
-      }
+      const team = await tx.biroTeam.findUnique({
+        where: { id: effectiveTeamId },
+        select: { code: true },
+      });
+      if (team) teamCode = team.code;
 
       // 1. Generate sequence atomically or use custom meetingNumber if provided (and not '-' or empty)
       let finalMeetingNumber = input.meetingNumber?.trim();
@@ -186,7 +185,7 @@ export async function createMeetingAction(input: CreateMeetingInput) {
           meetingNumber: finalMeetingNumber,
           title: input.title,
           primaryBiroId: primaryBiro.id,
-          primaryTeamId: input.primaryTeamId || null,
+          primaryTeamId: effectiveTeamId,
           date: new Date(input.date),
           startTime: finalStartTime,
           endTime: finalEndTime,
@@ -1314,16 +1313,25 @@ export async function previewNextMeetingNumberAction(biroCode?: string, teamId?:
   try {
     let teamCode: string | null = null;
     let resolvedBiro = biroCode || 'IKK';
-    if (teamId) {
-      const team = await prisma.biroTeam.findUnique({
-        where: { id: teamId },
-        select: { code: true, biro: { select: { code: true } } },
-      });
-      if (team) {
-        teamCode = team.code;
-        if (team.biro) resolvedBiro = team.biro.code;
-      }
+    const effectiveTeamId = teamId || 'TIM-001';
+
+    const team = await prisma.biroTeam.findFirst({
+      where: {
+        OR: [
+          { id: effectiveTeamId },
+          { code: effectiveTeamId.toUpperCase() },
+        ],
+      },
+      select: { code: true, biro: { select: { code: true } } },
+    });
+
+    if (team) {
+      teamCode = team.code;
+      if (team.biro) resolvedBiro = team.biro.code;
+    } else {
+      teamCode = effectiveTeamId;
     }
+
     const nextNumber = await previewNextMeetingNumber(resolvedBiro, teamCode);
     return { success: true, data: nextNumber };
   } catch (error: any) {
