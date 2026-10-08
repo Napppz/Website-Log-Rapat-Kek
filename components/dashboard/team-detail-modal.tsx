@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import {
@@ -19,10 +19,11 @@ import {
   FileText,
   Search,
   Filter,
+  RotateCcw,
 } from 'lucide-react';
 import { TeamWorkloadMetric } from '@/lib/types';
 import { cn } from '@/lib/utils';
-import { MeetingStatusBadge, MeetingProgressBadge } from '@/components/meeting/meeting-status-badge';
+import { MeetingProgressBadge } from '@/components/meeting/meeting-status-badge';
 
 interface TeamDetailModalProps {
   isOpen: boolean;
@@ -31,12 +32,112 @@ interface TeamDetailModalProps {
 }
 
 type ModalTab = 'jobs' | 'meetings' | 'members';
+export type DatePeriodFilter = 'ALL' | 'TODAY' | 'THIS_WEEK' | 'THIS_MONTH';
+
+interface DateBoundaries {
+  todayStr: string;
+  weekStart: string;
+  weekEnd: string;
+  monthStart: string;
+  monthEnd: string;
+  currentYear: number;
+  currentMonth: number;
+}
+
+function toLocalDateStr(d: Date): string {
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${y}-${m}-${day}`;
+}
+
+function getDateBoundaries(): DateBoundaries {
+  const now = new Date();
+  const todayStr = toLocalDateStr(now);
+
+  const dayOfWeek = now.getDay();
+  // Senin = 1, Minggu = 0 -> selisih hari menuju hari Senin
+  const diffToMonday = dayOfWeek === 0 ? -6 : 1 - dayOfWeek;
+  const monday = new Date(now);
+  monday.setDate(now.getDate() + diffToMonday);
+  const weekStart = toLocalDateStr(monday);
+
+  const sunday = new Date(monday);
+  sunday.setDate(monday.getDate() + 6);
+  const weekEnd = toLocalDateStr(sunday);
+
+  const firstOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+  const monthStart = toLocalDateStr(firstOfMonth);
+
+  const lastOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+  const monthEnd = toLocalDateStr(lastOfMonth);
+
+  return {
+    todayStr,
+    weekStart,
+    weekEnd,
+    monthStart,
+    monthEnd,
+    currentYear: now.getFullYear(),
+    currentMonth: now.getMonth(),
+  };
+}
+
+const MONTH_NAMES_ID = [
+  'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
+  'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'
+];
+
+const MONTH_SHORT_ID = [
+  'Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun',
+  'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'
+];
+
+function formatIndonesianDateLabel(dateStr: string): string {
+  try {
+    const parts = dateStr.split('-');
+    if (parts.length === 3) {
+      const day = parseInt(parts[2], 10);
+      const mIdx = parseInt(parts[1], 10) - 1;
+      return `${day} ${MONTH_SHORT_ID[mIdx]} ${parts[0]}`;
+    }
+  } catch {
+    // fallback
+  }
+  return dateStr;
+}
+
+function isDateInPeriod(
+  dateStr: string | null | undefined,
+  period: DatePeriodFilter,
+  boundaries: DateBoundaries
+): boolean {
+  if (period === 'ALL') return true;
+  if (!dateStr) return false;
+
+  const clean = dateStr.slice(0, 10);
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(clean)) return false;
+
+  if (period === 'TODAY') {
+    return clean === boundaries.todayStr;
+  }
+  if (period === 'THIS_WEEK') {
+    return clean >= boundaries.weekStart && clean <= boundaries.weekEnd;
+  }
+  if (period === 'THIS_MONTH') {
+    return clean >= boundaries.monthStart && clean <= boundaries.monthEnd;
+  }
+  return true;
+}
 
 export function TeamDetailModal({ isOpen, onClose, team }: TeamDetailModalProps) {
   const router = useRouter();
   const [activeTab, setActiveTab] = useState<ModalTab>('jobs');
   const [jobFilter, setJobFilter] = useState<'ALL' | 'IN_PROGRESS' | 'COMPLETED' | 'PENDING'>('ALL');
+  const [dateFilter, setDateFilter] = useState<DatePeriodFilter>('ALL');
   const [searchQuery, setSearchQuery] = useState('');
+
+  const boundaries = useMemo(() => getDateBoundaries(), []);
 
   if (!isOpen || !team) return null;
 
@@ -84,7 +185,39 @@ export function TeamDetailModal({ isOpen, onClose, team }: TeamDetailModalProps)
 
   const theme = getTeamColorTheme(team.code);
 
-  const filteredJobs = (team.actionItems || []).filter((job) => {
+  const getJobDate = (job: NonNullable<TeamWorkloadMetric['actionItems']>[number]) => {
+    return job.dueDate || team.meetings?.find((m) => m.id === job.meetingId || m.meetingNumber === job.meetingNumber)?.date || null;
+  };
+
+  // Periode Filtered Collections
+  const dateFilteredJobs = (team.actionItems || []).filter((job) => {
+    const jobDate = getJobDate(job);
+    return isDateInPeriod(jobDate, dateFilter, boundaries);
+  });
+
+  const dateFilteredMeetings = (team.meetings || []).filter((m) => {
+    return isDateInPeriod(m.date, dateFilter, boundaries);
+  });
+
+  // Hitung jumlah item tiap periode untuk badge indikator
+  const countsByPeriod = {
+    todayJobs: (team.actionItems || []).filter((j) => isDateInPeriod(getJobDate(j), 'TODAY', boundaries)).length,
+    todayMeetings: (team.meetings || []).filter((m) => isDateInPeriod(m.date, 'TODAY', boundaries)).length,
+    weekJobs: (team.actionItems || []).filter((j) => isDateInPeriod(getJobDate(j), 'THIS_WEEK', boundaries)).length,
+    weekMeetings: (team.meetings || []).filter((m) => isDateInPeriod(m.date, 'THIS_WEEK', boundaries)).length,
+    monthJobs: (team.actionItems || []).filter((j) => isDateInPeriod(getJobDate(j), 'THIS_MONTH', boundaries)).length,
+    monthMeetings: (team.meetings || []).filter((m) => isDateInPeriod(m.date, 'THIS_MONTH', boundaries)).length,
+  };
+
+  // Metrik KPI reaktif berdasarkan filter periode yang aktif
+  const kpiMeetingCount = dateFilteredMeetings.length;
+  const kpiTotalJobs = dateFilteredJobs.length;
+  const kpiCompletedJobs = dateFilteredJobs.filter((j) => j.status === 'COMPLETED').length;
+  const kpiInProgressJobs = dateFilteredJobs.filter((j) => j.status === 'IN_PROGRESS').length;
+  const kpiPendingJobs = dateFilteredJobs.filter((j) => j.status === 'PENDING').length;
+
+  // Filter teks pencarian dan status pekerjaan
+  const filteredJobs = dateFilteredJobs.filter((job) => {
     if (jobFilter !== 'ALL' && job.status !== jobFilter) return false;
     if (searchQuery.trim()) {
       const q = searchQuery.toLowerCase();
@@ -97,7 +230,7 @@ export function TeamDetailModal({ isOpen, onClose, team }: TeamDetailModalProps)
     return true;
   });
 
-  const filteredMeetings = (team.meetings || []).filter((m) => {
+  const filteredMeetings = dateFilteredMeetings.filter((m) => {
     if (searchQuery.trim()) {
       const q = searchQuery.toLowerCase();
       return (
@@ -137,6 +270,25 @@ export function TeamDetailModal({ isOpen, onClose, team }: TeamDetailModalProps)
         );
     }
   };
+
+  const getMeetingHref = (job: NonNullable<TeamWorkloadMetric['actionItems']>[number]) => {
+    const targetId = job.meetingId || team.meetings?.find((m) => m.meetingNumber === job.meetingNumber)?.id || job.meetingNumber;
+    return targetId ? `/semua-rapat/${targetId}` : null;
+  };
+
+  const periodDateLabel = (() => {
+    switch (dateFilter) {
+      case 'TODAY':
+        return `Hari Ini • ${formatIndonesianDateLabel(boundaries.todayStr)}`;
+      case 'THIS_WEEK':
+        return `Minggu Ini • ${formatIndonesianDateLabel(boundaries.weekStart)} – ${formatIndonesianDateLabel(boundaries.weekEnd)}`;
+      case 'THIS_MONTH':
+        return `Bulan Ini • ${MONTH_NAMES_ID[boundaries.currentMonth]} ${boundaries.currentYear}`;
+      case 'ALL':
+      default:
+        return 'Seluruh riwayat agenda & pekerjaan';
+    }
+  })();
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-5 bg-black/60 backdrop-blur-xs animate-in fade-in duration-200">
@@ -178,24 +330,142 @@ export function TeamDetailModal({ isOpen, onClose, team }: TeamDetailModalProps)
           </button>
         </div>
 
-        {/* Executive KPI Bar (Jumlah Rapat & Status Pemantauan: Selesai, Dalam Proses, Belum Dimulai - NO PERCENTAGE) */}
+        {/* Global Date Filter Bar (Hari Ini, Minggu Ini, Bulan Ini, Semua Waktu) */}
+        <div className="px-5 py-2.5 bg-slate-50 border-b border-slate-200/90 flex flex-wrap items-center justify-between gap-2.5">
+          <div className="flex items-center gap-2 flex-wrap">
+            <div className="flex items-center gap-1.5 text-[11.5px] font-bold text-slate-700">
+              <Calendar className="w-3.5 h-3.5 text-[#31889C]" />
+              <span>Filter Tanggal:</span>
+            </div>
+            <div className="inline-flex items-center p-0.5 bg-white border border-slate-200 rounded-lg shadow-2xs gap-0.5">
+              <button
+                type="button"
+                onClick={() => setDateFilter('ALL')}
+                className={cn(
+                  'px-2.5 py-1 rounded-md text-[11px] font-bold transition cursor-pointer',
+                  dateFilter === 'ALL'
+                    ? 'bg-[#215865] text-white shadow-2xs'
+                    : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
+                )}
+              >
+                Semua Waktu
+              </button>
+              <button
+                type="button"
+                onClick={() => setDateFilter('TODAY')}
+                className={cn(
+                  'px-2.5 py-1 rounded-md text-[11px] font-bold transition cursor-pointer flex items-center gap-1.5',
+                  dateFilter === 'TODAY'
+                    ? 'bg-[#215865] text-white shadow-2xs'
+                    : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
+                )}
+              >
+                <span>Hari Ini</span>
+                {(countsByPeriod.todayJobs > 0 || countsByPeriod.todayMeetings > 0) && (
+                  <span
+                    className={cn(
+                      'px-1.5 py-0.2 rounded-full text-[9.5px] font-black',
+                      dateFilter === 'TODAY'
+                        ? 'bg-white/20 text-white'
+                        : 'bg-emerald-100 text-emerald-800'
+                    )}
+                  >
+                    {activeTab === 'meetings' ? countsByPeriod.todayMeetings : countsByPeriod.todayJobs}
+                  </span>
+                )}
+              </button>
+              <button
+                type="button"
+                onClick={() => setDateFilter('THIS_WEEK')}
+                className={cn(
+                  'px-2.5 py-1 rounded-md text-[11px] font-bold transition cursor-pointer flex items-center gap-1.5',
+                  dateFilter === 'THIS_WEEK'
+                    ? 'bg-[#215865] text-white shadow-2xs'
+                    : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
+                )}
+              >
+                <span>Minggu Ini</span>
+                {(countsByPeriod.weekJobs > 0 || countsByPeriod.weekMeetings > 0) && (
+                  <span
+                    className={cn(
+                      'px-1.5 py-0.2 rounded-full text-[9.5px] font-black',
+                      dateFilter === 'THIS_WEEK'
+                        ? 'bg-white/20 text-white'
+                        : 'bg-sky-100 text-sky-800'
+                    )}
+                  >
+                    {activeTab === 'meetings' ? countsByPeriod.weekMeetings : countsByPeriod.weekJobs}
+                  </span>
+                )}
+              </button>
+              <button
+                type="button"
+                onClick={() => setDateFilter('THIS_MONTH')}
+                className={cn(
+                  'px-2.5 py-1 rounded-md text-[11px] font-bold transition cursor-pointer flex items-center gap-1.5',
+                  dateFilter === 'THIS_MONTH'
+                    ? 'bg-[#215865] text-white shadow-2xs'
+                    : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
+                )}
+              >
+                <span>Bulan Ini</span>
+                {(countsByPeriod.monthJobs > 0 || countsByPeriod.monthMeetings > 0) && (
+                  <span
+                    className={cn(
+                      'px-1.5 py-0.2 rounded-full text-[9.5px] font-black',
+                      dateFilter === 'THIS_MONTH'
+                        ? 'bg-white/20 text-white'
+                        : 'bg-amber-100 text-amber-800'
+                    )}
+                  >
+                    {activeTab === 'meetings' ? countsByPeriod.monthMeetings : countsByPeriod.monthJobs}
+                  </span>
+                )}
+              </button>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-2 text-[11px] text-slate-500 font-medium ml-auto">
+            <span className="inline-flex items-center gap-1">
+              <Clock className="w-3 h-3 text-slate-400" />
+              <span className="font-semibold text-slate-700">{periodDateLabel}</span>
+            </span>
+            {dateFilter !== 'ALL' && (
+              <button
+                type="button"
+                onClick={() => setDateFilter('ALL')}
+                className="inline-flex items-center gap-0.5 text-[10.5px] text-[#31889C] hover:text-[#215865] hover:underline font-bold cursor-pointer"
+                title="Reset periode ke semua waktu"
+              >
+                <RotateCcw className="w-2.5 h-2.5" />
+                <span>Reset</span>
+              </button>
+            )}
+          </div>
+        </div>
+
+        {/* Executive KPI Bar (Jumlah Rapat & Status Pemantauan: Selesai, Dalam Proses, Belum Dimulai) */}
         <div className="grid grid-cols-2 sm:grid-cols-5 gap-2.5 p-4 bg-slate-50/80 border-b border-slate-200 text-center">
           <div className="bg-white p-2.5 rounded-xl border border-slate-200/90 shadow-2xs">
             <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Jumlah Rapat</p>
-            <p className="text-[20px] font-extrabold text-[#215865] mt-0.5">{team.meetingCount}</p>
-            <p className="text-[10px] text-slate-400 mt-0.5">Agenda resmi tim</p>
+            <p className="text-[20px] font-extrabold text-[#215865] mt-0.5">{kpiMeetingCount}</p>
+            <p className="text-[10px] text-slate-400 mt-0.5">
+              {dateFilter === 'ALL' ? 'Agenda resmi tim' : 'Rapat periode ini'}
+            </p>
           </div>
           <div className="bg-white p-2.5 rounded-xl border border-slate-200/90 shadow-2xs">
             <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Total Pekerjaan</p>
-            <p className="text-[20px] font-extrabold text-slate-800 mt-0.5">{team.totalJobs}</p>
-            <p className="text-[10px] text-slate-400 mt-0.5">Tindak lanjut aktif</p>
+            <p className="text-[20px] font-extrabold text-slate-800 mt-0.5">{kpiTotalJobs}</p>
+            <p className="text-[10px] text-slate-400 mt-0.5">
+              {dateFilter === 'ALL' ? 'Tindak lanjut aktif' : 'Tenggat periode ini'}
+            </p>
           </div>
           <div className="bg-white p-2.5 rounded-xl border border-emerald-300 bg-emerald-50/40 shadow-2xs">
             <p className="text-[11px] font-bold text-emerald-800 uppercase tracking-wider flex items-center justify-center gap-1">
               <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
               Selesai
             </p>
-            <p className="text-[20px] font-extrabold text-emerald-800 mt-0.5">{team.completedJobs}</p>
+            <p className="text-[20px] font-extrabold text-emerald-800 mt-0.5">{kpiCompletedJobs}</p>
             <p className="text-[10px] text-emerald-700 font-semibold mt-0.5">Selesai tuntas</p>
           </div>
           <div className="bg-white p-2.5 rounded-xl border border-amber-300 bg-amber-50/40 shadow-2xs">
@@ -203,7 +473,7 @@ export function TeamDetailModal({ isOpen, onClose, team }: TeamDetailModalProps)
               <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse" />
               Dalam Proses
             </p>
-            <p className="text-[20px] font-extrabold text-amber-800 mt-0.5">{team.inProgressJobs}</p>
+            <p className="text-[20px] font-extrabold text-amber-800 mt-0.5">{kpiInProgressJobs}</p>
             <p className="text-[10px] text-amber-700 font-semibold mt-0.5">Sedang berjalan</p>
           </div>
           <div className="bg-white p-2.5 rounded-xl border border-sky-300 bg-sky-50/40 shadow-2xs col-span-2 sm:col-span-1">
@@ -211,7 +481,7 @@ export function TeamDetailModal({ isOpen, onClose, team }: TeamDetailModalProps)
               <span className="w-1.5 h-1.5 rounded-full bg-sky-500" />
               Belum Dimulai
             </p>
-            <p className="text-[20px] font-extrabold text-sky-800 mt-0.5">{team.pendingJobs}</p>
+            <p className="text-[20px] font-extrabold text-sky-800 mt-0.5">{kpiPendingJobs}</p>
             <p className="text-[10px] text-sky-700 font-semibold mt-0.5">Persiapan awal</p>
           </div>
         </div>
@@ -233,7 +503,7 @@ export function TeamDetailModal({ isOpen, onClose, team }: TeamDetailModalProps)
               )}
             >
               <CheckCircle2 className="w-3.5 h-3.5" />
-              <span>Status Pekerjaan ({team.totalJobs})</span>
+              <span>Status Pekerjaan ({kpiTotalJobs})</span>
             </button>
             <button
               type="button"
@@ -249,7 +519,7 @@ export function TeamDetailModal({ isOpen, onClose, team }: TeamDetailModalProps)
               )}
             >
               <Calendar className="w-3.5 h-3.5" />
-              <span>Daftar Rapat ({team.meetingCount})</span>
+              <span>Daftar Rapat ({kpiMeetingCount})</span>
             </button>
             <button
               type="button"
@@ -303,7 +573,7 @@ export function TeamDetailModal({ isOpen, onClose, team }: TeamDetailModalProps)
                       : 'bg-white border border-slate-200 text-slate-600 hover:bg-slate-50'
                   )}
                 >
-                  Semua ({team.totalJobs})
+                  Semua ({kpiTotalJobs})
                 </button>
                 <button
                   type="button"
@@ -315,7 +585,7 @@ export function TeamDetailModal({ isOpen, onClose, team }: TeamDetailModalProps)
                       : 'bg-white border border-sky-200 text-sky-800 hover:bg-sky-50'
                   )}
                 >
-                  Belum Dimulai ({team.pendingJobs})
+                  Belum Dimulai ({kpiPendingJobs})
                 </button>
                 <button
                   type="button"
@@ -327,7 +597,7 @@ export function TeamDetailModal({ isOpen, onClose, team }: TeamDetailModalProps)
                       : 'bg-white border border-amber-200 text-amber-800 hover:bg-amber-50'
                   )}
                 >
-                  Dalam Proses ({team.inProgressJobs})
+                  Dalam Proses ({kpiInProgressJobs})
                 </button>
                 <button
                   type="button"
@@ -339,63 +609,104 @@ export function TeamDetailModal({ isOpen, onClose, team }: TeamDetailModalProps)
                       : 'bg-white border border-emerald-200 text-emerald-800 hover:bg-emerald-50'
                   )}
                 >
-                  Selesai ({team.completedJobs})
+                  Selesai ({kpiCompletedJobs})
                 </button>
               </div>
 
               {filteredJobs.length > 0 ? (
                 <div className="space-y-2.5">
-                  {filteredJobs.map((job) => (
-                    <div
-                      key={job.id}
-                      className="bg-white p-4 rounded-xl border border-slate-200/90 shadow-2xs hover:shadow-xs transition flex flex-col sm:flex-row sm:items-center justify-between gap-3"
-                    >
-                      <div className="min-w-0 flex-1">
-                        <div className="flex items-center gap-2 flex-wrap mb-1">
-                          {job.meetingNumber && (
-                            <span className="text-[11px] font-mono font-bold text-[#1E6B7B] bg-[#F0F9FA] px-2 py-0.5 rounded border border-[#BCE3EB]">
-                              Rapat {job.meetingNumber}
-                            </span>
-                          )}
-                          {job.priority && (
-                            <span className="text-[10px] font-bold uppercase text-slate-500 bg-slate-100 px-1.5 py-0.5 rounded">
-                              Prioritas: {job.priority}
-                            </span>
-                          )}
-                        </div>
-                        <h4 className="font-bold text-[13.5px] text-slate-900 leading-snug">
-                          {job.title}
-                        </h4>
-                        <div className="flex items-center gap-4 text-[11.5px] text-slate-500 mt-2 flex-wrap">
-                          {job.picName && (
-                            <span className="flex items-center gap-1 font-medium">
-                              👤 PIC: <strong>{job.picName}</strong>
-                            </span>
-                          )}
-                          {job.dueDate && (
-                            <span className="flex items-center gap-1 font-medium">
-                              📅 Tenggat: <strong>{job.dueDate}</strong>
-                            </span>
-                          )}
-                        </div>
-                      </div>
+                  {filteredJobs.map((job) => {
+                    const meetingHref = getMeetingHref(job);
 
-                      {/* Status Lifecycle Indicator (Start / On Progres / Finish) */}
-                      <div className="sm:text-right shrink-0">
-                        {getStatusBadge(job.status)}
+                    return (
+                      <div
+                        key={job.id}
+                        className="bg-white p-4 rounded-xl border border-slate-200/90 shadow-2xs hover:shadow-xs transition flex flex-col sm:flex-row sm:items-center justify-between gap-3 group"
+                      >
+                        <div className="min-w-0 flex-1">
+                          <div className="flex items-center gap-2 flex-wrap mb-1">
+                            {meetingHref ? (
+                              <Link
+                                href={meetingHref}
+                                onClick={onClose}
+                                title={`Buka rincian rapat ${job.meetingNumber || ''}`}
+                                className="inline-flex items-center gap-1 text-[11px] font-mono font-bold text-[#1E6B7B] bg-[#F0F9FA] hover:bg-[#E0F3F7] hover:border-[#31889C] px-2 py-0.5 rounded border border-[#BCE3EB] transition-colors cursor-pointer group/link"
+                              >
+                                <span>Rapat {job.meetingNumber}</span>
+                                <ExternalLink className="w-2.5 h-2.5 text-[#1E6B7B] group-hover/link:translate-x-0.5 transition-transform" />
+                              </Link>
+                            ) : job.meetingNumber ? (
+                              <span className="text-[11px] font-mono font-bold text-[#1E6B7B] bg-[#F0F9FA] px-2 py-0.5 rounded border border-[#BCE3EB]">
+                                Rapat {job.meetingNumber}
+                              </span>
+                            ) : null}
+
+                            {job.priority && (
+                              <span className="text-[10px] font-bold uppercase text-slate-500 bg-slate-100 px-1.5 py-0.5 rounded">
+                                Prioritas: {job.priority}
+                              </span>
+                            )}
+                          </div>
+
+                          <h4 className="font-bold text-[13.5px] text-slate-900 leading-snug">
+                            {job.title}
+                          </h4>
+
+                          <div className="flex items-center gap-4 text-[11.5px] text-slate-500 mt-2 flex-wrap">
+                            {job.picName && (
+                              <span className="flex items-center gap-1 font-medium">
+                                👤 PIC: <strong>{job.picName}</strong>
+                              </span>
+                            )}
+                            {job.dueDate && (
+                              <span className="flex items-center gap-1 font-medium">
+                                📅 Tenggat: <strong>{job.dueDate}</strong>
+                              </span>
+                            )}
+                          </div>
+                        </div>
+
+                        {/* Status Lifecycle Indicator & Link Detail Rapat */}
+                        <div className="sm:text-right shrink-0 flex sm:flex-col items-center sm:items-end justify-between sm:justify-center gap-2">
+                          <div>{getStatusBadge(job.status)}</div>
+
+                          {meetingHref && (
+                            <Link
+                              href={meetingHref}
+                              onClick={onClose}
+                              className="inline-flex items-center gap-1 text-[11.5px] font-bold text-[#215865] hover:text-[#31889C] hover:underline transition-colors cursor-pointer"
+                              title={`Buka detail rapat ${job.meetingNumber || ''}`}
+                            >
+                              <span>Detail Rapat</span>
+                              <ExternalLink className="w-3 h-3" />
+                            </Link>
+                          )}
+                        </div>
                       </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               ) : (
                 <div className="p-8 text-center bg-white rounded-xl border border-dashed border-slate-200">
                   <CheckCircle2 className="w-8 h-8 text-slate-300 mx-auto mb-2" />
                   <p className="text-[13px] font-bold text-slate-700">
-                    Tidak ada pekerjaan pada kategori ini
+                    Tidak ada pekerjaan pada filter ini
                   </p>
                   <p className="text-xs text-slate-400 mt-1">
-                    Silakan ubah filter status atau kata kunci pencarian.
+                    {dateFilter !== 'ALL'
+                      ? `Tidak ada tindak lanjut untuk periode ${dateFilter === 'TODAY' ? 'Hari Ini' : dateFilter === 'THIS_WEEK' ? 'Minggu Ini' : 'Bulan Ini'}.`
+                      : 'Silakan ubah filter status atau kata kunci pencarian.'}
                   </p>
+                  {dateFilter !== 'ALL' && (
+                    <button
+                      type="button"
+                      onClick={() => setDateFilter('ALL')}
+                      className="mt-3 inline-flex items-center gap-1.5 px-3 py-1.5 bg-[#F0F9FA] hover:bg-[#E8F5F7] text-[#215865] border border-[#BCE3EB] rounded-lg text-xs font-bold transition cursor-pointer"
+                    >
+                      <RotateCcw className="w-3 h-3" />
+                      <span>Tampilkan Semua Waktu ({team.totalJobs})</span>
+                    </button>
+                  )}
                 </div>
               )}
             </div>
@@ -405,40 +716,72 @@ export function TeamDetailModal({ isOpen, onClose, team }: TeamDetailModalProps)
           {activeTab === 'meetings' && (
             <div className="space-y-2.5">
               {filteredMeetings.length > 0 ? (
-                filteredMeetings.map((m) => (
-                  <div
-                    key={m.id}
-                    className="bg-white p-4 rounded-xl border border-slate-200/90 shadow-2xs hover:shadow-xs hover:border-[#31889C] transition flex items-center justify-between gap-4 group"
-                  >
-                    <div className="min-w-0 flex-1">
-                      <div className="flex items-center gap-2 flex-wrap mb-1">
-                        <span className="text-[11.5px] font-mono font-extrabold text-[#215865] bg-[#F0F9FA] px-2 py-0.5 rounded border border-[#BCE3EB]">
-                          {m.meetingNumber}
-                        </span>
-                        <MeetingProgressBadge progressStatus={(m as any).progressStatus} status={m.status} showSubtitle />
-                        <span className="text-[11.5px] text-slate-400">📅 {m.date}</span>
-                      </div>
-                      <h4 className="font-bold text-[14px] text-slate-900 group-hover:text-[#31889C] transition-colors leading-snug">
-                        {m.title}
-                      </h4>
-                    </div>
+                filteredMeetings.map((m) => {
+                  const meetingDetailHref = `/semua-rapat/${m.id || m.meetingNumber}`;
 
-                    <Link
-                      href={`/semua-rapat/${m.id}`}
-                      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-[#BCE3EB] bg-[#F0F9FA] hover:bg-[#E8F5F7] text-[#215865] text-xs font-bold transition shadow-2xs shrink-0 cursor-pointer"
+                  return (
+                    <div
+                      key={m.id}
+                      className="bg-white p-4 rounded-xl border border-slate-200/90 shadow-2xs hover:shadow-xs hover:border-[#31889C] transition flex items-center justify-between gap-4 group"
                     >
-                      <span>Buka Risalah</span>
-                      <ExternalLink className="w-3 h-3" />
-                    </Link>
-                  </div>
-                ))
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-center gap-2 flex-wrap mb-1">
+                          <Link
+                            href={meetingDetailHref}
+                            onClick={onClose}
+                            className="text-[11.5px] font-mono font-extrabold text-[#215865] bg-[#F0F9FA] hover:bg-[#E0F3F7] hover:border-[#31889C] px-2 py-0.5 rounded border border-[#BCE3EB] transition-colors inline-flex items-center gap-1 cursor-pointer"
+                            title={`Buka detail rapat ${m.meetingNumber}`}
+                          >
+                            <span>{m.meetingNumber}</span>
+                            <ExternalLink className="w-2.5 h-2.5" />
+                          </Link>
+                          <MeetingProgressBadge progressStatus={(m as any).progressStatus} status={m.status} showSubtitle />
+                          <span className="text-[11.5px] text-slate-400">📅 {m.date}</span>
+                        </div>
+
+                        <Link
+                          href={meetingDetailHref}
+                          onClick={onClose}
+                          className="font-bold text-[14px] text-slate-900 group-hover:text-[#31889C] hover:underline transition-colors leading-snug block"
+                          title="Klik untuk membuka detail rapat"
+                        >
+                          {m.title}
+                        </Link>
+                      </div>
+
+                      <Link
+                        href={meetingDetailHref}
+                        onClick={onClose}
+                        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-[#BCE3EB] bg-[#F0F9FA] hover:bg-[#E8F5F7] text-[#215865] text-xs font-bold transition shadow-2xs shrink-0 cursor-pointer"
+                        title="Buka detail dan notula rapat"
+                      >
+                        <span>Detail Rapat</span>
+                        <ExternalLink className="w-3 h-3" />
+                      </Link>
+                    </div>
+                  );
+                })
               ) : (
                 <div className="p-8 text-center bg-white rounded-xl border border-dashed border-slate-200">
                   <Calendar className="w-8 h-8 text-slate-300 mx-auto mb-2" />
-                  <p className="text-[13px] font-bold text-slate-700">Belum ada rapat terdaftar</p>
-                  <p className="text-xs text-slate-400 mt-1">
-                    Seluruh rapat yang dibuat untuk {team.fullName} akan tampil di sini.
+                  <p className="text-[13px] font-bold text-slate-700">
+                    Tidak ada rapat pada periode ini
                   </p>
+                  <p className="text-xs text-slate-400 mt-1">
+                    {dateFilter !== 'ALL'
+                      ? `Belum ada agenda rapat yang dijadwalkan pada ${dateFilter === 'TODAY' ? 'Hari Ini' : dateFilter === 'THIS_WEEK' ? 'Minggu Ini' : 'Bulan Ini'}.`
+                      : `Seluruh rapat yang dibuat untuk ${team.fullName} akan tampil di sini.`}
+                  </p>
+                  {dateFilter !== 'ALL' && (
+                    <button
+                      type="button"
+                      onClick={() => setDateFilter('ALL')}
+                      className="mt-3 inline-flex items-center gap-1.5 px-3 py-1.5 bg-[#F0F9FA] hover:bg-[#E8F5F7] text-[#215865] border border-[#BCE3EB] rounded-lg text-xs font-bold transition cursor-pointer"
+                    >
+                      <RotateCcw className="w-3 h-3" />
+                      <span>Tampilkan Semua Rapat ({team.meetingCount})</span>
+                    </button>
+                  )}
                 </div>
               )}
             </div>
@@ -491,6 +834,7 @@ export function TeamDetailModal({ isOpen, onClose, team }: TeamDetailModalProps)
           <div className="flex items-center gap-2">
             <Link
               href={`/buat-rapat?tim=${team.code}`}
+              onClick={onClose}
               className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-[#31889C] hover:bg-[#266F80] text-white text-xs font-bold transition shadow-xs cursor-pointer"
             >
               <PlusCircle className="w-3.5 h-3.5" />
@@ -498,6 +842,7 @@ export function TeamDetailModal({ isOpen, onClose, team }: TeamDetailModalProps)
             </Link>
             <Link
               href={`/semua-rapat?tim=${team.code}`}
+              onClick={onClose}
               className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 text-xs font-bold transition cursor-pointer"
             >
               <FileText className="w-3.5 h-3.5 text-[#31889C]" />

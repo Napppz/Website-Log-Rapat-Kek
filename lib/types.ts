@@ -388,6 +388,7 @@ export interface TeamWorkloadMetric {
     priority?: string | null;
     picName?: string | null;
     progress?: number;
+    meetingId?: string | null;
     meetingNumber?: string | null;
     meetingTitle?: string | null;
   }>;
