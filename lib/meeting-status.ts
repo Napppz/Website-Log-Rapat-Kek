@@ -188,15 +188,25 @@ export const PROGRESS_STATUS_DETAILS: Record<MeetingProgressStatus, ProgressStat
 export const PROGRESS_STATUS_ORDER: MeetingProgressStatus[] = ['Start', 'On Progres', 'Finish'];
 
 export function normalizeProgressStatus(raw?: string | null): MeetingProgressStatus {
-  if (!raw) return 'Start';
+  if (!raw) return 'On Progres';
   const clean = raw.trim().toLowerCase();
   if (clean === 'finish' || clean === 'selesai' || clean === 'final' || clean === 'approved') {
     return 'Finish';
   }
-  if (clean === 'on progres' || clean === 'on progress' || clean === 'review' || clean === 'berjalan') {
+  if (
+    clean === 'on progres' ||
+    clean === 'on progress' ||
+    clean === 'review' ||
+    clean === 'berjalan' ||
+    clean === 'sedang berlangsung' ||
+    clean === 'sedang berjalan'
+  ) {
     return 'On Progres';
   }
-  return 'Start';
+  if (clean === 'start' || clean === 'draft') {
+    return 'Start';
+  }
+  return 'On Progres';
 }
 
 export function mapStatusToProgress(status?: MeetingStatus | string | null): MeetingProgressStatus {

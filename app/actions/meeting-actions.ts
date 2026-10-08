@@ -163,15 +163,18 @@ export async function createMeetingAction(input: CreateMeetingInput) {
         throw new Error(`Biro ${effectiveBiroCode} tidak ditemukan.`);
       }
 
-      // Map progressStatus to MeetingStatus
-      let finalStatus: MeetingStatus = MeetingStatus.DRAFT;
-      const rawProg = (input.progressStatus || '').trim().toLowerCase();
-      if (rawProg === 'finish' || rawProg === 'selesai') {
+      // Map progressStatus to MeetingStatus (Default to 'On Progres' / Sedang Berlangsung)
+      const effectiveProgStatus = input.progressStatus?.trim() || 'On Progres';
+      let finalStatus: MeetingStatus = MeetingStatus.REVIEW;
+      const rawProg = effectiveProgStatus.toLowerCase();
+      if (rawProg === 'finish' || rawProg === 'selesai' || rawProg === 'final') {
         finalStatus = MeetingStatus.FINAL;
-      } else if (rawProg === 'on progres' || rawProg === 'on progress' || rawProg === 'review') {
+      } else if (rawProg === 'on progres' || rawProg === 'on progress' || rawProg === 'review' || rawProg === 'sedang berlangsung') {
         finalStatus = MeetingStatus.REVIEW;
-      } else {
+      } else if (rawProg === 'start' || rawProg === 'draft') {
         finalStatus = MeetingStatus.DRAFT;
+      } else {
+        finalStatus = MeetingStatus.REVIEW;
       }
 
       const finalStartTime = input.startTime?.trim() || '09:00';
@@ -193,7 +196,7 @@ export async function createMeetingAction(input: CreateMeetingInput) {
           status: finalStatus,
           meetingKind: input.meetingKind || null,
           picName: input.picName || null,
-          progressStatus: input.progressStatus || 'Start',
+          progressStatus: effectiveProgStatus,
           previousMeetingId: input.previousMeetingId || null,
           chairpersonId: input.chairpersonId || null,
           invitationDocUrl: input.invitationDocUrl || null,
