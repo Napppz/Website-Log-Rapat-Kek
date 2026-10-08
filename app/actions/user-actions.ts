@@ -323,15 +323,7 @@ export async function deleteUserAction(userId: string) {
         where: { userId },
       });
 
-      // 5. Remove auth sessions and accounts
-      await tx.session.deleteMany({
-        where: { userId },
-      });
-      await tx.account.deleteMany({
-        where: { userId },
-      });
-
-      // 6. Delete user
+      // 5. Delete user
       await tx.user.delete({
         where: { id: userId },
       });

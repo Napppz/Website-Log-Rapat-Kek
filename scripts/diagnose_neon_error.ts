@@ -28,8 +28,6 @@ async function main() {
           secretaryMeetings: true,
           meetingParticipants: true,
           actionItems: true,
-          accounts: true,
-          sessions: true,
         },
         take: 3,
       }),
@@ -87,16 +85,8 @@ async function main() {
       }),
     },
     {
-      name: '9. Query Akun (Account)',
-      fn: () => prisma.account.findMany({ take: 3 }),
-    },
-    {
-      name: '10. Query Sesi (Session)',
-      fn: () => prisma.session.findMany({ take: 3 }),
-    },
-    {
-      name: '11. Query Token Verifikasi (VerificationToken)',
-      fn: () => prisma.verificationToken.findMany({ take: 3 }),
+      name: '9. Query Lampiran Rapat (MeetingAttachment)',
+      fn: () => prisma.meetingAttachment.findMany({ take: 3 }),
     },
   ];
 

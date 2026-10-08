@@ -83,8 +83,6 @@ model User {
   actionItems         ActionItem[]         @relation("UserActionItems")
   actionItemLogs      ActionItemLog[]
   notifications       Notification[]
-  accounts            Account[]
-  sessions            Session[]
   minutesComments     MinutesComment[]
   minutesHistories    MinutesHistory[]
 
@@ -140,6 +138,7 @@ model Meeting {
   actionItems      ActionItem[]
   comments         MinutesComment[]
   history          MinutesHistory[]
+  attachments      MeetingAttachment[]
 
   @@index([meetingNumber])
   @@index([primaryBiroId])
@@ -239,51 +238,22 @@ model ActionItem {
   @@map("tindak_lanjut")
 }
 
-model Account {
-  id                String  @id @default(uuid()) @map("id_akun")
-  userId            String  @map("id_pengguna")
-  type              String  @map("tipe")
-  provider          String  @map("penyedia")
-  providerAccountId String  @map("id_akun_penyedia")
-  refresh_token     String? @map("token_penyegar")
-  access_token      String? @map("token_akses")
-  expires_at        Int?    @map("kedaluwarsa_pada")
-  token_type        String? @map("tipe_token")
-  scope             String? @map("cakupan")
-  id_token          String? @map("token_identitas")
-  session_state     String? @map("status_sesi")
+model MeetingAttachment {
+  id         String   @id @default(uuid()) @map("id_lampiran")
+  meetingId  String   @map("id_rapat")
+  fileName   String   @map("nama_berkas")
+  fileUrl    String   @map("url_berkas")
+  fileSize   Int?     @map("ukuran_berkas")
+  fileType   String?  @map("tipe_berkas")
+  uploadedBy String?  @map("nama_pengunggah")
+  category   String?  @default("MATERIAL") @map("kategori")
+  createdAt  DateTime @default(now()) @map("dibuat_pada")
 
-  createdAt DateTime @default(now()) @map("dibuat_pada")
-  updatedAt DateTime @updatedAt @map("diperbarui_pada")
+  meeting Meeting @relation(fields: [meetingId], references: [id], onDelete: Cascade)
 
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@unique([provider, providerAccountId])
-  @@index([userId])
-  @@map("akun")
-}
-
-model Session {
-  id           String   @id @default(uuid()) @map("id_sesi")
-  sessionToken String   @unique @map("token_sesi")
-  userId       String   @map("id_pengguna")
-  expires      DateTime @map("waktu_kedaluwarsa")
-  createdAt    DateTime @default(now()) @map("dibuat_pada")
-  updatedAt    DateTime @updatedAt @map("diperbarui_pada")
-
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@index([userId])
-  @@map("sesi")
-}
-
-model VerificationToken {
-  identifier String   @map("identifikasi")
-  token      String   @map("token")
-  expires    DateTime @map("waktu_kedaluwarsa")
-
-  @@unique([identifier, token])
-  @@map("token_verifikasi")
+  @@index([meetingId])
+  @@index([createdAt])
+  @@map("lampiran_rapat")
 }
 
 model ActionItemLog {

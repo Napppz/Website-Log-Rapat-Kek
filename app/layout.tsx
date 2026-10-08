@@ -6,6 +6,8 @@ import { AuthProvider } from "@/components/providers/auth-provider";
 import { ToastProvider } from "@/components/providers/toast-provider";
 import { NotificationProvider } from "@/components/providers/notification-provider";
 
+import { auth } from "@/auth";
+
 const publicSans = Public_Sans({
   variable: "--font-public-sans",
   subsets: ["latin"],
@@ -25,15 +27,17 @@ export const metadata: Metadata = {
   description: "Sistem Pengelolaan Agenda Sidang, Risalah Notula & Tindak Lanjut Keputusan Rapat Sekretariat Dewan Nasional Kawasan Ekonomi Khusus.",
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const session = await auth();
+
   return (
     <html lang="id" className={`${publicSans.variable} ${plusJakartaSans.variable}`}>
       <body className="bg-[#F8FAFC] text-slate-800 antialiased selection:bg-[#E8F5F7] selection:text-[#215865]">
-        <AuthProvider>
+        <AuthProvider session={session}>
           <ToastProvider>
             <NotificationProvider>
               <DashboardShell>{children}</DashboardShell>
