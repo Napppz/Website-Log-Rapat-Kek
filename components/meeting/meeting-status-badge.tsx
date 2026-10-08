@@ -36,7 +36,12 @@ export function MeetingStatusBadge({
 }: MeetingStatusBadgeProps) {
   // If progressStatus is supplied or status is one of the progress statuses, render progress badge style
   const isDirectProgress =
-    status === 'Start' || status === 'On Progres' || status === 'Finish';
+    status === 'Belum Dimulai' ||
+    status === 'Dalam Proses' ||
+    status === 'Selesai' ||
+    status === 'Start' ||
+    status === 'On Progres' ||
+    status === 'Finish';
   if (progressStatus || isDirectProgress) {
     return (
       <MeetingProgressBadge
@@ -112,7 +117,10 @@ interface MeetingProgressBadgeProps {
   className?: string;
 }
 
-const PROGRESS_ICONS: Record<MeetingProgressStatus, React.ComponentType<{ className?: string }>> = {
+const PROGRESS_ICONS: Record<string, React.ComponentType<{ className?: string }>> = {
+  'Belum Dimulai': PlayCircle,
+  'Dalam Proses': Hourglass,
+  Selesai: CheckCircle,
   Start: PlayCircle,
   'On Progres': Hourglass,
   Finish: CheckCircle,
@@ -130,8 +138,8 @@ export function MeetingProgressBadge({
     ? normalizeProgressStatus(progressStatus)
     : mapStatusToProgress(status);
 
-  const detail = PROGRESS_STATUS_DETAILS[effectiveProgress];
-  const IconComponent = PROGRESS_ICONS[effectiveProgress];
+  const detail = PROGRESS_STATUS_DETAILS[effectiveProgress] || PROGRESS_STATUS_DETAILS['Belum Dimulai'];
+  const IconComponent = PROGRESS_ICONS[effectiveProgress] || PlayCircle;
 
   const sizeClasses = {
     sm: 'text-[10px] px-2 py-0.5 gap-1',
@@ -159,7 +167,7 @@ export function MeetingProgressBadge({
           className={cn(
             'w-2 h-2 rounded-full shrink-0',
             detail.colorClass.dot,
-            effectiveProgress === 'On Progres' && 'animate-pulse'
+            (effectiveProgress === 'Dalam Proses' || effectiveProgress === 'On Progres') && 'animate-pulse'
           )}
         />
         <IconComponent className={cn(iconSizes, 'shrink-0')} />

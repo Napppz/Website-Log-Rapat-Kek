@@ -163,18 +163,29 @@ export async function createMeetingAction(input: CreateMeetingInput) {
         throw new Error(`Biro ${effectiveBiroCode} tidak ditemukan.`);
       }
 
-      // Map progressStatus to MeetingStatus (Default to 'On Progres' / Sedang Berlangsung)
-      const effectiveProgStatus = input.progressStatus?.trim() || 'On Progres';
-      let finalStatus: MeetingStatus = MeetingStatus.REVIEW;
+      // Map progressStatus to MeetingStatus (Default to 'Belum Dimulai')
+      const effectiveProgStatus = input.progressStatus?.trim() || 'Belum Dimulai';
+      let finalStatus: MeetingStatus = MeetingStatus.DRAFT;
       const rawProg = effectiveProgStatus.toLowerCase();
       if (rawProg === 'finish' || rawProg === 'selesai' || rawProg === 'final') {
         finalStatus = MeetingStatus.FINAL;
-      } else if (rawProg === 'on progres' || rawProg === 'on progress' || rawProg === 'review' || rawProg === 'sedang berlangsung') {
+      } else if (
+        rawProg === 'dalam proses' ||
+        rawProg === 'on progres' ||
+        rawProg === 'on progress' ||
+        rawProg === 'review' ||
+        rawProg === 'sedang berlangsung'
+      ) {
         finalStatus = MeetingStatus.REVIEW;
-      } else if (rawProg === 'start' || rawProg === 'draft') {
+      } else if (
+        rawProg === 'belum dimulai' ||
+        rawProg === 'belum mulai' ||
+        rawProg === 'start' ||
+        rawProg === 'draft'
+      ) {
         finalStatus = MeetingStatus.DRAFT;
       } else {
-        finalStatus = MeetingStatus.REVIEW;
+        finalStatus = MeetingStatus.DRAFT;
       }
 
       const finalStartTime = input.startTime?.trim() || '09:00';
@@ -422,46 +433,65 @@ export async function updateMeetingStatusAction(
       }
     }
 
-    // Determine target MeetingStatus and target progressStatus ('Start' | 'On Progres' | 'Finish')
+    // Determine target MeetingStatus and target progressStatus ('Belum Dimulai' | 'Dalam Proses' | 'Selesai')
     let targetStatus: MeetingStatus = existing.status;
-    let targetProgressStatus: string = existing.progressStatus || 'Start';
+    let targetProgressStatus: string = existing.progressStatus || 'Belum Dimulai';
 
     const valStr = (status || '').toString().trim();
     const valLower = valStr.toLowerCase();
 
     if (valLower === 'finish' || valLower === 'selesai') {
-      targetProgressStatus = 'Finish';
+      targetProgressStatus = 'Selesai';
       targetStatus = MeetingStatus.FINAL;
-    } else if (valLower === 'on progres' || valLower === 'on progress' || valLower === 'berjalan') {
-      targetProgressStatus = 'On Progres';
+    } else if (
+      valLower === 'dalam proses' ||
+      valLower === 'on progres' ||
+      valLower === 'on progress' ||
+      valLower === 'berjalan' ||
+      valLower === 'sedang berlangsung'
+    ) {
+      targetProgressStatus = 'Dalam Proses';
       targetStatus = MeetingStatus.REVIEW;
-    } else if (valLower === 'start' || valLower === 'mulai') {
-      targetProgressStatus = 'Start';
+    } else if (
+      valLower === 'belum dimulai' ||
+      valLower === 'belum mulai' ||
+      valLower === 'start' ||
+      valLower === 'draft'
+    ) {
+      targetProgressStatus = 'Belum Dimulai';
       targetStatus = MeetingStatus.DRAFT;
     } else if (valStr.toUpperCase() === 'FINAL') {
       targetStatus = MeetingStatus.FINAL;
-      targetProgressStatus = 'Finish';
+      targetProgressStatus = 'Selesai';
     } else if (valStr.toUpperCase() === 'APPROVED') {
       targetStatus = MeetingStatus.APPROVED;
-      targetProgressStatus = 'Finish';
+      targetProgressStatus = 'Selesai';
     } else if (valStr.toUpperCase() === 'REVIEW') {
       targetStatus = MeetingStatus.REVIEW;
-      targetProgressStatus = 'On Progres';
+      targetProgressStatus = 'Dalam Proses';
     } else if (valStr.toUpperCase() === 'DRAFT') {
       targetStatus = MeetingStatus.DRAFT;
-      targetProgressStatus = 'Start';
+      targetProgressStatus = 'Belum Dimulai';
     }
 
     if (explicitProgressStatus) {
       const expLower = explicitProgressStatus.trim().toLowerCase();
       if (expLower === 'finish' || expLower === 'selesai') {
-        targetProgressStatus = 'Finish';
+        targetProgressStatus = 'Selesai';
         targetStatus = MeetingStatus.FINAL;
-      } else if (expLower === 'on progres' || expLower === 'on progress') {
-        targetProgressStatus = 'On Progres';
+      } else if (
+        expLower === 'dalam proses' ||
+        expLower === 'on progres' ||
+        expLower === 'on progress'
+      ) {
+        targetProgressStatus = 'Dalam Proses';
         targetStatus = MeetingStatus.REVIEW;
-      } else if (expLower === 'start') {
-        targetProgressStatus = 'Start';
+      } else if (
+        expLower === 'belum dimulai' ||
+        expLower === 'belum mulai' ||
+        expLower === 'start'
+      ) {
+        targetProgressStatus = 'Belum Dimulai';
         targetStatus = MeetingStatus.DRAFT;
       }
     }

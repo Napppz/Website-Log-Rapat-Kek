@@ -189,8 +189,8 @@ export default function BuatRapatPage() {
   const [isManualNumber, setIsManualNumber] = useState<boolean>(false);
   const [isLoadingNumber, setIsLoadingNumber] = useState<boolean>(false);
 
-  // Status Rapat: Otomatis 'On Progres' saat pembuatan; dikelola di menu Tindak Lanjut
-  const [statusRapat, setStatusRapat] = useState<string>('On Progres');
+  // Status Rapat: Otomatis 'Belum Dimulai' saat pembuatan rapat baru
+  const [statusRapat, setStatusRapat] = useState<string>('Belum Dimulai');
 
   // Optional: Tautkan rapat sebelumnya
   const [previousMeetingId, setPreviousMeetingId] = useState<string>('');
@@ -1286,13 +1286,13 @@ export default function BuatRapatPage() {
                   <div>
                     <div className="flex items-center gap-2">
                       <span className="font-bold text-slate-900 text-sm">Status Rapat Baru:</span>
-                      <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-bold bg-emerald-100 text-emerald-800 border border-emerald-300">
-                        <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-                        Sedang Berlangsung (On Progress)
+                      <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-bold bg-sky-100 text-sky-800 border border-sky-300">
+                        <span className="w-2 h-2 rounded-full bg-sky-500" />
+                        Belum Dimulai (Terjadwal)
                       </span>
                     </div>
                     <p className="text-xs text-slate-600 mt-1 leading-relaxed">
-                      Saat rapat dibuat, status otomatis diset <strong>Sedang Berlangsung</strong>. Pembaruan status (Start, On Progress, Finish) dan progres tindak lanjut dilakukan saat pengisian matriks di menu <strong>Tindak Lanjut</strong>.
+                      Saat rapat dibuat, status otomatis diset <strong>Belum Dimulai</strong>. Ketika pelaksanaan rapat dimulai, cukup klik tombol <strong>Mulai Rapat</strong> untuk langsung mengubah status menjadi <strong>Dalam Proses</strong>.
                     </p>
                   </div>
                 </div>

@@ -20,6 +20,7 @@ import {
   Loader2,
   Layers,
   ExternalLink,
+  Play,
 } from 'lucide-react';
 import { Meeting, BiroCode, MeetingStatus, getMeetingCategoryInfo } from '@/lib/types';
 import { MOCK_MEETINGS } from '@/lib/mock-data';
@@ -100,26 +101,26 @@ export function MeetingTable({
   const [downloadingId, setDownloadingId] = useState<string | null>(null);
   const [deletingRowId, setDeletingRowId] = useState<string | null>(null);
   const [updatingStatusId, setUpdatingStatusId] = useState<string | null>(null);
-  const [progressTabFilter, setProgressTabFilter] = useState<'ALL' | 'Start' | 'On Progres' | 'Finish'>('ALL');
+  const [progressTabFilter, setProgressTabFilter] = useState<'ALL' | 'Belum Dimulai' | 'Dalam Proses' | 'Selesai'>('ALL');
   const { data: session } = useSession();
   const userRole = session?.user?.role || 'STAFF';
   const canDeleteMeeting = userRole === 'SUPER_ADMIN' || userRole === 'ADMIN';
   const canUpdateStatus = userRole === 'SUPER_ADMIN' || userRole === 'ADMIN' || userRole === 'STAFF';
 
-  const countStart = useMemo(
-    () => meetings.filter((m) => normalizeProgressStatus(m.progressStatus || mapStatusToProgress(m.status)) === 'Start').length,
+  const countBelumDimulai = useMemo(
+    () => meetings.filter((m) => normalizeProgressStatus(m.progressStatus || mapStatusToProgress(m.status)) === 'Belum Dimulai').length,
     [meetings]
   );
-  const countOnProgress = useMemo(
-    () => meetings.filter((m) => normalizeProgressStatus(m.progressStatus || mapStatusToProgress(m.status)) === 'On Progres').length,
+  const countDalamProses = useMemo(
+    () => meetings.filter((m) => normalizeProgressStatus(m.progressStatus || mapStatusToProgress(m.status)) === 'Dalam Proses').length,
     [meetings]
   );
-  const countFinish = useMemo(
-    () => meetings.filter((m) => normalizeProgressStatus(m.progressStatus || mapStatusToProgress(m.status)) === 'Finish').length,
+  const countSelesai = useMemo(
+    () => meetings.filter((m) => normalizeProgressStatus(m.progressStatus || mapStatusToProgress(m.status)) === 'Selesai').length,
     [meetings]
   );
 
-  const handleQuickUpdateStatus = async (meetingId: string, newProg: 'Start' | 'On Progres' | 'Finish') => {
+  const handleQuickUpdateStatus = async (meetingId: string, newProg: 'Belum Dimulai' | 'Dalam Proses' | 'Selesai') => {
     try {
       setUpdatingStatusId(meetingId);
       const res = await updateMeetingStatusAction(meetingId, newProg);
@@ -569,55 +570,55 @@ export function MeetingTable({
 
               <button
                 type="button"
-                onClick={() => setProgressTabFilter('Start')}
+                onClick={() => setProgressTabFilter('Belum Dimulai')}
                 className={cn(
                   "px-2.5 py-1 rounded-lg text-[11.5px] font-bold transition-all cursor-pointer flex items-center gap-1.5 border select-none shrink-0",
-                  progressTabFilter === 'Start'
+                  progressTabFilter === 'Belum Dimulai'
                     ? "bg-sky-600 text-white border-sky-700 shadow-2xs ring-2 ring-sky-300/40"
                     : "bg-white text-sky-800 border-sky-200 hover:bg-sky-50"
                 )}
-                title="Filter rapat tahap Start (Persiapan / Terjadwal)"
+                title="Filter rapat tahap Belum Dimulai (Persiapan / Terjadwal)"
               >
                 <span className="w-2 h-2 rounded-full bg-sky-500"></span>
-                <span>Start</span>
-                <span className={cn("px-1.5 py-0.2 rounded-full text-[10px]", progressTabFilter === 'Start' ? "bg-sky-700 text-white" : "bg-sky-100 text-sky-800")}>
-                  {countStart}
+                <span>Belum Dimulai</span>
+                <span className={cn("px-1.5 py-0.2 rounded-full text-[10px]", progressTabFilter === 'Belum Dimulai' ? "bg-sky-700 text-white" : "bg-sky-100 text-sky-800")}>
+                  {countBelumDimulai}
                 </span>
               </button>
 
               <button
                 type="button"
-                onClick={() => setProgressTabFilter('On Progres')}
+                onClick={() => setProgressTabFilter('Dalam Proses')}
                 className={cn(
                   "px-2.5 py-1 rounded-lg text-[11.5px] font-bold transition-all cursor-pointer flex items-center gap-1.5 border select-none shrink-0",
-                  progressTabFilter === 'On Progres'
+                  progressTabFilter === 'Dalam Proses'
                     ? "bg-amber-600 text-white border-amber-700 shadow-2xs ring-2 ring-amber-300/40"
                     : "bg-white text-amber-800 border-amber-200 hover:bg-amber-50"
                 )}
-                title="Filter rapat tahap On Progres (Sedang Berjalan / Telaah)"
+                title="Filter rapat tahap Dalam Proses (Sedang Berjalan / Telaah)"
               >
                 <span className="w-2 h-2 rounded-full bg-amber-500 animate-pulse"></span>
-                <span>On Progres</span>
-                <span className={cn("px-1.5 py-0.2 rounded-full text-[10px]", progressTabFilter === 'On Progres' ? "bg-amber-700 text-white" : "bg-amber-100 text-amber-800")}>
-                  {countOnProgress}
+                <span>Dalam Proses</span>
+                <span className={cn("px-1.5 py-0.2 rounded-full text-[10px]", progressTabFilter === 'Dalam Proses' ? "bg-amber-700 text-white" : "bg-amber-100 text-amber-800")}>
+                  {countDalamProses}
                 </span>
               </button>
 
               <button
                 type="button"
-                onClick={() => setProgressTabFilter('Finish')}
+                onClick={() => setProgressTabFilter('Selesai')}
                 className={cn(
                   "px-2.5 py-1 rounded-lg text-[11.5px] font-bold transition-all cursor-pointer flex items-center gap-1.5 border select-none shrink-0",
-                  progressTabFilter === 'Finish'
+                  progressTabFilter === 'Selesai'
                     ? "bg-emerald-600 text-white border-emerald-700 shadow-2xs ring-2 ring-emerald-300/40"
                     : "bg-white text-emerald-800 border-emerald-200 hover:bg-emerald-50"
                 )}
-                title="Filter rapat tahap Finish (Selesai & Disahkan)"
+                title="Filter rapat tahap Selesai (Disahkan)"
               >
                 <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
-                <span>Finish</span>
-                <span className={cn("px-1.5 py-0.2 rounded-full text-[10px]", progressTabFilter === 'Finish' ? "bg-emerald-700 text-white" : "bg-emerald-100 text-emerald-800")}>
-                  {countFinish}
+                <span>Selesai</span>
+                <span className={cn("px-1.5 py-0.2 rounded-full text-[10px]", progressTabFilter === 'Selesai' ? "bg-emerald-700 text-white" : "bg-emerald-100 text-emerald-800")}>
+                  {countSelesai}
                 </span>
               </button>
             </div>
@@ -657,7 +658,7 @@ export function MeetingTable({
               <th className="py-3 px-4">Nomor &amp; Tanggal</th>
               <th className="py-3 px-4">Agenda Rapat</th>
               <th className="py-3 px-4">Tim Kerja Pelaksana</th>
-              <th className="py-3 px-4" title="Status Pemantauan Rapat: Start -> On Progres -> Finish">Status Rapat</th>
+              <th className="py-3 px-4" title="Status Pemantauan Rapat: Belum Dimulai -> Dalam Proses -> Selesai">Status Rapat</th>
               <th className="py-3 px-4">Tindak Lanjut</th>
               <th className="py-3 px-4 text-right">Aksi</th>
             </tr>
@@ -868,7 +869,7 @@ export function MeetingTable({
                       })()}
                     </td>
 
-                    {/* Status Rapat (Start, On Progres, Finish) */}
+                    {/* Status Rapat (Belum Dimulai, Dalam Proses, Selesai) */}
                     <td className="py-3.5 px-4 align-top whitespace-nowrap">
                       <div className="flex flex-col items-start gap-1.5">
                         <MeetingProgressBadge
@@ -879,40 +880,61 @@ export function MeetingTable({
                         />
 
                         {/* Quick 1-Click Status Updater for Atasan & Staff */}
-                        {canUpdateStatus && (
-                          <div className="flex items-center gap-1 mt-0.5">
-                            <span className="text-[10px] text-slate-400 font-medium mr-0.5">Ubah:</span>
-                            {(['Start', 'On Progres', 'Finish'] as const).map((st) => {
-                              const curProg = normalizeProgressStatus(meeting.progressStatus || mapStatusToProgress(meeting.status));
-                              const isSelected = curProg === st;
-                              return (
+                        {canUpdateStatus && (() => {
+                          const curProg = normalizeProgressStatus(meeting.progressStatus || mapStatusToProgress(meeting.status));
+                          return (
+                            <div className="flex flex-col gap-1 mt-0.5">
+                              {curProg === 'Belum Dimulai' && (
                                 <button
-                                  key={st}
                                   type="button"
-                                  disabled={isSelected || updatingStatusId === meeting.id}
-                                  onClick={() => handleQuickUpdateStatus(meeting.id, st)}
-                                  className={cn(
-                                    "px-1.5 py-0.5 rounded text-[10px] font-bold transition-all border select-none",
-                                    isSelected
-                                      ? st === 'Start'
-                                        ? "bg-sky-100 text-sky-800 border-sky-300 shadow-2xs font-extrabold cursor-default"
-                                        : st === 'On Progres'
-                                        ? "bg-amber-100 text-amber-900 border-amber-300 shadow-2xs font-extrabold cursor-default"
-                                        : "bg-emerald-100 text-emerald-900 border-emerald-300 shadow-2xs font-extrabold cursor-default"
-                                      : "bg-white text-slate-500 border-slate-200 hover:text-slate-800 hover:bg-slate-50 cursor-pointer"
-                                  )}
-                                  title={`Klik untuk ubah status rapat menjadi ${st}`}
+                                  disabled={updatingStatusId === meeting.id}
+                                  onClick={() => handleQuickUpdateStatus(meeting.id, 'Dalam Proses')}
+                                  className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded text-[10.5px] font-bold bg-emerald-600 hover:bg-emerald-700 text-white shadow-2xs transition-all cursor-pointer active:scale-95 disabled:opacity-50"
+                                  title="Mulai Rapat (Ubah status ke Dalam Proses)"
                                 >
                                   {updatingStatusId === meeting.id ? (
-                                    <Loader2 className="w-2.5 h-2.5 animate-spin inline" />
+                                    <Loader2 className="w-2.5 h-2.5 animate-spin" />
                                   ) : (
-                                    st
+                                    <Play className="w-2.5 h-2.5 fill-current" />
                                   )}
+                                  <span>Mulai Rapat</span>
                                 </button>
-                              );
-                            })}
-                          </div>
-                        )}
+                              )}
+
+                              <div className="flex items-center gap-1">
+                                <span className="text-[10px] text-slate-400 font-medium mr-0.5">Ubah:</span>
+                                {(['Belum Dimulai', 'Dalam Proses', 'Selesai'] as const).map((st) => {
+                                  const isSelected = curProg === st;
+                                  return (
+                                    <button
+                                      key={st}
+                                      type="button"
+                                      disabled={isSelected || updatingStatusId === meeting.id}
+                                      onClick={() => handleQuickUpdateStatus(meeting.id, st)}
+                                      className={cn(
+                                        "px-1.5 py-0.5 rounded text-[10px] font-bold transition-all border select-none",
+                                        isSelected
+                                          ? st === 'Belum Dimulai'
+                                            ? "bg-sky-100 text-sky-800 border-sky-300 shadow-2xs font-extrabold cursor-default"
+                                            : st === 'Dalam Proses'
+                                            ? "bg-amber-100 text-amber-900 border-amber-300 shadow-2xs font-extrabold cursor-default"
+                                            : "bg-emerald-100 text-emerald-900 border-emerald-300 shadow-2xs font-extrabold cursor-default"
+                                          : "bg-white text-slate-500 border-slate-200 hover:text-slate-800 hover:bg-slate-50 cursor-pointer"
+                                      )}
+                                      title={`Klik untuk ubah status rapat menjadi ${st}`}
+                                    >
+                                      {updatingStatusId === meeting.id ? (
+                                        <Loader2 className="w-2.5 h-2.5 animate-spin inline" />
+                                      ) : (
+                                        st
+                                      )}
+                                    </button>
+                                  );
+                                })}
+                              </div>
+                            </div>
+                          );
+                        })()}
                       </div>
                     </td>
 

@@ -189,14 +189,14 @@ export function SemuaRapatClient({
   }, [teamFilteredMeetings, monthIdx, dayIdx, targetYear, targetDate, searchFilter, kategoriParam]);
 
   const countAll = fullyFilteredMeetings.length;
-  const countStart = fullyFilteredMeetings.filter(
-    (m) => normalizeProgressStatus(m.progressStatus || mapStatusToProgress(m.status)) === 'Start'
+  const countBelumDimulai = fullyFilteredMeetings.filter(
+    (m) => normalizeProgressStatus(m.progressStatus || mapStatusToProgress(m.status)) === 'Belum Dimulai'
   ).length;
-  const countOnProgress = fullyFilteredMeetings.filter(
-    (m) => normalizeProgressStatus(m.progressStatus || mapStatusToProgress(m.status)) === 'On Progres'
+  const countDalamProses = fullyFilteredMeetings.filter(
+    (m) => normalizeProgressStatus(m.progressStatus || mapStatusToProgress(m.status)) === 'Dalam Proses'
   ).length;
-  const countFinish = fullyFilteredMeetings.filter(
-    (m) => normalizeProgressStatus(m.progressStatus || mapStatusToProgress(m.status)) === 'Finish'
+  const countSelesai = fullyFilteredMeetings.filter(
+    (m) => normalizeProgressStatus(m.progressStatus || mapStatusToProgress(m.status)) === 'Selesai'
   ).length;
 
   const countUndanganInternal = teamFilteredMeetings.filter(
@@ -234,9 +234,9 @@ export function SemuaRapatClient({
     dotColor: string;
   }[] = [
     { label: 'Semua Status', value: 'ALL', count: countAll, dotColor: 'bg-slate-400' },
-    { label: 'Start', value: 'Start', count: countStart, sublabel: 'Persiapan / Terjadwal', dotColor: 'bg-sky-500' },
-    { label: 'On Progres', value: 'On Progres', count: countOnProgress, sublabel: 'Sedang Berjalan / Telaah', dotColor: 'bg-amber-500' },
-    { label: 'Finish', value: 'Finish', count: countFinish, sublabel: 'Selesai & Disahkan', dotColor: 'bg-emerald-500' },
+    { label: 'Belum Dimulai', value: 'Belum Dimulai', count: countBelumDimulai, sublabel: 'Persiapan / Terjadwal', dotColor: 'bg-sky-500' },
+    { label: 'Dalam Proses', value: 'Dalam Proses', count: countDalamProses, sublabel: 'Sedang Berjalan / Telaah', dotColor: 'bg-amber-500' },
+    { label: 'Selesai', value: 'Selesai', count: countSelesai, sublabel: 'Selesai & Disahkan', dotColor: 'bg-emerald-500' },
   ];
 
   // Presets and date helpers
@@ -1191,7 +1191,7 @@ export function SemuaRapatClient({
               )}
 
               <span className="text-slate-500 text-[11.5px] ml-1 font-medium">
-                (Ditemukan <strong className="text-slate-800">{statusParam ? fullyFilteredMeetings.filter((m) => m.status === statusParam).length : countAll}</strong> risalah)
+                (Ditemukan <strong className="text-slate-800">{statusParam ? fullyFilteredMeetings.filter((m) => normalizeProgressStatus(m.progressStatus || mapStatusToProgress(m.status)) === normalizeProgressStatus(statusParam)).length : countAll}</strong> risalah)
               </span>
             </div>
 

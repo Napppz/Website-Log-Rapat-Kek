@@ -122,8 +122,8 @@ export function CreateMeetingDialog({ isOpen, onClose }: CreateMeetingDialogProp
   const [registrationNumber, setRegistrationNumber] = useState<string>('');
   const [isManualNumber, setIsManualNumber] = useState(false);
 
-  // 11. Status: Otomatis 'On Progres' (Sedang Berlangsung)
-  const [statusRapat, setStatusRapat] = useState<string>('On Progres');
+  // 11. Status: Otomatis 'Belum Dimulai' (Persiapan / Terjadwal)
+  const [statusRapat, setStatusRapat] = useState<string>('Belum Dimulai');
 
   // Aux
   const [availableUsers, setAvailableUsers] = useState<any[]>([]);
@@ -634,20 +634,20 @@ export function CreateMeetingDialog({ isOpen, onClose }: CreateMeetingDialogProp
           </div>
 
           {/* Status Rapat Otomatis */}
-          <div className="p-3.5 bg-emerald-50/70 border border-emerald-200 rounded-xl flex items-center justify-between">
+          <div className="p-3.5 bg-sky-50/70 border border-sky-200 rounded-xl flex items-center justify-between">
             <div className="flex items-center gap-2.5">
-              <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse" />
+              <span className="w-2.5 h-2.5 rounded-full bg-sky-500" />
               <div>
-                <p className="text-xs font-bold text-emerald-950">
-                  Status Otomatis: Sedang Berlangsung
+                <p className="text-xs font-bold text-sky-950">
+                  Status Otomatis: Belum Dimulai
                 </p>
-                <p className="text-[11px] text-emerald-700">
-                  Progres lanjutan (Start, On Progress, Finish) dikelola di menu Tindak Lanjut
+                <p className="text-[11px] text-sky-700">
+                  Rapat dijadwalkan dengan status awal Belum Dimulai. Klik &quot;Mulai Rapat&quot; saat rapat dimulai.
                 </p>
               </div>
             </div>
-            <span className="px-2.5 py-0.5 rounded text-[11px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-300">
-              On Progres
+            <span className="px-2.5 py-0.5 rounded text-[11px] font-bold bg-sky-100 text-sky-800 border border-sky-300">
+              Belum Dimulai
             </span>
           </div>
 

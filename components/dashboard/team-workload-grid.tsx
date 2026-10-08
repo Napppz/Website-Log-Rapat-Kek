@@ -213,7 +213,7 @@ export function TeamWorkloadGrid({ teams, onTeamClick }: TeamWorkloadGridProps) 
                   </div>
                 </div>
 
-                {/* KPI 2: Status Pekerjaan (Start, On Progres, Finish) */}
+                {/* KPI 2: Status Pekerjaan (Belum Dimulai, Dalam Proses, Selesai) */}
                 <div>
                   <div className="flex items-center justify-between text-[11px] font-semibold text-slate-500 uppercase tracking-wider mb-2">
                     <span>Status Tiap Pekerjaan</span>
@@ -223,33 +223,33 @@ export function TeamWorkloadGrid({ teams, onTeamClick }: TeamWorkloadGridProps) 
                   </div>
 
                   <div className="grid grid-cols-3 gap-2">
-                    {/* Start */}
+                    {/* Belum Dimulai */}
                     <div className="bg-sky-50/70 border border-sky-200/80 rounded-xl p-2.5 flex flex-col items-center text-center transition-all group-hover:bg-sky-50">
                       <div className="flex items-center gap-1 text-[11px] font-bold text-sky-800 mb-0.5">
                         <span className="w-1.5 h-1.5 rounded-full bg-sky-500" />
-                        <span>Start</span>
+                        <span>Belum Dimulai</span>
                       </div>
                       <span className="text-lg font-black text-sky-700 tabular-nums">
                         {team.pendingJobs}
                       </span>
                     </div>
 
-                    {/* On Progres */}
+                    {/* Dalam Proses */}
                     <div className="bg-amber-50/70 border border-amber-200/80 rounded-xl p-2.5 flex flex-col items-center text-center transition-all group-hover:bg-amber-50">
                       <div className="flex items-center gap-1 text-[11px] font-bold text-amber-800 mb-0.5">
                         <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse" />
-                        <span>On Progres</span>
+                        <span>Dalam Proses</span>
                       </div>
                       <span className="text-lg font-black text-amber-700 tabular-nums">
                         {team.inProgressJobs}
                       </span>
                     </div>
 
-                    {/* Finish */}
+                    {/* Selesai */}
                     <div className="bg-emerald-50/70 border border-emerald-200/80 rounded-xl p-2.5 flex flex-col items-center text-center transition-all group-hover:bg-emerald-50">
                       <div className="flex items-center gap-1 text-[11px] font-bold text-emerald-800 mb-0.5">
                         <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
-                        <span>Finish</span>
+                        <span>Selesai</span>
                       </div>
                       <span className="text-lg font-black text-emerald-700 tabular-nums">
                         {team.completedJobs}

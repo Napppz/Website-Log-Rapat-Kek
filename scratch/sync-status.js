@@ -2,28 +2,43 @@ const { PrismaClient } = require('@prisma/client');
 const prisma = new PrismaClient();
 
 async function main() {
-  console.log('Syncing meeting progressStatus...');
+  console.log('Syncing meeting progressStatus to formal Indonesian...');
   
-  // 1. Update REVIEW meetings to 'On Progres'
+  // 1. Update REVIEW meetings to 'Dalam Proses'
   const res1 = await prisma.meeting.updateMany({
-    where: { status: 'REVIEW' },
-    data: { progressStatus: 'On Progres' }
+    where: {
+      OR: [
+        { status: 'REVIEW' },
+        { progressStatus: { in: ['On Progres', 'On Progress', 'review'] } }
+      ]
+    },
+    data: { progressStatus: 'Dalam Proses' }
   });
-  console.log('Updated REVIEW -> On Progres:', res1.count);
+  console.log('Updated to Dalam Proses:', res1.count);
 
-  // 2. Update APPROVED and FINAL meetings to 'Finish'
+  // 2. Update APPROVED and FINAL meetings to 'Selesai'
   const res2 = await prisma.meeting.updateMany({
-    where: { status: { in: ['APPROVED', 'FINAL'] } },
-    data: { progressStatus: 'Finish' }
+    where: {
+      OR: [
+        { status: { in: ['APPROVED', 'FINAL'] } },
+        { progressStatus: { in: ['Finish', 'finish', 'Selesai'] } }
+      ]
+    },
+    data: { progressStatus: 'Selesai' }
   });
-  console.log('Updated APPROVED/FINAL -> Finish:', res2.count);
+  console.log('Updated to Selesai:', res2.count);
 
-  // 3. Update DRAFT meetings to 'Start'
+  // 3. Update DRAFT meetings to 'Belum Dimulai'
   const res3 = await prisma.meeting.updateMany({
-    where: { status: 'DRAFT' },
-    data: { progressStatus: 'Start' }
+    where: {
+      OR: [
+        { status: 'DRAFT' },
+        { progressStatus: { in: ['Start', 'start', 'Belum Dimulai', 'Belum Mulai'] } }
+      ]
+    },
+    data: { progressStatus: 'Belum Dimulai' }
   });
-  console.log('Updated DRAFT -> Start:', res3.count);
+  console.log('Updated to Belum Dimulai:', res3.count);
 
   // Verification
   const meetings = await prisma.meeting.findMany({

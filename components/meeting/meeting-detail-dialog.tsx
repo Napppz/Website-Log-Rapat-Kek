@@ -20,6 +20,7 @@ import {
   Loader2,
   Paperclip,
   Video,
+  Play,
 } from 'lucide-react';
 import { Meeting, MeetingStatus } from '@/lib/types';
 import { MeetingStatusBadge, MeetingProgressBadge } from './meeting-status-badge';
@@ -213,6 +214,23 @@ export function MeetingDetailDialog({
     }
   };
 
+  const currentProg = normalizeProgressStatus(
+    meeting?.progressStatus || (meeting?.status === 'DRAFT' ? 'Belum Dimulai' : 'Dalam Proses')
+  );
+  const isBelumDimulai = currentProg === 'Belum Dimulai' || meeting?.status === 'DRAFT';
+
+  const handleStartMeeting = async () => {
+    if (!meeting) return;
+    const confirmed = await confirmModal({
+      title: 'Mulai Pelaksanaan Rapat?',
+      message: `Apakah Anda ingin memulai pelaksanaan rapat "${meeting.title}" sekarang? Status rapat akan langsung diubah menjadi "Dalam Proses".`,
+      confirmText: 'Ya, Mulai Rapat',
+      variant: 'primary',
+    });
+    if (!confirmed) return;
+    await handleStatusChange('Dalam Proses');
+  };
+
   const handleStatusChange = async (newStatus: string) => {
     try {
       setIsUpdatingStatus(true);
@@ -257,6 +275,18 @@ export function MeetingDetailDialog({
               isNew={meeting.isNew}
               showSubtitle
             />
+            {canChangeStatus && isBelumDimulai && (
+              <button
+                type="button"
+                disabled={isUpdatingStatus}
+                onClick={handleStartMeeting}
+                className="inline-flex items-center gap-1.5 px-3 py-1 rounded-md text-[12px] font-bold text-white bg-emerald-600 hover:bg-emerald-700 transition-all shadow-xs hover:shadow-md cursor-pointer animate-pulse active:scale-95 disabled:opacity-50"
+                title="Mulai Rapat (Ubah status dari Belum Dimulai ke Dalam Proses)"
+              >
+                <Play className="w-3 h-3 fill-current" />
+                <span>Mulai Rapat</span>
+              </button>
+            )}
           </div>
 
           <div className="flex items-center gap-2">
@@ -485,7 +515,19 @@ export function MeetingDetailDialog({
                 </div>
                 {canChangeStatus ? (
                   <div className="flex flex-wrap items-center gap-2">
-                    {(['Start', 'On Progres', 'Finish'] as const).map((st) => {
+                    {canChangeStatus && isBelumDimulai && (
+                      <button
+                        type="button"
+                        disabled={isUpdatingStatus}
+                        onClick={handleStartMeeting}
+                        className="px-3 py-1.5 rounded-xl text-[11.5px] font-bold bg-emerald-600 hover:bg-emerald-700 text-white shadow-xs flex items-center gap-1.5 cursor-pointer active:scale-95 transition-all"
+                        title="Mulai Rapat Sekarang"
+                      >
+                        <Play className="w-3 h-3 fill-current" />
+                        <span>Mulai Rapat</span>
+                      </button>
+                    )}
+                    {(['Belum Dimulai', 'Dalam Proses', 'Selesai'] as const).map((st) => {
                       const curProg = normalizeProgressStatus(meeting.progressStatus || mapStatusToProgress(meeting.status));
                       const isSelected = curProg === st;
                       return (
@@ -497,9 +539,9 @@ export function MeetingDetailDialog({
                           className={cn(
                             "px-3 py-1.5 rounded-xl text-[11.5px] font-bold transition-all cursor-pointer border flex items-center gap-1.5 select-none",
                             isSelected
-                              ? st === 'Start'
+                              ? st === 'Belum Dimulai'
                                 ? "bg-sky-600 text-white border-sky-700 shadow-xs cursor-default ring-2 ring-sky-300/40"
-                                : st === 'On Progres'
+                                : st === 'Dalam Proses'
                                 ? "bg-amber-600 text-white border-amber-700 shadow-xs cursor-default ring-2 ring-amber-300/40"
                                 : "bg-emerald-600 text-white border-emerald-700 shadow-xs cursor-default ring-2 ring-emerald-300/40"
                               : "bg-white border-slate-200 text-slate-700 hover:bg-[#E8F5F7] hover:text-[#215865] hover:border-[#BCE3EB]"
@@ -509,8 +551,8 @@ export function MeetingDetailDialog({
                           <span
                             className={cn(
                               "w-2 h-2 rounded-full",
-                              st === 'Start' ? "bg-sky-400" : st === 'On Progres' ? "bg-amber-400" : "bg-emerald-400",
-                              isSelected && st === 'On Progres' && "animate-pulse"
+                              st === 'Belum Dimulai' ? "bg-sky-400" : st === 'Dalam Proses' ? "bg-amber-400" : "bg-emerald-400",
+                              isSelected && st === 'Dalam Proses' && "animate-pulse"
                             )}
                           />
                           <span>{st}</span>
@@ -610,6 +652,19 @@ export function MeetingDetailDialog({
           )}
 
           <div className="flex items-center gap-2">
+            {canChangeStatus && isBelumDimulai && (
+              <button
+                type="button"
+                disabled={isUpdatingStatus}
+                onClick={handleStartMeeting}
+                className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-[12px] shadow-sm hover:shadow-md transition-all cursor-pointer animate-pulse active:scale-95 disabled:opacity-50"
+                title="Mulai Rapat Sekarang"
+              >
+                <Play className="w-3.5 h-3.5 fill-current" />
+                <span>Mulai Rapat</span>
+              </button>
+            )}
+
             <button
               type="button"
               onClick={onClose}

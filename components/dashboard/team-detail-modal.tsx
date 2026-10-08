@@ -123,7 +123,7 @@ export function TeamDetailModal({ isOpen, onClose, team }: TeamDetailModalProps)
           <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-amber-50 text-amber-800 border border-amber-300">
             <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse" />
             <Clock className="w-3 h-3 text-amber-600" />
-            On Progres
+            Dalam Proses
           </span>
         );
       case 'PENDING':
@@ -132,7 +132,7 @@ export function TeamDetailModal({ isOpen, onClose, team }: TeamDetailModalProps)
           <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-sky-50 text-sky-800 border border-sky-300">
             <span className="w-1.5 h-1.5 rounded-full bg-sky-500" />
             <AlertCircle className="w-3 h-3 text-sky-600" />
-            Start
+            Belum Dimulai
           </span>
         );
     }
@@ -178,7 +178,7 @@ export function TeamDetailModal({ isOpen, onClose, team }: TeamDetailModalProps)
           </button>
         </div>
 
-        {/* Executive KPI Bar (Jumlah Rapat & Status Pemantauan: Finish, On Progres, Start - NO PERCENTAGE) */}
+        {/* Executive KPI Bar (Jumlah Rapat & Status Pemantauan: Selesai, Dalam Proses, Belum Dimulai - NO PERCENTAGE) */}
         <div className="grid grid-cols-2 sm:grid-cols-5 gap-2.5 p-4 bg-slate-50/80 border-b border-slate-200 text-center">
           <div className="bg-white p-2.5 rounded-xl border border-slate-200/90 shadow-2xs">
             <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Jumlah Rapat</p>
@@ -193,7 +193,7 @@ export function TeamDetailModal({ isOpen, onClose, team }: TeamDetailModalProps)
           <div className="bg-white p-2.5 rounded-xl border border-emerald-300 bg-emerald-50/40 shadow-2xs">
             <p className="text-[11px] font-bold text-emerald-800 uppercase tracking-wider flex items-center justify-center gap-1">
               <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
-              Finish
+              Selesai
             </p>
             <p className="text-[20px] font-extrabold text-emerald-800 mt-0.5">{team.completedJobs}</p>
             <p className="text-[10px] text-emerald-700 font-semibold mt-0.5">Selesai tuntas</p>
@@ -201,7 +201,7 @@ export function TeamDetailModal({ isOpen, onClose, team }: TeamDetailModalProps)
           <div className="bg-white p-2.5 rounded-xl border border-amber-300 bg-amber-50/40 shadow-2xs">
             <p className="text-[11px] font-bold text-amber-800 uppercase tracking-wider flex items-center justify-center gap-1">
               <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse" />
-              On Progres
+              Dalam Proses
             </p>
             <p className="text-[20px] font-extrabold text-amber-800 mt-0.5">{team.inProgressJobs}</p>
             <p className="text-[10px] text-amber-700 font-semibold mt-0.5">Sedang berjalan</p>
@@ -209,7 +209,7 @@ export function TeamDetailModal({ isOpen, onClose, team }: TeamDetailModalProps)
           <div className="bg-white p-2.5 rounded-xl border border-sky-300 bg-sky-50/40 shadow-2xs col-span-2 sm:col-span-1">
             <p className="text-[11px] font-bold text-sky-800 uppercase tracking-wider flex items-center justify-center gap-1">
               <span className="w-1.5 h-1.5 rounded-full bg-sky-500" />
-              Start
+              Belum Dimulai
             </p>
             <p className="text-[20px] font-extrabold text-sky-800 mt-0.5">{team.pendingJobs}</p>
             <p className="text-[10px] text-sky-700 font-semibold mt-0.5">Persiapan awal</p>

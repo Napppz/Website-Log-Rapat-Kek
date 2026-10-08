@@ -177,13 +177,13 @@ export function DashboardClient({
   const displayMetrics: DashboardMetric[] = useMemo(() => {
     const totalMonth = monthMeetings.length;
     const startMonth = monthMeetings.filter(
-      (m) => normalizeProgressStatus(m.progressStatus || mapStatusToProgress(m.status)) === 'Start'
+      (m) => normalizeProgressStatus(m.progressStatus || mapStatusToProgress(m.status)) === 'Belum Dimulai'
     ).length;
     const onProgressMonth = monthMeetings.filter(
-      (m) => normalizeProgressStatus(m.progressStatus || mapStatusToProgress(m.status)) === 'On Progres'
+      (m) => normalizeProgressStatus(m.progressStatus || mapStatusToProgress(m.status)) === 'Dalam Proses'
     ).length;
     const finishMonth = monthMeetings.filter(
-      (m) => normalizeProgressStatus(m.progressStatus || mapStatusToProgress(m.status)) === 'Finish'
+      (m) => normalizeProgressStatus(m.progressStatus || mapStatusToProgress(m.status)) === 'Selesai'
     ).length;
 
     const totalItems = monthMeetings.reduce((sum, m) => sum + (m.actionItems?.total || 0), 0);
@@ -202,9 +202,9 @@ export function DashboardClient({
     if (!selectedMonth) {
       // If no month is selected, compute the overall metrics for the selected year
       const totalYearMeetings = yearMeetings.length;
-      const yearStart = yearMeetings.filter((m) => normalizeProgressStatus(m.progressStatus || mapStatusToProgress(m.status)) === 'Start').length;
-      const yearOnProgress = yearMeetings.filter((m) => normalizeProgressStatus(m.progressStatus || mapStatusToProgress(m.status)) === 'On Progres').length;
-      const yearFinish = yearMeetings.filter((m) => normalizeProgressStatus(m.progressStatus || mapStatusToProgress(m.status)) === 'Finish').length;
+      const yearStart = yearMeetings.filter((m) => normalizeProgressStatus(m.progressStatus || mapStatusToProgress(m.status)) === 'Belum Dimulai').length;
+      const yearOnProgress = yearMeetings.filter((m) => normalizeProgressStatus(m.progressStatus || mapStatusToProgress(m.status)) === 'Dalam Proses').length;
+      const yearFinish = yearMeetings.filter((m) => normalizeProgressStatus(m.progressStatus || mapStatusToProgress(m.status)) === 'Selesai').length;
 
       return [
         {
@@ -222,8 +222,8 @@ export function DashboardClient({
           label: `STATUS PEMANTAUAN (${selectedYear})`,
           value: totalYearMeetings,
           unit: 'Agenda',
-          badgeText: `${yearFinish} Finish • ${yearOnProgress} On Progres`,
-          badgeSubtext: `${yearStart} Start (Persiapan)`,
+          badgeText: `${yearFinish} Selesai • ${yearOnProgress} Dalam Proses`,
+          badgeSubtext: `${yearStart} Belum Dimulai`,
           variant: 'default',
           iconName: 'calendar_month',
         },
@@ -276,8 +276,8 @@ export function DashboardClient({
         label: `RAPAT BULAN ${fullMonthName.toUpperCase()}`,
         value: totalMonth,
         unit: 'Agenda',
-        badgeText: totalMonth > 0 ? `${finishMonth} Finish • ${onProgressMonth} On Progres` : '0 Agenda',
-        badgeSubtext: `${startMonth} Start (${fullMonthName})`,
+        badgeText: totalMonth > 0 ? `${finishMonth} Selesai • ${onProgressMonth} Dalam Proses` : '0 Agenda',
+        badgeSubtext: `${startMonth} Belum Dimulai (${fullMonthName})`,
         variant: 'default',
         iconName: 'calendar_month',
       },

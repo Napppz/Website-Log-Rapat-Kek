@@ -41,11 +41,12 @@ import {
   Presentation,
   Inbox,
   Tag,
+  Play,
 } from 'lucide-react';
 
 import { MeetingStatusBadge, MeetingProgressBadge } from '@/components/meeting/meeting-status-badge';
 import { MeetingStatusGuideDialog } from '@/components/meeting/meeting-status-guide-dialog';
-import { getMeetingStatusDetail, MEETING_STATUS_DETAILS } from '@/lib/meeting-status';
+import { getMeetingStatusDetail, MEETING_STATUS_DETAILS, normalizeProgressStatus } from '@/lib/meeting-status';
 import { MeetingMinutesSection } from '@/components/meeting/meeting-minutes/meeting-minutes-section';
 import { MeetingFilePreviewPanel } from '@/components/meeting/file-preview';
 import { ActionItemList } from '@/components/action-items/action-item-list';
@@ -565,6 +566,38 @@ export function MeetingDetailView({
     }
   };
 
+  const currentProgress = normalizeProgressStatus(
+    (meeting as any).progressStatus || (status === 'DRAFT' ? 'Belum Dimulai' : status === 'REVIEW' ? 'Dalam Proses' : 'Selesai')
+  );
+  const isBelumDimulai = currentProgress === 'Belum Dimulai' || status === 'DRAFT';
+
+  const handleStartMeeting = async () => {
+    const confirmed = await confirmModal({
+      title: `Mulai Pelaksanaan Rapat?`,
+      message: `Apakah Anda ingin memulai pelaksanaan rapat "${meeting.title}" sekarang? Status rapat akan langsung diubah menjadi "Dalam Proses".`,
+      confirmText: 'Ya, Mulai Rapat',
+      variant: 'primary',
+    });
+    if (!confirmed) return;
+
+    try {
+      setIsUpdatingStatus(true);
+      const res = await updateMeetingStatusAction(meeting.id, 'Dalam Proses');
+      if (res.success) {
+        setStatus('REVIEW');
+        (meeting as any).progressStatus = 'Dalam Proses';
+        toast.success(`Rapat "${meeting.title}" resmi dimulai. Status kini "Dalam Proses".`);
+        router.refresh();
+      } else {
+        toast.error(res.error || 'Gagal memulai rapat');
+      }
+    } catch (err: any) {
+      toast.error(`Terjadi kesalahan: ${err?.message || 'Gagal memulai rapat'}`);
+    } finally {
+      setIsUpdatingStatus(false);
+    }
+  };
+
   const handleDelete = async () => {
     const confirmed = await confirmModal({
       title: `Hapus Rapat ${meeting.meetingNumber}?`,
@@ -790,6 +823,20 @@ export function MeetingDetailView({
         </Link>
 
         <div className="flex items-center gap-2 flex-wrap">
+          {/* Mulai Rapat Button (Ubah status Belum Dimulai -> Dalam Proses) */}
+          {canChangeStatus && isBelumDimulai && (
+            <button
+              type="button"
+              disabled={isUpdatingStatus}
+              onClick={handleStartMeeting}
+              className="inline-flex items-center gap-2 px-4 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-[12.5px] font-bold transition-all shadow-sm hover:shadow-md cursor-pointer animate-pulse active:scale-95 disabled:opacity-50"
+              title="Mulai Rapat Sekarang (Ubah status menjadi Dalam Proses)"
+            >
+              <Play className="w-3.5 h-3.5 fill-current" />
+              <span>Mulai Rapat</span>
+            </button>
+          )}
+
           {/* Google Calendar Button */}
           <button
             type="button"
@@ -901,6 +948,18 @@ export function MeetingDetailView({
               </div>
             )}
             <MeetingProgressBadge progressStatus={(meeting as any).progressStatus} status={status} size="lg" showSubtitle />
+            {canChangeStatus && isBelumDimulai && (
+              <button
+                type="button"
+                disabled={isUpdatingStatus}
+                onClick={handleStartMeeting}
+                className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-[12px] font-bold shadow-xs hover:shadow-md transition-all cursor-pointer group active:scale-95 disabled:opacity-50"
+                title="Mulai Rapat (Ubah status dari Belum Dimulai menjadi Dalam Proses)"
+              >
+                <Play className="w-3.5 h-3.5 fill-current group-hover:scale-110 transition-transform" />
+                <span>Mulai Rapat</span>
+              </button>
+            )}
             {/* Kategori Naskah / Status Penundaan */}
             {(() => {
               const catInfo = getMeetingCategoryInfo(categoryData.category, categoryData.subCategory);
