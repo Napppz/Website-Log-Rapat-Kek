@@ -918,13 +918,13 @@ export function ActionItemMatrixView({
           <table className="w-full text-left text-slate-800 text-[13px]">
             <thead className="bg-[#F8FAFC] border-b border-slate-200 text-[11px] font-bold text-slate-700 uppercase tracking-wider">
               <tr>
-                <th className="py-3.5 px-4">Ref. Rapat</th>
+                <th className="py-3.5 px-4 w-[110px] whitespace-nowrap">Ref. Rapat</th>
                 <th className="py-3.5 px-4 min-w-[280px]">Butir Tindak Lanjut</th>
-                <th className="py-3.5 px-4">Tim Kerja &amp; PIC</th>
-                <th className="py-3.5 px-4">Tenggat Waktu</th>
-                <th className="py-3.5 px-4">Prioritas</th>
-                <th className="py-3.5 px-4">Status</th>
-                <th className="py-3.5 px-4 text-right">Aksi</th>
+                <th className="py-3.5 px-4 w-[190px] whitespace-nowrap">Tim Kerja &amp; PIC</th>
+                <th className="py-3.5 px-4 w-[140px] whitespace-nowrap">Tenggat Waktu</th>
+                <th className="py-3.5 px-4 w-[155px] whitespace-nowrap">Prioritas</th>
+                <th className="py-3.5 px-4 w-[140px] whitespace-nowrap">Status</th>
+                <th className="py-3.5 px-4 w-[110px] text-right whitespace-nowrap">Aksi</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
@@ -1038,31 +1038,32 @@ export function ActionItemMatrixView({
                       </td>
 
                       {/* Tenggat Waktu */}
-                      <td className="py-3.5 px-4 align-top">
+                      <td className="py-3.5 px-4 align-top whitespace-nowrap">
                         <div className="flex flex-col items-start gap-1">
                           <span
-                            className={`font-semibold text-[12px] ${
-                              isItemOverdue ? 'text-red-600 font-bold' : 'text-slate-700'
-                            }`}
+                            className={cn(
+                              "font-semibold text-[12px]",
+                              isItemOverdue ? "text-rose-600 font-bold" : "text-slate-700"
+                            )}
                           >
                             {formatIndonesianDate(task.dueDate)}
                           </span>
                           {isItemOverdue && (
-                            <span className="inline-flex items-center gap-1 text-[10px] text-rose-600 font-bold bg-rose-50 px-1.5 py-0.5 rounded border border-rose-200 shadow-2xs">
-                              <AlertTriangle className="w-2.5 h-2.5 text-rose-500" />
-                              Lewat Tenggat
+                            <span className="inline-flex items-center gap-1 text-[10px] text-rose-600 font-bold bg-rose-50 px-2 py-0.5 rounded-full border border-rose-200/90 shadow-2xs whitespace-nowrap">
+                              <span className="w-1.5 h-1.5 rounded-full bg-rose-500 animate-pulse shrink-0" />
+                              <span>Lewat Tenggat</span>
                             </span>
                           )}
                         </div>
                       </td>
 
                       {/* Prioritas */}
-                      <td className="py-3.5 px-4 align-top">
+                      <td className="py-3.5 px-4 align-top whitespace-nowrap">
                         <ActionItemPriorityBadge priority={task.priority} />
                       </td>
 
                       {/* Status (Start / On Progress / Finish) */}
-                      <td className="py-3.5 px-4 align-top">
+                      <td className="py-3.5 px-4 align-top whitespace-nowrap">
                         {canEditTask(task) ? (
                           <button
                             type="button"
