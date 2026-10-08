@@ -98,6 +98,7 @@ export function ActionItemMatrixView({
     if (s === 'SELESAI' || s === 'COMPLETED' || s === 'FINISH') return 'COMPLETED';
     if (s === 'BELUM-DIMULAI' || s === 'PENDING' || s === 'START' || s === 'MENUNGGU') return 'PENDING';
     if (s === 'TERLAMBAT' || s === 'OVERDUE') return 'OVERDUE';
+    if (s === 'MENDEKATI-DEADLINE' || s === 'MENDEKATI_DEADLINE' || s === 'NEAR_DEADLINE' || s === 'DEADLINE') return 'NEAR_DEADLINE';
     return s;
   }, [rawStatus]);
   const teamParam = searchParams.get('tim') || 'ALL';
@@ -301,11 +302,23 @@ export function ActionItemMatrixView({
     (i) => i.status === 'PENDING' && new Date(i.dueDate).getTime() >= Date.now()
   ).length;
 
+  // Check if task is approaching deadline (due in <= 3 days, not overdue, not completed)
+  const isNearDeadlineTask = (i: any) => {
+    if (i.status === 'COMPLETED') return false;
+    const nowTime = Date.now();
+    const dueTime = new Date(i.dueDate).getTime();
+    const threeDaysAhead = nowTime + 3 * 24 * 60 * 60 * 1000;
+    return dueTime >= nowTime && dueTime <= threeDaysAhead;
+  };
+
+  const nearDeadlineCount = items.filter(isNearDeadlineTask).length;
+
   const statusOptions = [
     { label: 'Semua Status', value: 'ALL', count: totalCount, dotColor: 'bg-slate-400' },
-    { label: 'Start', value: 'PENDING', count: pendingCount, dotColor: 'bg-amber-500' },
-    { label: 'On Progress', value: 'IN_PROGRESS', count: inProgressCount, dotColor: 'bg-sky-500' },
-    { label: 'Finish', value: 'COMPLETED', count: completedCount, dotColor: 'bg-emerald-500' },
+    { label: 'Belum Dimulai', value: 'PENDING', count: pendingCount, dotColor: 'bg-amber-500' },
+    { label: 'Dalam Proses', value: 'IN_PROGRESS', count: inProgressCount, dotColor: 'bg-sky-500' },
+    { label: 'Selesai', value: 'COMPLETED', count: completedCount, dotColor: 'bg-emerald-500' },
+    { label: 'Mendekati Tenggat', value: 'NEAR_DEADLINE', count: nearDeadlineCount, dotColor: 'bg-amber-500' },
     { label: 'Terlambat', value: 'OVERDUE', count: overdueCount, dotColor: 'bg-rose-500' },
   ];
 
@@ -366,10 +379,10 @@ export function ActionItemMatrixView({
         );
         toast.success(
           newStatus === 'COMPLETED'
-            ? 'Status tindak lanjut diperbarui: Finish.'
+            ? 'Status tindak lanjut diperbarui: Selesai.'
             : newStatus === 'IN_PROGRESS'
-            ? 'Status tindak lanjut diperbarui: On Progress.'
-            : 'Status tindak lanjut diperbarui: Start.'
+            ? 'Status tindak lanjut diperbarui: Dalam Proses.'
+            : 'Status tindak lanjut diperbarui: Belum Dimulai.'
         );
         router.refresh();
       } else {
@@ -391,6 +404,8 @@ export function ActionItemMatrixView({
       if (statusParam !== 'ALL') {
         if (statusParam === 'OVERDUE') {
           if (!isOverdue) return false;
+        } else if (statusParam === 'NEAR_DEADLINE') {
+          if (!isNearDeadlineTask(task)) return false;
         } else if (task.status !== statusParam) {
           return false;
         }
@@ -461,80 +476,212 @@ export function ActionItemMatrixView({
   return (
     <div className="flex flex-col gap-6">
       {/* Header Card dengan Metrik Eksekutif Modern */}
-      <div className="p-6 bg-white rounded-2xl border border-slate-200/90 shadow-xs flex flex-col lg:flex-row lg:items-center lg:justify-between gap-5">
-        <div className="max-w-2xl">
-          <span className="font-bold text-[11px] text-[#31889C] uppercase tracking-wider flex items-center gap-1.5">
-            <Layers className="w-3.5 h-3.5" />
-            Matriks Disposisi &amp; Pemantauan Dewan
-          </span>
-          <h1 className="text-[24px] font-extrabold text-slate-900 mt-1 tracking-tight">
-            Monitoring &amp; Evaluasi Tindak Lanjut
-          </h1>
-          <p className="text-[13px] text-slate-500 mt-1 leading-relaxed">
-            Pantau realisasi komitmen keputusan rapat dewan KEK per tim kerja pelaksana dan penanggung jawab teknis.
-          </p>
+      <div className="bg-white rounded-2xl border border-slate-200/90 shadow-xs overflow-hidden">
+        {/* Baris Atas: Informasi & Konteks Eksekutif */}
+        <div className="p-6 pb-5 flex flex-col md:flex-row md:items-center md:justify-between gap-4 border-b border-slate-100">
+          <div className="space-y-1">
+            <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-[#EBF6F8] border border-[#BCE3EB]/60 text-[#1E6778] font-bold text-[11px] uppercase tracking-wider">
+              <Layers className="w-3.5 h-3.5 text-[#31889C]" />
+              <span>Matriks Disposisi &amp; Pemantauan Dewan</span>
+            </div>
+            <h1 className="text-2xl sm:text-[26px] font-extrabold text-slate-900 tracking-tight">
+              Monitoring &amp; Evaluasi Tindak Lanjut
+            </h1>
+            <p className="text-[13px] text-slate-500 leading-relaxed max-w-2xl">
+              Pantau realisasi komitmen keputusan rapat dewan KEK per tim kerja pelaksana dan penanggung jawab teknis.
+            </p>
+          </div>
+
+          {/* Quick Stat Indicators */}
+          <div className="flex items-center gap-3 shrink-0 self-start md:self-center">
+            <div className="px-4 py-2.5 rounded-xl bg-slate-50 border border-slate-200/80 flex items-center gap-4 shadow-2xs">
+              <div>
+                <span className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider">Total Komitmen</span>
+                <span className="text-base sm:text-lg font-black text-slate-900 leading-tight">{totalCount} Butir</span>
+              </div>
+              <div className="w-px h-8 bg-slate-200" />
+              <div>
+                <span className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider">Tingkat Selesai</span>
+                <span className="text-base sm:text-lg font-black text-emerald-600 leading-tight">
+                  {totalCount > 0 ? Math.round((completedCount / totalCount) * 100) : 0}%
+                </span>
+              </div>
+            </div>
+          </div>
         </div>
 
-        {/* Executive KPI Stats Grid */}
-        <div className="grid grid-cols-2 sm:grid-cols-5 gap-2.5 sm:gap-3 w-full lg:w-auto shrink-0">
-          {/* Total */}
-          <div className="px-3.5 py-2.5 rounded-2xl border border-slate-200 bg-white shadow-2xs hover:border-[#31889C]/50 transition-all flex flex-col justify-center">
-            <span className="text-[10px] text-slate-500 font-bold uppercase tracking-wider flex items-center gap-1.5">
-              <span className="w-1.5 h-1.5 rounded-full bg-[#31889C]" />
-              Total
-            </span>
-            <div className="flex items-baseline gap-1 mt-0.5">
-              <span className="text-[20px] font-black text-slate-900 tracking-tight">{totalCount}</span>
-              <span className="text-[10.5px] text-slate-400 font-medium">butir</span>
-            </div>
-          </div>
+        {/* Baris Bawah: Grid 6 Interactive KPI Status Cards */}
+        <div className="p-4 sm:p-5 bg-slate-50/50">
+          <div className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-6 gap-2.5 sm:gap-3 w-full">
+            {/* Total */}
+            <button
+              type="button"
+              onClick={() => handleSelectStatus('ALL')}
+              className={cn(
+                "p-3 rounded-xl border text-left transition-all cursor-pointer flex flex-col justify-between group",
+                statusParam === 'ALL'
+                  ? "bg-[#F0F9FA] border-[#31889C] ring-2 ring-[#31889C]/25 shadow-2xs"
+                  : "bg-white border-slate-200/90 hover:border-[#31889C]/50 hover:bg-slate-50/70 shadow-2xs hover:-translate-y-0.5"
+              )}
+            >
+              <div className="flex items-center justify-between gap-1">
+                <span className="text-[10px] sm:text-[10.5px] text-slate-500 font-bold uppercase tracking-wider flex items-center gap-1.5 truncate">
+                  <span className="w-1.5 h-1.5 rounded-full bg-[#31889C] shrink-0" />
+                  Total
+                </span>
+                {statusParam === 'ALL' && (
+                  <span className="text-[9px] font-bold px-1.5 py-0.2 rounded-full bg-[#EBF6F8] text-[#1E6778] shrink-0">
+                    Aktif
+                  </span>
+                )}
+              </div>
+              <div className="flex items-baseline gap-1 mt-1.5">
+                <span className="text-xl sm:text-[22px] font-black text-slate-900 tracking-tight">{totalCount}</span>
+                <span className="text-[10.5px] text-slate-400 font-medium">butir</span>
+              </div>
+            </button>
 
-          {/* Start */}
-          <div className="px-3.5 py-2.5 rounded-2xl border border-amber-200/90 bg-amber-50/50 shadow-2xs hover:border-amber-300 transition-all flex flex-col justify-center">
-            <span className="text-[10px] text-amber-700 font-bold uppercase tracking-wider flex items-center gap-1.5">
-              <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />
-              Start
-            </span>
-            <div className="flex items-baseline gap-1 mt-0.5">
-              <span className="text-[20px] font-black text-amber-700 tracking-tight">{pendingCount}</span>
-              <span className="text-[10.5px] text-amber-600/70 font-medium">butir</span>
-            </div>
-          </div>
+            {/* Belum Dimulai (PENDING) */}
+            <button
+              type="button"
+              onClick={() => handleSelectStatus('PENDING')}
+              className={cn(
+                "p-3 rounded-xl border text-left transition-all cursor-pointer flex flex-col justify-between group",
+                statusParam === 'PENDING'
+                  ? "bg-amber-100/70 border-amber-400 ring-2 ring-amber-400/30 shadow-2xs"
+                  : "bg-white border-amber-200/80 hover:border-amber-300 hover:bg-amber-50/40 shadow-2xs hover:-translate-y-0.5"
+              )}
+            >
+              <div className="flex items-center justify-between gap-1">
+                <span className="text-[10px] sm:text-[10.5px] text-amber-700 font-bold uppercase tracking-wider flex items-center gap-1.5 truncate">
+                  <span className="w-1.5 h-1.5 rounded-full bg-amber-500 shrink-0" />
+                  Belum Dimulai
+                </span>
+                {statusParam === 'PENDING' && (
+                  <span className="text-[9px] font-bold px-1.5 py-0.2 rounded-full bg-amber-200/80 text-amber-900 shrink-0">
+                    Aktif
+                  </span>
+                )}
+              </div>
+              <div className="flex items-baseline gap-1 mt-1.5">
+                <span className="text-xl sm:text-[22px] font-black text-amber-700 tracking-tight">{pendingCount}</span>
+                <span className="text-[10.5px] text-amber-600/70 font-medium">butir</span>
+              </div>
+            </button>
 
-          {/* On Progress */}
-          <div className="px-3.5 py-2.5 rounded-2xl border border-sky-200/90 bg-sky-50/50 shadow-2xs hover:border-sky-300 transition-all flex flex-col justify-center">
-            <span className="text-[10px] text-sky-700 font-bold uppercase tracking-wider flex items-center gap-1.5">
-              <span className="w-1.5 h-1.5 rounded-full bg-sky-500" />
-              On Progress
-            </span>
-            <div className="flex items-baseline gap-1 mt-0.5">
-              <span className="text-[20px] font-black text-sky-700 tracking-tight">{inProgressCount}</span>
-              <span className="text-[10.5px] text-sky-600/70 font-medium">proses</span>
-            </div>
-          </div>
+            {/* Dalam Proses (IN_PROGRESS) */}
+            <button
+              type="button"
+              onClick={() => handleSelectStatus('IN_PROGRESS')}
+              className={cn(
+                "p-3 rounded-xl border text-left transition-all cursor-pointer flex flex-col justify-between group",
+                statusParam === 'IN_PROGRESS'
+                  ? "bg-sky-100/70 border-sky-400 ring-2 ring-sky-400/30 shadow-2xs"
+                  : "bg-white border-sky-200/80 hover:border-sky-300 hover:bg-sky-50/40 shadow-2xs hover:-translate-y-0.5"
+              )}
+            >
+              <div className="flex items-center justify-between gap-1">
+                <span className="text-[10px] sm:text-[10.5px] text-sky-700 font-bold uppercase tracking-wider flex items-center gap-1.5 truncate">
+                  <span className="w-1.5 h-1.5 rounded-full bg-sky-500 shrink-0" />
+                  Dalam Proses
+                </span>
+                {statusParam === 'IN_PROGRESS' && (
+                  <span className="text-[9px] font-bold px-1.5 py-0.2 rounded-full bg-sky-200/80 text-sky-900 shrink-0">
+                    Aktif
+                  </span>
+                )}
+              </div>
+              <div className="flex items-baseline gap-1 mt-1.5">
+                <span className="text-xl sm:text-[22px] font-black text-sky-700 tracking-tight">{inProgressCount}</span>
+                <span className="text-[10.5px] text-sky-600/70 font-medium">proses</span>
+              </div>
+            </button>
 
-          {/* Finish */}
-          <div className="px-3.5 py-2.5 rounded-2xl border border-emerald-200/90 bg-emerald-50/50 shadow-2xs hover:border-emerald-300 transition-all flex flex-col justify-center">
-            <span className="text-[10px] text-emerald-700 font-bold uppercase tracking-wider flex items-center gap-1.5">
-              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
-              Finish
-            </span>
-            <div className="flex items-baseline gap-1 mt-0.5">
-              <span className="text-[20px] font-black text-emerald-700 tracking-tight">{completedCount}</span>
-              <span className="text-[10.5px] text-emerald-600/70 font-semibold">selesai</span>
-            </div>
-          </div>
+            {/* Selesai (COMPLETED) */}
+            <button
+              type="button"
+              onClick={() => handleSelectStatus('COMPLETED')}
+              className={cn(
+                "p-3 rounded-xl border text-left transition-all cursor-pointer flex flex-col justify-between group",
+                statusParam === 'COMPLETED'
+                  ? "bg-emerald-100/70 border-emerald-400 ring-2 ring-emerald-400/30 shadow-2xs"
+                  : "bg-white border-emerald-200/80 hover:border-emerald-300 hover:bg-emerald-50/40 shadow-2xs hover:-translate-y-0.5"
+              )}
+            >
+              <div className="flex items-center justify-between gap-1">
+                <span className="text-[10px] sm:text-[10.5px] text-emerald-700 font-bold uppercase tracking-wider flex items-center gap-1.5 truncate">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 shrink-0" />
+                  Selesai
+                </span>
+                {statusParam === 'COMPLETED' && (
+                  <span className="text-[9px] font-bold px-1.5 py-0.2 rounded-full bg-emerald-200/80 text-emerald-900 shrink-0">
+                    Aktif
+                  </span>
+                )}
+              </div>
+              <div className="flex items-baseline gap-1 mt-1.5">
+                <span className="text-xl sm:text-[22px] font-black text-emerald-700 tracking-tight">{completedCount}</span>
+                <span className="text-[10.5px] text-emerald-600/70 font-semibold">selesai</span>
+              </div>
+            </button>
 
-          {/* Terlambat */}
-          <div className="col-span-2 sm:col-span-1 px-3.5 py-2.5 rounded-2xl border border-rose-200/90 bg-rose-50/50 shadow-2xs hover:border-rose-300 transition-all flex flex-col justify-center">
-            <span className="text-[10px] text-rose-700 font-bold uppercase tracking-wider flex items-center gap-1.5">
-              <span className="w-1.5 h-1.5 rounded-full bg-rose-500 animate-pulse" />
-              Terlambat
-            </span>
-            <div className="flex items-baseline gap-1 mt-0.5">
-              <span className="text-[20px] font-black text-rose-700 tracking-tight">{overdueCount}</span>
-              <span className="text-[10.5px] text-rose-600/70 font-medium">atensi</span>
-            </div>
+            {/* Mendekati Tenggat (NEAR_DEADLINE) */}
+            <button
+              type="button"
+              onClick={() => handleSelectStatus('NEAR_DEADLINE')}
+              className={cn(
+                "p-3 rounded-xl border text-left transition-all cursor-pointer flex flex-col justify-between group",
+                statusParam === 'NEAR_DEADLINE'
+                  ? "bg-amber-100/80 border-amber-500 ring-2 ring-amber-500/30 shadow-2xs"
+                  : "bg-white border-amber-200/90 hover:border-amber-300 hover:bg-amber-50/40 shadow-2xs hover:-translate-y-0.5"
+              )}
+              title="Pekerjaan aktif dengan tenggat waktu ≤ 3 hari ke depan"
+            >
+              <div className="flex items-center justify-between gap-1">
+                <span className="text-[10px] sm:text-[10.5px] text-amber-800 font-bold uppercase tracking-wider flex items-center gap-1.5 truncate">
+                  <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse shrink-0" />
+                  Mendekati Tenggat
+                </span>
+                {statusParam === 'NEAR_DEADLINE' && (
+                  <span className="text-[9px] font-bold px-1.5 py-0.2 rounded-full bg-amber-300 text-amber-950 shrink-0">
+                    Aktif
+                  </span>
+                )}
+              </div>
+              <div className="flex items-baseline gap-1 mt-1.5">
+                <span className="text-xl sm:text-[22px] font-black text-amber-800 tracking-tight">{nearDeadlineCount}</span>
+                <span className="text-[10.5px] text-amber-700/70 font-medium">H ≤ 3 hari</span>
+              </div>
+            </button>
+
+            {/* Terlambat (OVERDUE) */}
+            <button
+              type="button"
+              onClick={() => handleSelectStatus('OVERDUE')}
+              className={cn(
+                "p-3 rounded-xl border text-left transition-all cursor-pointer flex flex-col justify-between group",
+                statusParam === 'OVERDUE'
+                  ? "bg-rose-100/80 border-rose-400 ring-2 ring-rose-400/30 shadow-2xs"
+                  : "bg-white border-rose-200/90 hover:border-rose-300 hover:bg-rose-50/50 shadow-2xs hover:-translate-y-0.5"
+              )}
+              title="Pekerjaan yang telah melewati batas tenggat waktu"
+            >
+              <div className="flex items-center justify-between gap-1">
+                <span className="text-[10px] sm:text-[10.5px] text-rose-700 font-bold uppercase tracking-wider flex items-center gap-1.5 truncate">
+                  <span className="w-1.5 h-1.5 rounded-full bg-rose-500 animate-pulse shrink-0" />
+                  Terlambat
+                </span>
+                {statusParam === 'OVERDUE' && (
+                  <span className="text-[9px] font-bold px-1.5 py-0.2 rounded-full bg-rose-200 text-rose-950 shrink-0">
+                    Aktif
+                  </span>
+                )}
+              </div>
+              <div className="flex items-baseline gap-1 mt-1.5">
+                <span className="text-xl sm:text-[22px] font-black text-rose-700 tracking-tight">{overdueCount}</span>
+                <span className="text-[10.5px] text-rose-600/70 font-medium">atensi</span>
+              </div>
+            </button>
           </div>
         </div>
       </div>
@@ -919,7 +1066,7 @@ export function ActionItemMatrixView({
             <thead className="bg-[#F8FAFC] border-b border-slate-200 text-[11px] font-bold text-slate-700 uppercase tracking-wider">
               <tr>
                 <th className="py-3.5 px-4 w-[110px] whitespace-nowrap">Ref. Rapat</th>
-                <th className="py-3.5 px-4 min-w-[280px]">Butir Tindak Lanjut</th>
+                <th className="py-3.5 px-4 min-w-[280px]">Butir Tindak Lanjut &amp; Output</th>
                 <th className="py-3.5 px-4 w-[190px] whitespace-nowrap">Tim Kerja &amp; PIC</th>
                 <th className="py-3.5 px-4 w-[140px] whitespace-nowrap">Tenggat Waktu</th>
                 <th className="py-3.5 px-4 w-[155px] whitespace-nowrap">Prioritas</th>
@@ -951,6 +1098,10 @@ export function ActionItemMatrixView({
                   const isItemOverdue =
                     task.status !== 'COMPLETED' &&
                     new Date(task.dueDate).getTime() < Date.now();
+                  const isItemNearDeadline =
+                    task.status !== 'COMPLETED' &&
+                    !isItemOverdue &&
+                    new Date(task.dueDate).getTime() <= Date.now() + 3 * 24 * 60 * 60 * 1000;
                   const isUpdatingThis = updatingStatusId === task.id;
                   const teamInfo = getTaskTeamInfo(task);
 
@@ -998,7 +1149,7 @@ export function ActionItemMatrixView({
                                     <GoogleDriveLinkCard
                                       key={url + idx}
                                       url={url}
-                                      label={allUrls.length > 1 ? `Buka Google Drive ${idx + 1}` : undefined}
+                                      label={allUrls.length > 1 ? `Output / Bukti ${idx + 1}` : 'Output / Bukti Hasil'}
                                       variant="badge"
                                     />
                                   ))}
@@ -1043,7 +1194,11 @@ export function ActionItemMatrixView({
                           <span
                             className={cn(
                               "font-semibold text-[12px]",
-                              isItemOverdue ? "text-rose-600 font-bold" : "text-slate-700"
+                              isItemOverdue
+                                ? "text-rose-600 font-bold"
+                                : isItemNearDeadline
+                                ? "text-amber-700 font-bold"
+                                : "text-slate-700"
                             )}
                           >
                             {formatIndonesianDate(task.dueDate)}
@@ -1052,6 +1207,12 @@ export function ActionItemMatrixView({
                             <span className="inline-flex items-center gap-1 text-[10px] text-rose-600 font-bold bg-rose-50 px-2 py-0.5 rounded-full border border-rose-200/90 shadow-2xs whitespace-nowrap">
                               <span className="w-1.5 h-1.5 rounded-full bg-rose-500 animate-pulse shrink-0" />
                               <span>Lewat Tenggat</span>
+                            </span>
+                          )}
+                          {!isItemOverdue && isItemNearDeadline && (
+                            <span className="inline-flex items-center gap-1 text-[10px] text-amber-700 font-bold bg-amber-50 px-2 py-0.5 rounded-full border border-amber-300 shadow-2xs whitespace-nowrap">
+                              <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse shrink-0" />
+                              <span>Mendekati Tenggat</span>
                             </span>
                           )}
                         </div>
@@ -1093,7 +1254,7 @@ export function ActionItemMatrixView({
                               type="button"
                               onClick={() => openUpdateDialog(task, 'COMPLETED', 100)}
                               className="p-1 rounded text-[#4D8F3D] hover:bg-[#ECF8E9] transition-colors cursor-pointer"
-                              title="Tandai Finish (Catat Hasil & Bukti Dukung)"
+                              title="Tandai Selesai (Catat Hasil & Bukti Dukung)"
                             >
                               <CheckCircle2 className="w-4 h-4" />
                             </button>

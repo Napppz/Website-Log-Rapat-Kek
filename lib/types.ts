@@ -160,22 +160,22 @@ export function getMeetingCategoryInfo(
     if (sub === 'DISPOSISI_SEKJEN') {
       return {
         key: 'NASKAH_MASUK_DISPOSISI_SEKJEN',
-        label: 'Daftar Naskah Masuk',
-        subLabel: 'Disposisi Sekjen',
-        badgeLabel: 'Naskah Masuk • Disposisi Sekjen',
+        label: 'Daftar Naskah Masuk / Disposisi SRIKANDI',
+        subLabel: 'Disposisi Sekjen (SRIKANDI)',
+        badgeLabel: 'Disposisi SRIKANDI • Sekjen',
         badgeClass: 'bg-indigo-50 text-indigo-700 border-indigo-200',
         badgeIcon: '📥',
-        description: 'Tindak lanjut arahan atau disposisi resmi dari Sekretaris Jenderal Dewan Nasional KEK.',
+        description: 'Tindak lanjut arahan atau disposisi resmi dari Sekretaris Jenderal Dewan Nasional KEK via SRIKANDI.',
       };
     }
     return {
       key: 'NASKAH_MASUK_SURAT_EKSTERNAL',
-      label: 'Daftar Naskah Masuk',
-      subLabel: 'Surat Eksternal (Surat Masuk dari Luar)',
-      badgeLabel: 'Naskah Masuk • Surat Eksternal',
+      label: 'Daftar Naskah Masuk / Disposisi SRIKANDI',
+      subLabel: 'Surat Masuk SRIKANDI / Eksternal',
+      badgeLabel: 'Naskah Masuk • SRIKANDI',
       badgeClass: 'bg-amber-50 text-amber-800 border-amber-200',
       badgeIcon: '✉️',
-      description: 'Rapat berdasarkan surat permohonan atau undangan resmi dari pihak luar/eksternal.',
+      description: 'Rapat koordinasi berdasarkan disposisi naskah dinas atau surat masuk via SRIKANDI.',
     };
   }
 

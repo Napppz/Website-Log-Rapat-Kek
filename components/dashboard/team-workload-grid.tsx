@@ -264,11 +264,11 @@ export function TeamWorkloadGrid({ teams, onTeamClick }: TeamWorkloadGridProps) 
                 <div className="flex items-center justify-between text-[11px] bg-slate-50/90 px-2.5 py-1.5 rounded-lg border border-slate-200/60 mb-2">
                   <span className="text-slate-500 font-medium text-[10.5px]">Monitoring Tim:</span>
                   <div className="flex items-center gap-1.5 text-[11px] font-bold">
-                    <span className="text-emerald-700">{team.completedJobs} Finish</span>
+                    <span className="text-emerald-700">{team.completedJobs} Selesai</span>
                     <span className="text-slate-300">•</span>
-                    <span className="text-amber-700">{team.inProgressJobs} On Progres</span>
+                    <span className="text-amber-700">{team.inProgressJobs} Dalam Proses</span>
                     <span className="text-slate-300">•</span>
-                    <span className="text-sky-700">{team.pendingJobs} Start</span>
+                    <span className="text-sky-700">{team.pendingJobs} Belum Dimulai</span>
                   </div>
                 </div>
 

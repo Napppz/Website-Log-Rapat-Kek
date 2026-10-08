@@ -66,6 +66,11 @@ export async function GET(request: NextRequest) {
     if (params.status === 'OVERDUE') {
       where.status = { not: 'COMPLETED' };
       where.dueDate = { lt: new Date() };
+    } else if (params.status === 'NEAR_DEADLINE') {
+      const now = new Date();
+      const threeDaysLater = new Date(now.getTime() + 3 * 24 * 60 * 60 * 1000);
+      where.status = { not: 'COMPLETED' };
+      where.dueDate = { gte: now, lte: threeDaysLater };
     } else {
       where.status = params.status as 'PENDING' | 'IN_PROGRESS' | 'COMPLETED';
     }

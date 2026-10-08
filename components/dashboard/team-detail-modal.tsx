@@ -315,7 +315,7 @@ export function TeamDetailModal({ isOpen, onClose, team }: TeamDetailModalProps)
                       : 'bg-white border border-sky-200 text-sky-800 hover:bg-sky-50'
                   )}
                 >
-                  Start ({team.pendingJobs})
+                  Belum Dimulai ({team.pendingJobs})
                 </button>
                 <button
                   type="button"
@@ -327,7 +327,7 @@ export function TeamDetailModal({ isOpen, onClose, team }: TeamDetailModalProps)
                       : 'bg-white border border-amber-200 text-amber-800 hover:bg-amber-50'
                   )}
                 >
-                  On Progres ({team.inProgressJobs})
+                  Dalam Proses ({team.inProgressJobs})
                 </button>
                 <button
                   type="button"
@@ -339,7 +339,7 @@ export function TeamDetailModal({ isOpen, onClose, team }: TeamDetailModalProps)
                       : 'bg-white border border-emerald-200 text-emerald-800 hover:bg-emerald-50'
                   )}
                 >
-                  Finish ({team.completedJobs})
+                  Selesai ({team.completedJobs})
                 </button>
               </div>
 

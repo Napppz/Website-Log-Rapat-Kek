@@ -777,7 +777,7 @@ export default function BuatRapatPage() {
                   className="w-full px-4 pr-10 h-[46px] rounded-xl border border-slate-300 bg-white text-slate-800 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-[#1E6B7B]/25 focus:border-[#1E6B7B] shadow-2xs cursor-pointer appearance-none transition-all hover:border-slate-400"
                 >
                   <option value="UNDANGAN_INTERNAL">Undangan Internal — Rapat koordinasi internal KEK</option>
-                  <option value="NASKAH_MASUK">Daftar Naskah Masuk — Disposisi Sekjen / Surat kementerian</option>
+                  <option value="NASKAH_MASUK">Daftar Naskah Masuk / Disposisi SRIKANDI — Disposisi Sekjen &amp; Surat Dinas Masuk</option>
                   <option value="SURAT_DITUNDA">Tunda Rapat — Penjadwalan ulang / penundaan agenda</option>
                 </select>
                 <ChevronDown className="w-4 h-4 text-slate-400 absolute right-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
@@ -787,13 +787,13 @@ export default function BuatRapatPage() {
               {kategoriRapat === 'NASKAH_MASUK' && (
                 <div className="mt-3 animate-in fade-in space-y-1.5 pt-2 border-t border-slate-200/80">
                   <label className="block text-xs font-semibold text-slate-700">
-                    Asal Naskah Masuk / Instansi Pengirim:
+                    Asal Naskah Masuk / Disposisi SRIKANDI (Instansi / No. Surat):
                   </label>
                   <input
                     type="text"
                     value={sourceOrigin}
                     onChange={(e) => setSourceOrigin(e.target.value)}
-                    placeholder="Contoh: Surat Menko Perekonomian No. S-114/EKON/2026..."
+                    placeholder="Contoh: Disposisi SRIKANDI No. ND-142/SES.KEK/2026 atau Surat Kemenko..."
                     className="w-full px-3.5 h-[40px] rounded-xl border border-slate-300 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-[#1E6B7B]/20 focus:border-[#1E6B7B]"
                   />
                 </div>

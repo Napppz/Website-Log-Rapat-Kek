@@ -13,7 +13,7 @@ export const actionItemExportQuerySchema = z.object({
 
   /** Filter by computed status. 'ALL' or omit = no filter. */
   status: z
-    .enum(['ALL', 'PENDING', 'IN_PROGRESS', 'COMPLETED', 'OVERDUE'])
+    .enum(['ALL', 'PENDING', 'IN_PROGRESS', 'COMPLETED', 'OVERDUE', 'NEAR_DEADLINE'])
     .optional()
     .default('ALL'),
 

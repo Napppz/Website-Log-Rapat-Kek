@@ -421,7 +421,7 @@ export function CreateMeetingDialog({ isOpen, onClose }: CreateMeetingDialogProp
               className="w-full px-3 py-2 rounded-xl border border-slate-300 bg-white text-slate-800"
             >
               <option value="UNDANGAN_INTERNAL">Undangan Internal</option>
-              <option value="NASKAH_MASUK">Daftar Naskah Masuk</option>
+              <option value="NASKAH_MASUK">Daftar Naskah Masuk / Disposisi SRIKANDI</option>
               <option value="SURAT_DITUNDA">Tunda Rapat</option>
             </select>
 
@@ -430,7 +430,7 @@ export function CreateMeetingDialog({ isOpen, onClose }: CreateMeetingDialogProp
                 type="text"
                 value={sourceOrigin}
                 onChange={(e) => setSourceOrigin(e.target.value)}
-                placeholder="Asal naskah / kementerian pengirim..."
+                placeholder="Asal naskah / Disposisi SRIKANDI / instansi pengirim..."
                 className="w-full px-3 py-1.5 rounded-lg border border-slate-300 bg-white text-xs"
               />
             )}
