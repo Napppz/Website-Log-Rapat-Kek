@@ -31,7 +31,7 @@ interface ActionItemFormDialogProps {
   actionItem?: ActionItem | null;
   availableMeetings?: Array<MeetingOption>;
   availableBiros?: { id: string; code: string; shortName: string; name: string }[];
-  availableUsers?: { id: string; name: string; email?: string; biroId?: string }[];
+  availableUsers?: { id: string; name: string; email?: string; biroId?: string; teamId?: string | null }[];
   lockedBiroCode?: string;
   onClose: () => void;
   onSuccess?: (item: any) => void;
@@ -92,11 +92,18 @@ export function ActionItemFormDialog({
   const [description, setDescription] = useState('');
   const [driveLink, setDriveLink] = useState('');
   const [picBiroId, setPicBiroId] = useState('');
-  const [picTeamId, setPicTeamId] = useState('');
+  const [picTeamId, setPicTeamId] = useState('TIM-001');
   const [picUserId, setPicUserId] = useState('');
   const [dueDate, setDueDate] = useState('');
   const [priority, setPriority] = useState<ActionItemPriority>('MEDIUM');
   const [status, setStatus] = useState<ActionItemStatus>('PENDING');
+
+  // Tiga Tim Kerja Resmi Tindak Lanjut Sekretariat KEK
+  const displayTeams = React.useMemo(() => [
+    { id: 'TIM-001', code: 'INV', name: 'Tim Investasi', biroId: 'BIRO-IKK' },
+    { id: 'TIM-003', code: 'KS', name: 'Tim Kerja Sama', biroId: 'BIRO-IKK' },
+    { id: 'TIM-002', code: 'KOM', name: 'Tim Komunikasi', biroId: 'BIRO-IKK' },
+  ], []);
 
   // Auto-fetch biros, users, teams & meetings when dialog opens if lists are empty
   useEffect(() => {
@@ -152,8 +159,8 @@ export function ActionItemFormDialog({
         setDriveLink('');
         setDescription(actionItem.description || '');
       }
-      setPicBiroId(actionItem.picBiroId || '');
-      setPicTeamId(actionItem.picTeamId || '');
+      setPicBiroId(actionItem.picBiroId || 'BIRO-IKK');
+      setPicTeamId(actionItem.picTeamId || 'TIM-001');
       setPicUserId(actionItem.picUserId || '');
       setDueDate(`${yyyy}-${mm}-${dd}`);
       setPriority(actionItem.priority || 'MEDIUM');
@@ -164,12 +171,28 @@ export function ActionItemFormDialog({
       const mm = String(nextWeek.getMonth() + 1).padStart(2, '0');
       const dd = String(nextWeek.getDate()).padStart(2, '0');
 
-      setSelectedMeetingId(meetingId || availableMeetings[0]?.id || '');
+      const initialMeetingId = meetingId || availableMeetings[0]?.id || '';
+      setSelectedMeetingId(initialMeetingId);
       setTitle('');
       setDescription('');
       setDriveLink('');
-      setPicBiroId('');
-      setPicTeamId('');
+
+      // Auto-detect team from meeting number prefix or primaryTeam
+      const currMeeting = (meetingsList.length > 0 ? meetingsList : availableMeetings).find(
+        (m) => m.id === initialMeetingId
+      );
+      let detectedTeamId = 'TIM-001';
+      if (currMeeting) {
+        const num = currMeeting.meetingNumber?.toUpperCase() || '';
+        if (num.startsWith('INV-')) detectedTeamId = 'TIM-001';
+        else if (num.startsWith('KS-')) detectedTeamId = 'TIM-003';
+        else if (num.startsWith('KOM-')) detectedTeamId = 'TIM-002';
+        else if ((currMeeting as any).primaryTeamId) detectedTeamId = (currMeeting as any).primaryTeamId;
+      }
+
+      setPicTeamId(detectedTeamId);
+      const matched = teamsList.find((t) => t.id === detectedTeamId);
+      setPicBiroId(matched?.biroId || 'BIRO-IKK');
       setPicUserId(session?.user?.role === 'STAFF' ? (session?.user?.id || '') : '');
       setDueDate(`${yyyy}-${mm}-${dd}`);
       setPriority('MEDIUM');
@@ -202,12 +225,24 @@ export function ActionItemFormDialog({
       return;
     }
 
+    const finalPicTeamId = picTeamId && picTeamId.trim() !== '' ? picTeamId.trim() : '';
+    if (!finalPicTeamId) {
+      setFieldErrors((prev) => ({
+        ...prev,
+        picTeamId: 'Tim penanggung jawab wajib dipilih.',
+      }));
+      setErrorMessage('Tim penanggung jawab wajib dipilih.');
+      return;
+    }
+
+    const selectedTeamObj = displayTeams.find((t) => t.id === finalPicTeamId);
     const finalPicBiroId =
+      selectedTeamObj?.biroId ||
       picBiroId ||
       (effectiveLockedBiroCode
         ? birosList.find((b) => b.code.toUpperCase() === effectiveLockedBiroCode.toUpperCase())?.id
         : '') ||
-      '';
+      'BIRO-IKK';
 
     // Zod client validation
     const rawData = {
@@ -215,7 +250,7 @@ export function ActionItemFormDialog({
       title,
       description: finalDescription || null,
       picBiroId: finalPicBiroId,
-      picTeamId: picTeamId && picTeamId.trim() !== '' ? picTeamId : null,
+      picTeamId: finalPicTeamId,
       picUserId: picUserId && picUserId.trim() !== '' ? picUserId : null,
       dueDate,
       priority,
@@ -329,6 +364,22 @@ export function ActionItemFormDialog({
                       return next;
                     });
                   }
+                  if (!isEditing) {
+                    const selM = meetingsList.find((m) => m.id === mId);
+                    if (selM) {
+                      const num = selM.meetingNumber?.toUpperCase() || '';
+                      let newTId = '';
+                      if (num.startsWith('INV-')) newTId = 'TIM-001';
+                      else if (num.startsWith('KS-')) newTId = 'TIM-003';
+                      else if (num.startsWith('KOM-')) newTId = 'TIM-002';
+                      else if ((selM as any).primaryTeamId) newTId = (selM as any).primaryTeamId;
+                      if (newTId) {
+                        setPicTeamId(newTId);
+                        const matchedT = displayTeams.find((t) => t.id === newTId);
+                        if (matchedT?.biroId) setPicBiroId(matchedT.biroId);
+                      }
+                    }
+                  }
                 }}
                 userBiroCode={effectiveLockedBiroCode}
                 isLoading={isLoadingOptions}
@@ -415,84 +466,73 @@ export function ActionItemFormDialog({
                 </div>
               )}
               <p className="mt-1 text-[11px] text-slate-400">
-                Tautkan Google Drive bahan rujukan agar PIC biro dapat langsung mengakses dokumen pendukung tugas ini.
+                Tautkan Google Drive bahan rujukan agar tim pelaksana dapat langsung mengakses dokumen pendukung tugas ini.
               </p>
             </div>
 
-            {/* Biro PIC, Tim Kerja & User PIC Grid */}
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-              {/* Biro Penanggung Jawab (Required, 5 Official Bureaus) */}
-              <div>
-                <label className="block font-bold text-slate-800 mb-1">
-                  Biro Penanggung Jawab <span className="text-red-500">*</span>
-                </label>
-                {effectiveLockedBiroCode ? (
-                  <div className="w-full px-3 py-2 rounded-lg border border-[#BCE3EB] bg-[#F0F9FA] text-[#215865] font-semibold text-[13px] flex items-center justify-between">
-                    <span>Biro {effectiveLockedBiroCode}</span>
-                    <span className="text-[11px] text-slate-500 font-normal">(Terkunci sesuai akun)</span>
-                  </div>
-                ) : (
-                  <select
-                    value={picBiroId}
-                    onChange={(e) => {
-                      setPicBiroId(e.target.value);
-                      setPicTeamId('');
-                    }}
-                    className="w-full px-3 py-2 rounded-lg border border-slate-200 focus:outline-none focus:ring-2 focus:ring-[#31889C]/30 focus:border-[#31889C] bg-white font-medium text-slate-800 text-[13px] cursor-pointer"
-                  >
-                    <option value="">
-                      {isLoadingOptions ? '-- Memuat Biro... --' : '-- Pilih Biro --'}
-                    </option>
-                    {birosList.map((b) => (
-                      <option key={b.id} value={b.id}>
-                        {b.code} — {b.shortName || b.name}
-                      </option>
-                    ))}
-                  </select>
-                )}
-                {fieldErrors.picBiroId && (
-                  <p className="mt-1 text-[11px] text-red-600 font-semibold">{fieldErrors.picBiroId}</p>
-                )}
-              </div>
-
-              {/* Tim Kerja PIC (Optional) */}
+            {/* Tim Kerja Penanggung Jawab & PIC Pelaksana Grid */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              {/* Tim Penanggung Jawab (Required, Per Tim Kerja IKK) */}
               <div>
                 {(() => {
-                  const filteredTeams = teamsList.filter((t) => t.biroId === picBiroId);
+                  const currentTeam = displayTeams.find((t) => t.id === picTeamId);
                   return (
                     <>
-                      <label className="block font-bold text-slate-800 mb-1 flex items-center justify-between">
-                        <span>Tim Kerja <span className="text-slate-400 font-normal">(Opsional)</span></span>
-                        {filteredTeams.length > 0 && (
-                          <span className="text-[10px] font-bold text-[#215865] bg-[#F0F9FA] px-1.5 py-0.2 rounded border border-[#BCE3EB]">
-                            {filteredTeams.length} Tim
+                      <div className="flex items-center justify-between mb-1">
+                        <label className="block font-bold text-slate-800 text-[13px] flex items-center gap-1.5">
+                          <Layers className="w-4 h-4 text-[#31889C]" />
+                          <span>Tim Penanggung Jawab</span>
+                          <span className="text-red-500">*</span>
+                        </label>
+                        {currentTeam && (
+                          <span className="text-[10px] font-bold text-[#215865] bg-[#E8F5F7] px-2 py-0.5 rounded border border-[#BCE3EB]">
+                            {currentTeam.code}
                           </span>
                         )}
-                      </label>
+                      </div>
                       <select
                         value={picTeamId}
-                        onChange={(e) => setPicTeamId(e.target.value)}
-                        disabled={filteredTeams.length === 0}
-                        className="w-full px-3 py-2 rounded-lg border border-slate-200 focus:outline-none focus:ring-2 focus:ring-[#31889C]/30 focus:border-[#31889C] bg-white text-slate-800 text-[13px] cursor-pointer disabled:bg-slate-50 disabled:text-slate-400"
+                        onChange={(e) => {
+                          const newTeamId = e.target.value;
+                          setPicTeamId(newTeamId);
+                          const matched = displayTeams.find((t) => t.id === newTeamId);
+                          if (matched?.biroId) {
+                            setPicBiroId(matched.biroId);
+                          }
+                          if (fieldErrors.picTeamId) {
+                            setFieldErrors((prev) => {
+                              const next = { ...prev };
+                              delete next.picTeamId;
+                              return next;
+                            });
+                          }
+                        }}
+                        className="w-full px-3 py-2 rounded-lg border border-slate-200 focus:outline-none focus:ring-2 focus:ring-[#31889C]/30 focus:border-[#31889C] bg-white font-medium text-slate-800 text-[13px] cursor-pointer shadow-2xs"
                       >
                         <option value="">
-                          {filteredTeams.length > 0 ? '-- Semua / Bebas --' : '-- Menyusul --'}
+                          {isLoadingOptions ? '-- Memuat Tim Kerja... --' : '-- Pilih Tim Kerja --'}
                         </option>
-                        {filteredTeams.map((t) => (
+                        {displayTeams.map((t) => (
                           <option key={t.id} value={t.id}>
-                            [{t.code}] Tim {t.name}
+                            {t.name}
                           </option>
                         ))}
                       </select>
+                      {fieldErrors.picTeamId && (
+                        <p className="mt-1 text-[11px] text-red-600 font-semibold">{fieldErrors.picTeamId}</p>
+                      )}
+                      <p className="mt-1 text-[11px] text-slate-400">
+                        Penanggung jawab operasional tindak lanjut per tim kerja Sekretariat KEK.
+                      </p>
                     </>
                   );
                 })()}
               </div>
 
-              {/* PIC Pengguna (Optional) */}
+              {/* Pejabat / PIC Pelaksana (Opsional) */}
               <div>
-                <label className="block font-bold text-slate-800 mb-1 flex items-center justify-between">
-                  <span>Pejabat / PIC <span className="text-slate-400 font-normal">(Opsional)</span></span>
+                <label className="block font-bold text-slate-800 mb-1 flex items-center justify-between text-[13px]">
+                  <span>Pejabat / PIC Pelaksana <span className="text-slate-400 font-normal">(Opsional)</span></span>
                   {picUserId && (
                     <span className="text-[11px] text-[#1E6B7B] font-semibold">
                       ✓ Terpilih
@@ -506,13 +546,18 @@ export function ActionItemFormDialog({
                   biros={birosList}
                   selectedBiroId={
                     picBiroId ||
+                    displayTeams.find((t) => t.id === picTeamId)?.biroId ||
                     (effectiveLockedBiroCode
                       ? birosList.find((b) => b.code.toUpperCase() === effectiveLockedBiroCode.toUpperCase())?.id
-                      : '')
+                      : '') ||
+                    'BIRO-IKK'
                   }
                   disabled={isLoadingOptions}
-                  placeholder="Pilih Pejabat / PIC..."
+                  placeholder="Pilih Pejabat / PIC Pelaksana..."
                 />
+                <p className="mt-1 text-[11px] text-slate-400">
+                  Dapat dikosongkan jika penugasan ditujukan secara kolektif kepada tim kerja.
+                </p>
               </div>
             </div>
 

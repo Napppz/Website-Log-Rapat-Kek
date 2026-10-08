@@ -37,7 +37,7 @@ export default async function TindakLanjutPage() {
       }),
       prisma.user.findMany({
         where: userBiroCode ? { biro: { code: userBiroCode } } : undefined,
-        select: { id: true, name: true, email: true, biroId: true },
+        select: { id: true, name: true, email: true, biroId: true, teamId: true },
         orderBy: { name: 'asc' },
       }),
       prisma.biroTeam.findMany({

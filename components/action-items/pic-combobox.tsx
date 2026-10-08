@@ -1,13 +1,14 @@
 'use client';
 
 import React, { useState, useRef, useEffect, useMemo } from 'react';
-import { Search, ChevronDown, Check, User, X, Building2, UserX } from 'lucide-react';
+import { Search, ChevronDown, Check, User, X, Layers, UserX } from 'lucide-react';
 
 export interface PicUserOption {
   id: string;
   name: string;
   email?: string | null;
   biroId?: string | null;
+  teamId?: string | null;
 }
 
 export interface PicBiroOption {
@@ -23,9 +24,47 @@ interface PicComboboxProps {
   users: PicUserOption[];
   biros?: PicBiroOption[];
   selectedBiroId?: string;
+  selectedTeamId?: string;
   disabled?: boolean;
   placeholder?: string;
 }
+
+export const getPicTeamDetails = (teamId?: string | null) => {
+  if (teamId === 'TIM-001') {
+    return {
+      id: 'TIM-001',
+      code: 'INV',
+      name: 'Tim Investasi',
+      shortName: 'Investasi',
+      badgeClass: 'bg-emerald-50 text-emerald-800 border-emerald-200',
+      avatarClass: 'bg-emerald-50 text-emerald-700 border-emerald-200',
+      dotClass: 'bg-emerald-500',
+    };
+  }
+  if (teamId === 'TIM-003') {
+    return {
+      id: 'TIM-003',
+      code: 'KS',
+      name: 'Tim Kerja Sama',
+      shortName: 'Kerja Sama',
+      badgeClass: 'bg-sky-50 text-sky-800 border-sky-200',
+      avatarClass: 'bg-sky-50 text-sky-700 border-sky-200',
+      dotClass: 'bg-sky-500',
+    };
+  }
+  if (teamId === 'TIM-002') {
+    return {
+      id: 'TIM-002',
+      code: 'KOM',
+      name: 'Tim Komunikasi',
+      shortName: 'Komunikasi',
+      badgeClass: 'bg-amber-50 text-amber-800 border-amber-200',
+      avatarClass: 'bg-amber-50 text-amber-700 border-amber-200',
+      dotClass: 'bg-amber-500',
+    };
+  }
+  return null;
+};
 
 export function PicCombobox({
   value,
@@ -33,12 +72,13 @@ export function PicCombobox({
   users = [],
   biros = [],
   selectedBiroId,
+  selectedTeamId,
   disabled = false,
   placeholder = 'Pilih Pejabat / PIC...',
 }: PicComboboxProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
-  const [filterByBiroOnly, setFilterByBiroOnly] = useState<boolean>(false);
+  const [activeTeamFilter, setActiveTeamFilter] = useState<string>('ALL');
   const containerRef = useRef<HTMLDivElement>(null);
   const searchInputRef = useRef<HTMLInputElement>(null);
 
@@ -54,27 +94,36 @@ export function PicCombobox({
     return users.find((u) => u.id === value) || null;
   }, [users, value]);
 
-  // Information about currently selected Biro in the form
-  const currentBiro = useMemo(() => {
-    return selectedBiroId ? biroMap.get(selectedBiroId) : null;
-  }, [selectedBiroId, biroMap]);
+  // Selected user team details
+  const selectedUserTeam = useMemo(() => {
+    return selectedUser ? getPicTeamDetails(selectedUser.teamId) : null;
+  }, [selectedUser]);
 
-  // Count how many users match the currently selected biro
-  const biroUsersCount = useMemo(() => {
-    if (!selectedBiroId) return 0;
-    return users.filter((u) => u.biroId === selectedBiroId).length;
-  }, [users, selectedBiroId]);
+  // Count users per team
+  const teamCounts = useMemo(() => {
+    return {
+      ALL: users.length,
+      'TIM-001': users.filter((u) => u.teamId === 'TIM-001').length,
+      'TIM-003': users.filter((u) => u.teamId === 'TIM-003').length,
+      'TIM-002': users.filter((u) => u.teamId === 'TIM-002').length,
+    };
+  }, [users]);
 
-  // Auto-focus search input when opened
+  // Auto-focus search input when opened & sync initial filter tab
   useEffect(() => {
     if (isOpen) {
+      if (selectedTeamId && ['TIM-001', 'TIM-002', 'TIM-003'].includes(selectedTeamId)) {
+        setActiveTeamFilter(selectedTeamId);
+      } else {
+        setActiveTeamFilter('ALL');
+      }
       setTimeout(() => {
         searchInputRef.current?.focus();
       }, 50);
     } else {
       setSearchQuery('');
     }
-  }, [isOpen]);
+  }, [isOpen, selectedTeamId]);
 
   // Click outside listener & Escape key
   useEffect(() => {
@@ -105,8 +154,8 @@ export function PicCombobox({
     const query = searchQuery.trim().toLowerCase();
 
     return users.filter((u) => {
-      // Biro filter toggle
-      if (filterByBiroOnly && selectedBiroId && u.biroId !== selectedBiroId) {
+      // Team filter
+      if (activeTeamFilter !== 'ALL' && u.teamId !== activeTeamFilter) {
         return false;
       }
 
@@ -115,16 +164,16 @@ export function PicCombobox({
 
       const nameMatch = u.name.toLowerCase().includes(query);
       const emailMatch = u.email ? u.email.toLowerCase().includes(query) : false;
-      const userBiro = u.biroId ? biroMap.get(u.biroId) : null;
-      const biroMatch = userBiro
-        ? userBiro.code.toLowerCase().includes(query) ||
-          userBiro.name.toLowerCase().includes(query) ||
-          userBiro.shortName.toLowerCase().includes(query)
+      const team = getPicTeamDetails(u.teamId);
+      const teamMatch = team
+        ? team.name.toLowerCase().includes(query) ||
+          team.shortName.toLowerCase().includes(query) ||
+          team.code.toLowerCase().includes(query)
         : false;
 
-      return nameMatch || emailMatch || biroMatch;
+      return nameMatch || emailMatch || teamMatch;
     });
-  }, [users, searchQuery, filterByBiroOnly, selectedBiroId, biroMap]);
+  }, [users, searchQuery, activeTeamFilter]);
 
   const handleSelect = (userId: string) => {
     onChange(userId);
@@ -161,18 +210,22 @@ export function PicCombobox({
         <div className="flex items-center gap-2 min-w-0 flex-1">
           {selectedUser ? (
             <>
-              <div className="w-5 h-5 rounded-full bg-[#E8F5F7] text-[#1E6B7B] font-bold text-[9px] flex items-center justify-center shrink-0 border border-[#BCE3EB]">
+              <div
+                className={`w-5 h-5 rounded-full font-bold text-[9px] flex items-center justify-center shrink-0 border ${
+                  selectedUserTeam ? selectedUserTeam.avatarClass : 'bg-[#E8F5F7] text-[#1E6B7B] border-[#BCE3EB]'
+                }`}
+              >
                 {getUserInitials(selectedUser.name)}
               </div>
               <div className="min-w-0 flex-1 flex items-center gap-1.5 flex-wrap">
                 <span className="font-semibold text-slate-800 truncate text-[13px]">
                   {selectedUser.name}
                 </span>
-                {selectedUser.biroId && biroMap.has(selectedUser.biroId) && (
-                  <span className="px-1.5 py-0.2 rounded text-[10px] font-bold bg-slate-100 text-slate-600 border border-slate-200 shrink-0">
-                    {biroMap.get(selectedUser.biroId)?.code}
+                {selectedUserTeam ? (
+                  <span className={`px-1.5 py-0.2 rounded text-[10px] font-bold border shrink-0 ${selectedUserTeam.badgeClass}`}>
+                    {selectedUserTeam.name}
                   </span>
-                )}
+                ) : null}
               </div>
             </>
           ) : (
@@ -209,9 +262,10 @@ export function PicCombobox({
 
       {/* Dropdown Popover */}
       {isOpen && (
-        <div className="absolute z-50 right-0 mt-1.5 w-[380px] sm:w-[420px] max-w-[calc(100vw-2.5rem)] bg-white rounded-xl border border-slate-200 shadow-2xl ring-1 ring-black/5 overflow-hidden animate-in fade-in zoom-in-95 duration-100">
-          {/* Search Header */}
-          <div className="p-2.5 bg-slate-50/80 border-b border-slate-200/80 space-y-2">
+        <div className="absolute z-50 right-0 mt-1.5 w-[390px] sm:w-[450px] max-w-[calc(100vw-2.5rem)] bg-white rounded-xl border border-slate-200 shadow-2xl ring-1 ring-black/5 overflow-hidden animate-in fade-in zoom-in-95 duration-100">
+          {/* Header & Filter Section */}
+          <div className="p-2.5 bg-slate-50/90 border-b border-slate-200/90 space-y-2">
+            {/* Search Input */}
             <div className="relative">
               <Search className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
               <input
@@ -219,7 +273,7 @@ export function PicCombobox({
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Cari nama, email, atau biro..."
+                placeholder="Cari nama atau email personil..."
                 className="w-full pl-8 pr-7 py-1.5 bg-white rounded-lg border border-slate-200 text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:border-[#31889C] focus:ring-1 focus:ring-[#31889C] transition-all"
               />
               {searchQuery && (
@@ -228,39 +282,67 @@ export function PicCombobox({
                   onClick={() => setSearchQuery('')}
                   className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 cursor-pointer"
                 >
-                  <X className="w-3 h-3" />
+                  <X className="w-3.5 h-3.5" />
                 </button>
               )}
             </div>
 
-            {/* Segmented Filter Pills */}
-            {currentBiro && biroUsersCount > 0 && (
-              <div className="flex items-center gap-1 p-0.5 bg-slate-200/70 rounded-lg text-[11px]">
-                <button
-                  type="button"
-                  onClick={() => setFilterByBiroOnly(false)}
-                  className={`flex-1 py-1 px-2 rounded-md font-semibold text-center transition-all cursor-pointer ${
-                    !filterByBiroOnly
-                      ? 'bg-white text-slate-800 shadow-2xs'
-                      : 'text-slate-600 hover:text-slate-900'
-                  }`}
-                >
-                  Semua ({users.length})
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setFilterByBiroOnly(true)}
-                  className={`flex-1 py-1 px-2 rounded-md font-semibold text-center transition-all cursor-pointer flex items-center justify-center gap-1 ${
-                    filterByBiroOnly
-                      ? 'bg-white text-[#1E6B7B] shadow-2xs'
-                      : 'text-slate-600 hover:text-slate-900'
-                  }`}
-                >
-                  <Building2 className="w-3 h-3 text-[#31889C]" />
-                  <span>Biro {currentBiro.code} ({biroUsersCount})</span>
-                </button>
-              </div>
-            )}
+            {/* Segmented Team Filter Tabs (3 Tim Kerja) */}
+            <div className="grid grid-cols-4 gap-1 p-1 bg-slate-200/70 rounded-xl text-[11px]">
+              <button
+                type="button"
+                onClick={() => setActiveTeamFilter('ALL')}
+                className={`py-1 px-1 rounded-lg text-center font-medium transition-all cursor-pointer truncate ${
+                  activeTeamFilter === 'ALL'
+                    ? 'bg-white text-slate-900 shadow-2xs font-bold border border-slate-200'
+                    : 'text-slate-600 hover:text-slate-900'
+                }`}
+              >
+                Semua ({teamCounts.ALL})
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setActiveTeamFilter('TIM-001')}
+                className={`py-1 px-1 rounded-lg text-center font-medium transition-all cursor-pointer flex items-center justify-center gap-1 truncate ${
+                  activeTeamFilter === 'TIM-001'
+                    ? 'bg-white text-emerald-800 shadow-2xs font-bold border border-emerald-300'
+                    : 'text-slate-600 hover:text-emerald-700'
+                }`}
+                title="Filter PIC Tim Investasi"
+              >
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 shrink-0" />
+                <span className="truncate">Investasi ({teamCounts['TIM-001']})</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setActiveTeamFilter('TIM-003')}
+                className={`py-1 px-1 rounded-lg text-center font-medium transition-all cursor-pointer flex items-center justify-center gap-1 truncate ${
+                  activeTeamFilter === 'TIM-003'
+                    ? 'bg-white text-sky-800 shadow-2xs font-bold border border-sky-300'
+                    : 'text-slate-600 hover:text-sky-700'
+                }`}
+                title="Filter PIC Tim Kerja Sama"
+              >
+                <span className="w-1.5 h-1.5 rounded-full bg-sky-500 shrink-0" />
+                <span className="truncate">Kerja Sama ({teamCounts['TIM-003']})</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setActiveTeamFilter('TIM-002')}
+                className={`py-1 px-1 rounded-lg text-center font-medium transition-all cursor-pointer flex items-center justify-center gap-1 truncate ${
+                  activeTeamFilter === 'TIM-002'
+                    ? 'bg-white text-amber-800 shadow-2xs font-bold border border-amber-300'
+                    : 'text-slate-600 hover:text-amber-700'
+                }`}
+                title="Filter PIC Tim Komunikasi"
+              >
+                <span className="w-1.5 h-1.5 rounded-full bg-amber-500 shrink-0" />
+                <span className="truncate">Komunikasi ({teamCounts['TIM-002']})</span>
+              </button>
+            </div>
           </div>
 
           {/* Unassign / Kosongkan PIC Option */}
@@ -276,19 +358,18 @@ export function PicCombobox({
             >
               <div className="flex items-center gap-2">
                 <UserX className="w-3.5 h-3.5 text-slate-400" />
-                <span>Belum Ditentukan (Kosongkan PIC)</span>
+                <span>Belum Ditentukan (Kosongkan PIC / Kolektif Tim)</span>
               </div>
               {!value && <Check className="w-3.5 h-3.5 text-[#1E6B7B]" />}
             </button>
           </div>
 
           {/* Options List */}
-          <div className="max-h-52 overflow-y-auto divide-y divide-slate-100 text-xs [scrollbar-width:thin] [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-slate-200">
+          <div className="max-h-56 overflow-y-auto divide-y divide-slate-100 text-xs [scrollbar-width:thin] [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-slate-200">
             {filteredUsers.length > 0 ? (
               filteredUsers.map((u) => {
                 const isSelected = u.id === value;
-                const isBiroMember = Boolean(selectedBiroId && u.biroId === selectedBiroId);
-                const userBiro = u.biroId ? biroMap.get(u.biroId) : null;
+                const userTeam = getPicTeamDetails(u.teamId);
 
                 return (
                   <button
@@ -302,13 +383,13 @@ export function PicCombobox({
                     }`}
                   >
                     <div className="flex items-center gap-2.5 min-w-0 flex-1">
-                      {/* Avatar initials badge */}
+                      {/* Avatar initials badge with team color */}
                       <div
                         className={`w-7 h-7 rounded-full font-bold text-[10px] flex items-center justify-center shrink-0 border ${
                           isSelected
                             ? 'bg-[#1E6B7B] text-white border-[#1E6B7B]'
-                            : isBiroMember
-                            ? 'bg-[#E8F5F7] text-[#1E6B7B] border-[#BCE3EB]'
+                            : userTeam
+                            ? userTeam.avatarClass
                             : 'bg-slate-100 text-slate-600 border-slate-200'
                         }`}
                       >
@@ -325,20 +406,11 @@ export function PicCombobox({
                           >
                             {u.name}
                           </p>
-                          {userBiro && (
+                          {userTeam && (
                             <span
-                              className={`px-1 py-0.2 rounded text-[9px] font-bold shrink-0 border ${
-                                isBiroMember
-                                  ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
-                                  : 'bg-slate-100 text-slate-600 border-slate-200'
-                              }`}
+                              className={`px-1.5 py-0.2 rounded text-[9.5px] font-bold shrink-0 border ${userTeam.badgeClass}`}
                             >
-                              {userBiro.code}
-                            </span>
-                          )}
-                          {isBiroMember && (
-                            <span className="text-[9.5px] font-medium text-emerald-600 shrink-0">
-                              • Anggota Biro
+                              {userTeam.name}
                             </span>
                           )}
                         </div>
@@ -359,20 +431,27 @@ export function PicCombobox({
               })
             ) : (
               <div className="p-4 text-center text-slate-400 space-y-1">
-                <p className="text-xs font-semibold text-slate-700">Pejabat tidak ditemukan</p>
+                <p className="text-xs font-semibold text-slate-700">Personil tidak ditemukan</p>
                 <p className="text-[11px] text-slate-400">
                   {searchQuery
                     ? `Tidak ada PIC yang cocok dengan kata kunci "${searchQuery}".`
-                    : 'Tidak ada daftar pegawai yang tersedia.'}
+                    : activeTeamFilter !== 'ALL'
+                    ? 'Tidak ada personil yang terdaftar pada tim ini.'
+                    : 'Tidak ada daftar personil yang tersedia.'}
                 </p>
               </div>
             )}
           </div>
 
-          {/* Footer note */}
-          <div className="px-3 py-1 bg-slate-50 border-t border-slate-100 text-[10.5px] text-slate-400 flex items-center justify-between">
-            <span>{filteredUsers.length} dari {users.length} pejabat</span>
-            <span>ESC untuk menutup</span>
+          {/* Footer status */}
+          <div className="px-3 py-1.5 bg-slate-50 border-t border-slate-100 text-[10.5px] text-slate-400 flex items-center justify-between">
+            <span className="flex items-center gap-1">
+              <Layers className="w-3 h-3 text-[#31889C]" />
+              <span>
+                Menampilkan <strong>{filteredUsers.length}</strong> dari {users.length} personil
+              </span>
+            </span>
+            <span>Tekan ESC untuk menutup</span>
           </div>
         </div>
       )}

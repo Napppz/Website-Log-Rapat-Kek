@@ -156,6 +156,7 @@ export async function getActionItemFormOptionsAction() {
           name: true,
           email: true,
           biroId: true,
+          teamId: true,
         },
         orderBy: { name: 'asc' },
       }),
@@ -176,8 +177,12 @@ export async function getActionItemFormOptionsAction() {
           meetingNumber: true,
           title: true,
           date: true,
+          primaryTeamId: true,
           primaryBiro: {
             select: { code: true, name: true },
+          },
+          primaryTeam: {
+            select: { id: true, code: true, name: true },
           },
         },
         orderBy: { date: 'desc' },
@@ -232,18 +237,40 @@ export async function createActionItemAction(input: ActionItemInput) {
     // 2. Ensure meeting exists
     const meeting = await prisma.meeting.findUnique({
       where: { id: meetingId },
-      include: { primaryBiro: true },
+      include: { primaryBiro: true, primaryTeam: true },
     });
     if (!meeting) {
       return { success: false, error: 'Rapat tidak ditemukan.' };
     }
 
-    // 3. Ensure Biro exists
+    // 3. Resolve Team & Biro (Team-First Architecture)
+    let effectiveBiroId = picBiroId ? picBiroId.trim() : '';
+    let effectiveTeamId = picTeamId ? picTeamId.trim() : null;
+
+    if (effectiveTeamId) {
+      const team = await prisma.biroTeam.findUnique({
+        where: { id: effectiveTeamId },
+        select: { id: true, biroId: true, code: true, name: true },
+      });
+      if (team?.biroId) {
+        effectiveBiroId = team.biroId;
+      }
+    }
+
+    if (!effectiveBiroId) {
+      const ikkBiro = await prisma.biro.findFirst({
+        where: { code: 'IKK' },
+        select: { id: true },
+      });
+      effectiveBiroId = ikkBiro?.id || 'BIRO-IKK';
+    }
+
+    // Ensure Biro exists
     const biro = await prisma.biro.findUnique({
-      where: { id: picBiroId },
+      where: { id: effectiveBiroId },
     });
     if (!biro) {
-      return { success: false, error: 'Biro penanggung jawab tidak ditemukan.' };
+      return { success: false, error: 'Biro/Unit kerja penanggung jawab tidak ditemukan.' };
     }
 
     // Authorization Check: Must have 'create:action_item' permission (SUPER_ADMIN, ADMIN, STAFF)
@@ -252,10 +279,10 @@ export async function createActionItemAction(input: ActionItemInput) {
       currentUser.role === 'SUPER_ADMIN' || currentUser.role === 'ADMIN';
 
     // Bureau Scoping: Non-admin users can only create action items assigned to their own bureau
-    if (!isPrivileged && currentUser.biroId && picBiroId !== currentUser.biroId) {
+    if (!isPrivileged && currentUser.biroId && effectiveBiroId !== currentUser.biroId) {
       return {
         success: false,
-        error: 'Anda hanya dapat menugaskan tindak lanjut ke biro Anda sendiri.',
+        error: 'Anda hanya dapat menugaskan tindak lanjut ke biro/tim Anda sendiri.',
       };
     }
 
@@ -283,8 +310,8 @@ export async function createActionItemAction(input: ActionItemInput) {
         meetingId,
         title,
         description: description || null,
-        picBiroId,
-        picTeamId: picTeamId || null,
+        picBiroId: effectiveBiroId,
+        picTeamId: effectiveTeamId,
         picUserId: validPicUserId,
         dueDate,
         priority,
@@ -365,12 +392,34 @@ export async function updateActionItemAction(input: UpdateActionItemInput) {
     const isPrivileged =
       currentUser.role === 'SUPER_ADMIN' || currentUser.role === 'ADMIN';
 
+    // Resolve Team & Biro (Team-First Architecture)
+    let effectiveTeamId = picTeamId !== undefined ? (picTeamId ? picTeamId.trim() : null) : existing.picTeamId;
+    let effectiveBiroId = picBiroId ? picBiroId.trim() : existing.picBiroId;
+
+    if (effectiveTeamId) {
+      const team = await prisma.biroTeam.findUnique({
+        where: { id: effectiveTeamId },
+        select: { id: true, biroId: true },
+      });
+      if (team?.biroId) {
+        effectiveBiroId = team.biroId;
+      }
+    }
+
+    if (!effectiveBiroId) {
+      const ikkBiro = await prisma.biro.findFirst({
+        where: { code: 'IKK' },
+        select: { id: true },
+      });
+      effectiveBiroId = ikkBiro?.id || 'BIRO-IKK';
+    }
+
     // Bureau Scoping: Non-admin users cannot edit action items of another bureau, nor reassign outside their bureau
     if (!isPrivileged && currentUser.biroId) {
-      if (existing.picBiroId !== currentUser.biroId || picBiroId !== currentUser.biroId) {
+      if (existing.picBiroId !== currentUser.biroId || effectiveBiroId !== currentUser.biroId) {
         return {
           success: false,
-          error: 'Anda hanya dapat mengelola tindak lanjut untuk biro Anda sendiri.',
+          error: 'Anda hanya dapat mengelola tindak lanjut untuk biro/tim Anda sendiri.',
         };
       }
     }
@@ -378,7 +427,7 @@ export async function updateActionItemAction(input: UpdateActionItemInput) {
     // 3. Ensure Meeting exists
     const meeting = await prisma.meeting.findUnique({
       where: { id: meetingId },
-      include: { primaryBiro: true },
+      include: { primaryBiro: true, primaryTeam: true },
     });
     if (!meeting) {
       return { success: false, error: 'Rapat tidak ditemukan.' };
@@ -386,10 +435,10 @@ export async function updateActionItemAction(input: UpdateActionItemInput) {
 
     // 4. Ensure Biro exists
     const biro = await prisma.biro.findUnique({
-      where: { id: picBiroId },
+      where: { id: effectiveBiroId },
     });
     if (!biro) {
-      return { success: false, error: 'Biro penanggung jawab tidak ditemukan.' };
+      return { success: false, error: 'Biro/Unit kerja penanggung jawab tidak ditemukan.' };
     }
 
     // 5. Validate picUser if provided
@@ -419,8 +468,8 @@ export async function updateActionItemAction(input: UpdateActionItemInput) {
         meetingId,
         title,
         description: description || null,
-        picBiroId,
-        picTeamId: picTeamId !== undefined ? (picTeamId || null) : undefined,
+        picBiroId: effectiveBiroId,
+        picTeamId: effectiveTeamId,
         picUserId: validPicUserId,
         dueDate,
         priority,

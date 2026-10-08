@@ -20,6 +20,7 @@ import {
   Search,
   Filter,
   X,
+  Layers,
 } from 'lucide-react';
 import { ActionItem, ActionItemStatus } from '@/lib/types';
 import { ActionItemStatusBadge, ActionItemPriorityBadge } from './action-item-status-badge';
@@ -42,7 +43,7 @@ interface ActionItemListProps {
   meetingId: string;
   initialItems: ActionItem[];
   availableBiros?: { id: string; code: string; shortName: string; name: string }[];
-  availableUsers?: { id: string; name: string; email?: string; biroId?: string }[];
+  availableUsers?: { id: string; name: string; email?: string; biroId?: string; teamId?: string | null }[];
   readOnly?: boolean;
 }
 
@@ -120,7 +121,7 @@ export function ActionItemList({
   const [filterSearch, setFilterSearch] = useState('');
   const [filterPic, setFilterPic] = useState('ALL');
   const [filterStatus, setFilterStatus] = useState('ALL');
-  const [filterBiro, setFilterBiro] = useState('ALL');
+  const [filterTeam, setFilterTeam] = useState('ALL');
 
   // Unique PICs from items
   const uniquePics = useMemo(() => {
@@ -133,25 +134,25 @@ export function ActionItemList({
     return Array.from(map.entries()).map(([id, name]) => ({ id, name }));
   }, [items]);
 
-  // Unique Biros from items
-  const uniqueBiros = useMemo(() => {
-    const set = new Set<string>();
-    items.forEach((it) => {
-      if (it.picBiro?.code) set.add(it.picBiro.code);
-    });
-    return Array.from(set);
-  }, [items]);
+  // Available Teams for filter
+  const availableTeamFilters = useMemo(() => {
+    return [
+      { code: 'INV', name: 'Tim Investasi' },
+      { code: 'KS', name: 'Tim Kerja Sama' },
+      { code: 'KOM', name: 'Tim Komunikasi' },
+    ];
+  }, []);
 
   // Has active filters
   const hasActiveFilters = Boolean(
-    filterSearch.trim() || filterPic !== 'ALL' || filterStatus !== 'ALL' || filterBiro !== 'ALL'
+    filterSearch.trim() || filterPic !== 'ALL' || filterStatus !== 'ALL' || filterTeam !== 'ALL'
   );
 
   const resetFilters = () => {
     setFilterSearch('');
     setFilterPic('ALL');
     setFilterStatus('ALL');
-    setFilterBiro('ALL');
+    setFilterTeam('ALL');
   };
 
   // Filtered items
@@ -163,8 +164,9 @@ export function ActionItemList({
         const titleMatch = item.title.toLowerCase().includes(q);
         const descMatch = item.description ? item.description.toLowerCase().includes(q) : false;
         const picMatch = item.picUser?.name ? item.picUser.name.toLowerCase().includes(q) : false;
+        const teamMatch = item.picTeam?.name ? item.picTeam.name.toLowerCase().includes(q) : false;
         const biroMatch = item.picBiro?.code ? item.picBiro.code.toLowerCase().includes(q) : false;
-        if (!titleMatch && !descMatch && !picMatch && !biroMatch) return false;
+        if (!titleMatch && !descMatch && !picMatch && !teamMatch && !biroMatch) return false;
       }
 
       // PIC filter
@@ -176,9 +178,10 @@ export function ActionItemList({
         }
       }
 
-      // Biro filter
-      if (filterBiro !== 'ALL') {
-        if (item.picBiro?.code !== filterBiro) return false;
+      // Team filter
+      if (filterTeam !== 'ALL') {
+        const itemTeamCode = item.picTeam?.code || (item.picBiro?.code === 'IKK' ? 'INV' : '');
+        if (itemTeamCode !== filterTeam) return false;
       }
 
       // Status filter
@@ -194,7 +197,7 @@ export function ActionItemList({
 
       return true;
     });
-  }, [items, filterSearch, filterPic, filterBiro, filterStatus]);
+  }, [items, filterSearch, filterPic, filterTeam, filterStatus]);
 
   const handleStatusChange = async (itemId: string, newStatus: ActionItemStatus) => {
     try {
@@ -353,24 +356,22 @@ export function ActionItemList({
                 </select>
               </div>
 
-              {/* Biro Filter Dropdown */}
-              {uniqueBiros.length > 1 && (
-                <div className="flex items-center gap-1.5 bg-slate-50 border border-slate-200 rounded-lg px-2.5 py-1.5">
-                  <Building2 className="w-3.5 h-3.5 text-slate-500 shrink-0" />
-                  <select
-                    value={filterBiro}
-                    onChange={(e) => setFilterBiro(e.target.value)}
-                    className="bg-transparent text-slate-700 font-semibold focus:outline-none cursor-pointer text-xs"
-                  >
-                    <option value="ALL">Semua Biro</option>
-                    {uniqueBiros.map((b) => (
-                      <option key={b} value={b}>
-                        Biro {b}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-              )}
+              {/* Tim Kerja Filter Dropdown */}
+              <div className="flex items-center gap-1.5 bg-slate-50 border border-slate-200 rounded-lg px-2.5 py-1.5">
+                <Layers className="w-3.5 h-3.5 text-[#31889C] shrink-0" />
+                <select
+                  value={filterTeam}
+                  onChange={(e) => setFilterTeam(e.target.value)}
+                  className="bg-transparent text-slate-700 font-semibold focus:outline-none cursor-pointer text-xs"
+                >
+                  <option value="ALL">Semua Tim Kerja</option>
+                  {availableTeamFilters.map((t) => (
+                    <option key={t.code} value={t.code}>
+                      {t.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
 
               {/* Status Filter Dropdown */}
               <div className="flex items-center gap-1.5 bg-slate-50 border border-slate-200 rounded-lg px-2.5 py-1.5">
@@ -433,7 +434,7 @@ export function ActionItemList({
             </h4>
             <p className="text-[13px] text-slate-500 leading-relaxed">
               {canCreateItem
-                ? 'Rapat ini belum memiliki tindak lanjut yang terdaftar. Tambahkan butir pekerjaan dan delegasikan kepada biro pelaksana.'
+                ? 'Rapat ini belum memiliki tindak lanjut yang terdaftar. Tambahkan butir pekerjaan dan delegasikan kepada tim kerja pelaksana.'
                 : 'Belum ada tindak lanjut yang didaftarkan untuk rapat ini oleh Notulis atau Administrator.'}
             </p>
             {canCreateItem && (
@@ -574,15 +575,28 @@ export function ActionItemList({
                 {/* Details Footer Row */}
                 <div className="flex flex-wrap items-center justify-between gap-3 pt-3 border-t border-slate-100 text-[12px]">
                   <div className="flex flex-wrap items-center gap-4 text-slate-600">
-                    {/* Biro PIC */}
+                    {/* Tim Penanggung Jawab */}
                     <div className="flex items-center gap-1.5 flex-wrap">
-                      <Building2 className="w-3.5 h-3.5 text-[#31889C]" />
-                      <span className="font-semibold text-slate-800">
-                        {item.picBiro ? `${item.picBiro.code} - ${item.picBiro.shortName}` : 'Biro KEK'}
-                      </span>
-                      {item.picTeam && (
-                        <span className="px-1.5 py-0.5 rounded text-[10.5px] font-semibold bg-amber-50 text-amber-900 border border-amber-200">
-                          Tim {item.picTeam.name}
+                      <Layers className="w-3.5 h-3.5 text-[#31889C]" />
+                      {item.picTeam?.code === 'INV' || (!item.picTeam && item.picBiro?.code === 'IKK') ? (
+                        <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-emerald-50 text-emerald-800 border border-emerald-200">
+                          <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                          Tim Investasi (INV)
+                        </span>
+                      ) : item.picTeam?.code === 'KS' ? (
+                        <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-sky-50 text-sky-800 border border-sky-200">
+                          <span className="w-1.5 h-1.5 rounded-full bg-sky-500" />
+                          Tim Kerja Sama (KS)
+                        </span>
+                      ) : item.picTeam?.code === 'KOM' ? (
+                        <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-amber-50 text-amber-800 border border-amber-200">
+                          <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />
+                          Tim Komunikasi (KOM)
+                        </span>
+                      ) : (
+                        <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-slate-50 text-slate-800 border border-slate-200">
+                          <span className="w-1.5 h-1.5 rounded-full bg-slate-400" />
+                          {item.picTeam ? `Tim ${item.picTeam.name}` : item.picBiro?.shortName || 'Tim Pelaksana'}
                         </span>
                       )}
                     </div>

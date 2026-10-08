@@ -22,7 +22,7 @@ export const actionItemSchema = z.object({
     .min(1, 'Judul tindak lanjut tidak boleh kosong')
     .max(255, 'Judul tindak lanjut maksimal 255 karakter'),
   description: z.string().trim().optional().nullable(),
-  picBiroId: z.string().min(1, 'Biro penanggung jawab wajib dipilih'),
+  picBiroId: z.string().trim().optional().nullable(),
   picTeamId: z.string().trim().optional().nullable(),
   picUserId: z.string().trim().optional().nullable(),
   dueDate: z.coerce.date({

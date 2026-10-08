@@ -39,6 +39,7 @@ export default async function MeetingDetailPage({ params, searchParams }: Meetin
           name: true,
           email: true,
           biroId: true,
+          teamId: true,
           biro: { select: { id: true, code: true, name: true, shortName: true } },
         },
         orderBy: { name: 'asc' },
