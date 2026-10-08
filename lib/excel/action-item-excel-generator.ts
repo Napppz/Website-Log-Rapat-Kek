@@ -11,9 +11,9 @@ const PRIORITY_MAP: Record<string, string> = {
 };
 
 const STATUS_MAP: Record<string, string> = {
-  PENDING: 'Menunggu',
-  IN_PROGRESS: 'Berjalan',
-  COMPLETED: 'Selesai',
+  PENDING: 'Start',
+  IN_PROGRESS: 'On Progress',
+  COMPLETED: 'Finish',
   OVERDUE: 'Terlambat',
 };
 

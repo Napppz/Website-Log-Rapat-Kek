@@ -206,10 +206,10 @@ export function ActionItemList({
         );
         toast.success(
           newStatus === 'COMPLETED'
-            ? 'Status tindak lanjut diperbarui: Selesai.'
+            ? 'Status tindak lanjut diperbarui: Finish.'
             : newStatus === 'IN_PROGRESS'
-            ? 'Status tindak lanjut diperbarui: Sedang Berjalan.'
-            : 'Status tindak lanjut diperbarui: Belum Dimulai.'
+            ? 'Status tindak lanjut diperbarui: On Progress.'
+            : 'Status tindak lanjut diperbarui: Start.'
         );
         router.refresh();
       } else {
@@ -381,9 +381,9 @@ export function ActionItemList({
                   className="bg-transparent text-slate-700 font-semibold focus:outline-none cursor-pointer text-xs"
                 >
                   <option value="ALL">Semua Status</option>
-                  <option value="PENDING">Belum Dimulai</option>
-                  <option value="IN_PROGRESS">Sedang Berjalan</option>
-                  <option value="COMPLETED">Selesai</option>
+                  <option value="PENDING">Start</option>
+                  <option value="IN_PROGRESS">On Progress</option>
+                  <option value="COMPLETED">Finish</option>
                   {overdue > 0 && <option value="OVERDUE">Terlambat ({overdue})</option>}
                 </select>
               </div>

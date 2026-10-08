@@ -55,9 +55,9 @@ function formatDateId(d: Date | string | null | undefined): string {
 function statusLabel(status: string, isOverdue: boolean): string {
   if (isOverdue) return 'Terlambat';
   switch (status) {
-    case 'COMPLETED':   return 'Selesai';
-    case 'IN_PROGRESS': return 'Sedang Berjalan';
-    case 'PENDING':     return 'Belum Dimulai';
+    case 'COMPLETED':   return 'Finish';
+    case 'IN_PROGRESS': return 'On Progress';
+    case 'PENDING':     return 'Start';
     default:            return status;
   }
 }

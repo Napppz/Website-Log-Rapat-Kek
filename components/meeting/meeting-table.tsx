@@ -45,6 +45,7 @@ interface MeetingTableProps {
   filterYear?: string | number | null;
   filterDayOfWeek?: string | number | null;
   filterDate?: string | null;
+  filterCategory?: string | null;
   searchQuery?: string;
   onSearchChange?: (val: string) => void;
   hideHeader?: boolean;
@@ -63,6 +64,7 @@ export function MeetingTable({
   filterYear,
   filterDayOfWeek,
   filterDate,
+  filterCategory,
   searchQuery,
   onSearchChange,
   hideHeader = false,
@@ -450,6 +452,18 @@ export function MeetingTable({
         }
       }
 
+      // Check category filter
+      if (filterCategory && filterCategory !== 'ALL') {
+        const cat = (m as any).documentCategory || 'UNDANGAN_INTERNAL';
+        if (filterCategory === 'UNDANGAN_INTERNAL' && cat !== 'UNDANGAN_INTERNAL') {
+          return false;
+        } else if (filterCategory === 'NASKAH_MASUK' && cat !== 'NASKAH_MASUK') {
+          return false;
+        } else if (filterCategory === 'SURAT_DITUNDA' && cat !== 'SURAT_DITUNDA') {
+          return false;
+        }
+      }
+
       // Check date/month/day/year filters
       if (monthIdx !== null || dayOfWeekIdx !== null || targetYear !== null || targetDate !== null) {
         const parsed = parseMeetingDate(m.date);
@@ -480,7 +494,7 @@ export function MeetingTable({
         (m.agendaSummary && m.agendaSummary.toLowerCase().includes(q))
       );
     });
-  }, [meetings, deletedMeetingIds, effectiveSearch, filterBiro, filterStatus, progressTabFilter, filterMonth, filterYear, filterDayOfWeek, filterDate]);
+  }, [meetings, deletedMeetingIds, effectiveSearch, filterBiro, filterStatus, progressTabFilter, filterMonth, filterYear, filterDayOfWeek, filterDate, filterCategory]);
 
   const handleResetFilter = () => {
     setEffectiveSearch('');
@@ -490,7 +504,7 @@ export function MeetingTable({
   // Reset page when filters change
   React.useEffect(() => {
     setCurrentPage(1);
-  }, [effectiveSearch, filterBiro, filterStatus, progressTabFilter, filterMonth, filterYear, filterDayOfWeek, filterDate]);
+  }, [effectiveSearch, filterBiro, filterStatus, progressTabFilter, filterMonth, filterYear, filterDayOfWeek, filterDate, filterCategory]);
 
   const itemsPerPage = pageSize;
   const totalPages = Math.max(1, Math.ceil(filteredMeetings.length / itemsPerPage));

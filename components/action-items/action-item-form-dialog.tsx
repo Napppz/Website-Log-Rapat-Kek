@@ -561,9 +561,9 @@ export function ActionItemFormDialog({
                   onChange={(e) => setStatus(e.target.value as ActionItemStatus)}
                   className="w-full px-3 py-2 rounded-lg border border-slate-200 focus:outline-none focus:ring-2 focus:ring-[#31889C]/30 focus:border-[#31889C] bg-white font-medium text-slate-800 text-[13px] cursor-pointer"
                 >
-                  <option value="PENDING">Belum Dimulai (PENDING)</option>
-                  <option value="IN_PROGRESS">Sedang Berjalan (IN_PROGRESS)</option>
-                  <option value="COMPLETED">Selesai (COMPLETED)</option>
+                  <option value="PENDING">Start</option>
+                  <option value="IN_PROGRESS">On Progress</option>
+                  <option value="COMPLETED">Finish</option>
                   <option value="OVERDUE">Terlambat (OVERDUE)</option>
                 </select>
               </div>

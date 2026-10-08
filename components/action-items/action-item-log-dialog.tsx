@@ -52,10 +52,10 @@ interface ActionItemLogDialogProps {
 
 // ─── Status helpers ───────────────────────────────────────────────────────────
 const STATUS_META: Record<string, { label: string; bg: string; text: string; border: string }> = {
-  COMPLETED:   { label: 'Selesai',       bg: 'bg-emerald-50',  text: 'text-emerald-700',  border: 'border-emerald-200' },
-  IN_PROGRESS: { label: 'Sedang Berjalan', bg: 'bg-sky-50',    text: 'text-sky-700',      border: 'border-sky-200'     },
-  PENDING:     { label: 'Belum Dimulai', bg: 'bg-amber-50',   text: 'text-amber-700',    border: 'border-amber-200'   },
-  OVERDUE:     { label: 'Terlambat',     bg: 'bg-rose-50',    text: 'text-rose-700',     border: 'border-rose-200'    },
+  COMPLETED:   { label: 'Finish',        bg: 'bg-emerald-50',  text: 'text-emerald-700',  border: 'border-emerald-200' },
+  IN_PROGRESS: { label: 'On Progress',   bg: 'bg-sky-50',      text: 'text-sky-700',      border: 'border-sky-200'     },
+  PENDING:     { label: 'Start',         bg: 'bg-amber-50',    text: 'text-amber-700',    border: 'border-amber-200'   },
+  OVERDUE:     { label: 'Terlambat',     bg: 'bg-rose-50',     text: 'text-rose-700',     border: 'border-rose-200'    },
 };
 
 const STATUS_BULLET: Record<string, string> = {
@@ -715,9 +715,9 @@ export function ActionItemLogDialog({
                       }}
                       className="w-full px-3 py-2 rounded-lg border border-slate-200 focus:outline-none focus:ring-2 focus:ring-[#31889C]/20 focus:border-[#31889C] bg-white cursor-pointer text-[13px]"
                     >
-                      <option value="PENDING">Belum Dimulai (PENDING)</option>
-                      <option value="IN_PROGRESS">Sedang Berjalan (IN PROGRESS)</option>
-                      <option value="COMPLETED">Selesai (COMPLETED)</option>
+                      <option value="PENDING">Start</option>
+                      <option value="IN_PROGRESS">On Progress</option>
+                      <option value="COMPLETED">Finish</option>
                     </select>
                     {/* Current → new preview */}
                     {item.status !== selectedStatus && (

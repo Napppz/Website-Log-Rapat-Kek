@@ -15,7 +15,7 @@ export default async function TindakLanjutPage() {
   // Strict Bureau Scoping: Non-admin users only see and manage action items for their own bureau
   const userBiroCode = !isPrivileged && currentUser?.biroCode ? currentUser.biroCode : undefined;
 
-  const [items, meetings, biros, users] = await withDbRetry(async () =>
+  const [items, meetings, biros, users, teams] = await withDbRetry(async () =>
     Promise.all([
       getActionItemsFromDb(userBiroCode ? { biroCode: userBiroCode } : undefined),
       prisma.meeting.findMany({
@@ -40,6 +40,11 @@ export default async function TindakLanjutPage() {
         select: { id: true, name: true, email: true, biroId: true },
         orderBy: { name: 'asc' },
       }),
+      prisma.biroTeam.findMany({
+        where: { isActive: true },
+        select: { id: true, code: true, name: true, biroId: true },
+        orderBy: { code: 'asc' },
+      }),
     ])
   );
 
@@ -50,6 +55,7 @@ export default async function TindakLanjutPage() {
         availableMeetings={meetings}
         availableBiros={biros}
         availableUsers={users}
+        availableTeams={teams}
         lockedBiroCode={userBiroCode}
         currentUserRole={currentUser?.role}
         currentUserBiroName={currentUser?.biroName}

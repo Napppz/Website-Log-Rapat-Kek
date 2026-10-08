@@ -10,40 +10,49 @@ interface ActionItemStatusBadgeProps {
 }
 
 export function ActionItemStatusBadge({ status, isOverdue }: ActionItemStatusBadgeProps) {
-  // If overdue is indicated or status is OVERDUE
-  if (status === 'OVERDUE' || (isOverdue && status !== 'COMPLETED')) {
+  const s = String(status || '').toUpperCase();
+
+  if (s === 'COMPLETED' || s === 'FINISH' || s === 'SELESAI') {
     return (
-      <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-[#FEF2F2] text-[#DC2626] text-[11px] font-bold border border-red-200">
+      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-[#ECF8E9] text-[#2E7D32] text-[11px] font-bold border border-[#C8E6C9] shadow-2xs">
+        <CheckCircle2 className="w-3.5 h-3.5 text-[#388E3C]" />
+        Finish
+      </span>
+    );
+  }
+
+  if (s === 'IN_PROGRESS' || s === 'ON_PROGRESS' || s === 'ON PROGRESS' || s === 'ON PROGRES' || s === 'BERJALAN') {
+    return (
+      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-[#E8F5F7] text-[#164E59] text-[11px] font-bold border border-[#BCE3EB] shadow-2xs">
+        <Clock className="w-3.5 h-3.5 text-[#31889C]" />
+        On Progress
+      </span>
+    );
+  }
+
+  if (s === 'PENDING' || s === 'START' || s === 'BELUM DIMULAI') {
+    return (
+      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-[#FFF8CC] text-[#8A7200] text-[11px] font-bold border border-[#FFEE99] shadow-2xs">
+        <PlayCircle className="w-3.5 h-3.5 text-[#B96800]" />
+        Start
+      </span>
+    );
+  }
+
+  if (s === 'OVERDUE' || (isOverdue && s !== 'COMPLETED')) {
+    return (
+      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-[#FEF2F2] text-[#DC2626] text-[11px] font-bold border border-red-200 shadow-2xs">
         <AlertTriangle className="w-3.5 h-3.5 text-[#DC2626]" />
         Terlambat
       </span>
     );
   }
 
-  switch (status) {
-    case 'COMPLETED':
-      return (
-        <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-[#ECF8E9] text-[#4D8F3D] text-[11px] font-bold border border-[#D2EFCA]">
-          <CheckCircle2 className="w-3.5 h-3.5 text-[#7CC563]" />
-          Selesai
-        </span>
-      );
-    case 'IN_PROGRESS':
-      return (
-        <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-[#E8F5F7] text-[#31889C] text-[11px] font-bold border border-[#BCE3EB]">
-          <Clock className="w-3.5 h-3.5 text-[#31889C]" />
-          Sedang Berjalan
-        </span>
-      );
-    case 'PENDING':
-    default:
-      return (
-        <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-[#FFF8CC] text-[#8A7200] text-[11px] font-bold border border-[#FFEE99]">
-          <PlayCircle className="w-3.5 h-3.5 text-[#8A7200]" />
-          Belum Dimulai
-        </span>
-      );
-  }
+  return (
+    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-slate-100 text-slate-700 text-[11px] font-bold border border-slate-200 shadow-2xs">
+      {status}
+    </span>
+  );
 }
 
 interface ActionItemPriorityBadgeProps {
