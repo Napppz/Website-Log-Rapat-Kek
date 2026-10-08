@@ -823,20 +823,6 @@ export function MeetingDetailView({
         </Link>
 
         <div className="flex items-center gap-2 flex-wrap">
-          {/* Mulai Rapat Button (Ubah status Belum Dimulai -> Dalam Proses) */}
-          {canChangeStatus && isBelumDimulai && (
-            <button
-              type="button"
-              disabled={isUpdatingStatus}
-              onClick={handleStartMeeting}
-              className="inline-flex items-center gap-2 px-4 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-[12.5px] font-bold transition-all shadow-sm hover:shadow-md cursor-pointer animate-pulse active:scale-95 disabled:opacity-50"
-              title="Mulai Rapat Sekarang (Ubah status menjadi Dalam Proses)"
-            >
-              <Play className="w-3.5 h-3.5 fill-current" />
-              <span>Mulai Rapat</span>
-            </button>
-          )}
-
           {/* Google Calendar Button */}
           <button
             type="button"
@@ -948,18 +934,6 @@ export function MeetingDetailView({
               </div>
             )}
             <MeetingProgressBadge progressStatus={(meeting as any).progressStatus} status={status} size="lg" showSubtitle />
-            {canChangeStatus && isBelumDimulai && (
-              <button
-                type="button"
-                disabled={isUpdatingStatus}
-                onClick={handleStartMeeting}
-                className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-[12px] font-bold shadow-xs hover:shadow-md transition-all cursor-pointer group active:scale-95 disabled:opacity-50"
-                title="Mulai Rapat (Ubah status dari Belum Dimulai menjadi Dalam Proses)"
-              >
-                <Play className="w-3.5 h-3.5 fill-current group-hover:scale-110 transition-transform" />
-                <span>Mulai Rapat</span>
-              </button>
-            )}
             {/* Kategori Naskah / Status Penundaan */}
             {(() => {
               const catInfo = getMeetingCategoryInfo(categoryData.category, categoryData.subCategory);

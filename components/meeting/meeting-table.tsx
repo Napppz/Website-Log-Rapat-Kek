@@ -883,55 +883,36 @@ export function MeetingTable({
                         {canUpdateStatus && (() => {
                           const curProg = normalizeProgressStatus(meeting.progressStatus || mapStatusToProgress(meeting.status));
                           return (
-                            <div className="flex flex-col gap-1 mt-0.5">
-                              {curProg === 'Belum Dimulai' && (
-                                <button
-                                  type="button"
-                                  disabled={updatingStatusId === meeting.id}
-                                  onClick={() => handleQuickUpdateStatus(meeting.id, 'Dalam Proses')}
-                                  className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded text-[10.5px] font-bold bg-emerald-600 hover:bg-emerald-700 text-white shadow-2xs transition-all cursor-pointer active:scale-95 disabled:opacity-50"
-                                  title="Mulai Rapat (Ubah status ke Dalam Proses)"
-                                >
-                                  {updatingStatusId === meeting.id ? (
-                                    <Loader2 className="w-2.5 h-2.5 animate-spin" />
-                                  ) : (
-                                    <Play className="w-2.5 h-2.5 fill-current" />
-                                  )}
-                                  <span>Mulai Rapat</span>
-                                </button>
-                              )}
-
-                              <div className="flex items-center gap-1">
-                                <span className="text-[10px] text-slate-400 font-medium mr-0.5">Ubah:</span>
-                                {(['Belum Dimulai', 'Dalam Proses', 'Selesai'] as const).map((st) => {
-                                  const isSelected = curProg === st;
-                                  return (
-                                    <button
-                                      key={st}
-                                      type="button"
-                                      disabled={isSelected || updatingStatusId === meeting.id}
-                                      onClick={() => handleQuickUpdateStatus(meeting.id, st)}
-                                      className={cn(
-                                        "px-1.5 py-0.5 rounded text-[10px] font-bold transition-all border select-none",
-                                        isSelected
-                                          ? st === 'Belum Dimulai'
-                                            ? "bg-sky-100 text-sky-800 border-sky-300 shadow-2xs font-extrabold cursor-default"
-                                            : st === 'Dalam Proses'
-                                            ? "bg-amber-100 text-amber-900 border-amber-300 shadow-2xs font-extrabold cursor-default"
-                                            : "bg-emerald-100 text-emerald-900 border-emerald-300 shadow-2xs font-extrabold cursor-default"
-                                          : "bg-white text-slate-500 border-slate-200 hover:text-slate-800 hover:bg-slate-50 cursor-pointer"
-                                      )}
-                                      title={`Klik untuk ubah status rapat menjadi ${st}`}
-                                    >
-                                      {updatingStatusId === meeting.id ? (
-                                        <Loader2 className="w-2.5 h-2.5 animate-spin inline" />
-                                      ) : (
-                                        st
-                                      )}
-                                    </button>
-                                  );
-                                })}
-                              </div>
+                            <div className="flex items-center gap-1 mt-0.5">
+                              <span className="text-[10px] text-slate-400 font-medium mr-0.5">Ubah:</span>
+                              {(['Belum Dimulai', 'Dalam Proses', 'Selesai'] as const).map((st) => {
+                                const isSelected = curProg === st;
+                                return (
+                                  <button
+                                    key={st}
+                                    type="button"
+                                    disabled={isSelected || updatingStatusId === meeting.id}
+                                    onClick={() => handleQuickUpdateStatus(meeting.id, st)}
+                                    className={cn(
+                                      "px-1.5 py-0.5 rounded text-[10px] font-bold transition-all border select-none",
+                                      isSelected
+                                        ? st === 'Belum Dimulai'
+                                          ? "bg-sky-100 text-sky-800 border-sky-300 shadow-2xs font-extrabold cursor-default"
+                                          : st === 'Dalam Proses'
+                                          ? "bg-amber-100 text-amber-900 border-amber-300 shadow-2xs font-extrabold cursor-default"
+                                          : "bg-emerald-100 text-emerald-900 border-emerald-300 shadow-2xs font-extrabold cursor-default"
+                                        : "bg-white text-slate-500 border-slate-200 hover:text-slate-800 hover:bg-slate-50 cursor-pointer"
+                                    )}
+                                    title={`Klik untuk ubah status rapat menjadi ${st}`}
+                                  >
+                                    {updatingStatusId === meeting.id ? (
+                                      <Loader2 className="w-2.5 h-2.5 animate-spin inline" />
+                                    ) : (
+                                      st
+                                    )}
+                                  </button>
+                                );
+                              })}
                             </div>
                           );
                         })()}

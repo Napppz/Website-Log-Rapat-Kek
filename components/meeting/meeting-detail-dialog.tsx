@@ -275,18 +275,6 @@ export function MeetingDetailDialog({
               isNew={meeting.isNew}
               showSubtitle
             />
-            {canChangeStatus && isBelumDimulai && (
-              <button
-                type="button"
-                disabled={isUpdatingStatus}
-                onClick={handleStartMeeting}
-                className="inline-flex items-center gap-1.5 px-3 py-1 rounded-md text-[12px] font-bold text-white bg-emerald-600 hover:bg-emerald-700 transition-all shadow-xs hover:shadow-md cursor-pointer animate-pulse active:scale-95 disabled:opacity-50"
-                title="Mulai Rapat (Ubah status dari Belum Dimulai ke Dalam Proses)"
-              >
-                <Play className="w-3 h-3 fill-current" />
-                <span>Mulai Rapat</span>
-              </button>
-            )}
           </div>
 
           <div className="flex items-center gap-2">
@@ -515,18 +503,6 @@ export function MeetingDetailDialog({
                 </div>
                 {canChangeStatus ? (
                   <div className="flex flex-wrap items-center gap-2">
-                    {canChangeStatus && isBelumDimulai && (
-                      <button
-                        type="button"
-                        disabled={isUpdatingStatus}
-                        onClick={handleStartMeeting}
-                        className="px-3 py-1.5 rounded-xl text-[11.5px] font-bold bg-emerald-600 hover:bg-emerald-700 text-white shadow-xs flex items-center gap-1.5 cursor-pointer active:scale-95 transition-all"
-                        title="Mulai Rapat Sekarang"
-                      >
-                        <Play className="w-3 h-3 fill-current" />
-                        <span>Mulai Rapat</span>
-                      </button>
-                    )}
                     {(['Belum Dimulai', 'Dalam Proses', 'Selesai'] as const).map((st) => {
                       const curProg = normalizeProgressStatus(meeting.progressStatus || mapStatusToProgress(meeting.status));
                       const isSelected = curProg === st;
@@ -652,19 +628,6 @@ export function MeetingDetailDialog({
           )}
 
           <div className="flex items-center gap-2">
-            {canChangeStatus && isBelumDimulai && (
-              <button
-                type="button"
-                disabled={isUpdatingStatus}
-                onClick={handleStartMeeting}
-                className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-[12px] shadow-sm hover:shadow-md transition-all cursor-pointer animate-pulse active:scale-95 disabled:opacity-50"
-                title="Mulai Rapat Sekarang"
-              >
-                <Play className="w-3.5 h-3.5 fill-current" />
-                <span>Mulai Rapat</span>
-              </button>
-            )}
-
             <button
               type="button"
               onClick={onClose}
