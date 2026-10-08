@@ -387,14 +387,11 @@ export async function getMeetingsFromDb(filters?: {
             summaryText:
               totalItems > 0
                 ? `${completedItems}/${totalItems} Tindak Lanjut Selesai`
-                : involvedBiroNames.length > 0
-                  ? `Biro Terlibat: ${involvedBiroNames}`
-                  : `Biro Utama: ${m.primaryBiro.code}`,
+                : `${fallbackCompleted}/${fallbackTotal} Tindak Lanjut Selesai`,
             isCompletePercentage: totalItems > 0 ? completedItems === totalItems : m.status === 'FINAL',
           },
           attendees,
-          agendaSummary: `Diselenggarakan oleh ${m.primaryBiro.name}. ${involvedBiroNames ? `Biro terlibat: ${involvedBiroNames}.` : ''
-            }`,
+          agendaSummary: `Diselenggarakan oleh ${m.primaryTeam?.name ? `Tim ${m.primaryTeam.name}` : 'Tim Kerja KEK'}.`,
           invitationDocUrl: m.invitationDocUrl || null,
           invitationDocName: m.invitationDocName || null,
           invitationDocSize: m.invitationDocSize || null,

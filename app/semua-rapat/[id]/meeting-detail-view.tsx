@@ -1174,19 +1174,14 @@ export function MeetingDetailView({
 
         {/* Metadata Grid */}
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 pt-3 border-t border-slate-100 text-[13px]">
-          {/* Biro Utama & Terlibat */}
+          {/* Tim Kerja Pelaksana */}
           <div className="flex items-start gap-2.5">
             <Building2 className="w-4 h-4 text-[#31889C] shrink-0 mt-0.5" />
             <div>
-              <p className="text-[11px] text-slate-400 font-semibold uppercase">Biro Utama &amp; Terlibat</p>
+              <p className="text-[11px] text-slate-400 font-semibold uppercase">Tim Kerja Pelaksana</p>
               <p className="font-bold text-slate-800">
-                {meeting.primaryBiro.code} — {meeting.primaryBiro.shortName}
+                {meeting.primaryTeam?.name ? `Tim ${meeting.primaryTeam.name}` : (meeting.primaryTeam?.code || 'Tim Investasi')}
               </p>
-              {meeting.meetingBiros && meeting.meetingBiros.length > 0 && (
-                <p className="text-[11px] text-slate-500 mt-0.5">
-                  Biro Terlibat: {meeting.meetingBiros.map((mb: any) => mb.biro.code).join(', ')}
-                </p>
-              )}
             </div>
           </div>
 

@@ -279,7 +279,7 @@ export function Sidebar({
                       "w-full flex items-center justify-between px-3 py-2 rounded-lg text-slate-600 hover:bg-[#F0F9FA] hover:text-[#31889C] transition-all font-medium text-[14px] cursor-pointer",
                       pathname.startsWith('/biro') ? "text-[#31889C] font-semibold bg-[#F0F9FA]/60" : ""
                     )}
-                    title="Tim Kerja Biro IKK"
+                    title="Tim Kerja KEK"
                   >
                     <div className="flex items-center gap-3">
                       <Layers className={cn(

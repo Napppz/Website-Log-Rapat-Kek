@@ -839,7 +839,7 @@ export function MeetingTable({
                       {(() => {
                         const teamInfo = getTeamBadgeInfo(meeting.code, meeting.primaryTeamCode, meeting.primaryTeamName);
                         return (
-                          <div className="flex flex-col items-start gap-1">
+                          <div className="flex flex-col items-start">
                             <span className={cn(
                               "inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md border text-[12px] font-bold shadow-2xs",
                               teamInfo.badgeClass
@@ -848,9 +848,6 @@ export function MeetingTable({
                                 {teamInfo.code}
                               </span>
                               <span>{teamInfo.teamName}</span>
-                            </span>
-                            <span className="text-[10px] text-slate-400 font-medium px-0.5">
-                              Biro IKK KEK
                             </span>
                           </div>
                         );

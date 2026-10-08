@@ -12,6 +12,12 @@ export function ActionItemProgress({ data }: ActionItemProgressProps) {
   const inProgressPct = total > 0 ? Math.round((inProgress / total) * 100) : 0;
   const overduePct = total > 0 ? Math.round((overdue / total) * 100) : 0;
 
+  // Sanitize summaryText to ensure no legacy Biro references are ever displayed
+  const isBiroSummary = !summaryText || /Biro/i.test(summaryText);
+  const cleanSummary = isBiroSummary
+    ? (total > 0 ? `${completed}/${total} Selesai` : 'Belum ada tindak lanjut')
+    : summaryText;
+
   // Case 1: 100% completed
   if (isCompletePercentage || completedPct === 100) {
     return (
@@ -23,7 +29,7 @@ export function ActionItemProgress({ data }: ActionItemProgressProps) {
         <div className="h-2 w-32 bg-slate-100 rounded-full overflow-hidden">
           <div className="bg-[#7CC563] h-full w-full" />
         </div>
-        <span className="text-[11px] text-[#4D8F3D] font-semibold">{summaryText}</span>
+        <span className="text-[11px] text-[#4D8F3D] font-semibold">{cleanSummary}</span>
       </div>
     );
   }
@@ -40,7 +46,7 @@ export function ActionItemProgress({ data }: ActionItemProgressProps) {
           <div className="bg-[#7CC563] h-full" style={{ width: `${completedPct}%` }} />
           <div className="bg-[#DC2626] h-full" style={{ width: `${overduePct}%` }} />
         </div>
-        <span className="text-[11px] text-slate-500 font-medium">{summaryText}</span>
+        <span className="text-[11px] text-slate-500 font-medium">{cleanSummary}</span>
       </div>
     );
   }
@@ -57,7 +63,7 @@ export function ActionItemProgress({ data }: ActionItemProgressProps) {
           <div className="bg-[#7CC563] h-full" style={{ width: `${completedPct}%` }} />
           <div className="bg-[#31889C] h-full" style={{ width: `${inProgressPct}%` }} />
         </div>
-        <span className="text-[11px] text-slate-500 font-medium">{summaryText}</span>
+        <span className="text-[11px] text-slate-500 font-medium">{cleanSummary}</span>
       </div>
     );
   }
@@ -75,7 +81,7 @@ export function ActionItemProgress({ data }: ActionItemProgressProps) {
           style={{ width: `${completedPct > 0 ? completedPct : 30}%` }}
         />
       </div>
-      <span className="text-[11px] text-slate-500 font-medium">{summaryText}</span>
+      <span className="text-[11px] text-slate-500 font-medium">{cleanSummary}</span>
     </div>
   );
 }

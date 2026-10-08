@@ -397,9 +397,9 @@ export function MeetingDetailDialog({
                 <div className="flex items-center gap-3">
                   <Building2 className="w-5 h-5 text-[#31889C] shrink-0" />
                   <div>
-                    <p className="text-[11px] text-slate-400 font-semibold uppercase">Biro Utama Penyelenggara</p>
+                    <p className="text-[11px] text-slate-400 font-semibold uppercase">Tim Kerja Penyelenggara</p>
                     <p className="font-bold text-slate-800">
-                      {meeting.biroCode} — {meeting.biroName}
+                      {meeting.primaryTeamName ? `Tim ${meeting.primaryTeamName}` : (meeting.primaryTeamCode || 'Tim Investasi')}
                     </p>
                   </div>
                 </div>

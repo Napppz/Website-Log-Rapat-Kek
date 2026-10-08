@@ -182,7 +182,7 @@ export function AgendaSeriesModal({
             <div className="mt-3.5 pt-3 border-t border-slate-200/80 flex flex-wrap items-center gap-x-6 gap-y-2 text-[12px] text-slate-600">
               <div className="flex items-center gap-1.5 font-medium">
                 <Building2 className="w-3.5 h-3.5 text-[#31889C]" />
-                <span>Biro Utama: <strong>{data.primaryBiroName} ({data.primaryBiroCode})</strong></span>
+                <span>Tim Pelaksana: <strong>Tim Kerja KEK</strong></span>
               </div>
               <div className="flex items-center gap-1.5 font-medium">
                 <CheckCircle2 className="w-3.5 h-3.5 text-[#7CC563]" />
