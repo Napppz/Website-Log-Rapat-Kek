@@ -1,0 +1,616 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mxfile host="app.diagrams.net" modified="2026-10-08T09:18:00.000Z" agent="Mozilla/5.0" version="24.0.0" type="device">
+
+  <!-- ========================================================================= -->
+  <!-- DIAGRAM 1: AD-01 PENJADWALAN RAPAT BARU -->
+  <!-- ========================================================================= -->
+  <diagram id="ad-01-penjadwalan" name="AD-01: Penjadwalan Rapat Baru">
+    <mxGraphModel dx="1400" dy="900" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1350" pageHeight="1150" background="#ffffff" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+
+        <!-- Title Banner -->
+        <mxCell id="d1_title" value="ACTIVITY DIAGRAM 01: PENJADWALAN RAPAT DINAS BARU&#xa;SIM-RAPAT KEK RI (SEKRETARIAT JENDERAL DEWAN NASIONAL KAWASAN EKONOMI KHUSUS)" style="rounded=1;arcSize=8;fillColor=#215865;strokeColor=#183E47;strokeWidth=1.5;fontColor=#ffffff;fontStyle=1;fontSize=13;align=center;verticalAlign=middle;shadow=1;" vertex="1" parent="1">
+          <mxGeometry x="60" y="20" width="1230" height="42" as="geometry" />
+        </mxCell>
+
+        <!-- Swimlane Pool -->
+        <mxCell id="d1_pool" value="Proses Bisnis Penjadwalan Agenda Rapat Baru" style="swimlane;html=1;childLayout=stackLayout;resizeParent=1;resizeParentMax=0;startSize=28;horizontal=1;horizontalStack=1;fillColor=#F8FAFC;strokeColor=#215865;strokeWidth=2;fontSize=12;fontStyle=1;fontColor=#215865;" vertex="1" parent="1">
+          <mxGeometry x="60" y="75" width="1230" height="1030" as="geometry" />
+        </mxCell>
+
+        <!-- Lane 1: Admin Biro / Tim -->
+        <mxCell id="d1_lane1" value="Admin Biro / Tim Kerja" style="swimlane;html=1;startSize=28;horizontal=0;fillColor=#ffffff;strokeColor=#CBD5E1;strokeWidth=1.2;fontSize=12;fontStyle=1;fontColor=#1E293B;" vertex="1" parent="d1_pool">
+          <mxGeometry x="0" y="28" width="410" height="1002" as="geometry" />
+        </mxCell>
+
+        <!-- Lane 2: Sistem SIM-RAPAT -->
+        <mxCell id="d1_lane2" value="Sistem SIM-RAPAT (Front-End &amp; Server)" style="swimlane;html=1;startSize=28;horizontal=0;fillColor=#ffffff;strokeColor=#CBD5E1;strokeWidth=1.2;fontSize=12;fontStyle=1;fontColor=#1E293B;" vertex="1" parent="d1_pool">
+          <mxGeometry x="410" y="28" width="460" height="1002" as="geometry" />
+        </mxCell>
+
+        <!-- Lane 3: Basis Data Neon DB -->
+        <mxCell id="d1_lane3" value="Basis Data (Neon PostgreSQL)" style="swimlane;html=1;startSize=28;horizontal=0;fillColor=#ffffff;strokeColor=#CBD5E1;strokeWidth=1.2;fontSize=12;fontStyle=1;fontColor=#1E293B;" vertex="1" parent="d1_pool">
+          <mxGeometry x="870" y="28" width="360" height="1002" as="geometry" />
+        </mxCell>
+
+        <!-- Nodes in Lane 1 (Admin) -->
+        <mxCell id="d1_start" value="" style="ellipse;fillColor=#215865;strokeColor=#183E47;strokeWidth=1.5;" vertex="1" parent="d1_lane1">
+          <mxGeometry x="190" y="45" width="30" height="30" as="geometry" />
+        </mxCell>
+
+        <mxCell id="d1_act1" value="Memilih Menu &quot;Buat Rapat&quot;&#xa;&amp;amp; Memilih Tim Kerja Pemrakarsa" style="rounded=1;arcSize=20;whiteSpace=wrap;html=1;fillColor=#F0F9FA;strokeColor=#31889C;strokeWidth=1.4;fontSize=11;fontColor=#0F172A;shadow=1;" vertex="1" parent="d1_lane1">
+          <mxGeometry x="105" y="105" width="200" height="52" as="geometry" />
+        </mxCell>
+
+        <mxCell id="d1_act2" value="Mengisi Formulir Rapat:&#xa;Judul, Tanggal, Jam, Lokasi,&#xa;&amp;amp; Kategori Dokumen Masuk" style="rounded=1;arcSize=20;whiteSpace=wrap;html=1;fillColor=#F0F9FA;strokeColor=#31889C;strokeWidth=1.4;fontSize=11;fontColor=#0F172A;shadow=1;" vertex="1" parent="d1_lane1">
+          <mxGeometry x="105" y="270" width="200" height="60" as="geometry" />
+        </mxCell>
+
+        <mxCell id="d1_act3" value="Menentukan Pimpinan Sidang,&#xa;Notulis, &amp;amp; Peserta / Biro Terkait" style="rounded=1;arcSize=20;whiteSpace=wrap;html=1;fillColor=#F0F9FA;strokeColor=#31889C;strokeWidth=1.4;fontSize=11;fontColor=#0F172A;shadow=1;" vertex="1" parent="d1_lane1">
+          <mxGeometry x="105" y="360" width="200" height="52" as="geometry" />
+        </mxCell>
+
+        <mxCell id="d1_act4" value="Mengunggah Berkas Lampiran&#xa;(Bahan Rapat / Naskah Dinas)" style="rounded=1;arcSize=20;whiteSpace=wrap;html=1;fillColor=#F0F9FA;strokeColor=#31889C;strokeWidth=1.4;fontSize=11;fontColor=#0F172A;shadow=1;" vertex="1" parent="d1_lane1">
+          <mxGeometry x="105" y="445" width="200" height="52" as="geometry" />
+        </mxCell>
+
+        <mxCell id="d1_act5" value="Menekan Tombol&#xa;&quot;Jadwalkan Rapat&quot;" style="rounded=1;arcSize=20;whiteSpace=wrap;html=1;fillColor=#FEF3C7;strokeColor=#D97706;strokeWidth=1.5;fontSize=11;fontStyle=1;fontColor=#78350F;shadow=1;" vertex="1" parent="d1_lane1">
+          <mxGeometry x="115" y="530" width="180" height="48" as="geometry" />
+        </mxCell>
+
+        <mxCell id="d1_act6" value="Menerima Halaman Detail&#xa;&amp;amp; Konfirmasi Rapat Berhasil" style="rounded=1;arcSize=20;whiteSpace=wrap;html=1;fillColor=#F0F9FA;strokeColor=#31889C;strokeWidth=1.4;fontSize=11;fontColor=#0F172A;shadow=1;" vertex="1" parent="d1_lane1">
+          <mxGeometry x="105" y="890" width="200" height="50" as="geometry" />
+        </mxCell>
+
+        <mxCell id="d1_end" value="" style="ellipse;html=1;shape=endState;fillColor=#215865;strokeColor=#183E47;strokeWidth=1.5;" vertex="1" parent="d1_lane1">
+          <mxGeometry x="190" y="965" width="30" height="30" as="geometry" />
+        </mxCell>
+
+        <!-- Nodes in Lane 2 (System) -->
+        <mxCell id="d1_sys1" value="Menampilkan Form Buat Rapat&#xa;&amp;amp; Request Nomor Terakhir" style="rounded=1;arcSize=20;whiteSpace=wrap;html=1;fillColor=#F8FAFC;strokeColor=#64748B;strokeWidth=1.3;fontSize=11;fontColor=#1E293B;shadow=1;" vertex="1" parent="d1_lane2">
+          <mxGeometry x="130" y="105" width="200" height="52" as="geometry" />
+        </mxCell>
+
+        <mxCell id="d1_sys2" value="Generate Preview Nomor Rapat&#xa;Otomatis (contoh: INV-015)" style="rounded=1;arcSize=20;whiteSpace=wrap;html=1;fillColor=#EFF6FF;strokeColor=#3B82F6;strokeWidth=1.4;fontSize=11;fontColor=#1E3A8A;shadow=1;" vertex="1" parent="d1_lane2">
+          <mxGeometry x="130" y="185" width="200" height="52" as="geometry" />
+        </mxCell>
+
+        <mxCell id="d1_sys3" value="Memvalidasi Kelengkapan Data&#xa;(Judul, Tanggal, &amp;amp; Penugasan)" style="rounded=1;arcSize=20;whiteSpace=wrap;html=1;fillColor=#F8FAFC;strokeColor=#64748B;strokeWidth=1.3;fontSize=11;fontColor=#1E293B;shadow=1;" vertex="1" parent="d1_lane2">
+          <mxGeometry x="130" y="528" width="200" height="52" as="geometry" />
+        </mxCell>
+
+        <mxCell id="d1_dec1" value="Data Lengkap&#xa;&amp;amp; Valid?" style="rhombus;whiteSpace=wrap;html=1;fillColor=#FEF3C7;strokeColor=#D97706;strokeWidth=1.5;fontSize=10.5;fontStyle=1;fontColor=#78350F;shadow=1;" vertex="1" parent="d1_lane2">
+          <mxGeometry x="165" y="615" width="130" height="80" as="geometry" />
+        </mxCell>
+
+        <mxCell id="d1_sys4" value="Menampilkan Pesan Validasi&#xa;&amp;amp; Sorot Isian Kurang" style="rounded=1;arcSize=20;whiteSpace=wrap;html=1;fillColor=#FEE2E2;strokeColor=#DC2626;strokeWidth=1.4;fontSize=11;fontColor=#7F1D1D;shadow=1;" vertex="1" parent="d1_lane2">
+          <mxGeometry x="15" y="630" width="130" height="50" as="geometry" />
+        </mxCell>
+
+        <mxCell id="d1_sys5" value="Menyiapkan Payload Data&#xa;&amp;amp; Eksekusi Transaksi Simpan" style="rounded=1;arcSize=20;whiteSpace=wrap;html=1;fillColor=#F8FAFC;strokeColor=#64748B;strokeWidth=1.3;fontSize=11;fontColor=#1E293B;shadow=1;" vertex="1" parent="d1_lane2">
+          <mxGeometry x="130" y="730" width="200" height="52" as="geometry" />
+        </mxCell>
+
+        <mxCell id="d1_sys6" value="Menampilkan Notifikasi Sukses&#xa;&amp;amp; Redirect ke /semua-rapat/[id]" style="rounded=1;arcSize=20;whiteSpace=wrap;html=1;fillColor=#ECFDF5;strokeColor=#059669;strokeWidth=1.4;fontSize=11;fontColor=#064E3B;shadow=1;" vertex="1" parent="d1_lane2">
+          <mxGeometry x="130" y="890" width="200" height="50" as="geometry" />
+        </mxCell>
+
+        <!-- Nodes in Lane 3 (Database) -->
+        <mxCell id="d1_db1" value="Kueri Nomor Terakhir dari&#xa;penomoran_rapat_biro" style="rounded=1;arcSize=20;whiteSpace=wrap;html=1;fillColor=#F8FAFC;strokeColor=#64748B;strokeWidth=1.3;fontSize=11;fontColor=#1E293B;shadow=1;" vertex="1" parent="d1_lane3">
+          <mxGeometry x="80" y="105" width="200" height="52" as="geometry" />
+        </mxCell>
+
+        <mxCell id="d1_db2" value="Eksekusi Transaksi Prisma:&#xa;1. Insert tabel rapat&#xa;2. Insert tabel peserta_rapat&#xa;3. Update penomoran_rapat_biro" style="rounded=1;arcSize=15;whiteSpace=wrap;html=1;fillColor=#EFF6FF;strokeColor=#3B82F6;strokeWidth=1.4;fontSize=11;fontColor=#1E3A8A;align=left;spacingLeft=12;shadow=1;" vertex="1" parent="d1_lane3">
+          <mxGeometry x="80" y="720" width="200" height="72" as="geometry" />
+        </mxCell>
+
+        <!-- Edges in AD-01 -->
+        <mxCell id="d1_e1" style="endArrow=open;endSize=8;html=1;strokeColor=#334155;strokeWidth=1.4;" edge="1" parent="1" source="d1_start" target="d1_act1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="d1_e2" style="endArrow=open;endSize=8;html=1;strokeColor=#334155;strokeWidth=1.4;" edge="1" parent="1" source="d1_act1" target="d1_sys1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="d1_e3" style="endArrow=open;endSize=8;html=1;strokeColor=#334155;strokeWidth=1.4;" edge="1" parent="1" source="d1_sys1" target="d1_db1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="d1_e4" style="endArrow=open;endSize=8;html=1;strokeColor=#334155;strokeWidth=1.4;" edge="1" parent="1" source="d1_db1" target="d1_sys2">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points"><mxPoint x="1050" y="240" /><mxPoint x="670" y="240" /></Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="d1_e5" style="endArrow=open;endSize=8;html=1;strokeColor=#334155;strokeWidth=1.4;" edge="1" parent="1" source="d1_sys2" target="d1_act2">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points"><mxPoint x="670" y="325" /></Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="d1_e6" style="endArrow=open;endSize=8;html=1;strokeColor=#334155;strokeWidth=1.4;" edge="1" parent="1" source="d1_act2" target="d1_act3">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="d1_e7" style="endArrow=open;endSize=8;html=1;strokeColor=#334155;strokeWidth=1.4;" edge="1" parent="1" source="d1_act3" target="d1_act4">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="d1_e8" style="endArrow=open;endSize=8;html=1;strokeColor=#334155;strokeWidth=1.4;" edge="1" parent="1" source="d1_act4" target="d1_act5">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="d1_e9" style="endArrow=open;endSize=8;html=1;strokeColor=#334155;strokeWidth=1.4;" edge="1" parent="1" source="d1_act5" target="d1_sys3">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="d1_e10" style="endArrow=open;endSize=8;html=1;strokeColor=#334155;strokeWidth=1.4;" edge="1" parent="1" source="d1_sys3" target="d1_dec1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="d1_e11" value="[Tidak Valid]" style="endArrow=open;endSize=8;html=1;strokeColor=#DC2626;strokeWidth=1.4;fontColor=#DC2626;fontSize=10;" edge="1" parent="1" source="d1_dec1" target="d1_sys4">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="d1_e12" style="endArrow=open;endSize=8;html=1;strokeColor=#DC2626;strokeWidth=1.4;dashed=1;" edge="1" parent="1" source="d1_sys4" target="d1_act2">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points"><mxPoint x="550" y="325" /></Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="d1_e13" value="[Valid]" style="endArrow=open;endSize=8;html=1;strokeColor=#059669;strokeWidth=1.4;fontColor=#059669;fontSize=10;" edge="1" parent="1" source="d1_dec1" target="d1_sys5">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="d1_e14" style="endArrow=open;endSize=8;html=1;strokeColor=#334155;strokeWidth=1.4;" edge="1" parent="1" source="d1_sys5" target="d1_db2">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="d1_e15" style="endArrow=open;endSize=8;html=1;strokeColor=#334155;strokeWidth=1.4;" edge="1" parent="1" source="d1_db2" target="d1_sys6">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points"><mxPoint x="1050" y="860" /><mxPoint x="670" y="860" /></Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="d1_e16" style="endArrow=open;endSize=8;html=1;strokeColor=#334155;strokeWidth=1.4;" edge="1" parent="1" source="d1_sys6" target="d1_act6">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="d1_e17" style="endArrow=open;endSize=8;html=1;strokeColor=#334155;strokeWidth=1.4;" edge="1" parent="1" source="d1_act6" target="d1_end">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+      </root>
+    </mxGraphModel>
+  </diagram>
+
+  <!-- ========================================================================= -->
+  <!-- DIAGRAM 2: AD-02 PENCATATAN NOTULA & TINDAK LANJUT -->
+  <!-- ========================================================================= -->
+  <diagram id="ad-02-notula" name="AD-02: Notula &amp; Tindak Lanjut">
+    <mxGraphModel dx="1400" dy="900" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1350" pageHeight="1150" background="#ffffff" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+
+        <mxCell id="d2_title" value="ACTIVITY DIAGRAM 02: PENYUSUNAN NOTULA &amp; BUTIR TINDAK LANJUT&#xa;SIM-RAPAT KEK RI (SEKRETARIAT JENDERAL DEWAN NASIONAL KAWASAN EKONOMI KHUSUS)" style="rounded=1;arcSize=8;fillColor=#215865;strokeColor=#183E47;strokeWidth=1.5;fontColor=#ffffff;fontStyle=1;fontSize=13;align=center;verticalAlign=middle;shadow=1;" vertex="1" parent="1">
+          <mxGeometry x="60" y="20" width="1230" height="42" as="geometry" />
+        </mxCell>
+
+        <mxCell id="d2_pool" value="Proses Bisnis Pencatatan Notula, Keputusan, dan Action Items" style="swimlane;html=1;childLayout=stackLayout;resizeParent=1;resizeParentMax=0;startSize=28;horizontal=1;horizontalStack=1;fillColor=#F8FAFC;strokeColor=#215865;strokeWidth=2;fontSize=12;fontStyle=1;fontColor=#215865;" vertex="1" parent="1">
+          <mxGeometry x="60" y="75" width="1230" height="980" as="geometry" />
+        </mxCell>
+
+        <mxCell id="d2_lane1" value="Notulis / Admin Biro" style="swimlane;html=1;startSize=28;horizontal=0;fillColor=#ffffff;strokeColor=#CBD5E1;strokeWidth=1.2;fontSize=12;fontStyle=1;fontColor=#1E293B;" vertex="1" parent="d2_pool">
+          <mxGeometry x="0" y="28" width="410" height="952" as="geometry" />
+        </mxCell>
+
+        <mxCell id="d2_lane2" value="Sistem SIM-RAPAT" style="swimlane;html=1;startSize=28;horizontal=0;fillColor=#ffffff;strokeColor=#CBD5E1;strokeWidth=1.2;fontSize=12;fontStyle=1;fontColor=#1E293B;" vertex="1" parent="d2_pool">
+          <mxGeometry x="410" y="28" width="450" height="952" as="geometry" />
+        </mxCell>
+
+        <mxCell id="d2_lane3" value="Basis Data (Neon DB)" style="swimlane;html=1;startSize=28;horizontal=0;fillColor=#ffffff;strokeColor=#CBD5E1;strokeWidth=1.2;fontSize=12;fontStyle=1;fontColor=#1E293B;" vertex="1" parent="d2_pool">
+          <mxGeometry x="860" y="28" width="370" height="952" as="geometry" />
+        </mxCell>
+
+        <!-- Lane 1 Nodes -->
+        <mxCell id="d2_start" value="" style="ellipse;fillColor=#215865;strokeColor=#183E47;strokeWidth=1.5;" vertex="1" parent="d2_lane1">
+          <mxGeometry x="190" y="45" width="30" height="30" as="geometry" />
+        </mxCell>
+
+        <mxCell id="d2_act1" value="Membuka Halaman Detail Rapat&#xa;&amp;amp; Memilih Tab &quot;Notula&quot;" style="rounded=1;arcSize=20;whiteSpace=wrap;html=1;fillColor=#F0F9FA;strokeColor=#31889C;strokeWidth=1.4;fontSize=11;fontColor=#0F172A;shadow=1;" vertex="1" parent="d2_lane1">
+          <mxGeometry x="105" y="105" width="200" height="52" as="geometry" />
+        </mxCell>
+
+        <mxCell id="d2_act2" value="Menginput Poin Pembahasan,&#xa;Arahan Pimpinan, &amp;amp; Kesimpulan" style="rounded=1;arcSize=20;whiteSpace=wrap;html=1;fillColor=#F0F9FA;strokeColor=#31889C;strokeWidth=1.4;fontSize=11;fontColor=#0F172A;shadow=1;" vertex="1" parent="d2_lane1">
+          <mxGeometry x="105" y="240" width="200" height="55" as="geometry" />
+        </mxCell>
+
+        <mxCell id="d2_act3" value="Menambahkan Butir Tindak Lanjut:&#xa;Judul Instruksi, Tim Kerja PIC,&#xa;Pegawai PIC, &amp;amp; Tenggat Waktu" style="rounded=1;arcSize=20;whiteSpace=wrap;html=1;fillColor=#F0F9FA;strokeColor=#31889C;strokeWidth=1.4;fontSize=11;fontColor=#0F172A;shadow=1;" vertex="1" parent="d2_lane1">
+          <mxGeometry x="95" y="325" width="220" height="60" as="geometry" />
+        </mxCell>
+
+        <mxCell id="d2_act4" value="Menekan Tombol&#xa;&quot;Simpan Notula &amp;amp; Tindak Lanjut&quot;" style="rounded=1;arcSize=20;whiteSpace=wrap;html=1;fillColor=#FEF3C7;strokeColor=#D97706;strokeWidth=1.5;fontSize=11;fontStyle=1;fontColor=#78350F;shadow=1;" vertex="1" parent="d2_lane1">
+          <mxGeometry x="105" y="420" width="200" height="48" as="geometry" />
+        </mxCell>
+
+        <mxCell id="d2_act5" value="Melihat Notula &amp;amp; Matriks Tindak&#xa;Lanjut Terkini pada Halaman Rapat" style="rounded=1;arcSize=20;whiteSpace=wrap;html=1;fillColor=#F0F9FA;strokeColor=#31889C;strokeWidth=1.4;fontSize=11;fontColor=#0F172A;shadow=1;" vertex="1" parent="d2_lane1">
+          <mxGeometry x="100" y="740" width="210" height="50" as="geometry" />
+        </mxCell>
+
+        <mxCell id="d2_act6" value="Mencetak / Export Dokumen&#xa;Notula &amp;amp; Nota Dinas Resmi (Opsional)" style="rounded=1;arcSize=20;whiteSpace=wrap;html=1;fillColor=#ECFDF5;strokeColor=#059669;strokeWidth=1.4;fontSize=11;fontColor=#064E3B;shadow=1;" vertex="1" parent="d2_lane1">
+          <mxGeometry x="100" y="825" width="210" height="50" as="geometry" />
+        </mxCell>
+
+        <mxCell id="d2_end" value="" style="ellipse;html=1;shape=endState;fillColor=#215865;strokeColor=#183E47;strokeWidth=1.5;" vertex="1" parent="d2_lane1">
+          <mxGeometry x="190" y="905" width="30" height="30" as="geometry" />
+        </mxCell>
+
+        <!-- Lane 2 Nodes -->
+        <mxCell id="d2_sys1" value="Menampilkan Form Notulen Editor&#xa;&amp;amp; Komponen Matriks Tindak Lanjut" style="rounded=1;arcSize=20;whiteSpace=wrap;html=1;fillColor=#F8FAFC;strokeColor=#64748B;strokeWidth=1.3;fontSize=11;fontColor=#1E293B;shadow=1;" vertex="1" parent="d2_lane2">
+          <mxGeometry x="120" y="105" width="210" height="52" as="geometry" />
+        </mxCell>
+
+        <mxCell id="d2_sys2" value="Memvalidasi Struktur Data Notula&#xa;&amp;amp; Konsistensi PIC Tindak Lanjut" style="rounded=1;arcSize=20;whiteSpace=wrap;html=1;fillColor=#F8FAFC;strokeColor=#64748B;strokeWidth=1.3;fontSize=11;fontColor=#1E293B;shadow=1;" vertex="1" parent="d2_lane2">
+          <mxGeometry x="120" y="418" width="210" height="52" as="geometry" />
+        </mxCell>
+
+        <mxCell id="d2_dec1" value="Validasi&#xa;Berhasil?" style="rhombus;whiteSpace=wrap;html=1;fillColor=#FEF3C7;strokeColor=#D97706;strokeWidth=1.5;fontSize=10.5;fontStyle=1;fontColor=#78350F;shadow=1;" vertex="1" parent="d2_lane2">
+          <mxGeometry x="165" y="505" width="120" height="75" as="geometry" />
+        </mxCell>
+
+        <mxCell id="d2_sys3" value="Menampilkan Pesan Validasi&#xa;&amp;amp; Peringatan Input Form" style="rounded=1;arcSize=20;whiteSpace=wrap;html=1;fillColor=#FEE2E2;strokeColor=#DC2626;strokeWidth=1.4;fontSize=11;fontColor=#7F1D1D;shadow=1;" vertex="1" parent="d2_lane2">
+          <mxGeometry x="15" y="517" width="130" height="50" as="geometry" />
+        </mxCell>
+
+        <mxCell id="d2_sys4" value="Kirim Mutasi Simpan ke Server&#xa;(Server Action / API)" style="rounded=1;arcSize=20;whiteSpace=wrap;html=1;fillColor=#F8FAFC;strokeColor=#64748B;strokeWidth=1.3;fontSize=11;fontColor=#1E293B;shadow=1;" vertex="1" parent="d2_lane2">
+          <mxGeometry x="125" y="620" width="200" height="50" as="geometry" />
+        </mxCell>
+
+        <mxCell id="d2_sys5" value="Rekalkulasi Status Progres Rapat&#xa;&amp;amp; Tampilkan Notifikasi Sukses" style="rounded=1;arcSize=20;whiteSpace=wrap;html=1;fillColor=#ECFDF5;strokeColor=#059669;strokeWidth=1.4;fontSize=11;fontColor=#064E3B;shadow=1;" vertex="1" parent="d2_lane2">
+          <mxGeometry x="120" y="740" width="210" height="50" as="geometry" />
+        </mxCell>
+
+        <!-- Lane 3 Nodes -->
+        <mxCell id="d2_db1" value="Kueri Data Notula &amp;amp; Tindak Lanjut&#xa;Terdahulu dari notulen_rapat" style="rounded=1;arcSize=20;whiteSpace=wrap;html=1;fillColor=#F8FAFC;strokeColor=#64748B;strokeWidth=1.3;fontSize=11;fontColor=#1E293B;shadow=1;" vertex="1" parent="d2_lane3">
+          <mxGeometry x="85" y="105" width="200" height="52" as="geometry" />
+        </mxCell>
+
+        <mxCell id="d2_db2" value="Eksekusi Penyimpanan DB:&#xa;1. Upsert notulen_rapat&#xa;2. Batch Insert tindak_lanjut&#xa;3. Update status rapat" style="rounded=1;arcSize=15;whiteSpace=wrap;html=1;fillColor=#EFF6FF;strokeColor=#3B82F6;strokeWidth=1.4;fontSize=11;fontColor=#1E3A8A;align=left;spacingLeft=12;shadow=1;" vertex="1" parent="d2_lane3">
+          <mxGeometry x="85" y="610" width="200" height="70" as="geometry" />
+        </mxCell>
+
+        <!-- Edges in AD-02 -->
+        <mxCell id="d2_e1" style="endArrow=open;endSize=8;html=1;strokeColor=#334155;strokeWidth=1.4;" edge="1" parent="1" source="d2_start" target="d2_act1"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="d2_e2" style="endArrow=open;endSize=8;html=1;strokeColor=#334155;strokeWidth=1.4;" edge="1" parent="1" source="d2_act1" target="d2_sys1"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="d2_e3" style="endArrow=open;endSize=8;html=1;strokeColor=#334155;strokeWidth=1.4;" edge="1" parent="1" source="d2_sys1" target="d2_db1"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="d2_e4" style="endArrow=open;endSize=8;html=1;strokeColor=#334155;strokeWidth=1.4;" edge="1" parent="1" source="d2_db1" target="d2_act2"><mxGeometry relative="1" as="geometry"><Array as="points"><mxPoint x="1045" y="200" /><mxPoint x="265" y="200" /></Array></mxGeometry></mxCell>
+        <mxCell id="d2_e5" style="endArrow=open;endSize=8;html=1;strokeColor=#334155;strokeWidth=1.4;" edge="1" parent="1" source="d2_act2" target="d2_act3"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="d2_e6" style="endArrow=open;endSize=8;html=1;strokeColor=#334155;strokeWidth=1.4;" edge="1" parent="1" source="d2_act3" target="d2_act4"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="d2_e7" style="endArrow=open;endSize=8;html=1;strokeColor=#334155;strokeWidth=1.4;" edge="1" parent="1" source="d2_act4" target="d2_sys2"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="d2_e8" style="endArrow=open;endSize=8;html=1;strokeColor=#334155;strokeWidth=1.4;" edge="1" parent="1" source="d2_sys2" target="d2_dec1"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="d2_e9" value="[Tidak Valid]" style="endArrow=open;endSize=8;html=1;strokeColor=#DC2626;strokeWidth=1.4;fontColor=#DC2626;fontSize=10;" edge="1" parent="1" source="d2_dec1" target="d2_sys3"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="d2_e10" style="endArrow=open;endSize=8;html=1;strokeColor=#DC2626;strokeWidth=1.4;dashed=1;" edge="1" parent="1" source="d2_sys3" target="d2_act2"><mxGeometry relative="1" as="geometry"><Array as="points"><mxPoint x="550" y="295" /></Array></mxGeometry></mxCell>
+        <mxCell id="d2_e11" value="[Valid]" style="endArrow=open;endSize=8;html=1;strokeColor=#059669;strokeWidth=1.4;fontColor=#059669;fontSize=10;" edge="1" parent="1" source="d2_dec1" target="d2_sys4"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="d2_e12" style="endArrow=open;endSize=8;html=1;strokeColor=#334155;strokeWidth=1.4;" edge="1" parent="1" source="d2_sys4" target="d2_db2"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="d2_e13" style="endArrow=open;endSize=8;html=1;strokeColor=#334155;strokeWidth=1.4;" edge="1" parent="1" source="d2_db2" target="d2_sys5"><mxGeometry relative="1" as="geometry"><Array as="points"><mxPoint x="1045" y="720" /><mxPoint x="695" y="720" /></Array></mxGeometry></mxCell>
+        <mxCell id="d2_e14" style="endArrow=open;endSize=8;html=1;strokeColor=#334155;strokeWidth=1.4;" edge="1" parent="1" source="d2_sys5" target="d2_act5"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="d2_e15" style="endArrow=open;endSize=8;html=1;strokeColor=#334155;strokeWidth=1.4;" edge="1" parent="1" source="d2_act5" target="d2_act6"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="d2_e16" style="endArrow=open;endSize=8;html=1;strokeColor=#334155;strokeWidth=1.4;" edge="1" parent="1" source="d2_act6" target="d2_end"><mxGeometry relative="1" as="geometry" /></mxCell>
+
+      </root>
+    </mxGraphModel>
+  </diagram>
+
+  <!-- ========================================================================= -->
+  <!-- DIAGRAM 3: AD-03 MONITORING KINERJA & FILTER PERIODE TANGGAL -->
+  <!-- ========================================================================= -->
+  <diagram id="ad-03-monitoring" name="AD-03: Monitoring &amp; Filter Periode">
+    <mxGraphModel dx="1400" dy="900" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1350" pageHeight="1150" background="#ffffff" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+
+        <mxCell id="d3_title" value="ACTIVITY DIAGRAM 03: PEMANTAUAN KINERJA TIM KERJA &amp; FILTER PERIODE TANGGAL&#xa;SIM-RAPAT KEK RI (SEKRETARIAT JENDERAL DEWAN NASIONAL KAWASAN EKONOMI KHUSUS)" style="rounded=1;arcSize=8;fillColor=#215865;strokeColor=#183E47;strokeWidth=1.5;fontColor=#ffffff;fontStyle=1;fontSize=13;align=center;verticalAlign=middle;shadow=1;" vertex="1" parent="1">
+          <mxGeometry x="60" y="20" width="1230" height="42" as="geometry" />
+        </mxCell>
+
+        <mxCell id="d3_pool" value="Proses Bisnis Monitoring Kinerja 3 Tim Kerja KEK (Investasi, Kerja Sama, Komunikasi)" style="swimlane;html=1;childLayout=stackLayout;resizeParent=1;resizeParentMax=0;startSize=28;horizontal=1;horizontalStack=1;fillColor=#F8FAFC;strokeColor=#215865;strokeWidth=2;fontSize=12;fontStyle=1;fontColor=#215865;" vertex="1" parent="1">
+          <mxGeometry x="60" y="75" width="1230" height="960" as="geometry" />
+        </mxCell>
+
+        <mxCell id="d3_lane1" value="Super Admin / Pimpinan" style="swimlane;html=1;startSize=28;horizontal=0;fillColor=#ffffff;strokeColor=#CBD5E1;strokeWidth=1.2;fontSize=12;fontStyle=1;fontColor=#1E293B;" vertex="1" parent="d3_pool">
+          <mxGeometry x="0" y="28" width="450" height="932" as="geometry" />
+        </mxCell>
+
+        <mxCell id="d3_lane2" value="Sistem SIM-RAPAT (Komponen Monitoring)" style="swimlane;html=1;startSize=28;horizontal=0;fillColor=#ffffff;strokeColor=#CBD5E1;strokeWidth=1.2;fontSize=12;fontStyle=1;fontColor=#1E293B;" vertex="1" parent="d3_pool">
+          <mxGeometry x="450" y="28" width="780" height="932" as="geometry" />
+        </mxCell>
+
+        <!-- Lane 1 Nodes -->
+        <mxCell id="d3_start" value="" style="ellipse;fillColor=#215865;strokeColor=#183E47;strokeWidth=1.5;" vertex="1" parent="d3_lane1">
+          <mxGeometry x="210" y="45" width="30" height="30" as="geometry" />
+        </mxCell>
+
+        <mxCell id="d3_act1" value="Membuka Halaman Dashboard&#xa;&amp;amp; Meninjau Kartu 3 Tim Kerja KEK" style="rounded=1;arcSize=20;whiteSpace=wrap;html=1;fillColor=#F0F9FA;strokeColor=#31889C;strokeWidth=1.4;fontSize=11;fontColor=#0F172A;shadow=1;" vertex="1" parent="d3_lane1">
+          <mxGeometry x="125" y="105" width="200" height="52" as="geometry" />
+        </mxCell>
+
+        <mxCell id="d3_act2" value="Mengklik Kartu Tim Kerja&#xa;(contoh: Tim Investasi / INV)" style="rounded=1;arcSize=20;whiteSpace=wrap;html=1;fillColor=#F0F9FA;strokeColor=#31889C;strokeWidth=1.4;fontSize=11;fontColor=#0F172A;shadow=1;" vertex="1" parent="d3_lane1">
+          <mxGeometry x="125" y="185" width="200" height="52" as="geometry" />
+        </mxCell>
+
+        <mxCell id="d3_act3" value="Memilih Filter Periode Tanggal:&#xa;Hari Ini / Minggu Ini / Bulan Ini / Semua" style="rounded=1;arcSize=20;whiteSpace=wrap;html=1;fillColor=#FEF3C7;strokeColor=#D97706;strokeWidth=1.5;fontSize=11;fontStyle=1;fontColor=#78350F;shadow=1;" vertex="1" parent="d3_lane1">
+          <mxGeometry x="120" y="360" width="210" height="52" as="geometry" />
+        </mxCell>
+
+        <mxCell id="d3_act4" value="Meninjau Kartu Metrik KPI&#xa;&amp;amp; Daftar Pekerjaan Terfilter" style="rounded=1;arcSize=20;whiteSpace=wrap;html=1;fillColor=#F0F9FA;strokeColor=#31889C;strokeWidth=1.4;fontSize=11;fontColor=#0F172A;shadow=1;" vertex="1" parent="d3_lane1">
+          <mxGeometry x="125" y="525" width="200" height="52" as="geometry" />
+        </mxCell>
+
+        <mxCell id="d3_dec1" value="Ingin Lihat&#xa;Detail Rapat?" style="rhombus;whiteSpace=wrap;html=1;fillColor=#FEF3C7;strokeColor=#D97706;strokeWidth=1.5;fontSize=10.5;fontStyle=1;fontColor=#78350F;shadow=1;" vertex="1" parent="d3_lane1">
+          <mxGeometry x="165" y="615" width="120" height="75" as="geometry" />
+        </mxCell>
+
+        <mxCell id="d3_act5" value="Mengklik Badge &quot;Rapat [Nomor]&quot;&#xa;atau Tombol &quot;Detail Rapat&quot;" style="rounded=1;arcSize=20;whiteSpace=wrap;html=1;fillColor=#ECFDF5;strokeColor=#059669;strokeWidth=1.4;fontSize=11;fontColor=#064E3B;shadow=1;" vertex="1" parent="d3_lane1">
+          <mxGeometry x="40" y="735" width="200" height="52" as="geometry" />
+        </mxCell>
+
+        <mxCell id="d3_act6" value="Menutup Modal Monitoring&#xa;&amp;amp; Kembali ke Dashboard" style="rounded=1;arcSize=20;whiteSpace=wrap;html=1;fillColor=#F8FAFC;strokeColor=#64748B;strokeWidth=1.3;fontSize=11;fontColor=#1E293B;shadow=1;" vertex="1" parent="d3_lane1">
+          <mxGeometry x="260" y="735" width="170" height="52" as="geometry" />
+        </mxCell>
+
+        <mxCell id="d3_end" value="" style="ellipse;html=1;shape=endState;fillColor=#215865;strokeColor=#183E47;strokeWidth=1.5;" vertex="1" parent="d3_lane1">
+          <mxGeometry x="210" y="870" width="30" height="30" as="geometry" />
+        </mxCell>
+
+        <!-- Lane 2 Nodes -->
+        <mxCell id="d3_sys1" value="Merender Komponen Dashboard:&#xa;Jumlah Rapat, Tindak Lanjut, &amp;amp; 3 Kartu Tim" style="rounded=1;arcSize=20;whiteSpace=wrap;html=1;fillColor=#F8FAFC;strokeColor=#64748B;strokeWidth=1.3;fontSize=11;fontColor=#1E293B;shadow=1;" vertex="1" parent="d3_lane2">
+          <mxGeometry x="260" y="105" width="250" height="52" as="geometry" />
+        </mxCell>
+
+        <mxCell id="d3_sys2" value="Membuka Modal Monitoring Tim&#xa;&amp;amp; Menampilkan Nilai Awal (Semua Waktu)" style="rounded=1;arcSize=20;whiteSpace=wrap;html=1;fillColor=#F8FAFC;strokeColor=#64748B;strokeWidth=1.3;fontSize=11;fontColor=#1E293B;shadow=1;" vertex="1" parent="d3_lane2">
+          <mxGeometry x="260" y="185" width="250" height="52" as="geometry" />
+        </mxCell>
+
+        <mxCell id="d3_sys3" value="Menghitung Rentang Tanggal Kalender:&#xa;• Hari Ini: Tanggal berjalan&#xa;• Minggu Ini: Senin s.d. Minggu&#xa;• Bulan Ini: Tanggal 1 s.d. Akhir Bulan" style="rounded=1;arcSize=15;whiteSpace=wrap;html=1;fillColor=#EFF6FF;strokeColor=#3B82F6;strokeWidth=1.4;fontSize=11;fontColor=#1E3A8A;align=left;spacingLeft=12;shadow=1;" vertex="1" parent="d3_lane2">
+          <mxGeometry x="260" y="270" width="250" height="70" as="geometry" />
+        </mxCell>
+
+        <mxCell id="d3_sys4" value="Menyaring Data:&#xa;1. Action Items berdasarkan dueDate / meetingDate&#xa;2. Rapat berdasarkan meetingDate" style="rounded=1;arcSize=15;whiteSpace=wrap;html=1;fillColor=#F8FAFC;strokeColor=#64748B;strokeWidth=1.3;fontSize=11;fontColor=#1E293B;align=left;spacingLeft=12;shadow=1;" vertex="1" parent="d3_lane2">
+          <mxGeometry x="245" y="360" width="280" height="60" as="geometry" />
+        </mxCell>
+
+        <mxCell id="d3_sys5" value="Rekalkulasi Metrik KPI Reaktif:&#xa;• Jumlah Rapat Terfilter&#xa;• Total Pekerjaan, Selesai, Proses, Belum Mulai" style="rounded=1;arcSize=15;whiteSpace=wrap;html=1;fillColor=#ECFDF5;strokeColor=#059669;strokeWidth=1.4;fontSize=11;fontColor=#064E3B;align=left;spacingLeft=12;shadow=1;" vertex="1" parent="d3_lane2">
+          <mxGeometry x="245" y="440" width="280" height="60" as="geometry" />
+        </mxCell>
+
+        <mxCell id="d3_sys6" value="Memperbarui Tampilan Baris Pekerjaan,&#xa;Badge Indikator, &amp;amp; Label Periode Waktu" style="rounded=1;arcSize=20;whiteSpace=wrap;html=1;fillColor=#F8FAFC;strokeColor=#64748B;strokeWidth=1.3;fontSize=11;fontColor=#1E293B;shadow=1;" vertex="1" parent="d3_lane2">
+          <mxGeometry x="260" y="525" width="250" height="52" as="geometry" />
+        </mxCell>
+
+        <mxCell id="d3_sys7" value="Otomatis Tutup Modal Monitoring&#xa;&amp;amp; Buka Halaman /semua-rapat/[id]" style="rounded=1;arcSize=20;whiteSpace=wrap;html=1;fillColor=#ECFDF5;strokeColor=#059669;strokeWidth=1.4;fontSize=11;fontColor=#064E3B;shadow=1;" vertex="1" parent="d3_lane2">
+          <mxGeometry x="15" y="735" width="230" height="52" as="geometry" />
+        </mxCell>
+
+        <!-- Edges in AD-03 -->
+        <mxCell id="d3_e1" style="endArrow=open;endSize=8;html=1;strokeColor=#334155;strokeWidth=1.4;" edge="1" parent="1" source="d3_start" target="d3_act1"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="d3_e2" style="endArrow=open;endSize=8;html=1;strokeColor=#334155;strokeWidth=1.4;" edge="1" parent="1" source="d3_act1" target="d3_sys1"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="d3_e3" style="endArrow=open;endSize=8;html=1;strokeColor=#334155;strokeWidth=1.4;" edge="1" parent="1" source="d3_act1" target="d3_act2"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="d3_e4" style="endArrow=open;endSize=8;html=1;strokeColor=#334155;strokeWidth=1.4;" edge="1" parent="1" source="d3_act2" target="d3_sys2"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="d3_e5" style="endArrow=open;endSize=8;html=1;strokeColor=#334155;strokeWidth=1.4;" edge="1" parent="1" source="d3_sys2" target="d3_sys3"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="d3_e6" style="endArrow=open;endSize=8;html=1;strokeColor=#334155;strokeWidth=1.4;" edge="1" parent="1" source="d3_sys3" target="d3_act3"><mxGeometry relative="1" as="geometry"><Array as="points"><mxPoint x="750" y="386" /></Array></mxGeometry></mxCell>
+        <mxCell id="d3_e7" style="endArrow=open;endSize=8;html=1;strokeColor=#334155;strokeWidth=1.4;" edge="1" parent="1" source="d3_act3" target="d3_sys4"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="d3_e8" style="endArrow=open;endSize=8;html=1;strokeColor=#334155;strokeWidth=1.4;" edge="1" parent="1" source="d3_sys4" target="d3_sys5"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="d3_e9" style="endArrow=open;endSize=8;html=1;strokeColor=#334155;strokeWidth=1.4;" edge="1" parent="1" source="d3_sys5" target="d3_sys6"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="d3_e10" style="endArrow=open;endSize=8;html=1;strokeColor=#334155;strokeWidth=1.4;" edge="1" parent="1" source="d3_sys6" target="d3_act4"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="d3_e11" style="endArrow=open;endSize=8;html=1;strokeColor=#334155;strokeWidth=1.4;" edge="1" parent="1" source="d3_act4" target="d3_dec1"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="d3_e12" value="[Ya, Klik Rapat]" style="endArrow=open;endSize=8;html=1;strokeColor=#059669;strokeWidth=1.4;fontColor=#059669;fontSize=10;" edge="1" parent="1" source="d3_dec1" target="d3_act5"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="d3_e13" value="[Tidak, Selesai]" style="endArrow=open;endSize=8;html=1;strokeColor=#64748B;strokeWidth=1.4;fontColor=#64748B;fontSize=10;" edge="1" parent="1" source="d3_dec1" target="d3_act6"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="d3_e14" style="endArrow=open;endSize=8;html=1;strokeColor=#334155;strokeWidth=1.4;" edge="1" parent="1" source="d3_act5" target="d3_sys7"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="d3_e15" style="endArrow=open;endSize=8;html=1;strokeColor=#334155;strokeWidth=1.4;" edge="1" parent="1" source="d3_sys7" target="d3_end"><mxGeometry relative="1" as="geometry"><Array as="points"><mxPoint x="580" y="885" /></Array></mxGeometry></mxCell>
+        <mxCell id="d3_e16" style="endArrow=open;endSize=8;html=1;strokeColor=#334155;strokeWidth=1.4;" edge="1" parent="1" source="d3_act6" target="d3_end"><mxGeometry relative="1" as="geometry"><Array as="points"><mxPoint x="380" y="885" /></Array></mxGeometry></mxCell>
+
+      </root>
+    </mxGraphModel>
+  </diagram>
+
+  <!-- ========================================================================= -->
+  <!-- DIAGRAM 4: AD-04 PEMBARUAN PROGRES TINDAK LANJUT (PIC) -->
+  <!-- ========================================================================= -->
+  <diagram id="ad-04-progres" name="AD-04: Progres Tindak Lanjut (PIC)">
+    <mxGraphModel dx="1400" dy="900" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1350" pageHeight="1150" background="#ffffff" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+
+        <mxCell id="d4_title" value="ACTIVITY DIAGRAM 04: PEMBARUAN STATUS &amp; PROGRES TINDAK LANJUT&#xa;SIM-RAPAT KEK RI (SEKRETARIAT JENDERAL DEWAN NASIONAL KAWASAN EKONOMI KHUSUS)" style="rounded=1;arcSize=8;fillColor=#215865;strokeColor=#183E47;strokeWidth=1.5;fontColor=#ffffff;fontStyle=1;fontSize=13;align=center;verticalAlign=middle;shadow=1;" vertex="1" parent="1">
+          <mxGeometry x="60" y="20" width="1230" height="42" as="geometry" />
+        </mxCell>
+
+        <mxCell id="d4_pool" value="Proses Bisnis Pembaruan Status Pelaksanaan Tindak Lanjut oleh PIC" style="swimlane;html=1;childLayout=stackLayout;resizeParent=1;resizeParentMax=0;startSize=28;horizontal=1;horizontalStack=1;fillColor=#F8FAFC;strokeColor=#215865;strokeWidth=2;fontSize=12;fontStyle=1;fontColor=#215865;" vertex="1" parent="1">
+          <mxGeometry x="60" y="75" width="1230" height="900" as="geometry" />
+        </mxCell>
+
+        <mxCell id="d4_lane1" value="Pegawai / PIC Tindak Lanjut" style="swimlane;html=1;startSize=28;horizontal=0;fillColor=#ffffff;strokeColor=#CBD5E1;strokeWidth=1.2;fontSize=12;fontStyle=1;fontColor=#1E293B;" vertex="1" parent="d4_pool">
+          <mxGeometry x="0" y="28" width="410" height="872" as="geometry" />
+        </mxCell>
+
+        <mxCell id="d4_lane2" value="Sistem SIM-RAPAT" style="swimlane;html=1;startSize=28;horizontal=0;fillColor=#ffffff;strokeColor=#CBD5E1;strokeWidth=1.2;fontSize=12;fontStyle=1;fontColor=#1E293B;" vertex="1" parent="d4_pool">
+          <mxGeometry x="410" y="28" width="450" height="872" as="geometry" />
+        </mxCell>
+
+        <mxCell id="d4_lane3" value="Basis Data (Neon DB)" style="swimlane;html=1;startSize=28;horizontal=0;fillColor=#ffffff;strokeColor=#CBD5E1;strokeWidth=1.2;fontSize=12;fontStyle=1;fontColor=#1E293B;" vertex="1" parent="d4_pool">
+          <mxGeometry x="860" y="28" width="370" height="872" as="geometry" />
+        </mxCell>
+
+        <!-- Lane 1 Nodes -->
+        <mxCell id="d4_start" value="" style="ellipse;fillColor=#215865;strokeColor=#183E47;strokeWidth=1.5;" vertex="1" parent="d4_lane1">
+          <mxGeometry x="190" y="45" width="30" height="30" as="geometry" />
+        </mxCell>
+
+        <mxCell id="d4_act1" value="Membuka Matriks Tindak Lanjut&#xa;atau Detail Rapat Bersangkutan" style="rounded=1;arcSize=20;whiteSpace=wrap;html=1;fillColor=#F0F9FA;strokeColor=#31889C;strokeWidth=1.4;fontSize=11;fontColor=#0F172A;shadow=1;" vertex="1" parent="d4_lane1">
+          <mxGeometry x="105" y="105" width="200" height="52" as="geometry" />
+        </mxCell>
+
+        <mxCell id="d4_act2" value="Memilih Butir Pekerjaan yang&#xa;Ditugaskan ke Diri / Timnya" style="rounded=1;arcSize=20;whiteSpace=wrap;html=1;fillColor=#F0F9FA;strokeColor=#31889C;strokeWidth=1.4;fontSize=11;fontColor=#0F172A;shadow=1;" vertex="1" parent="d4_lane1">
+          <mxGeometry x="105" y="185" width="200" height="52" as="geometry" />
+        </mxCell>
+
+        <mxCell id="d4_act3" value="Mengubah Status Pekerjaan:&#xa;Belum Dimulai / Dalam Proses / Selesai" style="rounded=1;arcSize=20;whiteSpace=wrap;html=1;fillColor=#FEF3C7;strokeColor=#D97706;strokeWidth=1.5;fontSize=11;fontStyle=1;fontColor=#78350F;shadow=1;" vertex="1" parent="d4_lane1">
+          <mxGeometry x="100" y="325" width="210" height="52" as="geometry" />
+        </mxCell>
+
+        <mxCell id="d4_act4" value="Menekan Tombol &quot;Simpan Progres&quot;" style="rounded=1;arcSize=20;whiteSpace=wrap;html=1;fillColor=#FEF3C7;strokeColor=#D97706;strokeWidth=1.5;fontSize=11;fontStyle=1;fontColor=#78350F;shadow=1;" vertex="1" parent="d4_lane1">
+          <mxGeometry x="115" y="415" width="180" height="48" as="geometry" />
+        </mxCell>
+
+        <mxCell id="d4_act5" value="Melihat Badge Status Terbarui:&#xa;Finish / Dalam Proses / Belum Mulai" style="rounded=1;arcSize=20;whiteSpace=wrap;html=1;fillColor=#ECFDF5;strokeColor=#059669;strokeWidth=1.4;fontSize=11;fontColor=#064E3B;shadow=1;" vertex="1" parent="d4_lane1">
+          <mxGeometry x="105" y="690" width="200" height="50" as="geometry" />
+        </mxCell>
+
+        <mxCell id="d4_end" value="" style="ellipse;html=1;shape=endState;fillColor=#215865;strokeColor=#183E47;strokeWidth=1.5;" vertex="1" parent="d4_lane1">
+          <mxGeometry x="190" y="780" width="30" height="30" as="geometry" />
+        </mxCell>
+
+        <!-- Lane 2 Nodes -->
+        <mxCell id="d4_sys1" value="Memvalidasi Hak Akses PIC / Admin&#xa;pada Butir Tindak Lanjut" style="rounded=1;arcSize=20;whiteSpace=wrap;html=1;fillColor=#F8FAFC;strokeColor=#64748B;strokeWidth=1.3;fontSize=11;fontColor=#1E293B;shadow=1;" vertex="1" parent="d4_lane2">
+          <mxGeometry x="120" y="185" width="210" height="52" as="geometry" />
+        </mxCell>
+
+        <mxCell id="d4_sys2" value="Menampilkan Dialog Status &amp;amp;&#xa;Pilihan Lifecycle Pekerjaan" style="rounded=1;arcSize=20;whiteSpace=wrap;html=1;fillColor=#F8FAFC;strokeColor=#64748B;strokeWidth=1.3;fontSize=11;fontColor=#1E293B;shadow=1;" vertex="1" parent="d4_lane2">
+          <mxGeometry x="120" y="255" width="210" height="50" as="geometry" />
+        </mxCell>
+
+        <mxCell id="d4_sys3" value="Menyiapkan Payload Update:&#xa;status_tindak_lanjut &amp;amp; diselesaikan_pada" style="rounded=1;arcSize=20;whiteSpace=wrap;html=1;fillColor=#F8FAFC;strokeColor=#64748B;strokeWidth=1.3;fontSize=11;fontColor=#1E293B;shadow=1;" vertex="1" parent="d4_lane2">
+          <mxGeometry x="120" y="415" width="220" height="48" as="geometry" />
+        </mxCell>
+
+        <mxCell id="d4_sys4" value="Kalkulasi Ulang Persentase Tim&#xa;&amp;amp; Kirim Notifikasi Pembaruan" style="rounded=1;arcSize=20;whiteSpace=wrap;html=1;fillColor=#ECFDF5;strokeColor=#059669;strokeWidth=1.4;fontSize=11;fontColor=#064E3B;shadow=1;" vertex="1" parent="d4_lane2">
+          <mxGeometry x="120" y="690" width="210" height="50" as="geometry" />
+        </mxCell>
+
+        <!-- Lane 3 Nodes -->
+        <mxCell id="d4_db1" value="Update Record tindak_lanjut:&#xa;status = :status,&#xa;diselesaikan_pada = NOW()" style="rounded=1;arcSize=15;whiteSpace=wrap;html=1;fillColor=#EFF6FF;strokeColor=#3B82F6;strokeWidth=1.4;fontSize=11;fontColor=#1E3A8A;align=left;spacingLeft=12;shadow=1;" vertex="1" parent="d4_lane3">
+          <mxGeometry x="85" y="410" width="200" height="60" as="geometry" />
+        </mxCell>
+
+        <mxCell id="d4_db2" value="Insert ke tabel riwayat log&#xa;(Audit Trail Pembaruan Status)" style="rounded=1;arcSize=20;whiteSpace=wrap;html=1;fillColor=#F8FAFC;strokeColor=#64748B;strokeWidth=1.3;fontSize=11;fontColor=#1E293B;shadow=1;" vertex="1" parent="d4_lane3">
+          <mxGeometry x="85" y="500" width="200" height="50" as="geometry" />
+        </mxCell>
+
+        <!-- Edges in AD-04 -->
+        <mxCell id="d4_e1" style="endArrow=open;endSize=8;html=1;strokeColor=#334155;strokeWidth=1.4;" edge="1" parent="1" source="d4_start" target="d4_act1"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="d4_e2" style="endArrow=open;endSize=8;html=1;strokeColor=#334155;strokeWidth=1.4;" edge="1" parent="1" source="d4_act1" target="d4_act2"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="d4_e3" style="endArrow=open;endSize=8;html=1;strokeColor=#334155;strokeWidth=1.4;" edge="1" parent="1" source="d4_act2" target="d4_sys1"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="d4_e4" style="endArrow=open;endSize=8;html=1;strokeColor=#334155;strokeWidth=1.4;" edge="1" parent="1" source="d4_sys1" target="d4_sys2"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="d4_e5" style="endArrow=open;endSize=8;html=1;strokeColor=#334155;strokeWidth=1.4;" edge="1" parent="1" source="d4_sys2" target="d4_act3"><mxGeometry relative="1" as="geometry"><Array as="points"><mxPoint x="635" y="351" /></Array></mxGeometry></mxCell>
+        <mxCell id="d4_e6" style="endArrow=open;endSize=8;html=1;strokeColor=#334155;strokeWidth=1.4;" edge="1" parent="1" source="d4_act3" target="d4_act4"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="d4_e7" style="endArrow=open;endSize=8;html=1;strokeColor=#334155;strokeWidth=1.4;" edge="1" parent="1" source="d4_act4" target="d4_sys3"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="d4_e8" style="endArrow=open;endSize=8;html=1;strokeColor=#334155;strokeWidth=1.4;" edge="1" parent="1" source="d4_sys3" target="d4_db1"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="d4_e9" style="endArrow=open;endSize=8;html=1;strokeColor=#334155;strokeWidth=1.4;" edge="1" parent="1" source="d4_db1" target="d4_db2"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="d4_e10" style="endArrow=open;endSize=8;html=1;strokeColor=#334155;strokeWidth=1.4;" edge="1" parent="1" source="d4_db2" target="d4_sys4"><mxGeometry relative="1" as="geometry"><Array as="points"><mxPoint x="1045" y="620" /><mxPoint x="635" y="620" /></Array></mxGeometry></mxCell>
+        <mxCell id="d4_e11" style="endArrow=open;endSize=8;html=1;strokeColor=#334155;strokeWidth=1.4;" edge="1" parent="1" source="d4_sys4" target="d4_act5"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="d4_e12" style="endArrow=open;endSize=8;html=1;strokeColor=#334155;strokeWidth=1.4;" edge="1" parent="1" source="d4_act5" target="d4_end"><mxGeometry relative="1" as="geometry" /></mxCell>
+
+      </root>
+    </mxGraphModel>
+  </diagram>
+
+  <!-- ========================================================================= -->
+  <!-- DIAGRAM 5: AD-05 AUTENTIKASI PENGGUNA & LOGIN -->
+  <!-- ========================================================================= -->
+  <diagram id="ad-05-login" name="AD-05: Autentikasi &amp; Login">
+    <mxGraphModel dx="1400" dy="900" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1350" pageHeight="1150" background="#ffffff" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+
+        <mxCell id="d5_title" value="ACTIVITY DIAGRAM 05: AUTENTIKASI &amp; VERIFIKASI LOGIN PENGGUNA&#xa;SIM-RAPAT KEK RI (SEKRETARIAT JENDERAL DEWAN NASIONAL KAWASAN EKONOMI KHUSUS)" style="rounded=1;arcSize=8;fillColor=#215865;strokeColor=#183E47;strokeWidth=1.5;fontColor=#ffffff;fontStyle=1;fontSize=13;align=center;verticalAlign=middle;shadow=1;" vertex="1" parent="1">
+          <mxGeometry x="60" y="20" width="1230" height="42" as="geometry" />
+        </mxCell>
+
+        <mxCell id="d5_pool" value="Proses Bisnis Autentikasi Pengguna &amp; Pembentukan Sesi Sistem" style="swimlane;html=1;childLayout=stackLayout;resizeParent=1;resizeParentMax=0;startSize=28;horizontal=1;horizontalStack=1;fillColor=#F8FAFC;strokeColor=#215865;strokeWidth=2;fontSize=12;fontStyle=1;fontColor=#215865;" vertex="1" parent="1">
+          <mxGeometry x="60" y="75" width="1230" height="900" as="geometry" />
+        </mxCell>
+
+        <mxCell id="d5_lane1" value="Pengguna (Pegawai / Admin)" style="swimlane;html=1;startSize=28;horizontal=0;fillColor=#ffffff;strokeColor=#CBD5E1;strokeWidth=1.2;fontSize=12;fontStyle=1;fontColor=#1E293B;" vertex="1" parent="d5_pool">
+          <mxGeometry x="0" y="28" width="410" height="872" as="geometry" />
+        </mxCell>
+
+        <mxCell id="d5_lane2" value="Sistem SIM-RAPAT (Auth Service)" style="swimlane;html=1;startSize=28;horizontal=0;fillColor=#ffffff;strokeColor=#CBD5E1;strokeWidth=1.2;fontSize=12;fontStyle=1;fontColor=#1E293B;" vertex="1" parent="d5_pool">
+          <mxGeometry x="410" y="28" width="450" height="872" as="geometry" />
+        </mxCell>
+
+        <mxCell id="d5_lane3" value="Basis Data (Neon DB)" style="swimlane;html=1;startSize=28;horizontal=0;fillColor=#ffffff;strokeColor=#CBD5E1;strokeWidth=1.2;fontSize=12;fontStyle=1;fontColor=#1E293B;" vertex="1" parent="d5_pool">
+          <mxGeometry x="860" y="28" width="370" height="872" as="geometry" />
+        </mxCell>
+
+        <!-- Lane 1 Nodes -->
+        <mxCell id="d5_start" value="" style="ellipse;fillColor=#215865;strokeColor=#183E47;strokeWidth=1.5;" vertex="1" parent="d5_lane1">
+          <mxGeometry x="190" y="45" width="30" height="30" as="geometry" />
+        </mxCell>
+
+        <mxCell id="d5_act1" value="Mengakses Halaman Login&#xa;Sistem SIM-RAPAT KEK" style="rounded=1;arcSize=20;whiteSpace=wrap;html=1;fillColor=#F0F9FA;strokeColor=#31889C;strokeWidth=1.4;fontSize=11;fontColor=#0F172A;shadow=1;" vertex="1" parent="d5_lane1">
+          <mxGeometry x="105" y="105" width="200" height="52" as="geometry" />
+        </mxCell>
+
+        <mxCell id="d5_act2" value="Memasukkan Email Dinas&#xa;&amp;amp; Kata Sandi Akun" style="rounded=1;arcSize=20;whiteSpace=wrap;html=1;fillColor=#F0F9FA;strokeColor=#31889C;strokeWidth=1.4;fontSize=11;fontColor=#0F172A;shadow=1;" vertex="1" parent="d5_lane1">
+          <mxGeometry x="105" y="235" width="200" height="52" as="geometry" />
+        </mxCell>
+
+        <mxCell id="d5_act3" value="Menekan Tombol &quot;Masuk&quot;" style="rounded=1;arcSize=20;whiteSpace=wrap;html=1;fillColor=#FEF3C7;strokeColor=#D97706;strokeWidth=1.5;fontSize=11;fontStyle=1;fontColor=#78350F;shadow=1;" vertex="1" parent="d5_lane1">
+          <mxGeometry x="115" y="325" width="180" height="48" as="geometry" />
+        </mxCell>
+
+        <mxCell id="d5_act4" value="Melihat Dashboard Utama Sesuai&#xa;Hak Akses (Super Admin/Admin/Staff)" style="rounded=1;arcSize=20;whiteSpace=wrap;html=1;fillColor=#ECFDF5;strokeColor=#059669;strokeWidth=1.4;fontSize=11;fontColor=#064E3B;shadow=1;" vertex="1" parent="d5_lane1">
+          <mxGeometry x="95" y="700" width="220" height="52" as="geometry" />
+        </mxCell>
+
+        <mxCell id="d5_end" value="" style="ellipse;html=1;shape=endState;fillColor=#215865;strokeColor=#183E47;strokeWidth=1.5;" vertex="1" parent="d5_lane1">
+          <mxGeometry x="190" y="790" width="30" height="30" as="geometry" />
+        </mxCell>
+
+        <!-- Lane 2 Nodes -->
+        <mxCell id="d5_sys1" value="Menampilkan Halaman Login&#xa;&amp;amp; Form Kredensial" style="rounded=1;arcSize=20;whiteSpace=wrap;html=1;fillColor=#F8FAFC;strokeColor=#64748B;strokeWidth=1.3;fontSize=11;fontColor=#1E293B;shadow=1;" vertex="1" parent="d5_lane2">
+          <mxGeometry x="120" y="105" width="210" height="52" as="geometry" />
+        </mxCell>
+
+        <mxCell id="d5_sys2" value="Validasi Format Input Email &amp;amp;&#xa;Kirim Kueri Pencarian Pengguna" style="rounded=1;arcSize=20;whiteSpace=wrap;html=1;fillColor=#F8FAFC;strokeColor=#64748B;strokeWidth=1.3;fontSize=11;fontColor=#1E293B;shadow=1;" vertex="1" parent="d5_lane2">
+          <mxGeometry x="120" y="323" width="210" height="52" as="geometry" />
+        </mxCell>
+
+        <mxCell id="d5_dec1" value="Pengguna Ditemukan&#xa;&amp;amp; Status Aktif?" style="rhombus;whiteSpace=wrap;html=1;fillColor=#FEF3C7;strokeColor=#D97706;strokeWidth=1.5;fontSize=10;fontStyle=1;fontColor=#78350F;shadow=1;" vertex="1" parent="d5_lane2">
+          <mxGeometry x="155" y="415" width="140" height="75" as="geometry" />
+        </mxCell>
+
+        <mxCell id="d5_sys3" value="Verifikasi Hash Kata Sandi&#xa;(Argon2 / Bcrypt compare)" style="rounded=1;arcSize=20;whiteSpace=wrap;html=1;fillColor=#F8FAFC;strokeColor=#64748B;strokeWidth=1.3;fontSize=11;fontColor=#1E293B;shadow=1;" vertex="1" parent="d5_lane2">
+          <mxGeometry x="120" y="525" width="210" height="50" as="geometry" />
+        </mxCell>
+
+        <mxCell id="d5_dec2" value="Kata Sandi&#xa;Cocok?" style="rhombus;whiteSpace=wrap;html=1;fillColor=#FEF3C7;strokeColor=#D97706;strokeWidth=1.5;fontSize=10.5;fontStyle=1;fontColor=#78350F;shadow=1;" vertex="1" parent="d5_lane2">
+          <mxGeometry x="165" y="605" width="120" height="70" as="geometry" />
+        </mxCell>
+
+        <mxCell id="d5_sys4" value="Bentuk Token Sesi Terenkripsi&#xa;&amp;amp; Redirect ke /dashboard" style="rounded=1;arcSize=20;whiteSpace=wrap;html=1;fillColor=#ECFDF5;strokeColor=#059669;strokeWidth=1.4;fontSize=11;fontColor=#064E3B;shadow=1;" vertex="1" parent="d5_lane2">
+          <mxGeometry x="120" y="701" width="210" height="50" as="geometry" />
+        </mxCell>
+
+        <mxCell id="d5_err1" value="Tampilkan Pesan Kesalahan:&#xa;&quot;Kredensial Tidak Sesuai&quot;" style="rounded=1;arcSize=20;whiteSpace=wrap;html=1;fillColor=#FEE2E2;strokeColor=#DC2626;strokeWidth=1.4;fontSize=11;fontColor=#7F1D1D;shadow=1;" vertex="1" parent="d5_lane2">
+          <mxGeometry x="10" y="480" width="130" height="50" as="geometry" />
+        </mxCell>
+
+        <!-- Lane 3 Nodes -->
+        <mxCell id="d5_db1" value="SELECT * FROM pengguna&#xa;WHERE email = :email&#xa;AND status_aktif = true" style="rounded=1;arcSize=15;whiteSpace=wrap;html=1;fillColor=#EFF6FF;strokeColor=#3B82F6;strokeWidth=1.4;fontSize=11;fontColor=#1E3A8A;align=left;spacingLeft=12;shadow=1;" vertex="1" parent="d5_lane3">
+          <mxGeometry x="85" y="320" width="200" height="58" as="geometry" />
+        </mxCell>
+
+        <!-- Edges in AD-05 -->
+        <mxCell id="d5_e1" style="endArrow=open;endSize=8;html=1;strokeColor=#334155;strokeWidth=1.4;" edge="1" parent="1" source="d5_start" target="d5_act1"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="d5_e2" style="endArrow=open;endSize=8;html=1;strokeColor=#334155;strokeWidth=1.4;" edge="1" parent="1" source="d5_act1" target="d5_sys1"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="d5_e3" style="endArrow=open;endSize=8;html=1;strokeColor=#334155;strokeWidth=1.4;" edge="1" parent="1" source="d5_sys1" target="d5_act2"><mxGeometry relative="1" as="geometry"><Array as="points"><mxPoint x="575" y="195" /><mxPoint x="265" y="195" /></Array></mxGeometry></mxCell>
+        <mxCell id="d5_e4" style="endArrow=open;endSize=8;html=1;strokeColor=#334155;strokeWidth=1.4;" edge="1" parent="1" source="d5_act2" target="d5_act3"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="d5_e5" style="endArrow=open;endSize=8;html=1;strokeColor=#334155;strokeWidth=1.4;" edge="1" parent="1" source="d5_act3" target="d5_sys2"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="d5_e6" style="endArrow=open;endSize=8;html=1;strokeColor=#334155;strokeWidth=1.4;" edge="1" parent="1" source="d5_sys2" target="d5_db1"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="d5_e7" style="endArrow=open;endSize=8;html=1;strokeColor=#334155;strokeWidth=1.4;" edge="1" parent="1" source="d5_db1" target="d5_dec1"><mxGeometry relative="1" as="geometry"><Array as="points"><mxPoint x="1045" y="452" /></Array></mxGeometry></mxCell>
+        <mxCell id="d5_e8" value="[Tidak]" style="endArrow=open;endSize=8;html=1;strokeColor=#DC2626;strokeWidth=1.4;fontColor=#DC2626;fontSize=10;" edge="1" parent="1" source="d5_dec1" target="d5_err1"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="d5_e9" value="[Ya]" style="endArrow=open;endSize=8;html=1;strokeColor=#059669;strokeWidth=1.4;fontColor=#059669;fontSize=10;" edge="1" parent="1" source="d5_dec1" target="d5_sys3"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="d5_e10" style="endArrow=open;endSize=8;html=1;strokeColor=#334155;strokeWidth=1.4;" edge="1" parent="1" source="d5_sys3" target="d5_dec2"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="d5_e11" value="[Tidak Cocok]" style="endArrow=open;endSize=8;html=1;strokeColor=#DC2626;strokeWidth=1.4;fontColor=#DC2626;fontSize=10;" edge="1" parent="1" source="d5_dec2" target="d5_err1"><mxGeometry relative="1" as="geometry"><Array as="points"><mxPoint x="485" y="640" /></Array></mxGeometry></mxCell>
+        <mxCell id="d5_e12" style="endArrow=open;endSize=8;html=1;strokeColor=#DC2626;strokeWidth=1.4;dashed=1;" edge="1" parent="1" source="d5_err1" target="d5_act2"><mxGeometry relative="1" as="geometry"><Array as="points"><mxPoint x="485" y="261" /></Array></mxGeometry></mxCell>
+        <mxCell id="d5_e13" value="[Cocok]" style="endArrow=open;endSize=8;html=1;strokeColor=#059669;strokeWidth=1.4;fontColor=#059669;fontSize=10;" edge="1" parent="1" source="d5_dec2" target="d5_sys4"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="d5_e14" style="endArrow=open;endSize=8;html=1;strokeColor=#334155;strokeWidth=1.4;" edge="1" parent="1" source="d5_sys4" target="d5_act4"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="d5_e15" style="endArrow=open;endSize=8;html=1;strokeColor=#334155;strokeWidth=1.4;" edge="1" parent="1" source="d5_act4" target="d5_end"><mxGeometry relative="1" as="geometry" /></mxCell>
+
+      </root>
+    </mxGraphModel>
+  </diagram>
+
+</mxfile>
