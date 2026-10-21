@@ -19,6 +19,8 @@ interface MeetingMinutesSectionProps {
   isApproved?: boolean;
   canApprove?: boolean;
   isApproving?: boolean;
+  canEdit?: boolean;
+  readOnly?: boolean;
 }
 
 export function MeetingMinutesSection({
@@ -31,15 +33,23 @@ export function MeetingMinutesSection({
   isApproved,
   canApprove,
   isApproving,
+  canEdit,
+  readOnly = false,
 }: MeetingMinutesSectionProps) {
   const { data: session } = useSession();
   const userRole = session?.user?.role || 'STAFF';
-  const canEditMinutes = userRole === 'SUPER_ADMIN' || userRole === 'ADMIN' || userRole === 'STAFF';
+  const canEditMinutes =
+    !readOnly &&
+    (canEdit !== undefined
+      ? canEdit
+      : userRole === 'SUPER_ADMIN' || userRole === 'ADMIN' || userRole === 'STAFF');
 
   const [currentMeeting, setCurrentMeeting] = useState<any>(propMeeting || null);
   const [minutes, setMinutes] = useState<any>(propMinutes || propMeeting?.minutes || null);
   const [isLoading, setIsLoading] = useState(!propMinutes && !propMeeting);
-  const [mode, setMode] = useState<'edit' | 'preview'>(defaultMode);
+  const [mode, setMode] = useState<'edit' | 'preview'>(
+    canEditMinutes ? defaultMode : 'preview'
+  );
   const [isDownloadingPdf, setIsDownloadingPdf] = useState(false);
   const [isDownloadingDocx, setIsDownloadingDocx] = useState(false);
 

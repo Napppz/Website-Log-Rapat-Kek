@@ -14,8 +14,6 @@ import {
   Sparkles,
   PlusCircle,
   CheckSquare,
-  Download,
-  Loader2,
 } from 'lucide-react';
 import { useSession } from 'next-auth/react';
 import { toast } from '@/components/providers/toast-provider';
@@ -25,6 +23,7 @@ import { StatsOverview } from '@/components/dashboard/stats-overview';
 import { ActivityTrendChart } from '@/components/dashboard/activity-trend-chart';
 import { BureauDistribution } from '@/components/dashboard/bureau-distribution';
 import { MeetingTable } from '@/components/meeting/meeting-table';
+import { normalizeProgressStatus, mapStatusToProgress } from '@/lib/meeting-status';
 
 interface TeamItem {
   id: string;
@@ -98,7 +97,6 @@ export function BiroDashboardClient({
 
   const [selectedYear, setSelectedYear] = useState<number>(2026);
   const [selectedMonth, setSelectedMonth] = useState<string | null>(null);
-  const [isDownloadingReport, setIsDownloadingReport] = useState(false);
 
   const currentUser = session?.user;
   const userName = currentUser?.name || 'Pejabat Biro';
@@ -133,29 +131,6 @@ export function BiroDashboardClient({
     year: 'numeric',
   });
 
-  const handleDownloadReport = async () => {
-    try {
-      setIsDownloadingReport(true);
-      const res = await fetch(`/api/reports/summary/pdf?period=YEAR&biro=${biro.code}`);
-      if (!res.ok) {
-        throw new Error('Gagal mengunduh ringkasan eksekutif');
-      }
-      const blob = await res.blob();
-      const url = window.URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      link.href = url;
-      link.download = `Laporan-Eksekutif-Biro-${biro.code}-${new Date().toISOString().slice(0, 10)}.pdf`;
-      document.body.appendChild(link);
-      link.click();
-      window.URL.revokeObjectURL(url);
-      document.body.removeChild(link);
-      toast.success(`Ringkasan Eksekutif Biro ${biro.code} berhasil diunduh.`);
-    } catch (e: any) {
-      toast.error(e?.message || 'Terjadi kesalahan saat mengunduh dokumen.');
-    } finally {
-      setIsDownloadingReport(false);
-    }
-  };
 
   // Discover available years from meetings
   const availableYears = useMemo(() => {
@@ -175,27 +150,50 @@ export function BiroDashboardClient({
     });
   }, [meetingsList, selectedYear]);
 
-  // Monthly trend activity for this biro
+  // Monthly trend activity for this biro - akumulasi jumlah kegiatan seluruh tim
   const yearMonthlyActivity: MonthlyActivity[] = useMemo(() => {
     const monthLabels = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
     const counts = new Array(12).fill(0);
+    const monthTeamsMap: Record<number, Record<string, { name: string; count: number }>> = {};
 
     yearMeetings.forEach((m) => {
       const d = new Date(m.date);
       const mIdx = d.getMonth();
-      if (mIdx >= 0 && mIdx < 12) counts[mIdx]++;
+      if (mIdx >= 0 && mIdx < 12) {
+        counts[mIdx]++;
+
+        // Catat rincian tim kerja
+        const tCode = m.primaryTeamCode || (m.primaryTeamId ? 'TIM' : 'UMUM');
+        const tName = m.primaryTeamName || 'Lintas / Umum';
+        if (!monthTeamsMap[mIdx]) monthTeamsMap[mIdx] = {};
+        if (!monthTeamsMap[mIdx][tCode]) {
+          monthTeamsMap[mIdx][tCode] = { name: tName, count: 0 };
+        }
+        monthTeamsMap[mIdx][tCode].count++;
+      }
     });
 
     const maxCount = Math.max(...counts, 0);
-    const lastActiveIdx = counts.reduce((acc, c, idx) => (c > 0 ? idx : acc), -1);
-    const maxMonthIdx = selectedYear === 2026 ? 9 : (lastActiveIdx >= 0 ? Math.max(lastActiveIdx, 8) : 8);
 
-    return monthLabels.slice(0, maxMonthIdx + 1).map((m, idx) => ({
-      month: m,
-      count: counts[idx],
-      isPeak: maxCount > 0 && counts[idx] === maxCount,
-    }));
-  }, [yearMeetings, selectedYear]);
+    return monthLabels.map((m, idx) => {
+      const teamBreakdown = monthTeamsMap[idx]
+        ? Object.entries(monthTeamsMap[idx])
+            .map(([code, val]) => ({
+              code,
+              name: val.name,
+              count: val.count,
+            }))
+            .sort((a, b) => b.count - a.count)
+        : [];
+
+      return {
+        month: m,
+        count: counts[idx],
+        isPeak: maxCount > 0 && counts[idx] === maxCount,
+        teamBreakdown,
+      };
+    });
+  }, [yearMeetings]);
 
   const selectedMonthIdx = selectedMonth ? MONTH_INDEX_MAP[selectedMonth] : null;
   const fullMonthName = selectedMonth ? (FULL_MONTH_NAMES[selectedMonth] || selectedMonth) : '';
@@ -221,9 +219,18 @@ export function BiroDashboardClient({
   const displayMetrics: DashboardMetric[] = useMemo(() => {
     const now = new Date();
     const totalMonth = monthMeetings.length;
-    const approvedMonth = monthMeetings.filter((m) => m.status === 'APPROVED' || m.status === 'FINAL').length;
-    const draftMonth = monthMeetings.filter((m) => m.status === 'DRAFT').length;
-    const reviewMonth = monthMeetings.filter((m) => m.status === 'REVIEW').length;
+    const selesaiMonth = monthMeetings.filter((m) => {
+      const p = normalizeProgressStatus((m as any).progressStatus || mapStatusToProgress(m.status));
+      return p === 'Selesai';
+    }).length;
+    const dalamProsesMonth = monthMeetings.filter((m) => {
+      const p = normalizeProgressStatus((m as any).progressStatus || mapStatusToProgress(m.status));
+      return p === 'Dalam Proses';
+    }).length;
+    const belumDimulaiMonth = monthMeetings.filter((m) => {
+      const p = normalizeProgressStatus((m as any).progressStatus || mapStatusToProgress(m.status));
+      return p === 'Belum Dimulai';
+    }).length;
 
     const totalActions = actionItems.length;
     const completedItems = actionItems.filter((a) => a.status === 'COMPLETED').length;
@@ -257,7 +264,7 @@ export function BiroDashboardClient({
         label: `KEGIATAN BULAN ${fullMonthName ? fullMonthName.toUpperCase() : 'BERJALAN'}`,
         value: totalMonth,
         unit: 'Agenda',
-        badgeText: totalMonth > 0 ? `${approvedMonth} Sah` : '0 Agenda',
+        badgeText: totalMonth > 0 ? `${selesaiMonth} Selesai` : '0 Agenda',
         badgeSubtext: `${fullMonthName || 'Biro'} ${selectedYear}`,
         variant: 'default',
         iconName: 'calendar_month',
@@ -274,10 +281,10 @@ export function BiroDashboardClient({
       },
       {
         id: 'perlu-atensi',
-        label: 'PERLU ATENSI (OVERDUE/DRAFT)',
-        value: overdueCount + draftMonth,
-        unit: 'Item',
-        badgeText: overdueCount > 0 ? `${overdueCount} Terlambat` : draftMonth > 0 ? `${draftMonth} Draft` : 'Nihil',
+        label: 'PERLU ATENSI (TERLAMBAT)',
+        value: overdueCount,
+        unit: 'Komitmen',
+        badgeText: overdueCount > 0 ? `${overdueCount} Terlambat` : dalamProsesMonth > 0 ? `${dalamProsesMonth} Dalam Proses` : 'Terkendali',
         badgeSubtext: `${biro.code} ${selectedYear}`,
         variant: overdueCount > 0 ? 'danger' : 'default',
         iconName: 'warning',
@@ -369,11 +376,16 @@ export function BiroDashboardClient({
   }, [biro.teams, initialMeetings]);
 
   const meetingStatusBreakdown = useMemo(() => {
-    return {
-      approved: initialMeetings.filter((m) => m.status === 'APPROVED' || m.status === 'FINAL').length,
-      review: initialMeetings.filter((m) => m.status === 'REVIEW').length,
-      draft: initialMeetings.filter((m) => m.status === 'DRAFT').length,
-    };
+    let selesai = 0;
+    let dalamProses = 0;
+    let belumDimulai = 0;
+    initialMeetings.forEach((m) => {
+      const prog = normalizeProgressStatus((m as any).progressStatus || mapStatusToProgress(m.status));
+      if (prog === 'Selesai') selesai++;
+      else if (prog === 'Dalam Proses') dalamProses++;
+      else belumDimulai++;
+    });
+    return { selesai, dalamProses, belumDimulai };
   }, [initialMeetings]);
 
   return (
@@ -520,20 +532,6 @@ export function BiroDashboardClient({
               <CheckSquare className="w-4 h-4 text-[#31889C]" />
               <span>Matriks Tindak Lanjut</span>
             </Link>
-
-            <button
-              type="button"
-              onClick={handleDownloadReport}
-              disabled={isDownloadingReport}
-              className="inline-flex items-center justify-center gap-2 px-4 py-2 rounded-xl bg-[#F0F9FA] border border-[#BCE3EB] text-[#215865] hover:bg-[#E8F5F7] transition-all shadow-xs font-semibold text-[12px] cursor-pointer disabled:opacity-50"
-            >
-              {isDownloadingReport ? (
-                <Loader2 className="w-3.5 h-3.5 animate-spin" />
-              ) : (
-                <Download className="w-3.5 h-3.5 text-[#31889C]" />
-              )}
-              <span>{isDownloadingReport ? 'Membuat PDF...' : 'Unduh Laporan Eksekutif'}</span>
-            </button>
           </div>
         </div>
       </div>
@@ -561,7 +559,7 @@ export function BiroDashboardClient({
         />
         <BureauDistribution
           meetings={selectedMonth ? monthMeetings : yearMeetings}
-          onCategoryClick={(categoryKey) => router.push(`/semua-rapat?kategori=${categoryKey}`)}
+          onCategoryClick={(categoryKey: string) => router.push(`/semua-rapat?kategori=${categoryKey}`)}
         />
       </div>
 
@@ -577,14 +575,6 @@ export function BiroDashboardClient({
               Daftar seluruh agenda kegiatan yang diselenggarakan di bawah koordinasi {biro.shortName}
             </p>
           </div>
-
-          <Link
-            href={`/tindak-lanjut?biro=${encodeURIComponent(biro.code)}`}
-            className="inline-flex items-center gap-1.5 text-[12px] font-bold text-[#31889C] hover:text-[#215865] hover:underline shrink-0"
-          >
-            <span>Matriks Tindak Lanjut {biro.code}</span>
-            <ArrowRight className="w-3.5 h-3.5" />
-          </Link>
         </div>
 
         <MeetingTable

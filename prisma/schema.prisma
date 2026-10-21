@@ -289,6 +289,7 @@ model ActionItemLog {
 model Notification {
   id        String   @id @default(uuid()) @map("id_notifikasi")
   userId    String?  @map("id_pengguna")
+  teamId    String?  @map("id_tim")
   title     String   @map("judul")
   message   String   @map("pesan")
   type      String   @default("info") @map("tipe")
@@ -296,9 +297,11 @@ model Notification {
   isRead    Boolean  @default(false) @map("sudah_dibaca")
   createdAt DateTime @default(now()) @map("dibuat_pada")
 
-  user User? @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user User?     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  team BiroTeam? @relation(fields: [teamId], references: [id], onDelete: SetNull)
 
   @@index([userId])
+  @@index([teamId])
   @@index([isRead])
   @@index([createdAt])
   @@map("notifikasi")
@@ -364,6 +367,7 @@ model BiroTeam {
   actionItems     ActionItem[] @relation("TeamActionItems")
   users           User[]
   userTeams       UserTeam[]
+  notifications   Notification[]
 
   @@unique([biroId, code])
   @@index([biroId])

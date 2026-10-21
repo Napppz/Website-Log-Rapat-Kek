@@ -41,28 +41,8 @@ export default async function SemuaRapatPage(props: {
   let lockedTeamCode: string | undefined = undefined;
   let lockedTeamName: string | undefined = undefined;
 
-  if (isStaff) {
-    if (requestedTim && (userAssignedCodes.length === 0 || userAssignedCodes.includes(requestedTim))) {
-      // Staff explicitly navigated to one of their assigned teams (e.g. from sidebar /semua-rapat?tim=KOM)
-      queryTeamCode = requestedTim;
-    } else if (userAssignedCodes.length > 1) {
-      // Staff belongs to multiple teams and hasn't filtered to a specific team
-      queryTeamCodes = userAssignedCodes;
-    } else if (userAssignedCodes.length === 1) {
-      // Staff strictly belongs to only 1 team
-      queryTeamCode = userAssignedCodes[0];
-      lockedTeamCode = userAssignedCodes[0];
-      lockedTeamName = currentUser?.teamName || undefined;
-    } else if (currentUser?.teamCode) {
-      queryTeamCode = currentUser.teamCode;
-      lockedTeamCode = currentUser.teamCode;
-      lockedTeamName = currentUser?.teamName || undefined;
-    }
-  } else {
-    // Admin, Pimpinan, Super Admin
-    if (requestedTim) {
-      queryTeamCode = requestedTim;
-    }
+  if (requestedTim) {
+    queryTeamCode = requestedTim;
   }
 
   const [meetings, dbBiros, dbTeamsWithMembers] = await Promise.all([
@@ -70,7 +50,6 @@ export default async function SemuaRapatPage(props: {
       biroCode: userBiroCode,
       teamCode: queryTeamCode,
       teamCodes: queryTeamCodes,
-      teamId: !requestedTim && isStaff && userAssignedCodes.length <= 1 ? (currentUser?.teamId ?? undefined) : undefined,
     }),
     getOfficialBiros(),
     getTeamsWithMembers(userBiroCode || 'IKK'),

@@ -16,6 +16,7 @@ import {
 import { toast } from '@/components/providers/toast-provider';
 import { createPicDeliverableAction } from '@/app/actions/pic-deliverable-actions';
 import { ActionItemPriority } from '@prisma/client';
+import { cn } from '@/lib/utils';
 
 interface AddPicDeliverableDialogProps {
   isOpen: boolean;
@@ -84,8 +85,6 @@ export function AddPicDeliverableDialog({
     return new Date().toISOString().split('T')[0];
   });
   const [notes, setNotes] = useState('');
-  const [linkUrl, setLinkUrl] = useState('');
-  const [linkTitle, setLinkTitle] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   if (!isOpen) return null;
@@ -106,8 +105,8 @@ export function AddPicDeliverableDialog({
         dueDate,
         priority,
         notes: notes.trim() || null,
-        linkUrl: linkUrl.trim() || null,
-        linkTitle: linkTitle.trim() || null,
+        linkUrl: null,
+        linkTitle: null,
       });
 
       if (res.success) {
@@ -117,7 +116,6 @@ export function AddPicDeliverableDialog({
         onClose();
         setTitle('');
         setNotes('');
-        setLinkUrl('');
       } else {
         toast.error(res.error || 'Gagal menambahkan penugasan PIC.');
       }
@@ -145,7 +143,7 @@ export function AddPicDeliverableDialog({
             <div>
               <span className="text-xs text-teal-100/80">Penugasan Kerja PIC</span>
               <h2 className="text-[17px] font-bold text-white mt-0.5">
-                Tambah Luaran / Output PIC
+                Pilih &amp; Berikan Tugas PIC
               </h2>
             </div>
           </div>
@@ -163,9 +161,14 @@ export function AddPicDeliverableDialog({
         <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto p-6 space-y-4">
           {/* PIC Selector */}
           <div className="space-y-1.5">
-            <label className="text-xs font-bold text-slate-700 flex items-center gap-1.5">
-              <Users className="w-3.5 h-3.5 text-slate-500" />
-              <span>PIC Penanggung Jawab Output</span>
+            <label className="text-xs font-bold text-slate-700 flex items-center justify-between">
+              <span className="flex items-center gap-1.5">
+                <Users className="w-3.5 h-3.5 text-slate-500" />
+                <span>1. Pilih PIC Penanggung Jawab</span>
+              </span>
+              <span className="text-[11px] text-slate-400 font-normal">
+                {userList.length} Staf / PIC Tersedia
+              </span>
             </label>
             <select
               value={selectedUserId}
@@ -182,31 +185,41 @@ export function AddPicDeliverableDialog({
 
           {/* Title & Presets */}
           <div className="space-y-2">
-            <label className="text-xs font-bold text-slate-700">
-              Judul Tugas / Output yang Dihasilkan
-            </label>
-            <input
-              type="text"
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-              placeholder="Contoh: Rilis Berita & Siaran Pers Media Nasional"
-              className="w-full text-xs sm:text-[13px] rounded-xl border border-slate-300 p-2.5 text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-[#1E6B7B]/20 focus:border-[#1E6B7B]"
-              required
-            />
+            <div className="flex items-center justify-between">
+              <label className="text-xs font-bold text-slate-700">
+                2. Pilih atau Ketik Judul Tugas PIC
+              </label>
+              <span className="text-[10.5px] text-slate-500">Klik salah satu opsi tugas di bawah:</span>
+            </div>
 
             {/* Quick Presets */}
-            <div className="flex flex-wrap gap-1.5 pt-1">
+            <div className="flex flex-wrap gap-1.5">
               {DELIVERABLE_PRESETS.map((preset) => (
                 <button
                   key={preset}
                   type="button"
                   onClick={() => setTitle(preset)}
-                  className="text-[11px] px-2.5 py-1 rounded-full bg-slate-100 hover:bg-[#F0F9FA] hover:text-[#1E6B7B] border border-slate-200 text-slate-600 transition-colors cursor-pointer"
+                  className={cn(
+                    "text-[11.5px] px-3 py-1.5 rounded-xl border transition-all cursor-pointer font-medium text-left",
+                    title === preset
+                      ? "bg-[#1E6B7B] text-white border-[#1E6B7B] shadow-2xs font-bold"
+                      : "bg-slate-50 hover:bg-[#F0F9FA] hover:text-[#1E6B7B] border-slate-200 text-slate-700"
+                  )}
                 >
-                  + {preset}
+                  {title === preset ? '✓ ' : '+ '}
+                  {preset}
                 </button>
               ))}
             </div>
+
+            <input
+              type="text"
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              placeholder="Atau ketik judul tugas kustom..."
+              className="w-full text-xs sm:text-[13px] rounded-xl border border-slate-300 p-2.5 text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-[#1E6B7B]/20 focus:border-[#1E6B7B]"
+              required
+            />
           </div>
 
           {/* Due Date & Priority */}
@@ -241,32 +254,17 @@ export function AddPicDeliverableDialog({
             </div>
           </div>
 
-          {/* Notes */}
+          {/* Instruksi / Catatan Penugasan */}
           <div className="space-y-1.5">
             <label className="text-xs font-bold text-slate-700">
-              Instruksi / Catatan Awal untuk PIC (Opsional)
+              Instruksi / Catatan Penugasan
             </label>
             <textarea
               rows={2}
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
-              placeholder="Instruksi khusus, format rilis yang diinginkan, atau tautan acuan..."
+              placeholder="Instruksi singkat atau catatan khusus untuk PIC yang ditugaskan..."
               className="w-full text-xs rounded-xl border border-slate-300 p-2.5 text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-[#1E6B7B]/20 focus:border-[#1E6B7B] resize-none"
-            />
-          </div>
-
-          {/* Optional initial link */}
-          <div className="space-y-1.5 p-3 rounded-xl bg-slate-50 border border-slate-200">
-            <label className="text-xs font-bold text-slate-700 flex items-center gap-1.5">
-              <Link2 className="w-3.5 h-3.5 text-[#1E6B7B]" />
-              <span>Tautan Dokumen / Google Drive (Opsional)</span>
-            </label>
-            <input
-              type="url"
-              value={linkUrl}
-              onChange={(e) => setLinkUrl(e.target.value)}
-              placeholder="https://drive.google.com/... atau https://..."
-              className="w-full text-xs font-mono rounded-lg border border-slate-300 bg-white p-2 text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-[#1E6B7B]/20 focus:border-[#1E6B7B]"
             />
           </div>
         </form>
@@ -291,12 +289,12 @@ export function AddPicDeliverableDialog({
             {isSubmitting ? (
               <>
                 <Loader2 className="w-4 h-4 animate-spin" />
-                <span>Menambahkan...</span>
+                <span>Menyimpan...</span>
               </>
             ) : (
               <>
                 <CheckCircle2 className="w-4 h-4" />
-                <span>Tambahkan Penugasan</span>
+                <span>Simpan &amp; Berikan Tugas ke PIC</span>
               </>
             )}
           </button>

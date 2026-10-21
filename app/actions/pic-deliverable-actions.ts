@@ -10,6 +10,7 @@ import {
   getNextActionItemLogId,
   getNextNotificationId,
 } from '@/lib/id-generator';
+import { createNotificationRecord } from '@/app/actions/notification-actions';
 import { ActionItemStatus, ActionItemPriority } from '@prisma/client';
 
 import {
@@ -44,6 +45,7 @@ export async function submitPicProgressAction(formData: FormData): Promise<{
 
     const actionItemId = (formData.get('actionItemId') as string)?.trim();
     const meetingId = (formData.get('meetingId') as string)?.trim();
+    const outputType = ((formData.get('outputType') as string) || '').trim();
     const notes = ((formData.get('notes') as string) || '').trim();
     const linkUrl = ((formData.get('linkUrl') as string) || '').trim();
     const linkTitle = ((formData.get('linkTitle') as string) || '').trim();
@@ -138,11 +140,11 @@ export async function submitPicProgressAction(formData: FormData): Promise<{
       }
     }
 
-    // Determine Status & Progress
+    // Determine Status & Progress (Belum Dimulai, Dalam Proses, Selesai)
     let statusEnum: ActionItemStatus = ActionItemStatus.IN_PROGRESS;
     if (rawStatus === 'COMPLETED' || rawStatus === 'Selesai') {
       statusEnum = ActionItemStatus.COMPLETED;
-    } else if (rawStatus === 'PENDING' || rawStatus === 'Belum Dimulai') {
+    } else if (rawStatus === 'PENDING' || rawStatus === 'Belum Dimulai' || rawStatus === 'BELUM_DIMULAI') {
       statusEnum = ActionItemStatus.PENDING;
     } else {
       statusEnum = ActionItemStatus.IN_PROGRESS;
@@ -150,17 +152,64 @@ export async function submitPicProgressAction(formData: FormData): Promise<{
 
     let progressNum = parseInt(rawProgress || '0', 10);
     if (isNaN(progressNum)) {
-      progressNum = statusEnum === ActionItemStatus.COMPLETED ? 100 : 50;
+      progressNum = statusEnum === ActionItemStatus.COMPLETED ? 100 : statusEnum === ActionItemStatus.PENDING ? 0 : 50;
     }
     if (statusEnum === ActionItemStatus.COMPLETED && progressNum < 100) {
       progressNum = 100;
     }
+    if (statusEnum === ActionItemStatus.PENDING) {
+      progressNum = 0;
+    }
 
-    // Build JSON description
+    // Parse multiple links if provided as linksJson
+    const linksJsonRaw = (formData.get('linksJson') as string)?.trim();
+    let parsedLinks: Array<{ url: string; title?: string }> = [];
+    if (linksJsonRaw) {
+      try {
+        const rawArr = JSON.parse(linksJsonRaw);
+        if (Array.isArray(rawArr)) {
+          parsedLinks = rawArr
+            .filter((l: any) => l && typeof l.url === 'string' && l.url.trim().length > 0)
+            .map((l: any) => ({
+              url: l.url.trim(),
+              title: typeof l.title === 'string' ? l.title.trim() : '',
+            }));
+        }
+      } catch {}
+    }
+
+    if (parsedLinks.length === 0 && linkUrl) {
+      parsedLinks = [{ url: linkUrl, title: linkTitle || 'Tautan Hasil Kegiatan' }];
+    }
+
+    // Build JSON description: either LINK or NOTE
+    let finalNotes = '';
+    let finalLinkUrl = '';
+    let finalLinkTitle = '';
+
+    if (outputType === 'LINK') {
+      finalLinkUrl = parsedLinks[0]?.url || linkUrl;
+      finalLinkTitle = parsedLinks[0]?.title || linkTitle || 'Tautan Hasil Kegiatan';
+      finalNotes = '';
+    } else if (outputType === 'NOTE') {
+      finalNotes = notes;
+      finalLinkUrl = '';
+      finalLinkTitle = '';
+      parsedLinks = [];
+    } else {
+      finalNotes = notes || prevData.notes || '';
+      finalLinkUrl = parsedLinks[0]?.url || linkUrl || prevData.linkUrl || '';
+      finalLinkTitle = parsedLinks[0]?.title || linkTitle || prevData.linkTitle || (linkUrl ? 'Tautan Hasil Kegiatan' : '');
+      if (parsedLinks.length === 0 && prevData.links && prevData.links.length > 0) {
+        parsedLinks = prevData.links;
+      }
+    }
+
     const updatedDescriptionObj: PicDeliverableParsedData = {
-      notes: notes || prevData.notes || '',
-      linkUrl: linkUrl || prevData.linkUrl || '',
-      linkTitle: linkTitle || prevData.linkTitle || (linkUrl ? 'Tautan Luaran PIC' : ''),
+      notes: finalNotes,
+      linkUrl: finalLinkUrl,
+      linkTitle: finalLinkTitle,
+      links: parsedLinks,
       fileUrl: uploadedFileUrl,
       fileName: uploadedFileName,
       fileSize: uploadedFileSize,
@@ -224,38 +273,51 @@ export async function submitPicProgressAction(formData: FormData): Promise<{
         userId: validUserId,
         previousStatus: existing.status,
         newStatus: statusEnum,
-        notes: notes || (linkUrl ? `Melampirkan tautan: ${linkUrl}` : 'Pembaruan progres pengerjaan'),
+        notes: outputType === 'LINK'
+          ? (parsedLinks.length > 1
+              ? `Melampirkan ${parsedLinks.length} tautan hasil kegiatan: ${parsedLinks.map((l) => l.url).join(', ')}`
+              : finalLinkUrl
+              ? `Melampirkan tautan hasil: ${finalLinkUrl}`
+              : 'Pembaruan tautan hasil kegiatan')
+          : (finalNotes || 'Pembaruan catatan hasil kegiatan'),
         progress: progressNum,
       },
     });
 
     // Sync to Meeting record if requested or if it's a press release / drive link
-    if (syncToMeeting && linkUrl) {
-      const isDrive = linkUrl.includes('drive.google.com');
+    if (syncToMeeting && (parsedLinks.length > 0 || linkUrl)) {
+      const linksToSync = parsedLinks.length > 0 ? parsedLinks : [{ url: linkUrl, title: linkTitle }];
 
-      // 1. Store as a MeetingAttachment so it appears in the meeting's documents
-      try {
-        const existingAttachment = await prisma.meetingAttachment.findFirst({
-          where: {
-            meetingId: effectiveMeetingId,
-            fileUrl: linkUrl,
-          },
-        });
+      for (const itemLink of linksToSync) {
+        if (!itemLink.url) continue;
+        const isDrive = itemLink.url.includes('drive.google.com');
 
-        if (!existingAttachment) {
-          await prisma.meetingAttachment.create({
-            data: {
+        // 1. Store as a MeetingAttachment so it appears in the meeting's documents
+        try {
+          const existingAttachment = await prisma.meetingAttachment.findFirst({
+            where: {
               meetingId: effectiveMeetingId,
-              fileName: linkTitle || (isDrive ? 'Google Drive Luaran PIC' : (existing.title || 'Tautan Luaran PIC')),
-              fileUrl: linkUrl,
-              fileType: 'link',
-              uploadedBy: currentUser.name || 'PIC',
-              category: isDrive ? 'DRIVE' : 'MATERIAL',
+              fileUrl: itemLink.url,
             },
           });
+
+          if (!existingAttachment) {
+            await prisma.meetingAttachment.create({
+              data: {
+                meetingId: effectiveMeetingId,
+                fileName:
+                  itemLink.title ||
+                  (isDrive ? 'Google Drive Luaran PIC' : existing.title || 'Tautan Luaran PIC'),
+                fileUrl: itemLink.url,
+                fileType: 'link',
+                uploadedBy: currentUser.name || 'PIC',
+                category: isDrive ? 'DRIVE' : 'MATERIAL',
+              },
+            });
+          }
+        } catch (attachErr) {
+          console.warn('Could not create meeting attachment for link:', attachErr);
         }
-      } catch (attachErr) {
-        console.warn('Could not create meeting attachment for link:', attachErr);
       }
 
       // 2. Also attach physical file if uploaded
@@ -289,9 +351,14 @@ export async function submitPicProgressAction(formData: FormData): Promise<{
       try {
         const meetingUpdatePayload: Record<string, any> = {};
 
-        if (!existing.meeting.materialDocUrl) {
-          meetingUpdatePayload.materialDocUrl = linkUrl;
-          meetingUpdatePayload.materialDocName = linkTitle || (isDrive ? 'Google Drive Luaran PIC' : (existing.title || 'Tautan Luaran PIC'));
+        const effectiveUrl = finalLinkUrl || linkUrl;
+        if (!existing.meeting.materialDocUrl && effectiveUrl) {
+          const isDriveUrl = effectiveUrl.includes('drive.google.com');
+          meetingUpdatePayload.materialDocUrl = effectiveUrl;
+          meetingUpdatePayload.materialDocName =
+            finalLinkTitle ||
+            linkTitle ||
+            (isDriveUrl ? 'Google Drive Luaran PIC' : existing.title || 'Tautan Luaran PIC');
         }
 
         if (existing.meeting.progressStatus === 'Belum Dimulai' || existing.meeting.progressStatus === 'Start') {
@@ -309,18 +376,16 @@ export async function submitPicProgressAction(formData: FormData): Promise<{
       }
     }
 
-    // Create notification for pimpinan / creator
+    // Create notification for pimpinan / creator (scoped to team)
     try {
-      const nextNotifId = await getNextNotificationId();
-      await prisma.notification.create({
-        data: {
-          id: nextNotifId,
-          title: `Update Output PIC: ${existing.title}`,
-          message: `${currentUser.name || 'PIC'} memperbarui capaian (${progressNum}%): "${(notes || 'Progres diperbarui').slice(0, 80)}"`,
-          type: 'action_item',
-          link: `/semua-rapat/${effectiveMeetingId}`,
-          isRead: false,
-        },
+      const effectiveTeamId = existing.picTeamId || existing.meeting?.primaryTeamId || null;
+      await createNotificationRecord({
+        title: `Update Output PIC: ${existing.title}`,
+        message: `${currentUser.name || 'PIC'} memperbarui capaian (${progressNum}%): "${(notes || 'Progres diperbarui').slice(0, 80)}"`,
+        type: 'action_item',
+        link: `/semua-rapat/${effectiveMeetingId}`,
+        teamId: effectiveTeamId,
+        isRead: false,
       });
     } catch {}
 
@@ -425,7 +490,7 @@ export async function createPicDeliverableAction(input: {
         picTeamId: targetTeamId,
         picUserId: picUserId || null,
         dueDate: effectiveDueDate,
-        status: ActionItemStatus.PENDING,
+        status: ActionItemStatus.IN_PROGRESS,
         priority: priority || ActionItemPriority.HIGH,
       },
       include: {
@@ -435,20 +500,17 @@ export async function createPicDeliverableAction(input: {
       },
     });
 
-    // Notify assigned PIC user if present
+    // Notify assigned PIC user if present (scoped to team)
     if (picUserId && picUserId !== currentUser.id) {
       try {
-        const nextNotifId = await getNextNotificationId();
-        await prisma.notification.create({
-          data: {
-            id: nextNotifId,
-            userId: picUserId,
-            title: `Penugasan Output Baru: ${title}`,
-            message: `Anda ditugaskan mengerjakan luaran "${title}" pada kegiatan "${meeting.title}".`,
-            type: 'action_item',
-            link: `/semua-rapat/${meetingId}`,
-            isRead: false,
-          },
+        await createNotificationRecord({
+          userId: picUserId,
+          teamId: meeting.primaryTeamId || null,
+          title: `Penugasan Output Baru: ${title}`,
+          message: `Anda ditugaskan mengerjakan luaran "${title}" pada kegiatan "${meeting.title}".`,
+          type: 'action_item',
+          link: `/semua-rapat/${meetingId}`,
+          isRead: false,
         });
       } catch {}
     }
@@ -534,7 +596,7 @@ export async function initializeMeetingPicDeliverablesAction(meetingId: string):
             picTeamId: part.user.teamId || meeting.primaryTeamId,
             picUserId: part.user.id,
             dueDate: meeting.date,
-            status: ActionItemStatus.PENDING,
+            status: ActionItemStatus.IN_PROGRESS,
             priority: ActionItemPriority.HIGH,
           },
         });
@@ -554,6 +616,29 @@ export async function initializeMeetingPicDeliverablesAction(meetingId: string):
     return {
       success: false,
       error: error?.message || 'Gagal menginisialisasi penugasan PIC.',
+    };
+  }
+}
+
+/**
+ * Server Action: Hapus penugasan tugas PIC
+ */
+export async function deletePicDeliverableAction(id: string): Promise<{
+  success: boolean;
+  error?: string;
+}> {
+  try {
+    const { deleteActionItemAction } = await import('@/app/actions/action-item-actions');
+    const res = await deleteActionItemAction(id);
+    return {
+      success: res.success,
+      error: res.error,
+    };
+  } catch (err: any) {
+    console.error('Error deleting PIC deliverable:', err);
+    return {
+      success: false,
+      error: err?.message || 'Gagal menghapus penugasan PIC.',
     };
   }
 }

@@ -10,6 +10,7 @@ import {
   updateUserSchema,
   CreateUserInput,
   UpdateUserInput,
+  formatUserFullName,
 } from '@/lib/validations/user';
 
 function safeRevalidate(paths: string[]) {
@@ -107,6 +108,9 @@ export async function createUserAction(input: CreateUserInput) {
     }
 
     let { name, username, email, password, role, teamId, isActive } = parsed.data;
+
+    // Format name with role suffix automatically (e.g. "Kevin (Staff)")
+    name = formatUserFullName(name, role);
 
     // RBAC & Team Scoping restrictions for ADMIN
     if (!isGlobalAdmin) {
@@ -263,6 +267,9 @@ export async function updateUserAction(input: UpdateUserInput) {
     }
 
     let { id, name, username, email, password, role, teamId, isActive } = parsed.data;
+
+    // Format name with role suffix automatically (e.g. "Kevin (Staff)")
+    name = formatUserFullName(name, role);
 
     const existing = await prisma.user.findUnique({
       where: { id },

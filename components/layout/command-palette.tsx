@@ -5,21 +5,13 @@ import { useRouter } from 'next/navigation';
 import {
   Search,
   Calendar,
-  Layers,
   ArrowRight,
-  CheckCircle2,
-  Clock,
-  Building2,
-  FileText,
-  PlusCircle,
-  CalendarDays,
-  Settings,
+  Users,
   X,
-  ExternalLink,
   ChevronRight,
-  Hash,
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
+import { MeetingProgressBadge } from '@/components/meeting/meeting-status-badge';
 import { cn } from '@/lib/utils';
 import { Meeting } from '@/lib/types';
 
@@ -29,72 +21,39 @@ interface CommandPaletteProps {
   onCreateMeeting?: () => void;
 }
 
-interface QuickAction {
-  id: string;
-  title: string;
-  subtitle: string;
-  category: 'action';
-  icon: React.ReactNode;
-  action: () => void;
-}
-
-interface BiroItem {
+interface TeamItem {
   id: string;
   code: string;
   name: string;
-  category: 'biro';
+  category: 'team';
+  biroCode?: string;
+  biroName?: string;
   href: string;
 }
 
-const STATIC_BIROS: BiroItem[] = [
-  {
-    id: 'biro-bppk',
-    code: 'BPPK',
-    name: 'Biro Perencanaan & Pembentukan KEK',
-    category: 'biro',
-    href: '/biro/bppk',
-  },
-  {
-    id: 'biro-pkkek',
-    code: 'PKKEK',
-    name: 'Biro Pengendalian KEK',
-    category: 'biro',
-    href: '/biro/pkkek',
-  },
-  {
-    id: 'biro-ikk',
-    code: 'IKK',
-    name: 'Biro Investasi, Kerja Sama & Komunikasi',
-    category: 'biro',
-    href: '/biro/ikk',
-  },
-  {
-    id: 'biro-hsdmo',
-    code: 'HSDMO',
-    name: 'Biro Hukum, SDM & Organisasi',
-    category: 'biro',
-    href: '/biro/hsdmo',
-  },
-  {
-    id: 'biro-uk',
-    code: 'UK',
-    name: 'Biro Umum & Keuangan',
-    category: 'biro',
-    href: '/biro/uk',
-  },
+const STATIC_TEAMS: TeamItem[] = [
+  { id: 'team-hukum', code: 'HUKUM', name: 'Tim HKM', category: 'team', biroCode: 'IKK', href: '/semua-rapat?tim=hukum' },
+  { id: 'team-inv', code: 'INV', name: 'Tim Investasi', category: 'team', biroCode: 'IKK', href: '/semua-rapat?tim=inv' },
+  { id: 'team-kom', code: 'KOM', name: 'Tim Komunikasi', category: 'team', biroCode: 'IKK', href: '/semua-rapat?tim=kom' },
+  { id: 'team-ks', code: 'KS', name: 'Tim Kerja Sama', category: 'team', biroCode: 'IKK', href: '/semua-rapat?tim=ks' },
+  { id: 'team-si', code: 'SI', name: 'Tim Sistem Informasi', category: 'team', biroCode: 'IKK', href: '/semua-rapat?tim=si' },
+  { id: 'team-sdm', code: 'SDM', name: 'Sumber Daya Manusia', category: 'team', biroCode: 'HSDMO', href: '/semua-rapat?tim=sdm' },
+  { id: 'team-keu', code: 'KEU', name: 'Keuangan & Akuntansi', category: 'team', biroCode: 'UK', href: '/semua-rapat?tim=keu' },
+  { id: 'team-tu', code: 'TU', name: 'Tata Usaha & Persuratan', category: 'team', biroCode: 'UK', href: '/semua-rapat?tim=tu' },
 ];
 
-export function CommandPalette({ isOpen, onClose, onCreateMeeting }: CommandPaletteProps) {
+export function CommandPalette({ isOpen, onClose }: CommandPaletteProps) {
   const router = useRouter();
   const [query, setQuery] = useState('');
-  const [activeTab, setActiveTab] = useState<'all' | 'meetings' | 'biros' | 'actions'>('all');
+  const [activeTab, setActiveTab] = useState<'all' | 'meetings' | 'teams'>('all');
   const [meetings, setMeetings] = useState<Meeting[]>([]);
-  const [isLoadingMeetings, setIsLoadingMeetings] = useState(false);
+  const [teams, setTeams] = useState<TeamItem[]>(STATIC_TEAMS);
+  const [, setIsLoadingMeetings] = useState(false);
   const [selectedIndex, setSelectedIndex] = useState(0);
   const inputRef = useRef<HTMLInputElement>(null);
   const listRef = useRef<HTMLDivElement>(null);
 
-  // Focus input on open & load meetings cache
+  // Focus input on open & load meetings and dynamic teams
   useEffect(() => {
     if (isOpen) {
       setQuery('');
@@ -108,99 +67,72 @@ export function CommandPalette({ isOpen, onClose, onCreateMeeting }: CommandPale
         .then((data) => setMeetings(Array.isArray(data) ? data : []))
         .catch(() => setMeetings([]))
         .finally(() => setIsLoadingMeetings(false));
+
+      // Fetch latest dynamic teams
+      fetch('/api/teams')
+        .then((res) => (res.ok ? res.json() : []))
+        .then((data) => {
+          if (Array.isArray(data) && data.length > 0) {
+            setTeams(
+              data.map((item: any) => ({
+                id: item.id,
+                code: item.code,
+                name: item.name,
+                category: 'team' as const,
+                biroCode: item.biro?.code || '',
+                biroName: item.biro?.name || '',
+                href: `/semua-rapat?tim=${encodeURIComponent(item.code.toLowerCase())}`,
+              }))
+            );
+          }
+        })
+        .catch(() => {});
     }
   }, [isOpen]);
 
-  // Quick action navigation shortcuts
-  const quickActions: QuickAction[] = useMemo(
-    () => [
-      {
-        id: 'act-new-meeting',
-        title: 'Catat Kegiatan Baru',
-        subtitle: 'Buka formulir registrasi dan pencatatan kegiatan baru',
-        category: 'action',
-        icon: <PlusCircle className="w-4 h-4 text-[#1E6B7B]" />,
-        action: () => {
-          onClose();
-          if (onCreateMeeting) onCreateMeeting();
-          else router.push('/buat-rapat');
-        },
-      },
-      {
-        id: 'act-all-meetings',
-        title: 'Semua Log Kegiatan',
-        subtitle: 'Lihat seluruh daftar arsip dan log kegiatan Biro 3 KEK',
-        category: 'action',
-        icon: <FileText className="w-4 h-4 text-[#31889C]" />,
-        action: () => {
-          onClose();
-          router.push('/semua-rapat');
-        },
-      },
-      {
-        id: 'act-settings',
-        title: 'Pengaturan Sistem',
-        subtitle: 'Konfigurasi akun, preferensi dan manajemen pengguna',
-        category: 'action',
-        icon: <Settings className="w-4 h-4 text-slate-500" />,
-        action: () => {
-          onClose();
-          router.push('/pengaturan');
-        },
-      },
-    ],
-    [onClose, onCreateMeeting, router]
-  );
-
-  // Filtered Results
-  const filteredActions = useMemo(() => {
-    if (!query.trim()) return quickActions;
+  // Filtered Teams
+  const filteredTeams = useMemo(() => {
+    if (!query.trim()) return teams;
     const q = query.toLowerCase();
-    return quickActions.filter(
-      (a) => a.title.toLowerCase().includes(q) || a.subtitle.toLowerCase().includes(q)
+    return teams.filter(
+      (t) =>
+        t.code.toLowerCase().includes(q) ||
+        t.name.toLowerCase().includes(q) ||
+        (t.biroCode && t.biroCode.toLowerCase().includes(q))
     );
-  }, [query, quickActions]);
+  }, [query, teams]);
 
-  const filteredBiros = useMemo(() => {
-    if (!query.trim()) return STATIC_BIROS;
-    const q = query.toLowerCase();
-    return STATIC_BIROS.filter(
-      (b) => b.code.toLowerCase().includes(q) || b.name.toLowerCase().includes(q)
-    );
-  }, [query]);
-
+  // Filtered Meetings
   const filteredMeetings = useMemo(() => {
     if (!query.trim()) return meetings.slice(0, 5); // default show latest 5
     const q = query.toLowerCase();
-    return meetings.filter(
-      (m) =>
-        m.title.toLowerCase().includes(q) ||
-        m.code.toLowerCase().includes(q) ||
-        (m.location && m.location.toLowerCase().includes(q)) ||
-        (m.biroName && m.biroName.toLowerCase().includes(q)) ||
-        (m.biroCode && m.biroCode.toLowerCase().includes(q))
-    ).slice(0, 15);
+    return meetings
+      .filter(
+        (m) =>
+          m.title.toLowerCase().includes(q) ||
+          m.code.toLowerCase().includes(q) ||
+          (m.location && m.location.toLowerCase().includes(q)) ||
+          (m.biroName && m.biroName.toLowerCase().includes(q)) ||
+          (m.biroCode && m.biroCode.toLowerCase().includes(q))
+      )
+      .slice(0, 15);
   }, [query, meetings]);
 
   // Combined active list for arrow key navigation
   const activeItems = useMemo(() => {
     const list: Array<
       | { type: 'meeting'; item: Meeting }
-      | { type: 'biro'; item: BiroItem }
-      | { type: 'action'; item: QuickAction }
+      | { type: 'team'; item: TeamItem }
     > = [];
 
     if (activeTab === 'all' || activeTab === 'meetings') {
       filteredMeetings.forEach((m) => list.push({ type: 'meeting', item: m }));
     }
-    if (activeTab === 'all' || activeTab === 'biros') {
-      filteredBiros.forEach((b) => list.push({ type: 'biro', item: b }));
-    }
-    if (activeTab === 'all' || activeTab === 'actions') {
-      filteredActions.forEach((a) => list.push({ type: 'action', item: a }));
+    if (activeTab === 'all' || activeTab === 'teams') {
+      filteredTeams.forEach((t) => list.push({ type: 'team', item: t }));
     }
     return list;
-  }, [activeTab, filteredMeetings, filteredBiros, filteredActions]);
+  }, [activeTab, filteredMeetings, filteredTeams]);
 
   // Handle keyboard events (ArrowUp, ArrowDown, Enter, Escape)
   const handleKeyDown = (e: React.KeyboardEvent) => {
@@ -220,11 +152,9 @@ export function CommandPalette({ isOpen, onClose, onCreateMeeting }: CommandPale
         if (current.type === 'meeting') {
           onClose();
           router.push(`/semua-rapat/${current.item.id}`);
-        } else if (current.type === 'biro') {
+        } else if (current.type === 'team') {
           onClose();
           router.push(current.item.href);
-        } else if (current.type === 'action') {
-          current.item.action();
         }
       }
     }
@@ -261,7 +191,7 @@ export function CommandPalette({ isOpen, onClose, onCreateMeeting }: CommandPale
               setSelectedIndex(0);
             }}
             onKeyDown={handleKeyDown}
-            placeholder="Ketik nomor kegiatan (misal: 012), nama agenda, atau biro..."
+            placeholder="Ketik nomor kegiatan (misal: 012), nama agenda, atau tim kerja..."
             className="w-full bg-transparent text-slate-800 text-[14px] placeholder:text-slate-400 focus:outline-none"
           />
           {query ? (
@@ -281,7 +211,7 @@ export function CommandPalette({ isOpen, onClose, onCreateMeeting }: CommandPale
           )}
         </div>
 
-        {/* Category Tabs */}
+        {/* Category Tabs: Semua, Kegiatan, Tim (Aksi Cepat dihapus) */}
         <div className="flex items-center gap-1.5 px-4 py-2 border-b border-slate-100 bg-white text-xs font-semibold overflow-x-auto">
           <button
             type="button"
@@ -317,34 +247,18 @@ export function CommandPalette({ isOpen, onClose, onCreateMeeting }: CommandPale
           <button
             type="button"
             onClick={() => {
-              setActiveTab('biros');
+              setActiveTab('teams');
               setSelectedIndex(0);
             }}
             className={cn(
               'px-3 py-1 rounded-lg transition-colors cursor-pointer shrink-0 inline-flex items-center gap-1.5',
-              activeTab === 'biros'
+              activeTab === 'teams'
                 ? 'bg-[#1E6B7B] text-white shadow-2xs'
                 : 'text-slate-600 hover:bg-slate-100'
             )}
           >
-            <Building2 className="w-3.5 h-3.5" />
-            <span>Biro ({filteredBiros.length})</span>
-          </button>
-          <button
-            type="button"
-            onClick={() => {
-              setActiveTab('actions');
-              setSelectedIndex(0);
-            }}
-            className={cn(
-              'px-3 py-1 rounded-lg transition-colors cursor-pointer shrink-0 inline-flex items-center gap-1.5',
-              activeTab === 'actions'
-                ? 'bg-[#1E6B7B] text-white shadow-2xs'
-                : 'text-slate-600 hover:bg-slate-100'
-            )}
-          >
-            <Layers className="w-3.5 h-3.5" />
-            <span>Aksi Cepat ({filteredActions.length})</span>
+            <Users className="w-3.5 h-3.5" />
+            <span>Tim ({filteredTeams.length})</span>
           </button>
         </div>
 
@@ -355,7 +269,7 @@ export function CommandPalette({ isOpen, onClose, onCreateMeeting }: CommandPale
               <Search className="w-8 h-8 text-slate-300 mx-auto mb-2" />
               <p className="text-sm font-semibold text-slate-700">Tidak ada hasil ditemukan</p>
               <p className="text-xs text-slate-400 mt-1">
-                Coba gunakan kata kunci nomor agenda, biro, atau bersihkan pencarian.
+                Coba gunakan kata kunci nomor agenda, tim kerja, atau bersihkan pencarian.
               </p>
             </div>
           ) : (
@@ -389,26 +303,11 @@ export function CommandPalette({ isOpen, onClose, onCreateMeeting }: CommandPale
                           </span>
                           <span className="text-[11px] text-slate-400">•</span>
                           <span className="text-xs text-slate-500 font-medium">{m.date}</span>
-                          {m.status === 'FINAL' && (
-                            <Badge variant="final" dot className="text-[10px] py-0 px-2">
-                              FINAL
-                            </Badge>
-                          )}
-                          {m.status === 'APPROVED' && (
-                            <Badge variant="approved" dot className="text-[10px] py-0 px-2">
-                              APPROVED
-                            </Badge>
-                          )}
-                          {m.status === 'REVIEW' && (
-                            <Badge variant="review" dot className="text-[10px] py-0 px-2">
-                              REVIEW
-                            </Badge>
-                          )}
-                          {m.status === 'DRAFT' && (
-                            <Badge variant="draft" dot className="text-[10px] py-0 px-2">
-                              DRAFT
-                            </Badge>
-                          )}
+                          <MeetingProgressBadge
+                            progressStatus={(m as any).progressStatus}
+                            status={m.status}
+                            size="sm"
+                          />
                         </div>
                         <h4 className="text-sm font-semibold text-slate-900 truncate mt-0.5">
                           {m.title}
@@ -421,15 +320,15 @@ export function CommandPalette({ isOpen, onClose, onCreateMeeting }: CommandPale
                 );
               }
 
-              if (entry.type === 'biro') {
-                const b = entry.item;
+              if (entry.type === 'team') {
+                const t = entry.item;
                 return (
                   <div
-                    key={`biro-${b.id}`}
+                    key={`team-${t.id}`}
                     id={`cmd-item-${index}`}
                     onClick={() => {
                       onClose();
-                      router.push(b.href);
+                      router.push(t.href);
                     }}
                     onMouseEnter={() => setSelectedIndex(index)}
                     className={cn(
@@ -438,39 +337,14 @@ export function CommandPalette({ isOpen, onClose, onCreateMeeting }: CommandPale
                     )}
                   >
                     <div className="flex items-center gap-3 min-w-0">
-                      <div className="w-8 h-8 rounded-lg bg-[#ECF8E9] border border-[#D2EFCA] flex items-center justify-center text-[#15803D] shrink-0 shadow-2xs font-bold text-xs">
-                        {b.code}
+                      <div className="w-8 h-8 rounded-lg bg-[#E8F5F7] border border-[#BCE3EB] flex items-center justify-center text-[#1E6B7B] shrink-0 shadow-2xs font-bold text-xs">
+                        {t.code}
                       </div>
                       <div className="min-w-0">
-                        <h4 className="text-sm font-semibold text-slate-900 truncate">{b.name}</h4>
-                        <p className="text-xs text-slate-500">Dashboard Khusus {b.code}</p>
-                      </div>
-                    </div>
-                    <ArrowRight className="w-4 h-4 text-slate-400 shrink-0" />
-                  </div>
-                );
-              }
-
-              if (entry.type === 'action') {
-                const a = entry.item;
-                return (
-                  <div
-                    key={`action-${a.id}`}
-                    id={`cmd-item-${index}`}
-                    onClick={a.action}
-                    onMouseEnter={() => setSelectedIndex(index)}
-                    className={cn(
-                      'flex items-center justify-between gap-3 p-3 rounded-xl cursor-pointer transition-all',
-                      isSelected ? 'bg-[#F0F8FA] border border-[#BCE3EB]/80' : 'hover:bg-slate-50'
-                    )}
-                  >
-                    <div className="flex items-center gap-3 min-w-0">
-                      <div className="w-8 h-8 rounded-lg bg-white border border-slate-200 flex items-center justify-center shrink-0 shadow-2xs">
-                        {a.icon}
-                      </div>
-                      <div className="min-w-0">
-                        <h4 className="text-sm font-semibold text-slate-900 truncate">{a.title}</h4>
-                        <p className="text-xs text-slate-500 truncate">{a.subtitle}</p>
+                        <h4 className="text-sm font-semibold text-slate-900 truncate">{t.name}</h4>
+                        <p className="text-xs text-slate-500">
+                          Tim Kerja {t.biroCode ? `• Biro ${t.biroCode}` : ''}
+                        </p>
                       </div>
                     </div>
                     <ArrowRight className="w-4 h-4 text-slate-400 shrink-0" />
@@ -502,7 +376,7 @@ export function CommandPalette({ isOpen, onClose, onCreateMeeting }: CommandPale
               <span>Pilih</span>
             </span>
           </div>
-          <span className="text-slate-400">Pencarian Cepat Kegiatan KEK</span>
+          <span className="text-slate-400">Pencarian Cepat Kegiatan &amp; Tim KEK</span>
         </div>
       </div>
     </div>

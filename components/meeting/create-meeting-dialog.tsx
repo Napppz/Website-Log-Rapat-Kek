@@ -47,12 +47,17 @@ export function CreateMeetingDialog({ isOpen, onClose, onSuccess }: CreateMeetin
   // Deteksi seluruh tim kerja staf jika login sebagai STAFF (bisa >1 tim)
   const staffTeams = useMemo(() => {
     if (session?.user?.role !== 'STAFF') return [];
-    const sessionTeams = (session?.user as any)?.teams;
+    const sessionTeams =
+      (session?.user as any)?.assignedTeams ||
+      (session?.user as any)?.teams;
     if (Array.isArray(sessionTeams) && sessionTeams.length > 0) {
-      return sessionTeams.map((st: any) => {
-        const found = teamsList.find((t) => t.id === st.id || t.code === st.code);
-        return found || st;
-      });
+      const mapped = sessionTeams
+        .map((st: any) => {
+          const found = teamsList.find((t) => t.id === st.id || t.code === st.code);
+          return found || st;
+        })
+        .filter(Boolean);
+      if (mapped.length > 0) return mapped;
     }
     const staffCode = session?.user?.teamCode?.toUpperCase();
     const staffId = session?.user?.teamId;
@@ -61,7 +66,17 @@ export function CreateMeetingDialog({ isOpen, onClose, onSuccess }: CreateMeetin
         (staffId && t.id === staffId) ||
         (staffCode && t.code.toUpperCase() === staffCode)
     );
-    return match ? [match] : [];
+    if (match) return [match];
+    if (staffId || staffCode) {
+      return [
+        {
+          id: staffId || 'TIM-STAFF',
+          code: staffCode || 'TIM',
+          name: session?.user?.teamName || staffCode || 'Tim Staf',
+        },
+      ];
+    }
+    return [];
   }, [session, teamsList]);
 
   const todayStr = (() => {
@@ -292,7 +307,7 @@ export function CreateMeetingDialog({ isOpen, onClose, onSuccess }: CreateMeetin
                       }}
                       className="w-full px-3 h-[38px] rounded-lg border border-[#31889C] bg-[#E8F5F7] text-[#1E6B7B] text-xs font-bold focus:outline-none focus:ring-2 focus:ring-[#31889C]/20"
                     >
-                      {staffTeams.map((t: any) => (
+                      {(staffTeams.length > 0 ? staffTeams : teamsList).map((t: any) => (
                         <option key={t.id} value={t.id}>
                           {t.name} ({t.code})
                         </option>

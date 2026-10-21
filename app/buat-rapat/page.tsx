@@ -122,12 +122,17 @@ export default function BuatRapatPage() {
   // Deteksi seluruh tim kerja staf jika login sebagai STAFF (bisa >1 tim)
   const staffTeams = useMemo(() => {
     if (session?.user?.role !== 'STAFF') return [];
-    const sessionTeams = (session?.user as any)?.teams;
+    const sessionTeams =
+      (session?.user as any)?.assignedTeams ||
+      (session?.user as any)?.teams;
     if (Array.isArray(sessionTeams) && sessionTeams.length > 0) {
-      return sessionTeams.map((st: any) => {
-        const found = teamsList.find((t) => t.id === st.id || t.code === st.code);
-        return found || st;
-      });
+      const mapped = sessionTeams
+        .map((st: any) => {
+          const found = teamsList.find((t) => t.id === st.id || t.code === st.code);
+          return found || st;
+        })
+        .filter(Boolean);
+      if (mapped.length > 0) return mapped;
     }
     const staffCode = session?.user?.teamCode?.toUpperCase();
     const staffId = session?.user?.teamId;
@@ -136,7 +141,17 @@ export default function BuatRapatPage() {
         (staffId && t.id === staffId) ||
         (staffCode && t.code.toUpperCase() === staffCode)
     );
-    return match ? [match] : [];
+    if (match) return [match];
+    if (staffId || staffCode) {
+      return [
+        {
+          id: staffId || 'TIM-STAFF',
+          code: staffCode || 'TIM',
+          name: session?.user?.teamName || staffCode || 'Tim Staf',
+        },
+      ];
+    }
+    return [];
   }, [session, teamsList]);
 
   // Today string for date input
@@ -202,8 +217,13 @@ export default function BuatRapatPage() {
   }, [isStaff, staffTeams, selectedTeamId]);
 
   const currentTeam = useMemo(
-    () => teamsList.find((t: any) => t.id === selectedTeamId) || teamsList[0] || TIM_OPTIONS[0],
-    [selectedTeamId, teamsList]
+    () =>
+      teamsList.find((t: any) => t.id === selectedTeamId) ||
+      staffTeams.find((t: any) => t.id === selectedTeamId) ||
+      staffTeams[0] ||
+      teamsList[0] ||
+      TIM_OPTIONS[0],
+    [selectedTeamId, teamsList, staffTeams]
   );
 
   // Fetch initial data
@@ -495,7 +515,7 @@ export default function BuatRapatPage() {
                     </div>
                   ) : (
                     <div className="bg-white p-1.5 rounded-xl border border-slate-200/90 shadow-2xs space-y-1 max-h-56 overflow-y-auto">
-                      {(isStaff ? staffTeams : teamsList).map((tim: any) => {
+                      {((isStaff && staffTeams.length > 0) ? staffTeams : teamsList).map((tim: any) => {
                         const isSelected = selectedTeamId === tim.id;
                         return (
                           <button
@@ -540,7 +560,7 @@ export default function BuatRapatPage() {
                     {isStaff
                       ? staffTeams.length > 1
                         ? 'Anda terdaftar pada beberapa tim kerja. Klik tim kerja untuk menyesuaikan penomoran registrasi otomatis.'
-                        : `Nomor registrasi otomatis disesuaikan dengan tim kerja Anda (${staffTeams[0]?.name || 'Tim Kerja'}).`
+                        : `Nomor registrasi otomatis disesuaikan dengan tim kerja Anda (${staffTeams[0]?.name || currentTeam?.name || 'Tim Kerja'}).`
                       : 'Pilih salah satu tim Biro 3 untuk penomoran registrasi & pengarsipan kegiatan.'}
                   </p>
                 </div>

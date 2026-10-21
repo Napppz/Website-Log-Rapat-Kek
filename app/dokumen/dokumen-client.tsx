@@ -19,30 +19,13 @@ import {
 import { Meeting, Biro } from '@/lib/types';
 import { cn } from '@/lib/utils';
 import { toast } from '@/components/providers/toast-provider';
+import { MeetingProgressBadge } from '@/components/meeting/meeting-status-badge';
+import { normalizeProgressStatus, mapStatusToProgress } from '@/lib/meeting-status';
 
 interface DokumenClientProps {
   initialMeetings: Meeting[];
   biros: Biro[];
 }
-
-const STATUS_BADGES: Record<string, { label: string; class: string }> = {
-  FINAL: {
-    label: 'Disahkan (Final)',
-    class: 'bg-[#ECF8E9] text-[#4D8F3D] border-[#D2EFCA]',
-  },
-  APPROVED: {
-    label: 'Disetujui',
-    class: 'bg-[#E8F5F7] text-[#31889C] border-[#BCE3EB]',
-  },
-  REVIEW: {
-    label: 'Menunggu Review',
-    class: 'bg-[#FFF8CC] text-[#8A7200] border-[#FFEE99]',
-  },
-  DRAFT: {
-    label: 'Draf Catatan',
-    class: 'bg-[#F1F5F9] text-[#64748B] border-[#E2E8F0]',
-  },
-};
 
 export function DokumenClient({ initialMeetings, biros }: DokumenClientProps) {
   const [searchTerm, setSearchTerm] = useState('');
@@ -65,7 +48,13 @@ export function DokumenClient({ initialMeetings, biros }: DokumenClientProps) {
         m.biroCode === selectedBiro ||
         m.involvedBiros?.includes(selectedBiro);
 
-      const matchStatus = selectedStatus === 'ALL' || m.status === selectedStatus;
+      const mProg = normalizeProgressStatus((m as any).progressStatus || mapStatusToProgress(m.status));
+      const matchStatus =
+        selectedStatus === 'ALL' ||
+        mProg === selectedStatus ||
+        (selectedStatus === 'Selesai' && (m.status === 'FINAL' || m.status === 'APPROVED')) ||
+        (selectedStatus === 'Dalam Proses' && m.status === 'REVIEW') ||
+        (selectedStatus === 'Belum Dimulai' && m.status === 'DRAFT');
 
       return matchSearch && matchBiro && matchStatus;
     });
@@ -74,13 +63,18 @@ export function DokumenClient({ initialMeetings, biros }: DokumenClientProps) {
   // Statistics calculation
   const stats = useMemo(() => {
     const total = initialMeetings.length;
-    const approvedOrFinal = initialMeetings.filter(
-      (m) => m.status === 'APPROVED' || m.status === 'FINAL'
-    ).length;
-    const inReview = initialMeetings.filter((m) => m.status === 'REVIEW').length;
-    const draft = initialMeetings.filter((m) => m.status === 'DRAFT').length;
+    let selesai = 0;
+    let dalamProses = 0;
+    let belumDimulai = 0;
 
-    return { total, approvedOrFinal, inReview, draft };
+    initialMeetings.forEach((m) => {
+      const prog = normalizeProgressStatus((m as any).progressStatus || mapStatusToProgress(m.status));
+      if (prog === 'Selesai') selesai++;
+      else if (prog === 'Dalam Proses') dalamProses++;
+      else belumDimulai++;
+    });
+
+    return { total, selesai, dalamProses, belumDimulai };
   }, [initialMeetings]);
 
   // Download individual meeting official PDF
@@ -187,36 +181,36 @@ export function DokumenClient({ initialMeetings, biros }: DokumenClientProps) {
         </div>
 
         <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-xs flex flex-col">
-          <span className="text-[11px] font-semibold text-[#4D8F3D] uppercase tracking-wider">
-            Dokumen Telah Disahkan
+          <span className="text-[11px] font-semibold text-[#15803D] uppercase tracking-wider">
+            Dokumen Selesai
           </span>
           <div className="mt-1 flex items-baseline gap-1.5">
-            <span className="text-[26px] font-extrabold text-[#4D8F3D]">{stats.approvedOrFinal}</span>
-            <span className="text-[12px] font-semibold text-[#4D8F3D]">Final / Approved</span>
+            <span className="text-[26px] font-extrabold text-[#15803D]">{stats.selesai}</span>
+            <span className="text-[12px] font-semibold text-[#15803D]">Selesai</span>
           </div>
-          <span className="text-[11px] text-[#4D8F3D] mt-2 font-medium">Siap dijadikan acuan hukum</span>
+          <span className="text-[11px] text-[#15803D] mt-2 font-medium">Siap dijadikan acuan hukum</span>
         </div>
 
         <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-xs flex flex-col">
-          <span className="text-[11px] font-semibold text-[#8A7200] uppercase tracking-wider">
-            Menunggu Review
+          <span className="text-[11px] font-semibold text-[#0369A1] uppercase tracking-wider">
+            Dalam Proses
           </span>
           <div className="mt-1 flex items-baseline gap-1.5">
-            <span className="text-[26px] font-extrabold text-[#8A7200]">{stats.inReview}</span>
-            <span className="text-[12px] font-semibold text-[#8A7200]">Dalam Verifikasi</span>
+            <span className="text-[26px] font-extrabold text-[#0369A1]">{stats.dalamProses}</span>
+            <span className="text-[12px] font-semibold text-[#0369A1]">Dalam Telaah</span>
           </div>
-          <span className="text-[11px] text-[#8A7200] mt-2 font-medium">Proses paraf pimpinan biro</span>
+          <span className="text-[11px] text-[#0369A1] mt-2 font-medium">Penyusunan &amp; penelaahan naskah</span>
         </div>
 
         <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-xs flex flex-col">
           <span className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">
-            Draf Catatan Baru
+            Belum Dimulai
           </span>
           <div className="mt-1 flex items-baseline gap-1.5">
-            <span className="text-[26px] font-extrabold text-slate-700">{stats.draft}</span>
-            <span className="text-[12px] font-semibold text-slate-500">Draft</span>
+            <span className="text-[26px] font-extrabold text-slate-700">{stats.belumDimulai}</span>
+            <span className="text-[12px] font-semibold text-slate-500">Persiapan</span>
           </div>
-          <span className="text-[11px] text-slate-500 mt-2 font-medium">Sedang dirampungkan tim pelaksana</span>
+          <span className="text-[11px] text-slate-500 mt-2 font-medium">Diagendakan &amp; persiapan dokumen</span>
         </div>
       </div>
 
@@ -265,10 +259,9 @@ export function DokumenClient({ initialMeetings, biros }: DokumenClientProps) {
             className="px-3 py-2 rounded-xl border border-slate-200 bg-white text-[12.5px] font-semibold text-slate-700 focus:outline-none focus:ring-2 focus:ring-[#31889C]/25 focus:border-[#31889C] cursor-pointer"
           >
             <option value="ALL">Semua Status Dokumen</option>
-            <option value="FINAL">Disahkan (Final)</option>
-            <option value="APPROVED">Disetujui</option>
-            <option value="REVIEW">Menunggu Review</option>
-            <option value="DRAFT">Draf Catatan</option>
+            <option value="Selesai">Selesai</option>
+            <option value="Dalam Proses">Dalam Proses</option>
+            <option value="Belum Dimulai">Belum Dimulai</option>
           </select>
 
           {(searchTerm || selectedBiro !== 'ALL' || selectedStatus !== 'ALL') && (
@@ -320,7 +313,6 @@ export function DokumenClient({ initialMeetings, biros }: DokumenClientProps) {
         ) : (
           <div className="divide-y divide-slate-100">
             {filteredMeetings.map((m) => {
-              const statusCfg = STATUS_BADGES[m.status] || STATUS_BADGES.DRAFT;
               const isDownloadingThis = downloadingId === m.id;
 
               return (
@@ -343,14 +335,11 @@ export function DokumenClient({ initialMeetings, biros }: DokumenClientProps) {
                         >
                           {m.code}
                         </Link>
-                        <span
-                          className={cn(
-                            'text-[11px] font-bold px-2.5 py-0.5 rounded-lg border',
-                            statusCfg.class
-                          )}
-                        >
-                          {statusCfg.label}
-                        </span>
+                        <MeetingProgressBadge
+                          progressStatus={(m as any).progressStatus}
+                          status={m.status}
+                          size="sm"
+                        />
                         <Link
                           href={`/semua-rapat/${m.id}`}
                           className="text-[12px] text-slate-500 hover:text-[#31889C] hover:underline font-medium flex items-center gap-1 transition-colors"

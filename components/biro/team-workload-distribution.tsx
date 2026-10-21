@@ -16,9 +16,13 @@ interface TeamWorkloadDistributionProps {
   teams: TeamItem[];
   totalMeetings: number;
   meetingStatusBreakdown?: {
-    approved: number;
-    review: number;
-    draft: number;
+    selesai?: number;
+    dalamProses?: number;
+    belumDimulai?: number;
+    // Legacy fallbacks if needed
+    approved?: number;
+    review?: number;
+    draft?: number;
   };
 }
 
@@ -114,90 +118,94 @@ export function TeamWorkloadDistribution({
             })
           ) : (
             <>
-              {/* Fallback to status breakdown when biro operates centrally */}
-              <div className="space-y-1.5">
-                <div className="flex items-center justify-between text-[12.5px]">
-                  <span className="font-bold text-slate-800 flex items-center gap-2">
-                    <span className="w-2.5 h-2.5 rounded-full bg-emerald-500"></span>
-                    Disetujui / Sah
-                  </span>
-                  <span className="font-bold text-slate-900">
-                    <AnimatedCounter value={meetingStatusBreakdown?.approved || 0} />
-                  </span>
-                </div>
-                <div className="w-full h-2 bg-slate-100 rounded-full overflow-hidden">
-                  <div
-                    className="h-full bg-emerald-500 rounded-full transition-all duration-700 ease-out"
-                    style={{
-                      width: isAnimated
-                        ? `${
-                            totalMeetings > 0
-                              ? Math.round(
-                                  ((meetingStatusBreakdown?.approved || 0) / totalMeetings) * 100
-                                )
-                              : 0
-                          }%`
-                        : '0%',
-                    }}
-                  />
-                </div>
-              </div>
+              {/* Fallback to progress status breakdown when biro operates centrally */}
+              {(() => {
+                const selesaiCount = meetingStatusBreakdown?.selesai ?? meetingStatusBreakdown?.approved ?? 0;
+                const dalamProsesCount = meetingStatusBreakdown?.dalamProses ?? meetingStatusBreakdown?.review ?? 0;
+                const belumDimulaiCount = meetingStatusBreakdown?.belumDimulai ?? meetingStatusBreakdown?.draft ?? 0;
 
-              <div className="space-y-1.5">
-                <div className="flex items-center justify-between text-[12.5px]">
-                  <span className="font-bold text-slate-800 flex items-center gap-2">
-                    <span className="w-2.5 h-2.5 rounded-full bg-amber-500"></span>
-                    Menunggu Review
-                  </span>
-                  <span className="font-bold text-slate-900">
-                    <AnimatedCounter value={meetingStatusBreakdown?.review || 0} />
-                  </span>
-                </div>
-                <div className="w-full h-2 bg-slate-100 rounded-full overflow-hidden">
-                  <div
-                    className="h-full bg-amber-500 rounded-full transition-all duration-700 ease-out"
-                    style={{
-                      width: isAnimated
-                        ? `${
-                            totalMeetings > 0
-                              ? Math.round(
-                                  ((meetingStatusBreakdown?.review || 0) / totalMeetings) * 100
-                                )
-                              : 0
-                          }%`
-                        : '0%',
-                    }}
-                  />
-                </div>
-              </div>
+                return (
+                  <>
+                    <div className="space-y-1.5">
+                      <div className="flex items-center justify-between text-[12.5px]">
+                        <span className="font-bold text-slate-800 flex items-center gap-2">
+                          <span className="w-2.5 h-2.5 rounded-full bg-emerald-500"></span>
+                          Selesai
+                        </span>
+                        <span className="font-bold text-slate-900">
+                          <AnimatedCounter value={selesaiCount} />
+                        </span>
+                      </div>
+                      <div className="w-full h-2 bg-slate-100 rounded-full overflow-hidden">
+                        <div
+                          className="h-full bg-emerald-500 rounded-full transition-all duration-700 ease-out"
+                          style={{
+                            width: isAnimated
+                              ? `${
+                                  totalMeetings > 0
+                                    ? Math.round((selesaiCount / totalMeetings) * 100)
+                                    : 0
+                                }%`
+                              : '0%',
+                          }}
+                        />
+                      </div>
+                    </div>
 
-              <div className="space-y-1.5">
-                <div className="flex items-center justify-between text-[12.5px]">
-                  <span className="font-bold text-slate-800 flex items-center gap-2">
-                    <span className="w-2.5 h-2.5 rounded-full bg-slate-400"></span>
-                    Draft Notula
-                  </span>
-                  <span className="font-bold text-slate-900">
-                    <AnimatedCounter value={meetingStatusBreakdown?.draft || 0} />
-                  </span>
-                </div>
-                <div className="w-full h-2 bg-slate-100 rounded-full overflow-hidden">
-                  <div
-                    className="h-full bg-slate-400 rounded-full transition-all duration-700 ease-out"
-                    style={{
-                      width: isAnimated
-                        ? `${
-                            totalMeetings > 0
-                              ? Math.round(
-                                  ((meetingStatusBreakdown?.draft || 0) / totalMeetings) * 100
-                                )
-                              : 0
-                          }%`
-                        : '0%',
-                    }}
-                  />
-                </div>
-              </div>
+                    <div className="space-y-1.5">
+                      <div className="flex items-center justify-between text-[12.5px]">
+                        <span className="font-bold text-slate-800 flex items-center gap-2">
+                          <span className="w-2.5 h-2.5 rounded-full bg-sky-500"></span>
+                          Dalam Proses
+                        </span>
+                        <span className="font-bold text-slate-900">
+                          <AnimatedCounter value={dalamProsesCount} />
+                        </span>
+                      </div>
+                      <div className="w-full h-2 bg-slate-100 rounded-full overflow-hidden">
+                        <div
+                          className="h-full bg-sky-500 rounded-full transition-all duration-700 ease-out"
+                          style={{
+                            width: isAnimated
+                              ? `${
+                                  totalMeetings > 0
+                                    ? Math.round((dalamProsesCount / totalMeetings) * 100)
+                                    : 0
+                                }%`
+                              : '0%',
+                          }}
+                        />
+                      </div>
+                    </div>
+
+                    <div className="space-y-1.5">
+                      <div className="flex items-center justify-between text-[12.5px]">
+                        <span className="font-bold text-slate-800 flex items-center gap-2">
+                          <span className="w-2.5 h-2.5 rounded-full bg-slate-400"></span>
+                          Belum Dimulai
+                        </span>
+                        <span className="font-bold text-slate-900">
+                          <AnimatedCounter value={belumDimulaiCount} />
+                        </span>
+                      </div>
+                      <div className="w-full h-2 bg-slate-100 rounded-full overflow-hidden">
+                        <div
+                          className="h-full bg-slate-400 rounded-full transition-all duration-700 ease-out"
+                          style={{
+                            width: isAnimated
+                              ? `${
+                                  totalMeetings > 0
+                                    ? Math.round((belumDimulaiCount / totalMeetings) * 100)
+                                    : 0
+                                }%`
+                              : '0%',
+                          }}
+                        />
+                      </div>
+                    </div>
+                  </>
+                );
+              })()}
             </>
           )}
         </div>

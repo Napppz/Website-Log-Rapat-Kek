@@ -7,6 +7,35 @@ export const userRoleEnum = z.enum([
   'STAFF',
 ]);
 
+export const ROLE_SUFFIX_MAP: Record<z.infer<typeof userRoleEnum>, string> = {
+  SUPER_ADMIN: 'Super Admin',
+  ADMIN: 'Admin',
+  PIMPINAN: 'Pimpinan',
+  STAFF: 'Staff',
+};
+
+export function getRoleSuffix(role?: string | null): string {
+  if (!role) return 'Staff';
+  return ROLE_SUFFIX_MAP[role as keyof typeof ROLE_SUFFIX_MAP] || 'Staff';
+}
+
+export function stripRoleSuffix(name?: string | null): string {
+  if (!name) return '';
+  return name
+    .replace(
+      /\s*\((?:Pimpinan[^)]*|Staff[^)]*|Staf[^)]*|Admin[^)]*|Super\s*Admin[^)]*|Pelaksana[^)]*|Koordinator[^)]*)\)\s*$/i,
+      ''
+    )
+    .trim();
+}
+
+export function formatUserFullName(name?: string | null, role?: string | null): string {
+  const base = stripRoleSuffix(name);
+  if (!base) return '';
+  const suffix = getRoleSuffix(role);
+  return `${base} (${suffix})`;
+}
+
 export const createUserSchema = z.object({
   name: z.string().trim().min(1, 'Nama lengkap wajib diisi'),
   username: z

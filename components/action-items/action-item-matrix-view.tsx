@@ -112,13 +112,11 @@ export function ActionItemMatrixView({
   const teamParam = searchParams.get('tim') || 'ALL';
   const priorityParam = searchParams.get('prioritas') || 'ALL';
 
-  const effectiveLockedTeamCode =
-    lockedTeamCode ||
-    (userRole === 'STAFF' && session?.user?.teamCode ? session.user.teamCode.toUpperCase() : undefined);
+  const effectiveLockedTeamCode = lockedTeamCode;
 
   const [items, setItems] = useState<any[]>(initialItems);
   const [search, setSearch] = useState('');
-  const [selectedTeam, setSelectedTeam] = useState<string>(effectiveLockedTeamCode || teamParam);
+  const [selectedTeam, setSelectedTeam] = useState<string>(teamParam || 'ALL');
   const [selectedPriority, setSelectedPriority] = useState<string>(priorityParam);
   const [openDropdown, setOpenDropdown] = useState<'TIM' | 'STATUS' | 'PRIORITAS' | null>(null);
   const filterToolbarRef = useRef<HTMLDivElement>(null);

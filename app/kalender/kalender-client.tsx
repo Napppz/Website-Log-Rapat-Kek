@@ -21,6 +21,8 @@ import {
 } from 'lucide-react';
 import { Meeting, Biro } from '@/lib/types';
 import { cn } from '@/lib/utils';
+import { MeetingProgressBadge } from '@/components/meeting/meeting-status-badge';
+import { normalizeProgressStatus, mapStatusToProgress } from '@/lib/meeting-status';
 
 interface KalenderClientProps {
   initialMeetings: Meeting[];
@@ -43,13 +45,6 @@ const MONTH_NAMES = [
 ];
 
 const DAY_NAMES = ['Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab', 'Min'];
-
-const STATUS_CONFIG: Record<string, { label: string; badge: string; step: number }> = {
-  DRAFT: { label: '1. Draf', badge: 'bg-[#F1F5F9] text-[#475569] border-[#CBD5E1]', step: 1 },
-  REVIEW: { label: '2. Review', badge: 'bg-[#FEF9C3] text-[#854D0E] border-[#FDE047]', step: 2 },
-  APPROVED: { label: '3. Disetujui', badge: 'bg-[#E0F2FE] text-[#0369A1] border-[#BAE6FD]', step: 3 },
-  FINAL: { label: '4. Final', badge: 'bg-[#DCFCE7] text-[#15803D] border-[#86EFAC]', step: 4 },
-};
 
 export function KalenderClient({ initialMeetings, biros }: KalenderClientProps) {
   const { data: session } = useSession();
@@ -130,7 +125,13 @@ export function KalenderClient({ initialMeetings, biros }: KalenderClientProps) 
 
     initialMeetings.forEach((m) => {
       const matchBiro = selectedBiro === 'ALL' || m.biroCode === selectedBiro || m.involvedBiros?.includes(selectedBiro);
-      const matchStatus = selectedStatus === 'ALL' || m.status === selectedStatus;
+      const mProg = normalizeProgressStatus((m as any).progressStatus || mapStatusToProgress(m.status));
+      const matchStatus =
+        selectedStatus === 'ALL' ||
+        mProg === selectedStatus ||
+        (selectedStatus === 'Selesai' && (m.status === 'FINAL' || m.status === 'APPROVED')) ||
+        (selectedStatus === 'Dalam Proses' && m.status === 'REVIEW') ||
+        (selectedStatus === 'Belum Dimulai' && m.status === 'DRAFT');
       const matchQuery =
         m.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
         m.code.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -335,11 +336,10 @@ export function KalenderClient({ initialMeetings, biros }: KalenderClientProps) 
             onChange={(e) => setSelectedStatus(e.target.value)}
             className="px-2.5 py-1.5 rounded-xl border border-slate-200 text-[12px] font-semibold text-slate-700 bg-white cursor-pointer focus:outline-none focus:border-[#31889C]"
           >
-            <option value="ALL">Semua Tahap</option>
-            <option value="DRAFT">1. Draf (Penyusunan)</option>
-            <option value="REVIEW">2. Review (Penelaahan)</option>
-            <option value="APPROVED">3. Disetujui (Pimpinan)</option>
-            <option value="FINAL">4. Final (Sah &amp; Terbit)</option>
+            <option value="ALL">Semua Status Kegiatan</option>
+            <option value="Belum Dimulai">Belum Dimulai</option>
+            <option value="Dalam Proses">Dalam Proses</option>
+            <option value="Selesai">Selesai</option>
           </select>
 
           {/* Toggle View Mode */}
@@ -496,8 +496,6 @@ export function KalenderClient({ initialMeetings, biros }: KalenderClientProps) 
                   </div>
                 ) : (
                   selectedMeetings.map((m) => {
-                    const statusCfg = STATUS_CONFIG[m.status] || STATUS_CONFIG.DRAFT;
-
                     return (
                       <div
                         key={m.id}
@@ -507,14 +505,11 @@ export function KalenderClient({ initialMeetings, biros }: KalenderClientProps) 
                           <span className="font-bold text-[11.5px] text-[#215865] bg-[#F0F9FA] px-2 py-0.5 rounded border border-[#BCE3EB]">
                             {m.code}
                           </span>
-                          <span
-                            className={cn(
-                              'text-[10px] font-bold px-2 py-0.5 rounded-full border',
-                              statusCfg.badge
-                            )}
-                          >
-                            {statusCfg.label}
-                          </span>
+                          <MeetingProgressBadge
+                            progressStatus={(m as any).progressStatus}
+                            status={m.status}
+                            size="sm"
+                          />
                         </div>
 
                         <h4 className="font-bold text-[13.5px] text-slate-900 line-clamp-2">
@@ -590,8 +585,6 @@ export function KalenderClient({ initialMeetings, biros }: KalenderClientProps) 
               </div>
             ) : (
               allFilteredMeetings.map((m) => {
-                const statusCfg = STATUS_CONFIG[m.status] || STATUS_CONFIG.DRAFT;
-
                 return (
                   <div
                     key={m.id}
@@ -613,14 +606,11 @@ export function KalenderClient({ initialMeetings, biros }: KalenderClientProps) 
                           <span className="font-bold text-[12px] text-[#215865] bg-[#F0F9FA] px-2 py-0.5 rounded border border-[#BCE3EB]">
                             {m.code}
                           </span>
-                          <span
-                            className={cn(
-                              'text-[10.5px] font-bold px-2.5 py-0.5 rounded-full border',
-                              statusCfg.badge
-                            )}
-                          >
-                            {statusCfg.label}
-                          </span>
+                          <MeetingProgressBadge
+                            progressStatus={(m as any).progressStatus}
+                            status={m.status}
+                            size="sm"
+                          />
                           <span className="text-[12px] text-slate-500 font-medium">
                             {m.date}
                           </span>

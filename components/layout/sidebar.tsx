@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import {
@@ -50,6 +50,30 @@ export function Sidebar({
   const isTimRoute = pathname.includes('/biro');
 
   const [toggledSections, setToggledSections] = useState<Record<string, boolean>>({ tim: true });
+  const [dbTeams, setDbTeams] = useState<Array<{ code: string; name: string }>>([]);
+
+  useEffect(() => {
+    let isMounted = true;
+    fetch('/api/teams')
+      .then((res) => (res.ok ? res.json() : []))
+      .then((data) => {
+        if (isMounted && Array.isArray(data)) {
+          setDbTeams(
+            data.map((t: any) => ({
+              code: String(t.code || '').toUpperCase(),
+              name:
+                t.name?.startsWith('Tim ') || t.name?.startsWith('Pokja')
+                  ? t.name
+                  : `Tim ${t.name}`,
+            }))
+          );
+        }
+      })
+      .catch(() => {});
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
   const isRapatOpen = toggledSections.rapat !== undefined ? toggledSections.rapat : isRapatRoute;
   const isTimOpen = toggledSections.tim !== undefined ? toggledSections.tim : isTimRoute;
@@ -267,14 +291,20 @@ export function Sidebar({
                         ];
 
                         const userAssigned = (session?.user as any)?.assignedTeams || [];
-                        const userAssignedCodes = Array.from(
-                          new Set([
-                            ...userAssigned.map((t: any) => (t.code || '').toUpperCase()),
-                            ...(session?.user?.teamCode ? [session.user.teamCode.toUpperCase()] : []),
-                          ])
-                        ).filter(Boolean);
-
                         const allTeams = [...defaultTeams];
+
+                        // 1. Masukkan tim yang diambil dari database secara dinamis
+                        for (const dt of dbTeams) {
+                          if (dt.code && !allTeams.some((t) => t.code.toUpperCase() === dt.code.toUpperCase())) {
+                            allTeams.push({
+                              code: dt.code,
+                              name: dt.name,
+                              href: `/semua-rapat?tim=${dt.code}`,
+                            });
+                          }
+                        }
+
+                        // 2. Masukkan tim yang ditugaskan ke pengguna jika belum ada
                         for (const u of userAssigned) {
                           if (u.code && !allTeams.some((t) => t.code.toUpperCase() === u.code.toUpperCase())) {
                             allTeams.push({
@@ -285,14 +315,8 @@ export function Sidebar({
                           }
                         }
 
-                        return allTeams.filter((tim) => {
-                          if (userRole === 'STAFF') {
-                            if (userAssignedCodes.length > 0) {
-                              return userAssignedCodes.includes(tim.code.toUpperCase());
-                            }
-                          }
-                          return true;
-                        });
+                        // Seluruh tim kerja dapat dilihat oleh semua pengguna
+                        return allTeams;
                       })().map((tim) => (
                         <Link
                           key={tim.code}

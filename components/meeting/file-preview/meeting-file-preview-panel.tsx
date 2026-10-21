@@ -40,6 +40,8 @@ interface MeetingFilePreviewPanelProps {
   onAttachmentsChange?: (attachments: MeetingAttachmentItem[]) => void;
   className?: string;
   isCompact?: boolean;
+  canManage?: boolean;
+  readOnly?: boolean;
 }
 
 export function MeetingFilePreviewPanel({
@@ -49,11 +51,13 @@ export function MeetingFilePreviewPanel({
   onAttachmentsChange,
   className = '',
   isCompact = false,
+  canManage,
+  readOnly = false,
 }: MeetingFilePreviewPanelProps) {
   const { data: session } = useSession();
 
-  // Both ADMIN and STAFF are fully authorized to upload and delete meeting materials
-  const canManageFiles = true;
+  // Manage files permission: disabled if readOnly or canManage explicitly false
+  const canManageFiles = !readOnly && (canManage !== undefined ? canManage : true);
 
   const [attachments, setAttachments] = useState<MeetingAttachmentItem[]>(initialAttachments);
   const [selectedFileId, setSelectedFileId] = useState<string | null>(

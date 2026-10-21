@@ -345,11 +345,18 @@ export interface DashboardMetric {
   iconName: 'event_note' | 'calendar_month' | 'pending_actions' | 'warning' | 'task_alt';
 }
 
+export interface TeamBreakdownItem {
+  code: string;
+  name: string;
+  count: number;
+}
+
 export interface MonthlyActivity {
   month: string;
   count: number;
   isPeak?: boolean;
   highlightColor?: string;
+  teamBreakdown?: TeamBreakdownItem[];
 }
 
 export interface FollowUpStatusMetric {

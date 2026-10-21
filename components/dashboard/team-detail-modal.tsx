@@ -753,7 +753,27 @@ export function TeamDetailModal({ isOpen, onClose, team }: TeamDetailModalProps)
                               <div className="mt-2.5 pt-2 border-t border-slate-100 space-y-1.5">
                                 {(effectiveLinkUrl || effectiveFileUrl) ? (
                                   <div className="flex flex-wrap items-center gap-2">
-                                    {effectiveLinkUrl && (
+                                    {parsed.links && parsed.links.length > 0 ? (
+                                      parsed.links.map((link, lIdx) => (
+                                        <a
+                                          key={link.url + lIdx}
+                                          href={link.url}
+                                          target="_blank"
+                                          rel="noopener noreferrer"
+                                          onClick={(e) => e.stopPropagation()}
+                                          className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-300 text-[11.5px] font-bold shadow-2xs transition-all group/outlink cursor-pointer hover:border-emerald-400"
+                                          title={`Buka tautan luaran PIC: ${link.url}`}
+                                        >
+                                          <ExternalLink className="w-3.5 h-3.5 text-emerald-600 group-hover/outlink:scale-110 transition-transform shrink-0" />
+                                          <span className="truncate max-w-[220px] sm:max-w-[320px]">
+                                            {link.title || (parsed.links && parsed.links.length > 1 ? `Tautan #${lIdx + 1}` : 'Buka Tautan Luaran / Output')}
+                                          </span>
+                                          <span className="text-[9.5px] font-mono px-1 py-0.2 rounded bg-emerald-200/70 text-emerald-900 shrink-0 font-bold">
+                                            Buka Link ↗
+                                          </span>
+                                        </a>
+                                      ))
+                                    ) : effectiveLinkUrl ? (
                                       <a
                                         href={effectiveLinkUrl}
                                         target="_blank"
@@ -770,7 +790,7 @@ export function TeamDetailModal({ isOpen, onClose, team }: TeamDetailModalProps)
                                           Buka Link ↗
                                         </span>
                                       </a>
-                                    )}
+                                    ) : null}
 
                                     {effectiveFileUrl && (
                                       <a

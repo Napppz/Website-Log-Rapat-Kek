@@ -739,25 +739,17 @@ export async function getDashboardStats() {
         }
       });
 
-      // Tampilkan hingga bulan aktif terakhir yang memiliki rapat (minimal Sep)
-      const currentMonthIdx = now.getMonth();
-      let maxMonthIdx = Math.max(currentMonthIdx, 8);
-      for (let i = 0; i < 12; i++) {
-        if (monthCountMap[i] > 0 && i > maxMonthIdx) {
-          maxMonthIdx = i;
-        }
-      }
-
       // Cari bulan dengan frekuensi tertinggi sebagai titik puncak (isPeak)
       let peakCount = 0;
-      for (let i = 0; i <= maxMonthIdx; i++) {
+      for (let i = 0; i < 12; i++) {
         if (monthCountMap[i] > peakCount) {
           peakCount = monthCountMap[i];
         }
       }
 
+      // Seluruh 12 bulan dari Januari hingga Desember (akumulasi seluruh kegiatan dan tim)
       const monthlyActivity: MonthlyActivity[] = [];
-      for (let i = 0; i <= maxMonthIdx; i++) {
+      for (let i = 0; i < 12; i++) {
         const count = monthCountMap[i];
         monthlyActivity.push({
           month: monthLabels[i],

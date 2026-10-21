@@ -4,6 +4,7 @@ import { prisma } from '@/lib/prisma';
 import { revalidatePath } from 'next/cache';
 import { requireAuth } from '@/lib/auth/authorization';
 import { getNextCommentId, getNextNotificationId } from '@/lib/id-generator';
+import { createNotificationRecord } from '@/app/actions/notification-actions';
 
 function safeRevalidate(meetingId: string) {
   try {
@@ -45,7 +46,7 @@ export async function addCommentAction(
     try {
       const meeting = await prisma.meeting.findUnique({
         where: { id: meetingId },
-        select: { meetingNumber: true, title: true, secretaryId: true, chairpersonId: true },
+        select: { meetingNumber: true, title: true, secretaryId: true, chairpersonId: true, primaryTeamId: true },
       });
       if (meeting) {
         const preview = content.trim().length > 60 ? `${content.trim().slice(0, 60)}...` : content.trim();
@@ -56,17 +57,14 @@ export async function addCommentAction(
             ? meeting.chairpersonId
             : null;
 
-        const nextNotifId = await getNextNotificationId();
-        await prisma.notification.create({
-          data: {
-            id: nextNotifId,
-            title: `Komentar Baru: ${meeting.meetingNumber}`,
-            message: `${user.name || 'Pengguna'} memberikan catatan: "${preview}"`,
-            type: 'info',
-            link: `/semua-rapat/${meetingId}?tab=komentar`,
-            isRead: false,
-            userId: targetUserId,
-          },
+        await createNotificationRecord({
+          title: `Komentar Baru: ${meeting.meetingNumber}`,
+          message: `${user.name || 'Pengguna'} memberikan catatan: "${preview}"`,
+          type: 'info',
+          link: `/semua-rapat/${meetingId}?tab=komentar`,
+          isRead: false,
+          userId: targetUserId,
+          teamId: meeting.primaryTeamId || null,
         });
       }
     } catch (notifErr) {

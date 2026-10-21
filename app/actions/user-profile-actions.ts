@@ -5,6 +5,7 @@ import { getCurrentUser } from '@/lib/auth/authorization';
 import bcrypt from 'bcryptjs';
 import { revalidatePath } from 'next/cache';
 import { z } from 'zod';
+import { formatUserFullName } from '@/lib/validations/user';
 
 const updateProfileSchema = z.object({
   name: z.string().trim().min(2, 'Nama lengkap minimal 2 karakter').max(150),
@@ -155,7 +156,7 @@ export async function updateCurrentUserProfileAction(input: UpdateProfileInput) 
     const updatedUser = await prisma.user.update({
       where: { id: authUser.id },
       data: {
-        name,
+        name: formatUserFullName(name, existingUser.role),
         username: normalizedUsername,
         email: normalizedEmail,
         biroId,

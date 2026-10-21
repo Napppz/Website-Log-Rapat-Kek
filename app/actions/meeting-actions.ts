@@ -8,6 +8,7 @@ import { revalidatePath } from 'next/cache';
 import { requirePermission, requireAuth, getCurrentUser } from '@/lib/auth/authorization';
 import { extractPlainText } from '@/lib/pdf/pdf-utils';
 import { getNextMeetingId, getNextUserId, getNextParticipantId, getNextNotificationId, getNextActionItemId } from '@/lib/id-generator';
+import { createNotificationRecord } from '@/app/actions/notification-actions';
 
 export interface CreateMeetingInput {
   title: string;
@@ -378,70 +379,39 @@ export async function createMeetingAction(input: CreateMeetingInput) {
           },
         });
 
-        // PER-USER NOTIFICATION: Only delivered to this specific invited participant
-        const nextNotifId = await getNextNotificationId(tx);
-        await tx.notification.create({
-          data: {
-            id: nextNotifId,
+        // PER-USER NOTIFICATION: Delivered to this specific invited participant with team scope
+        await createNotificationRecord(
+          {
             userId: uid,
+            teamId: meeting.primaryTeamId,
             title: `Undangan Rapat: [${finalMeetingNumber}] ${meeting.title}`,
             message: `Anda diundang untuk menghadiri rapat "${meeting.title}" pada ${meetingDateFormatted} (${input.startTime} - ${input.endTime} WIB) bertempat di ${input.location}.`,
             type: 'meeting',
             link: `/semua-rapat/${meeting.id}`,
             isRead: false,
           },
-        });
+          tx
+        );
       }
 
       // If chairperson was designated and not in targetUserIds, send chairperson notification
       if (input.chairpersonId && !targetUserIds.has(input.chairpersonId)) {
-        const nextNotifId = await getNextNotificationId(tx);
-        await tx.notification.create({
-          data: {
-            id: nextNotifId,
+        await createNotificationRecord(
+          {
             userId: input.chairpersonId,
+            teamId: meeting.primaryTeamId,
             title: `Undangan Pimpinan Sidang: [${finalMeetingNumber}] ${meeting.title}`,
             message: `Anda ditugaskan sebagai Pimpinan Sidang untuk rapat "${meeting.title}" pada ${meetingDateFormatted} (${input.startTime} - ${input.endTime} WIB) bertempat di ${input.location}.`,
             type: 'meeting',
             link: `/semua-rapat/${meeting.id}`,
             isRead: false,
           },
-        });
+          tx
+        );
       }
 
-      // 6. Automatically initialize PIC deliverables / action items for each involved PIC
-      if (targetUserIds.size > 0) {
-        const picUsers = await tx.user.findMany({
-          where: { id: { in: Array.from(targetUserIds) } },
-          select: { id: true, name: true, biroId: true, teamId: true },
-        });
-
-        for (const pUser of picUsers) {
-          const nextActionId = await getNextActionItemId(tx);
-          const initialDesc = JSON.stringify({
-            notes: `Penugasan pelaporan capaian, berkas fisik, dan tautan publikasi kegiatan oleh ${pUser.name}.`,
-            linkUrl: '',
-            linkTitle: '',
-            fileUrl: '',
-            fileName: '',
-          });
-
-          await tx.actionItem.create({
-            data: {
-              id: nextActionId,
-              meetingId: meeting.id,
-              title: `Output & Pelaporan PIC: ${pUser.name}`,
-              description: initialDesc,
-              picBiroId: pUser.biroId || primaryBiro.id,
-              picTeamId: pUser.teamId || effectiveTeamId,
-              picUserId: pUser.id,
-              dueDate: new Date(input.date),
-              status: 'PENDING',
-              priority: 'HIGH',
-            },
-          });
-        }
-      }
+      // Catatan: Tugas / deliverables PIC tidak dibuat otomatis di sini.
+      // Pengguna akan memilih dan menentukan tugas untuk masing-masing PIC secara eksplisit melalui Detail Kegiatan.
 
       return {
         meetingNumber: finalMeetingNumber,
@@ -505,6 +475,18 @@ export async function updateMeetingStatusAction(
         return {
           success: false,
           error: 'Anda hanya dapat memperbarui status rapat biro Anda sendiri.',
+        };
+      }
+
+      const userAssignedList = currentUser.assignedTeams || [];
+      const userTeamIds = [
+        ...(currentUser.teamId ? [currentUser.teamId] : []),
+        ...userAssignedList.map((t: any) => t.id).filter(Boolean),
+      ];
+      if (existing.primaryTeamId && userTeamIds.length > 0 && !userTeamIds.includes(existing.primaryTeamId)) {
+        return {
+          success: false,
+          error: 'Anda tidak memiliki hak akses untuk mengubah status kegiatan milik tim kerja lain.',
         };
       }
     }
@@ -644,17 +626,14 @@ export async function approveMeetingAction(meetingId: string) {
       }
 
       for (const uid of targetUserIds) {
-        const nextNotifId = await getNextNotificationId();
-        await prisma.notification.create({
-          data: {
-            id: nextNotifId,
-            userId: uid,
-            title: `Hasil Rapat Disetujui: [${existing.meetingNumber}] ${existing.title}`,
-            message: `Hasil dan risalah rapat telah disetujui resmi oleh ${currentUser.name || 'Pimpinan'}. Status rapat kini telah SELESAI.`,
-            type: 'meeting',
-            link: `/semua-rapat/${existing.id}`,
-            isRead: false,
-          },
+        await createNotificationRecord({
+          userId: uid,
+          teamId: existing.primaryTeamId,
+          title: `Hasil Rapat Disetujui: [${existing.meetingNumber}] ${existing.title}`,
+          message: `Hasil dan risalah rapat telah disetujui resmi oleh ${currentUser.name || 'Pimpinan'}. Status rapat kini telah SELESAI.`,
+          type: 'meeting',
+          link: `/semua-rapat/${existing.id}`,
+          isRead: false,
         });
       }
     } catch (notifErr) {
@@ -700,7 +679,7 @@ export interface UpdateMeetingOutputInput {
  */
 export async function updateMeetingOutputAction(input: UpdateMeetingOutputInput) {
   try {
-    await requireAuth();
+    const currentUser = await requireAuth();
 
     const existing = await prisma.meeting.findUnique({
       where: { id: input.meetingId },
@@ -709,6 +688,21 @@ export async function updateMeetingOutputAction(input: UpdateMeetingOutputInput)
 
     if (!existing) {
       return { success: false, error: 'Kegiatan tidak ditemukan.' };
+    }
+
+    if (currentUser.role === 'STAFF') {
+      const userAssignedList = currentUser.assignedTeams || [];
+      const userTeamIds = [
+        ...(currentUser.teamId ? [currentUser.teamId] : []),
+        ...userAssignedList.map((t: any) => t.id).filter(Boolean),
+      ];
+      const isSameTeam = Boolean(existing.primaryTeamId && userTeamIds.includes(existing.primaryTeamId));
+      if (!isSameTeam) {
+        return {
+          success: false,
+          error: 'Anda hanya dapat mengisi hasil kegiatan untuk tim kerja Anda sendiri.',
+        };
+      }
     }
 
     const updateData: any = {};
@@ -781,6 +775,19 @@ export async function updateMeetingNumberAction(meetingId: string, newMeetingNum
         success: false,
         error: 'Anda hanya dapat memperbarui nomor rapat biro Anda sendiri.',
       };
+    }
+
+    if (currentUser.role === 'STAFF') {
+      const isSameTeam =
+        !currentUser.teamId ||
+        !existingMeeting.primaryTeamId ||
+        existingMeeting.primaryTeamId === currentUser.teamId;
+      if (!isSameTeam) {
+        return {
+          success: false,
+          error: 'Anda hanya dapat memperbarui nomor surat kegiatan tim kerja Anda sendiri.',
+        };
+      }
     }
 
     const trimmed = newMeetingNumber.trim();
@@ -856,6 +863,21 @@ export async function updateMeetingCategoryAction(
         success: false,
         error: 'Anda hanya dapat memperbarui kategori rapat biro Anda sendiri.',
       };
+    }
+
+    if (currentUser.role === 'STAFF') {
+      const userAssignedList = currentUser.assignedTeams || [];
+      const userTeamIds = [
+        ...(currentUser.teamId ? [currentUser.teamId] : []),
+        ...userAssignedList.map((t: any) => t.id).filter(Boolean),
+      ];
+      const isSameTeam = Boolean(existingMeeting.primaryTeamId && userTeamIds.includes(existingMeeting.primaryTeamId));
+      if (!isSameTeam) {
+        return {
+          success: false,
+          error: 'Anda hanya dapat memperbarui kategori kegiatan tim kerja Anda sendiri.',
+        };
+      }
     }
 
     const resolvedCategory = data.category || data.documentCategory || 'UNDANGAN_INTERNAL';
@@ -1047,6 +1069,7 @@ export async function addParticipantToMeetingAction(
             id: true,
             meetingNumber: true,
             title: true,
+            primaryTeamId: true,
             date: true,
             startTime: true,
             endTime: true,
@@ -1074,17 +1097,14 @@ export async function addParticipantToMeetingAction(
           });
 
           if (!existingNotif) {
-            const nextNotifId = await getNextNotificationId();
-            await prisma.notification.create({
-              data: {
-                id: nextNotifId,
-                userId: targetUserId,
-                title: `Undangan Rapat: [${meetingInfo.meetingNumber}] ${meetingInfo.title}`,
-                message: `Anda telah ditambahkan sebagai peserta rapat "${meetingInfo.title}" pada ${meetingDateFormatted} (${meetingInfo.startTime} - ${meetingInfo.endTime} WIB) bertempat di ${meetingInfo.location}.`,
-                type: 'meeting',
-                link: `/semua-rapat/${meetingInfo.id}`,
-                isRead: false,
-              },
+            await createNotificationRecord({
+              userId: targetUserId,
+              teamId: meetingInfo.primaryTeamId,
+              title: `Undangan Rapat: [${meetingInfo.meetingNumber}] ${meetingInfo.title}`,
+              message: `Anda telah ditambahkan sebagai peserta rapat "${meetingInfo.title}" pada ${meetingDateFormatted} (${meetingInfo.startTime} - ${meetingInfo.endTime} WIB) bertempat di ${meetingInfo.location}.`,
+              type: 'meeting',
+              link: `/semua-rapat/${meetingInfo.id}`,
+              isRead: false,
             });
           }
         }
@@ -1157,6 +1177,21 @@ export async function deleteMeetingAction(meetingId: string) {
         success: false,
         error: 'Anda hanya dapat menghapus rapat milik biro Anda sendiri.',
       };
+    }
+
+    if (currentUser.role === 'STAFF') {
+      const userAssignedList = currentUser.assignedTeams || [];
+      const userTeamIds = [
+        ...(currentUser.teamId ? [currentUser.teamId] : []),
+        ...userAssignedList.map((t: any) => t.id).filter(Boolean),
+      ];
+      const isSameTeam = Boolean(meeting.primaryTeamId && userTeamIds.includes(meeting.primaryTeamId));
+      if (!isSameTeam) {
+        return {
+          success: false,
+          error: 'Anda tidak memiliki hak akses untuk menghapus kegiatan milik tim kerja lain.',
+        };
+      }
     }
 
     // 1. Explicitly delete child relations for maximum reliability across database drivers

@@ -9,6 +9,7 @@ import {
   getNextMinutesHistoryId,
   getNextNotificationId,
 } from '@/lib/id-generator';
+import { createNotificationRecord } from '@/app/actions/notification-actions';
 
 /**
  * Server Action: Get MeetingMinutes by meetingId
@@ -66,6 +67,22 @@ export async function upsertMeetingMinutesAction(input: MeetingMinutesInput) {
         success: false,
         error: 'Anda hanya dapat mengelola notula/nota dinas untuk rapat biro Anda sendiri.',
       };
+    }
+
+    if (currentUser.role === 'STAFF') {
+      const userAssignedList = currentUser.assignedTeams || [];
+      const userTeamIds = [
+        ...(currentUser.teamId ? [currentUser.teamId] : []),
+        ...userAssignedList.map((t: any) => t.id).filter(Boolean),
+      ];
+      const isSameTeam = Boolean(meeting.primaryTeamId && userTeamIds.includes(meeting.primaryTeamId));
+
+      if (!isSameTeam) {
+        return {
+          success: false,
+          error: 'Anda hanya dapat mengelola notula/nota dinas untuk kegiatan tim kerja Anda sendiri.',
+        };
+      }
     }
 
     // Merge docType and notaDinas into conclusion JSON payload if provided
@@ -198,27 +215,23 @@ export async function upsertMeetingMinutesAction(input: MeetingMinutesInput) {
             },
           });
 
-          // 5b. In-App Notification for Dewan / Team members (only on confirmed revisions)
-          try {
-            const actionText = isNew ? 'Dibuat' : 'Diperbarui';
-            const notifTitle = `${docLabel} ${actionText}: ${meeting.meetingNumber}`;
-            const notifMessage = `${currentUser.name || 'Pengguna'} telah ${isNew ? 'membuat' : 'memperbarui'} ${docLabel.toLowerCase()} untuk "${meeting.title}".`;
+            // 5b. In-App Notification for Team members (scoped to meeting.primaryTeamId)
+            try {
+              const actionText = isNew ? 'Dibuat' : 'Diperbarui';
+              const notifTitle = `${docLabel} ${actionText}: ${meeting.meetingNumber}`;
+              const notifMessage = `${currentUser.name || 'Pengguna'} telah ${isNew ? 'membuat' : 'memperbarui'} ${docLabel.toLowerCase()} untuk "${meeting.title}".`;
 
-            const nextNotifId = await getNextNotificationId();
-            await prisma.notification.create({
-              data: {
-                id: nextNotifId,
+              await createNotificationRecord({
                 title: notifTitle,
                 message: notifMessage,
                 type: 'info',
                 link: `/semua-rapat/${meetingId}`,
+                teamId: meeting.primaryTeamId || null,
                 isRead: false,
-                userId: null, // Broadcast to Dewan KEK team
-              },
-            });
-          } catch (notifErr) {
-            console.warn('[upsertMeetingMinutesAction] notification creation skipped:', notifErr);
-          }
+              });
+            } catch (notifErr) {
+              console.warn('[upsertMeetingMinutesAction] notification creation skipped:', notifErr);
+            }
         }
       } catch (histErr) {
         console.warn('[upsertMeetingMinutesAction] history recording skipped:', histErr);

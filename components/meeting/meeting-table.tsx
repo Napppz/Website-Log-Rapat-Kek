@@ -22,6 +22,7 @@ import {
   ChevronDown,
   Check,
   CheckCircle2,
+  Eye,
 } from 'lucide-react';
 import { Meeting, BiroCode, MeetingStatus, getMeetingCategoryInfo } from '@/lib/types';
 import { MOCK_MEETINGS } from '@/lib/mock-data';
@@ -122,6 +123,42 @@ export function MeetingTable({
   }, [isStatusDropdownOpen]);
   const { data: session } = useSession();
   const userRole = session?.user?.role || 'STAFF';
+
+  const userAssignedList = (session?.user as any)?.assignedTeams || [];
+  const userTeamCodes = useMemo(
+    () =>
+      Array.from(
+        new Set([
+          ...(session?.user?.teamCode ? [session.user.teamCode.toUpperCase()] : []),
+          ...userAssignedList.map((t: any) => (t.code || '').toUpperCase()),
+        ])
+      ).filter(Boolean),
+    [session]
+  );
+  const userTeamIds = useMemo(
+    () =>
+      Array.from(
+        new Set([
+          ...(session?.user?.teamId ? [session.user.teamId] : []),
+          ...userAssignedList.map((t: any) => t.id || ''),
+        ])
+      ).filter(Boolean),
+    [session]
+  );
+
+  const isMeetingOwnedByUser = (m: Meeting) => {
+    if (userRole === 'SUPER_ADMIN') return true;
+    if (userTeamCodes.length === 0 && userTeamIds.length === 0) return false;
+
+    const mTeamCode = (m.primaryTeamCode || '').toUpperCase();
+    const mTeamId = m.primaryTeamId || '';
+    const mCode = (m.code || '').toUpperCase();
+
+    const matchCode = userTeamCodes.some((tc) => tc === mTeamCode || mCode.startsWith(`${tc}-`));
+    const matchId = userTeamIds.some((id) => id === mTeamId);
+    return matchCode || matchId;
+  };
+
   const canDeleteMeeting = userRole === 'SUPER_ADMIN' || userRole === 'ADMIN' || userRole === 'STAFF';
   const canUpdateStatus = userRole === 'SUPER_ADMIN' || userRole === 'ADMIN' || userRole === 'PIMPINAN' || userRole === 'STAFF';
   const canApprove = userRole === 'SUPER_ADMIN' || userRole === 'ADMIN' || userRole === 'PIMPINAN';
@@ -473,27 +510,31 @@ export function MeetingTable({
 
     return list.filter((m) => {
       if (filterBiro) {
-        const target = String(filterBiro).toUpperCase();
-        if (target === 'INV' || target === 'KS' || target === 'KOM' || target === 'SI' || target === 'POKJA') {
-          const matchTeam =
-            m.code.toUpperCase().startsWith(`${target}-`) ||
-            m.primaryTeamCode?.toUpperCase() === target ||
-            m.primaryTeamId?.toUpperCase().includes(target) ||
-            (target === 'INV' && (m.primaryTeamName?.toLowerCase().includes('investasi') || m.primaryTeamCode === 'TIM-001' || m.primaryTeamId === 'TIM-001')) ||
-            (target === 'KS' && (m.primaryTeamName?.toLowerCase().includes('kerja sama') || m.primaryTeamName?.toLowerCase().includes('kerjasama') || m.primaryTeamCode === 'TIM-003' || m.primaryTeamId === 'TIM-003')) ||
-            (target === 'KOM' && (m.primaryTeamName?.toLowerCase().includes('komunikasi') || m.primaryTeamCode === 'TIM-002' || m.primaryTeamId === 'TIM-002')) ||
-            (target === 'SI' && (m.primaryTeamName?.toLowerCase().includes('sistem informasi') || m.primaryTeamCode === 'TIM-004' || m.primaryTeamId === 'TIM-004')) ||
-            (target === 'POKJA' && (m.primaryTeamName?.toLowerCase().includes('pokja') || m.primaryTeamCode === 'TIM-005' || m.primaryTeamId === 'TIM-005'));
-          if (!matchTeam) {
-            return false;
-          }
-        } else {
+        const target = String(filterBiro).toUpperCase().trim();
+        const matchTeam =
+          m.code.toUpperCase().startsWith(`${target}-`) ||
+          m.primaryTeamCode?.toUpperCase() === target ||
+          m.primaryTeamId?.toUpperCase() === target ||
+          m.primaryTeamId?.toUpperCase().includes(target) ||
+          (m.primaryTeamName && m.primaryTeamName.toUpperCase().includes(target)) ||
+          (target === 'INV' && (m.primaryTeamName?.toLowerCase().includes('investasi') || m.primaryTeamCode === 'TIM-001' || m.primaryTeamId === 'TIM-001')) ||
+          (target === 'KS' && (m.primaryTeamName?.toLowerCase().includes('kerja sama') || m.primaryTeamName?.toLowerCase().includes('kerjasama') || m.primaryTeamCode === 'TIM-003' || m.primaryTeamId === 'TIM-003')) ||
+          (target === 'KOM' && (m.primaryTeamName?.toLowerCase().includes('komunikasi') || m.primaryTeamCode === 'TIM-002' || m.primaryTeamId === 'TIM-002')) ||
+          (target === 'SI' && (m.primaryTeamName?.toLowerCase().includes('sistem informasi') || m.primaryTeamCode === 'TIM-004' || m.primaryTeamId === 'TIM-004')) ||
+          (target === 'POKJA' && (m.primaryTeamName?.toLowerCase().includes('pokja') || m.primaryTeamCode === 'TIM-005' || m.primaryTeamId === 'TIM-005'));
+
+        const knownBiroCodes = ['BPPK', 'PKKEK', 'IKK', 'HSDMO', 'UK', 'PPK', 'REN', 'IT', 'DAL', 'OPS', 'HUK', 'LEG', 'ADM', 'BUK'];
+        const isBiroFilter = knownBiroCodes.includes(target);
+
+        if (matchTeam && !isBiroFilter) {
+          // Cocok dengan filter tim
+        } else if (isBiroFilter) {
           const normalize = (c?: string | null) => {
             if (!c) return '';
             const upper = c.toUpperCase().trim();
             if (upper === 'PPK' || upper === 'REN' || upper === 'IT') return 'BPPK';
             if (upper === 'DAL' || upper === 'OPS') return 'PKKEK';
-            if (upper === 'INV') return 'IKK';
+            if (upper === 'INV' || upper === 'IKK' || upper === 'BIRO-IKK') return 'IKK';
             if (upper === 'HUK' || upper === 'LEG') return 'HSDMO';
             if (upper === 'ADM' || upper === 'BUK') return 'UK';
             return upper;
@@ -503,6 +544,10 @@ export function MeetingTable({
           const matchPrimary = primaryBiro === targetBiro;
           const matchInvolved = m.involvedBiros && normalize(m.involvedBiros).includes(targetBiro);
           if (!matchPrimary && !matchInvolved) {
+            return false;
+          }
+        } else {
+          if (!matchTeam) {
             return false;
           }
         }
@@ -973,9 +1018,6 @@ export function MeetingTable({
                             <span className="text-slate-600 text-[12px] font-medium group-hover/link:text-[#1E6B7B] group-hover/link:underline transition-colors mt-1">
                               {meeting.date}
                             </span>
-                            <span className="text-[11px] text-slate-400">
-                              {meeting.time}
-                            </span>
                           </Link>
                         );
                       })()}
@@ -1084,6 +1126,21 @@ export function MeetingTable({
                       <div className="flex items-center justify-end gap-1.5">
                         {/* Dynamic Quick Action: Mulai Kegiatan / Setujui Hasil Kegiatan */}
                         {(() => {
+                          const isOwned = isMeetingOwnedByUser(meeting);
+                          const canManageThisMeeting = isOwned;
+
+                          if (!canManageThisMeeting) {
+                            return (
+                              <span
+                                className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md bg-slate-100 text-slate-500 border border-slate-200 text-[11px] font-medium whitespace-nowrap shrink-0"
+                                title="Kegiatan tim kerja lain (Akses Hanya Lihat)"
+                              >
+                                <Eye className="w-3.5 h-3.5 text-slate-400" />
+                                <span>Lihat Saja</span>
+                              </span>
+                            );
+                          }
+
                           const curProg = normalizeProgressStatus(
                             meeting.progressStatus || mapStatusToProgress(meeting.status)
                           );
@@ -1145,8 +1202,7 @@ export function MeetingTable({
                           return null;
                         })()}
 
-
-                        {canDeleteMeeting && (
+                        {isMeetingOwnedByUser(meeting) && canDeleteMeeting && (
                           <button
                             type="button"
                             disabled={deletingRowId === meeting.id}

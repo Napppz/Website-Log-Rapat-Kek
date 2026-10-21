@@ -112,17 +112,8 @@ export function ActionItemList({
   const userStaffTeamCode = userRole === 'STAFF' && currentUser?.teamCode ? currentUser.teamCode.toUpperCase() : null;
   const userStaffTeamId = userRole === 'STAFF' && currentUser?.teamId ? currentUser.teamId : null;
 
-  // Filter items sesuai dengan tim kerja staf
-  const visibleItems = useMemo(() => {
-    if (!userStaffTeamCode && !userStaffTeamId) return items;
-    return items.filter((item) => {
-      const itemTeamCode = item.picTeam?.code?.toUpperCase() || (item.picBiro?.code === 'IKK' ? 'INV' : '');
-      const isSameTeamCode = Boolean(userStaffTeamCode && itemTeamCode === userStaffTeamCode);
-      const isSameTeamId = Boolean(userStaffTeamId && item.picTeamId && userStaffTeamId === item.picTeamId);
-      const isUserPic = Boolean(currentUserId && item.picUserId && currentUserId === item.picUserId);
-      return isSameTeamCode || isSameTeamId || isUserPic;
-    });
-  }, [items, userStaffTeamCode, userStaffTeamId, currentUserId]);
+  // Semua tim kerja dapat melihat pekerjaan/tindak lanjut tim lain
+  const visibleItems = items;
 
   // Compute stats
   const total = visibleItems.length;
@@ -528,6 +519,7 @@ export function ActionItemList({
                       const parsed = parsePicDeliverableDescription(item.description);
                       const rawNotes = parsed.notes || item.description || '';
                       const allUrls = Array.from(new Set([
+                        ...(parsed.links ? parsed.links.map((l) => l.url) : []),
                         ...(parsed.linkUrl ? [parsed.linkUrl] : []),
                         ...(parsed.fileUrl ? [parsed.fileUrl] : []),
                         ...extractAllLinks(rawNotes),

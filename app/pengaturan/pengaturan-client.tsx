@@ -17,6 +17,11 @@ import { updateCurrentUserProfileAction } from '@/app/actions/user-profile-actio
 import { toast } from '@/components/providers/toast-provider';
 import { useRouter } from 'next/navigation';
 import { useSession } from 'next-auth/react';
+import {
+  stripRoleSuffix,
+  getRoleSuffix,
+  formatUserFullName,
+} from '@/lib/validations/user';
 
 interface PengaturanClientProps {
   initialUser: {
@@ -48,7 +53,7 @@ export function PengaturanClient({
   const router = useRouter();
   const { update } = useSession();
 
-  const [name, setName] = useState(initialUser?.name || '');
+  const [name, setName] = useState(stripRoleSuffix(initialUser?.name || ''));
   const [username, setUsername] = useState(initialUser?.username || '');
   const [email, setEmail] = useState(initialUser?.email || '');
   const [biroId, setBiroId] = useState(initialUser?.biroId || availableBiros[0]?.id || '');
@@ -95,8 +100,9 @@ export function PengaturanClient({
 
     try {
       setIsSaving(true);
+      const formattedFullName = formatUserFullName(name.trim(), role);
       const res = await updateCurrentUserProfileAction({
-        name: name.trim(),
+        name: formattedFullName,
         username: username.trim() || undefined,
         email: email.trim(),
         biroId,
@@ -167,17 +173,33 @@ export function PengaturanClient({
           </h3>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <label className="block font-semibold text-slate-700 mb-1">
-                Nama Lengkap &amp; Gelar
-              </label>
-              <input
-                type="text"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                placeholder="Contoh: Dr. Ir. Budi Santoso, M.Sc"
-                className="w-full px-3 py-2 rounded-lg border border-slate-200 focus:outline-none focus:ring-2 focus:ring-[#31889C]/25 focus:border-[#31889C]"
-                required
-              />
+              <div className="flex items-center justify-between mb-1">
+                <label className="block font-semibold text-slate-700">
+                  Nama Lengkap &amp; Gelar
+                </label>
+                <span className="text-[11px] text-[#31889C] font-semibold">
+                  Role: ({getRoleSuffix(role)})
+                </span>
+              </div>
+              <div className="flex items-stretch rounded-lg border border-slate-200 focus-within:ring-2 focus-within:ring-[#31889C]/25 focus-within:border-[#31889C] overflow-hidden bg-white">
+                <input
+                  type="text"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  onBlur={() => {
+                    if (name.trim()) setName(stripRoleSuffix(name));
+                  }}
+                  placeholder="Contoh: Dr. Ir. Budi Santoso, M.Sc atau Kevin"
+                  className="flex-1 min-w-0 px-3 py-2 border-0 focus:outline-none text-[13px] text-slate-900 bg-transparent"
+                  required
+                />
+                <div className="flex items-center px-3 py-2 bg-[#F0F9FA] border-l border-[#BCE3EB] text-[#1E6B7B] font-bold text-[12px] shrink-0 select-none">
+                  ({getRoleSuffix(role)})
+                </div>
+              </div>
+              <span className="text-[11px] text-slate-400 mt-1 block">
+                Suffix role otomatis disematkan sesuai peran akun Anda ({getRoleSuffix(role)}).
+              </span>
             </div>
             <div>
               <label className="block font-semibold text-slate-700 mb-1">

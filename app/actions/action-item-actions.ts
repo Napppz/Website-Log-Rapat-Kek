@@ -19,6 +19,7 @@ import {
   getNextActionItemLogId,
   getNextNotificationId,
 } from '@/lib/id-generator';
+import { createNotificationRecord } from '@/app/actions/notification-actions';
 
 /**
  * Helper to safely revalidate paths without crashing in standalone tests
@@ -900,17 +901,16 @@ export async function addActionItemLogAction(input: AddActionItemLogInput) {
       },
     });
 
-    // Optionally create a system notification for the organization
+    // Optionally create a system notification scoped to the action item's team
     try {
-      const nextNotifId = await getNextNotificationId();
-      await prisma.notification.create({
-        data: {
-          id: nextNotifId,
-          title: `Pembaruan Tindak Lanjut: ${existing.title.slice(0, 40)}`,
-          message: `${currentUser?.name || 'Staf'} mencatat progres (${progress ?? 0}%): "${notes.slice(0, 80)}"`,
-          type: targetStatus === 'COMPLETED' ? 'success' : 'info',
-          link: `/tindak-lanjut?search=${encodeURIComponent(existing.title)}`,
-        },
+      const effectiveTeamId = existing.picTeamId || existing.meeting?.primaryTeamId || null;
+      await createNotificationRecord({
+        title: `Pembaruan Tindak Lanjut: ${existing.title.slice(0, 40)}`,
+        message: `${currentUser?.name || 'Staf'} mencatat progres (${progress ?? 0}%): "${notes.slice(0, 80)}"`,
+        type: targetStatus === 'COMPLETED' ? 'success' : 'info',
+        link: `/semua-rapat/${existing.meetingId}`,
+        teamId: effectiveTeamId,
+        isRead: false,
       });
     } catch (notifErr) {
       console.warn('Failed to insert notification:', notifErr);

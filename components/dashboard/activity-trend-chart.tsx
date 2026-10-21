@@ -155,13 +155,13 @@ export function ActivityTrendChart({
           <div>
             <span className="font-semibold text-[11px] text-[#31889C] uppercase tracking-wider flex items-center gap-1.5">
               <TrendingUp className="w-3.5 h-3.5 text-[#31889C]" />
-              <span>Tren Aktivitas Kegiatan</span>
+              <span>Tren Aktivitas Kegiatan Seluruh Tim</span>
             </span>
             <h2 className="font-bold text-[18px] text-slate-900 mt-0.5">
               Tren Kegiatan per Bulan ({selectedYear})
             </h2>
             <p className="text-[12px] text-slate-500 mt-0.5">
-              Klik grafik batang setiap bulan untuk melihat rincian jumlah kegiatan
+              Akumulasi jumlah kegiatan dari semua tim kerja • Klik grafik batang untuk melihat rincian
             </p>
           </div>
 
@@ -240,10 +240,17 @@ export function ActivityTrendChart({
                   {/* Tooltip / Value on top of bar */}
                   <div className="h-8 w-full flex items-end justify-center mb-1.5 relative">
                     {isActive ? (
-                      <div className="absolute -top-1 left-1/2 -translate-x-1/2 z-30 flex flex-col items-center animate-in fade-in zoom-in-75 duration-150">
-                        <div className="bg-[#215865] text-white text-[11px] font-extrabold px-2 py-0.5 rounded-full shadow-md whitespace-nowrap flex items-center gap-1 border border-[#31889C]/50">
-                          <span className="w-1.5 h-1.5 rounded-full bg-[#7CC563] animate-pulse" />
-                          <span>{item.count} Kegiatan</span>
+                      <div className="absolute -top-1 left-1/2 -translate-x-1/2 z-30 flex flex-col items-center animate-in fade-in zoom-in-75 duration-150 pointer-events-none">
+                        <div className="bg-[#215865] text-white text-[11px] font-extrabold px-2.5 py-1 rounded-lg shadow-md whitespace-nowrap flex flex-col items-center gap-0.5 border border-[#31889C]/50">
+                          <div className="flex items-center gap-1">
+                            <span className="w-1.5 h-1.5 rounded-full bg-[#7CC563] animate-pulse" />
+                            <span>{item.count} Kegiatan</span>
+                          </div>
+                          {item.teamBreakdown && item.teamBreakdown.length > 0 && (
+                            <span className="text-[9.5px] font-normal text-[#BCE3EB]">
+                              {item.teamBreakdown.length} Tim Berkontribusi
+                            </span>
+                          )}
                         </div>
                         <div className="w-1.5 h-1.5 bg-[#215865] rotate-45 -mt-0.5 border-r border-b border-[#31889C]/50" />
                       </div>
@@ -323,17 +330,17 @@ export function ActivityTrendChart({
       </div>
 
       {/* Footer Info Callout - Displays detailed count for selected / active month */}
-      <div className="mt-4 pt-2 bg-gradient-to-r from-[#F0F9FA] via-white to-[#F0F9FA]/50 border border-[#BCE3EB] rounded-xl p-3 flex items-center justify-between transition-all shadow-2xs">
-        <div className="flex items-center gap-2.5 min-w-0">
-          <div className="w-8 h-8 rounded-lg bg-[#31889C]/10 border border-[#BCE3EB] flex items-center justify-center shrink-0 text-[#215865]">
+      <div className="mt-4 pt-2 bg-gradient-to-r from-[#F0F9FA] via-white to-[#F0F9FA]/50 border border-[#BCE3EB] rounded-xl p-3 flex flex-col sm:flex-row sm:items-center justify-between gap-3 transition-all shadow-2xs">
+        <div className="flex items-start sm:items-center gap-2.5 min-w-0">
+          <div className="w-8 h-8 rounded-lg bg-[#31889C]/10 border border-[#BCE3EB] flex items-center justify-center shrink-0 text-[#215865] mt-0.5 sm:mt-0">
             <Calendar className="w-4 h-4 text-[#31889C]" />
           </div>
           <div className="min-w-0">
-            <div className="flex items-center gap-1.5">
+            <div className="flex items-center gap-1.5 flex-wrap">
               <span className="text-[13px] font-bold text-slate-800">
                 {effectiveSelectedMonth
                   ? `Bulan ${fullMonthName} ${selectedYear}`
-                  : `Seluruh Kegiatan ${selectedYear} (YTD)`}
+                  : `Seluruh Kegiatan Semua Tim ${selectedYear} (YTD)`}
               </span>
               {effectiveSelectedMonth && activeItem?.isPeak && (
                 <span className="text-[10px] font-bold px-1.5 py-0.5 bg-[#FEF3C7] text-[#92400E] rounded-md border border-[#FDE68A]">
@@ -341,15 +348,32 @@ export function ActivityTrendChart({
                 </span>
               )}
             </div>
-            <p className="text-[11.5px] text-slate-500 truncate">
+            <p className="text-[11.5px] text-slate-500">
               {effectiveSelectedMonth
-                ? `${activeItem?.count || 0} kegiatan (${monthPercentage}% dari total)`
-                : 'Klik grafik batang setiap bulan untuk melihat rincian'}
+                ? `${activeItem?.count || 0} kegiatan gabungan seluruh tim (${monthPercentage}% dari total tahunan)`
+                : 'Akumulasi total kegiatan dari seluruh tim kerja'}
             </p>
+
+            {/* Rincian kontribusi tim pada bulan terpilih */}
+            {effectiveSelectedMonth && activeItem?.teamBreakdown && activeItem.teamBreakdown.length > 0 && (
+              <div className="flex flex-wrap items-center gap-1.5 mt-2">
+                <span className="text-[10px] text-slate-400 font-medium">Rincian Tim:</span>
+                {activeItem.teamBreakdown.map((t) => (
+                  <span
+                    key={t.code}
+                    className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md bg-white border border-[#BCE3EB] text-[#215865] text-[10.5px] font-medium shadow-2xs"
+                    title={t.name}
+                  >
+                    <span className="font-bold">{t.code}:</span>
+                    <span>{t.count}</span>
+                  </span>
+                ))}
+              </div>
+            )}
           </div>
         </div>
 
-        <div className="flex items-center gap-2 shrink-0 ml-3">
+        <div className="flex items-center gap-2 shrink-0 self-end sm:self-center ml-0 sm:ml-3">
           {effectiveSelectedMonth && (
             <button
               type="button"
@@ -367,7 +391,7 @@ export function ActivityTrendChart({
               "bg-[#215865] hover:bg-[#1b4853] text-white px-3 py-1.5 rounded-xl shadow-xs flex items-center gap-1.5 transition-all cursor-pointer",
               effectiveSelectedMonth ? "hover:scale-[1.02] active:scale-95 group" : ""
             )}
-            title={effectiveSelectedMonth ? "Kembali ke ringkasan statistik di atas" : "Total kegiatan"}
+            title={effectiveSelectedMonth ? "Kembali ke ringkasan statistik di atas" : "Total kegiatan seluruh tim"}
           >
             <span className="text-[15px] font-extrabold tracking-tight">
               {effectiveSelectedMonth ? activeItem?.count ?? 0 : totalYearCount}

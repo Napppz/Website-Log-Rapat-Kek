@@ -34,67 +34,17 @@ export function MeetingStatusBadge({
   showSublabel = false,
   className,
 }: MeetingStatusBadgeProps) {
-  // If progressStatus is supplied or status is one of the progress statuses, render progress badge style
-  const isDirectProgress =
-    status === 'Belum Dimulai' ||
-    status === 'Dalam Proses' ||
-    status === 'Selesai' ||
-    status === 'Start' ||
-    status === 'On Progres' ||
-    status === 'Finish';
-  if (progressStatus || isDirectProgress) {
-    return (
-      <MeetingProgressBadge
-        progressStatus={progressStatus || (status as string)}
-        isNew={isNew}
-        className={className}
-      />
-    );
-  }
-
-  const normalizedStatus = (status as MeetingStatus) in MEETING_STATUS_DETAILS ? (status as MeetingStatus) : 'DRAFT';
-  const detail = MEETING_STATUS_DETAILS[normalizedStatus] || MEETING_STATUS_DETAILS.DRAFT;
-  const IconComponent = STATUS_ICONS[normalizedStatus] || FileEdit;
-
-  const tooltipText = `Tahap ${detail.step} dari 4 — ${detail.label} (${detail.sublabel}): ${detail.tagline}`;
+  // Always map to modern 3-stage progress status ('Belum Dimulai' | 'Dalam Proses' | 'Selesai')
+  const resolvedProg = progressStatus || mapStatusToProgress(status);
 
   return (
-    <div className={cn("inline-flex flex-wrap items-center gap-1.5", className)}>
-      <div
-        className={cn(
-          "inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full font-semibold text-[11px] tracking-wide transition-colors border shadow-2xs select-none",
-          detail.colorClass.badgeStyle
-        )}
-        title={tooltipText}
-      >
-        {/* Step indicator or Icon */}
-        {showStep ? (
-          <span
-            className={cn(
-              "w-4 h-4 rounded-full flex items-center justify-center text-[9.5px] font-extrabold text-white shrink-0 -ml-0.5",
-              status === 'DRAFT' && "bg-slate-500",
-              status === 'REVIEW' && "bg-[#CA8A04]",
-              status === 'APPROVED' && "bg-[#0284C7]",
-              status === 'FINAL' && "bg-[#16A34A]"
-            )}
-          >
-            {detail.step}
-          </span>
-        ) : (
-          <IconComponent className="w-3.5 h-3.5 shrink-0" />
-        )}
-
-        {/* Text Label */}
-        <span>{detail.label}</span>
-
-        {/* Optional sublabel */}
-        {showSublabel && (
-          <span className="opacity-75 font-normal text-[10px]">
-            • {detail.sublabel}
-          </span>
-        )}
-      </div>
-    </div>
+    <MeetingProgressBadge
+      progressStatus={resolvedProg}
+      status={status}
+      isNew={isNew}
+      showSubtitle={showSublabel}
+      className={className}
+    />
   );
 }
 

@@ -1,27 +1,26 @@
 'use client';
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import {
   X,
   FileCheck,
   Link2,
   ExternalLink,
-  UploadCloud,
   FileText,
   CheckCircle2,
   Clock,
-  AlertCircle,
-  Loader2,
-  Sparkles,
-  Paperclip,
+  PlayCircle,
+  Plus,
   Trash2,
+  Loader2,
 } from 'lucide-react';
 import { toast } from '@/components/providers/toast-provider';
 import { submitPicProgressAction } from '@/app/actions/pic-deliverable-actions';
 import {
   parsePicDeliverableDescription,
   PicDeliverableParsedData,
+  PicDeliverableLink,
 } from '@/lib/pic-deliverables';
 import { cn } from '@/lib/utils';
 
@@ -56,6 +55,11 @@ interface UpdatePicDeliverableDialogProps {
   onSuccess?: () => void;
 }
 
+interface LinkItem {
+  url: string;
+  title: string;
+}
+
 export function UpdatePicDeliverableDialog({
   isOpen,
   onClose,
@@ -64,82 +68,91 @@ export function UpdatePicDeliverableDialog({
   onSuccess,
 }: UpdatePicDeliverableDialogProps) {
   const router = useRouter();
-  const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const parsed: PicDeliverableParsedData = parsePicDeliverableDescription(
-    deliverable?.description
-  );
+  const getDeliverableStatus = (st?: string | null): 'PENDING' | 'IN_PROGRESS' | 'COMPLETED' => {
+    if (st === 'COMPLETED' || st === 'Selesai') return 'COMPLETED';
+    if (st === 'PENDING' || st === 'Belum Dimulai') return 'PENDING';
+    return 'IN_PROGRESS';
+  };
 
-  const [status, setStatus] = useState<string>(deliverable?.status || 'IN_PROGRESS');
-  const [progress, setProgress] = useState<number>(
-    deliverable?.logs?.[0]?.progress ?? (deliverable?.status === 'COMPLETED' ? 100 : 50)
-  );
-  const [notes, setNotes] = useState<string>(parsed.notes || '');
-  const [linkUrl, setLinkUrl] = useState<string>(parsed.linkUrl || '');
-  const [linkTitle, setLinkTitle] = useState<string>(parsed.linkTitle || '');
-  const [selectedFile, setSelectedFile] = useState<File | null>(null);
-  const [existingFileUrl, setExistingFileUrl] = useState<string>(parsed.fileUrl || '');
-  const [existingFileName, setExistingFileName] = useState<string>(parsed.fileName || '');
-  const [syncToMeeting, setSyncToMeeting] = useState<boolean>(true);
+  const [status, setStatus] = useState<'PENDING' | 'IN_PROGRESS' | 'COMPLETED'>('IN_PROGRESS');
+  const [progress, setProgress] = useState<number>(50);
+  const [outputType, setOutputType] = useState<'LINK' | 'NOTE'>('NOTE');
+  const [notes, setNotes] = useState<string>('');
+  const [links, setLinks] = useState<LinkItem[]>([{ url: '', title: '' }]);
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
 
   useEffect(() => {
     if (deliverable) {
       const p = parsePicDeliverableDescription(deliverable.description);
-      setStatus(deliverable.status || 'IN_PROGRESS');
-      const latestProg = deliverable.logs?.[0]?.progress;
-      setProgress(
-        typeof latestProg === 'number'
-          ? latestProg
-          : deliverable.status === 'COMPLETED'
-          ? 100
-          : deliverable.status === 'PENDING'
-          ? 0
-          : 50
-      );
+      const targetStatus = getDeliverableStatus(deliverable.status);
+      setStatus(targetStatus);
+      setProgress(targetStatus === 'COMPLETED' ? 100 : targetStatus === 'PENDING' ? 0 : 50);
       setNotes(p.notes || '');
-      setLinkUrl(p.linkUrl || '');
-      setLinkTitle(p.linkTitle || '');
-      setExistingFileUrl(p.fileUrl || '');
-      setExistingFileName(p.fileName || '');
-      setSelectedFile(null);
+
+      const initialLinks: LinkItem[] = [];
+      if (p.links && p.links.length > 0) {
+        p.links.forEach((l) => {
+          if (l.url) initialLinks.push({ url: l.url, title: l.title || '' });
+        });
+      } else if (p.linkUrl) {
+        initialLinks.push({ url: p.linkUrl, title: p.linkTitle || '' });
+      }
+
+      if (initialLinks.length === 0) {
+        initialLinks.push({ url: '', title: '' });
+      }
+
+      setLinks(initialLinks);
+      setOutputType(initialLinks.some((l) => l.url.trim().length > 0) ? 'LINK' : 'NOTE');
     }
   }, [deliverable]);
 
   if (!isOpen || !deliverable) return null;
 
-  const handleStatusSelect = (newStatus: string) => {
+  const handleStatusSelect = (newStatus: 'PENDING' | 'IN_PROGRESS' | 'COMPLETED') => {
     setStatus(newStatus);
     if (newStatus === 'COMPLETED') {
       setProgress(100);
     } else if (newStatus === 'PENDING') {
       setProgress(0);
-    } else if (progress === 0 || progress === 100) {
+    } else {
       setProgress(50);
     }
   };
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files[0]) {
-      const f = e.target.files[0];
-      if (f.size > 100 * 1024 * 1024) {
-        toast.error('Ukuran berkas melebihi 100MB.');
-        return;
-      }
-      setSelectedFile(f);
-    }
+  const handleAddLink = () => {
+    setLinks((prev) => [...prev, { url: '', title: '' }]);
   };
 
-  const handleRemoveSelectedFile = () => {
-    setSelectedFile(null);
-    if (fileInputRef.current) fileInputRef.current.value = '';
+  const handleRemoveLink = (index: number) => {
+    setLinks((prev) => {
+      const updated = prev.filter((_, i) => i !== index);
+      return updated.length > 0 ? updated : [{ url: '', title: '' }];
+    });
+  };
+
+  const handleLinkChange = (index: number, field: keyof LinkItem, value: string) => {
+    setLinks((prev) =>
+      prev.map((item, i) => (i === index ? { ...item, [field]: value } : item))
+    );
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!notes.trim() && !linkUrl.trim() && !selectedFile && !existingFileUrl) {
-      toast.error('Mohon isi minimal salah satu: Catatan progres, tautan URL, atau unggah berkas.');
-      return;
+
+    const validLinks = links.filter((l) => l.url.trim().length > 0);
+
+    if (outputType === 'LINK') {
+      if (validLinks.length === 0) {
+        toast.error('Mohon masukkan minimal 1 tautan / link hasil kegiatan.');
+        return;
+      }
+    } else {
+      if (!notes.trim()) {
+        toast.error('Mohon masukkan catatan hasil kegiatan.');
+        return;
+      }
     }
 
     setIsSubmitting(true);
@@ -149,27 +162,35 @@ export function UpdatePicDeliverableDialog({
       formData.append('meetingId', deliverable.meetingId);
       formData.append('status', status);
       formData.append('progress', String(progress));
-      formData.append('notes', notes.trim());
-      formData.append('linkUrl', linkUrl.trim());
-      formData.append('linkTitle', linkTitle.trim() || 'Tautan Luaran PIC');
-      formData.append('syncToMeeting', syncToMeeting ? 'true' : 'false');
-      if (selectedFile) {
-        formData.append('file', selectedFile);
+      formData.append('outputType', outputType);
+
+      if (outputType === 'LINK') {
+        formData.append('linkUrl', validLinks[0].url.trim());
+        formData.append('linkTitle', validLinks[0].title.trim() || 'Tautan Hasil Kegiatan');
+        formData.append('linksJson', JSON.stringify(validLinks));
+        formData.append('notes', '');
+      } else {
+        formData.append('notes', notes.trim());
+        formData.append('linkUrl', '');
+        formData.append('linkTitle', '');
+        formData.append('linksJson', '[]');
       }
+
+      formData.append('syncToMeeting', 'true');
 
       const res = await submitPicProgressAction(formData);
 
       if (res.success) {
-        toast.success('Progres & luaran PIC berhasil disimpan dan diperbarui!');
+        toast.success('Hasil & status kegiatan PIC berhasil disimpan!');
         onSuccess?.();
         router.refresh();
         onClose();
       } else {
-        toast.error(res.error || 'Gagal menyimpan progres PIC.');
+        toast.error(res.error || 'Gagal menyimpan status & hasil kegiatan.');
       }
     } catch (err: any) {
       console.error(err);
-      toast.error(err?.message || 'Terjadi kesalahan sistem saat memperbarui progres.');
+      toast.error(err?.message || 'Terjadi kesalahan sistem saat menyimpan data.');
     } finally {
       setIsSubmitting(false);
     }
@@ -178,7 +199,7 @@ export function UpdatePicDeliverableDialog({
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-900/60 backdrop-blur-xs animate-in fade-in duration-150">
       <div
-        className="bg-white w-full max-w-2xl rounded-2xl shadow-2xl border border-slate-200 overflow-hidden flex flex-col max-h-[92vh] animate-in zoom-in-95 duration-150"
+        className="bg-white w-full max-w-lg rounded-2xl shadow-2xl border border-slate-200 overflow-hidden flex flex-col max-h-[90vh] animate-in zoom-in-95 duration-150"
         role="dialog"
         aria-modal="true"
       >
@@ -194,10 +215,10 @@ export function UpdatePicDeliverableDialog({
                   {deliverable.picUser?.name || 'PIC Terkait'}
                 </span>
                 <span className="text-xs text-teal-100/80">
-                  Pelaporan Progres &amp; Output
+                  Hasil &amp; Status Kegiatan
                 </span>
               </div>
-              <h2 className="text-[17px] font-bold text-white mt-0.5 line-clamp-1">
+              <h2 className="text-[16px] font-bold text-white mt-0.5 line-clamp-1">
                 {deliverable.title}
               </h2>
             </div>
@@ -214,231 +235,228 @@ export function UpdatePicDeliverableDialog({
 
         {/* Form Body */}
         <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto p-6 space-y-5">
-          {/* Status Perkembangan Tugas (Status Saja Tanpa Persentase) */}
+          {/* Status Tugas (Belum Dimulai, Dalam Proses, Selesai) */}
           <div className="p-4 rounded-xl bg-slate-50 border border-slate-200 space-y-3">
             <div className="flex items-center justify-between">
               <label className="text-xs font-bold text-slate-800 uppercase tracking-wider">
-                Status Perkembangan Tugas
+                Status Tugas
               </label>
               <span
                 className={cn(
-                  "text-xs font-bold px-2.5 py-0.5 rounded-full border transition-colors",
+                  "text-xs font-bold px-2.5 py-0.5 rounded-full border transition-colors inline-flex items-center gap-1",
                   status === 'COMPLETED'
                     ? "bg-emerald-50 text-emerald-700 border-emerald-200"
-                    : status === 'IN_PROGRESS'
-                    ? "bg-amber-50 text-amber-700 border-amber-200"
-                    : "bg-slate-100 text-slate-700 border-slate-200"
+                    : status === 'PENDING'
+                    ? "bg-slate-100 text-slate-700 border-slate-300"
+                    : "bg-amber-50 text-amber-700 border-amber-200"
                 )}
               >
-                {status === 'COMPLETED'
-                  ? 'Selesai'
-                  : status === 'IN_PROGRESS'
-                  ? 'Sedang Dikerjakan'
-                  : 'Belum Dimulai'}
+                {status === 'COMPLETED' ? (
+                  <>
+                    <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
+                    <span>Selesai</span>
+                  </>
+                ) : status === 'PENDING' ? (
+                  <>
+                    <PlayCircle className="w-3.5 h-3.5 text-slate-600" />
+                    <span>Belum Dimulai</span>
+                  </>
+                ) : (
+                  <>
+                    <Clock className="w-3.5 h-3.5 text-amber-600" />
+                    <span>Dalam Proses</span>
+                  </>
+                )}
               </span>
             </div>
 
-            <div className="grid grid-cols-3 gap-2">
+            <div className="grid grid-cols-3 gap-2 sm:gap-2.5">
               <button
                 type="button"
                 onClick={() => handleStatusSelect('PENDING')}
                 className={cn(
-                  "py-2.5 px-3 rounded-xl text-xs font-bold border transition-all text-center cursor-pointer",
+                  "py-2.5 px-2 rounded-xl text-xs font-bold border transition-all text-center cursor-pointer flex items-center justify-center gap-1.5",
                   status === 'PENDING'
-                    ? "bg-slate-700 text-white border-slate-700 shadow-xs"
-                    : "bg-white text-slate-700 border-slate-200 hover:border-slate-300"
+                    ? "bg-slate-700 text-white border-slate-700 shadow-xs ring-2 ring-slate-200"
+                    : "bg-white text-slate-700 border-slate-200 hover:border-slate-300 hover:bg-slate-50"
                 )}
               >
-                Belum Dimulai
+                <PlayCircle className="w-4 h-4 shrink-0" />
+                <span className="truncate">Belum Dimulai</span>
               </button>
               <button
                 type="button"
                 onClick={() => handleStatusSelect('IN_PROGRESS')}
                 className={cn(
-                  "py-2.5 px-3 rounded-xl text-xs font-bold border transition-all text-center cursor-pointer",
+                  "py-2.5 px-2 rounded-xl text-xs font-bold border transition-all text-center cursor-pointer flex items-center justify-center gap-1.5",
                   status === 'IN_PROGRESS'
-                    ? "bg-amber-600 text-white border-amber-600 shadow-xs"
-                    : "bg-white text-slate-700 border-slate-200 hover:border-slate-300"
+                    ? "bg-amber-600 text-white border-amber-600 shadow-xs ring-2 ring-amber-200"
+                    : "bg-white text-slate-700 border-slate-200 hover:border-slate-300 hover:bg-slate-50"
                 )}
               >
-                Sedang Dikerjakan
+                <Clock className="w-4 h-4 shrink-0" />
+                <span className="truncate">Dalam Proses</span>
               </button>
               <button
                 type="button"
                 onClick={() => handleStatusSelect('COMPLETED')}
                 className={cn(
-                  "py-2.5 px-3 rounded-xl text-xs font-bold border transition-all text-center cursor-pointer",
+                  "py-2.5 px-2 rounded-xl text-xs font-bold border transition-all text-center cursor-pointer flex items-center justify-center gap-1.5",
                   status === 'COMPLETED'
-                    ? "bg-emerald-600 text-white border-emerald-600 shadow-xs"
-                    : "bg-white text-slate-700 border-slate-200 hover:border-slate-300"
+                    ? "bg-emerald-600 text-white border-emerald-600 shadow-xs ring-2 ring-emerald-200"
+                    : "bg-white text-slate-700 border-slate-200 hover:border-slate-300 hover:bg-slate-50"
                 )}
               >
-                Selesai
+                <CheckCircle2 className="w-4 h-4 shrink-0" />
+                <span className="truncate">Selesai</span>
               </button>
             </div>
           </div>
 
-          {/* Catatan Progres */}
-          <div className="space-y-1.5">
-            <label className="text-xs font-bold text-slate-700 flex items-center justify-between">
-              <span>Catatan Perkembangan Terkini</span>
-              <span className="text-[11px] text-slate-400 font-normal">
-                Bisa dibaca langsung oleh Pimpinan
-              </span>
-            </label>
-            <textarea
-              rows={3}
-              value={notes}
-              onChange={(e) => setNotes(e.target.value)}
-              placeholder="Contoh: Rilis pers sudah dibuat dan dikirim ke humas kementerian. Menunggu tayang pada portal resmi sore ini..."
-              className="w-full text-xs sm:text-[13px] rounded-xl border border-slate-300 p-3 text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-[#1E6B7B]/20 focus:border-[#1E6B7B] transition-all resize-none"
-            />
-          </div>
-
-          {/* Tautan URL yang Bisa Diklik Pimpinan */}
-          <div className="p-4 rounded-xl bg-teal-50/40 border border-teal-200/70 space-y-3">
-            <div className="flex items-center gap-2">
-              <Link2 className="w-4 h-4 text-[#1E6B7B]" />
-              <label className="text-xs font-bold text-[#175360]">
-                Tautan Online / Link Hasil (Bisa Diklik Pimpinan)
+          {/* Pilihan Bentuk Hasil: Tautan / Link ATAU Catatan */}
+          <div className="space-y-3">
+            <div className="flex items-center justify-between">
+              <label className="text-xs font-bold text-slate-800 uppercase tracking-wider">
+                Bentuk Hasil Kegiatan
               </label>
+              <span className="text-[11px] text-slate-500 font-medium">
+                Pilih salah satu: Tautan atau Catatan
+              </span>
             </div>
-            <p className="text-[11.5px] text-slate-500">
-              Masukkan URL hasil kerja, misalnya tautan siaran pers yang sudah terbit, folder Google Drive, dokumen kerja bersama, atau berita online:
-            </p>
 
-            <div className="space-y-2">
-              <input
-                type="url"
-                value={linkUrl}
-                onChange={(e) => setLinkUrl(e.target.value)}
-                placeholder="https://ekon.go.id/publikasi/detail/... atau https://drive.google.com/..."
-                className="w-full text-xs font-mono rounded-lg border border-slate-300 bg-white p-2.5 text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-[#1E6B7B]/20 focus:border-[#1E6B7B]"
-              />
-
-              <div className="flex items-center gap-2">
-                <input
-                  type="text"
-                  value={linkTitle}
-                  onChange={(e) => setLinkTitle(e.target.value)}
-                  placeholder="Label Tautan (Contoh: Siaran Pers Kementerian Koordinator)"
-                  className="flex-1 text-xs rounded-lg border border-slate-300 bg-white p-2 text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-[#1E6B7B]/20 focus:border-[#1E6B7B]"
-                />
-                {linkUrl && (
-                  <a
-                    href={linkUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-flex items-center gap-1 px-3 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold transition-all shadow-xs shrink-0"
-                    title="Uji coba buka tautan"
-                  >
-                    <span>Coba Klik</span>
-                    <ExternalLink className="w-3.5 h-3.5" />
-                  </a>
+            <div className="grid grid-cols-2 gap-2.5">
+              <button
+                type="button"
+                onClick={() => setOutputType('LINK')}
+                className={cn(
+                  "py-2.5 px-3 rounded-xl text-xs font-bold border transition-all text-center cursor-pointer flex items-center justify-center gap-2",
+                  outputType === 'LINK'
+                    ? "bg-[#1E6B7B] text-white border-[#1E6B7B] shadow-xs ring-2 ring-[#1E6B7B]/20"
+                    : "bg-white text-slate-700 border-slate-200 hover:bg-slate-50 hover:border-slate-300"
                 )}
-              </div>
+              >
+                <Link2 className="w-4 h-4" />
+                <span>Tautan / Link</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setOutputType('NOTE')}
+                className={cn(
+                  "py-2.5 px-3 rounded-xl text-xs font-bold border transition-all text-center cursor-pointer flex items-center justify-center gap-2",
+                  outputType === 'NOTE'
+                    ? "bg-[#1E6B7B] text-white border-[#1E6B7B] shadow-xs ring-2 ring-[#1E6B7B]/20"
+                    : "bg-white text-slate-700 border-slate-200 hover:bg-slate-50 hover:border-slate-300"
+                )}
+              >
+                <FileText className="w-4 h-4" />
+                <span>Catatan</span>
+              </button>
             </div>
 
-            {linkUrl && (
-              <label className="flex items-center gap-2 pt-1 text-[11.5px] text-slate-600 cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={syncToMeeting}
-                  onChange={(e) => setSyncToMeeting(e.target.checked)}
-                  className="rounded text-[#1E6B7B] focus:ring-[#1E6B7B] cursor-pointer"
-                />
-                <span>
-                  Sinkronkan juga tautan ini ke panel <strong>Hasil Kegiatan &amp; Output Rapat</strong> utama
-                </span>
-              </label>
-            )}
-          </div>
-
-          {/* Unggah Berkas Fisik (Opsional) */}
-          <div className="space-y-2">
-            <label className="text-xs font-bold text-slate-700 flex items-center justify-between">
-              <span className="flex items-center gap-1.5">
-                <Paperclip className="w-3.5 h-3.5 text-slate-500" />
-                <span>Unggah Berkas Fisik / Foto Dokumentasi (Opsional)</span>
-              </span>
-              <span className="text-[11px] text-slate-400 font-normal">
-                PDF, Word, Excel, Gambar (Max 100MB)
-              </span>
-            </label>
-
-            <input
-              ref={fileInputRef}
-              type="file"
-              onChange={handleFileChange}
-              accept=".pdf,.docx,.doc,.pptx,.ppt,.xlsx,.xls,.png,.jpg,.jpeg,.webp"
-              className="hidden"
-            />
-
-            {/* Existing File Info */}
-            {existingFileUrl && !selectedFile && (
-              <div className="flex items-center justify-between p-3 rounded-xl bg-slate-50 border border-slate-200 text-xs">
-                <div className="flex items-center gap-2 min-w-0">
-                  <FileText className="w-4 h-4 text-emerald-600 shrink-0" />
-                  <span className="truncate font-medium text-slate-800">
-                    {existingFileName || 'Berkas Terlampir'}
+            {/* Input Sesuai Pilihan */}
+            {outputType === 'LINK' ? (
+              <div className="p-4 rounded-xl bg-teal-50/40 border border-teal-200/70 space-y-3 animate-in fade-in-50 duration-150">
+                <div className="flex items-center justify-between">
+                  <label className="text-xs font-bold text-[#175360] flex items-center gap-1.5">
+                    <Link2 className="w-3.5 h-3.5 text-[#1E6B7B]" />
+                    <span>Tautan / Link Hasil Kegiatan</span>
+                  </label>
+                  <span className="text-[11px] font-medium text-slate-500">
+                    {links.length} Tautan
                   </span>
                 </div>
-                <div className="flex items-center gap-2 shrink-0">
-                  <a
-                    href={existingFileUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-xs font-bold text-[#1E6B7B] hover:underline"
-                  >
-                    Lihat Berkas
-                  </a>
+                <p className="text-[11.5px] text-slate-500 leading-relaxed">
+                  Masukkan tautan Google Drive, link berita/publikasi, atau dokumen kerja bersama (bisa menambah lebih dari 1 tautan):
+                </p>
+
+                <div className="space-y-2.5">
+                  {links.map((linkItem, idx) => (
+                    <div
+                      key={idx}
+                      className="p-3 rounded-xl bg-white border border-teal-200/90 shadow-2xs space-y-2"
+                    >
+                      <div className="flex items-center justify-between text-xs">
+                        <span className="font-bold text-[#1E6B7B] flex items-center gap-1.5 text-[11px]">
+                          <span className="w-4 h-4 rounded-full bg-[#1E6B7B]/10 text-[#1E6B7B] inline-flex items-center justify-center font-mono text-[10px]">
+                            {idx + 1}
+                          </span>
+                          <span>Tautan #{idx + 1}</span>
+                        </span>
+
+                        <div className="flex items-center gap-1.5">
+                          {linkItem.url.trim() && (
+                            <a
+                              href={linkItem.url.trim()}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 text-[11px] font-bold transition-all shadow-2xs cursor-pointer"
+                              title="Uji coba buka tautan"
+                            >
+                              <span>Coba Buka</span>
+                              <ExternalLink className="w-3 h-3" />
+                            </a>
+                          )}
+                          {links.length > 1 && (
+                            <button
+                              type="button"
+                              onClick={() => handleRemoveLink(idx)}
+                              className="p-1 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition-colors cursor-pointer"
+                              title="Hapus tautan ini"
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
+                            </button>
+                          )}
+                        </div>
+                      </div>
+
+                      <div className="space-y-1.5">
+                        <input
+                          type="url"
+                          value={linkItem.url}
+                          onChange={(e) => handleLinkChange(idx, 'url', e.target.value)}
+                          placeholder="https://drive.google.com/... atau https://..."
+                          className="w-full text-xs font-mono rounded-lg border border-slate-300 bg-white p-2.5 text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-[#1E6B7B]/20 focus:border-[#1E6B7B]"
+                        />
+                        <input
+                          type="text"
+                          value={linkItem.title}
+                          onChange={(e) => handleLinkChange(idx, 'title', e.target.value)}
+                          placeholder="Keterangan tautan (opsional, contoh: File Paparan / Draft Berita)"
+                          className="w-full text-xs rounded-lg border border-slate-200 bg-slate-50/60 p-2 text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-[#1E6B7B]/20 focus:border-[#1E6B7B] focus:bg-white"
+                        />
+                      </div>
+                    </div>
+                  ))}
+
                   <button
                     type="button"
-                    onClick={() => fileInputRef.current?.click()}
-                    className="px-2 py-1 rounded bg-white border border-slate-200 text-[11px] font-semibold text-slate-700 hover:bg-slate-50 cursor-pointer"
+                    onClick={handleAddLink}
+                    className="w-full py-2 px-3 rounded-xl border border-dashed border-[#1E6B7B]/40 hover:border-[#1E6B7B] bg-white hover:bg-teal-50/50 text-[#1E6B7B] text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer shadow-2xs"
                   >
-                    Ganti
+                    <Plus className="w-3.5 h-3.5" />
+                    <span>+ Tambah Tautan Lainnya</span>
                   </button>
                 </div>
               </div>
-            )}
-
-            {/* Selected New File */}
-            {selectedFile ? (
-              <div className="flex items-center justify-between p-3 rounded-xl bg-teal-50/60 border border-teal-200 text-xs">
-                <div className="flex items-center gap-2 min-w-0">
-                  <UploadCloud className="w-4 h-4 text-[#1E6B7B] shrink-0" />
-                  <div className="truncate">
-                    <p className="font-bold text-teal-950 truncate">{selectedFile.name}</p>
-                    <p className="text-[10.5px] text-slate-500">
-                      {(selectedFile.size / (1024 * 1024)).toFixed(2)} MB
-                    </p>
-                  </div>
-                </div>
-                <button
-                  type="button"
-                  onClick={handleRemoveSelectedFile}
-                  className="p-1 rounded text-rose-600 hover:bg-rose-50 transition-colors cursor-pointer"
-                  title="Batalkan berkas baru"
-                >
-                  <Trash2 className="w-4 h-4" />
-                </button>
+            ) : (
+              <div className="p-4 rounded-xl bg-slate-50 border border-slate-200 space-y-2 animate-in fade-in-50 duration-150">
+                <label className="text-xs font-bold text-slate-700 flex items-center gap-1.5">
+                  <FileText className="w-3.5 h-3.5 text-[#1E6B7B]" />
+                  <span>Catatan Hasil Kegiatan</span>
+                </label>
+                <p className="text-[11.5px] text-slate-500">
+                  Tuliskan uraian hasil kegiatan, ringkasan capaian, atau tindak lanjut PIC:
+                </p>
+                <textarea
+                  rows={4}
+                  value={notes}
+                  onChange={(e) => setNotes(e.target.value)}
+                  placeholder="Contoh: Rilis pers telah selesai disusun dan disetujui untuk dipublikasikan..."
+                  className="w-full text-xs sm:text-[13px] rounded-xl border border-slate-300 bg-white p-3 text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-[#1E6B7B]/20 focus:border-[#1E6B7B] transition-all resize-none"
+                />
               </div>
-            ) : !existingFileUrl ? (
-              <button
-                type="button"
-                onClick={() => fileInputRef.current?.click()}
-                className="w-full p-4 rounded-xl border-2 border-dashed border-slate-300 hover:border-[#1E6B7B] bg-slate-50/50 hover:bg-teal-50/30 flex flex-col items-center justify-center gap-1.5 transition-all text-slate-600 cursor-pointer"
-              >
-                <UploadCloud className="w-5 h-5 text-slate-400" />
-                <span className="text-xs font-semibold text-slate-700">
-                  Klik untuk memilih berkas dari komputer
-                </span>
-                <span className="text-[11px] text-slate-400">
-                  Format didukung: PDF, Dokumen Word, Presentasi, atau Foto Kegiatan
-                </span>
-              </button>
-            ) : null}
+            )}
           </div>
         </form>
 
@@ -462,12 +480,12 @@ export function UpdatePicDeliverableDialog({
             {isSubmitting ? (
               <>
                 <Loader2 className="w-4 h-4 animate-spin" />
-                <span>Menyimpan Progres...</span>
+                <span>Menyimpan...</span>
               </>
             ) : (
               <>
                 <CheckCircle2 className="w-4 h-4" />
-                <span>Simpan &amp; Publikasikan Progres</span>
+                <span>Simpan Status &amp; Hasil</span>
               </>
             )}
           </button>

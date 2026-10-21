@@ -143,13 +143,8 @@ export function DashboardClient({
     setMeetingsList(initialMeetings.filter((m) => !deletedIds.has(m.id)));
   }, [initialMeetings, deletedIds]);
 
-  // Koleksi rapat yang relevan: untuk staf hanya ambil rapat milik tim mereka
-  const relevantMeetings = useMemo(() => {
-    if (isStaff && effectiveTeamCode) {
-      return meetingsList.filter((m) => isMatchTeam(m, effectiveTeamCode));
-    }
-    return meetingsList;
-  }, [meetingsList, isStaff, effectiveTeamCode]);
+  // Koleksi rapat yang relevan: seluruh kegiatan dapat dilihat oleh semua staf dan tim kerja
+  const relevantMeetings = meetingsList;
 
   const [selectedYear, setSelectedYear] = useState<number>(2026);
   const [selectedMonth, setSelectedMonth] = useState<string | null>(null);
@@ -172,28 +167,50 @@ export function DashboardClient({
     });
   }, [relevantMeetings, selectedYear]);
 
-  // Compute monthly activity trend dynamically for the selected year
+  // Compute monthly activity trend dynamically for the selected year - akumulasi jumlah kegiatan dari SEMUA tim
   const yearMonthlyActivity: MonthlyActivity[] = useMemo(() => {
     const monthLabels = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
     const counts = new Array(12).fill(0);
+    const monthTeamsMap: Record<number, Record<string, { name: string; count: number }>> = {};
 
     yearMeetings.forEach((m) => {
       const d = new Date(m.date);
       const mIdx = d.getMonth();
-      if (mIdx >= 0 && mIdx < 12) counts[mIdx]++;
+      if (mIdx >= 0 && mIdx < 12) {
+        counts[mIdx]++;
+
+        // Catat rincian tim kerja
+        const tCode = m.primaryTeamCode || (m.primaryTeamId ? 'TIM' : 'UMUM');
+        const tName = m.primaryTeamName || 'Lintas / Umum';
+        if (!monthTeamsMap[mIdx]) monthTeamsMap[mIdx] = {};
+        if (!monthTeamsMap[mIdx][tCode]) {
+          monthTeamsMap[mIdx][tCode] = { name: tName, count: 0 };
+        }
+        monthTeamsMap[mIdx][tCode].count++;
+      }
     });
 
     const maxCount = Math.max(...counts, 0);
-    // Display up to current month (min Sep) for current year, or up to the last month with data / full year
-    const lastActiveIdx = counts.reduce((acc, c, idx) => (c > 0 ? idx : acc), -1);
-    const maxMonthIdx = selectedYear === 2026 ? 8 : (lastActiveIdx >= 0 ? Math.max(lastActiveIdx, 8) : 8);
 
-    return monthLabels.slice(0, maxMonthIdx + 1).map((m, idx) => ({
-      month: m,
-      count: counts[idx],
-      isPeak: maxCount > 0 && counts[idx] === maxCount,
-    }));
-  }, [yearMeetings, selectedYear]);
+    return monthLabels.map((m, idx) => {
+      const teamBreakdown = monthTeamsMap[idx]
+        ? Object.entries(monthTeamsMap[idx])
+            .map(([code, val]) => ({
+              code,
+              name: val.name,
+              count: val.count,
+            }))
+            .sort((a, b) => b.count - a.count)
+        : [];
+
+      return {
+        month: m,
+        count: counts[idx],
+        isPeak: maxCount > 0 && counts[idx] === maxCount,
+        teamBreakdown,
+      };
+    });
+  }, [yearMeetings]);
 
   const selectedMonthIdx = selectedMonth ? MONTH_INDEX_MAP[selectedMonth] : null;
   const fullMonthName = selectedMonth ? (FULL_MONTH_NAMES[selectedMonth] || selectedMonth) : '';
@@ -476,13 +493,11 @@ function computeDonutMetrics(
         onScheduleMeeting={() => router.push('/buat-rapat')}
       />
 
-      {/* 3. Executive 3 Tim Kerja KEK (Investasi, Kerja Sama, Komunikasi) - Hanya Super Admin, Admin, Pimpinan (bukan Staf) */}
-      {!isStaff && (
-        <TeamWorkloadGrid
-          teams={sanitizedTeamWorkload}
-          onTeamClick={handleOpenTeamModal}
-        />
-      )}
+      {/* 3. Executive Tim Kerja KEK (Investasi, Kerja Sama, Komunikasi, dll) - Tampil untuk Semua Tim Kerja */}
+      <TeamWorkloadGrid
+        teams={sanitizedTeamWorkload}
+        onTeamClick={handleOpenTeamModal}
+      />
 
       {/* 4. Analytics Grid (Monthly Trend + Status Donut + Tim Distribution) */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">

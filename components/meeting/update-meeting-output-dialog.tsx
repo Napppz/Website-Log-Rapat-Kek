@@ -171,9 +171,8 @@ export function UpdateMeetingOutputDialog({
                 <Clock className="w-4 h-4 text-[#1E6B7B]" />
                 <span>Status Pekerjaan Saat Ini:</span>
               </label>
-              <div className="grid grid-cols-3 gap-2">
+              <div className="grid grid-cols-2 gap-2">
                 {[
-                  { value: 'Belum Dimulai', color: 'border-slate-300 hover:border-slate-400 text-slate-700 bg-white' },
                   { value: 'Dalam Proses', color: 'border-blue-300 hover:border-blue-400 text-blue-800 bg-blue-50/50' },
                   { value: 'Selesai', color: 'border-emerald-300 hover:border-emerald-400 text-emerald-800 bg-emerald-50/50' },
                 ].map((item) => {

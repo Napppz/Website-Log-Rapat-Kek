@@ -17,6 +17,8 @@ import {
   X,
   Sparkles,
   Calendar,
+  Users,
+  Filter,
 } from 'lucide-react';
 import {
   getNotificationsAction,
@@ -24,35 +26,36 @@ import {
   markAllNotificationsAsReadAction,
   deleteNotificationAction,
   clearAllReadNotificationsAction,
+  NotificationItem,
+  TeamInfo,
 } from '@/app/actions/notification-actions';
 import { toast } from '@/components/providers/toast-provider';
 import { useNotifications } from '@/components/providers/notification-provider';
 
-export interface NotificationItem {
-  id: string;
-  title: string;
-  message: string;
-  type: string;
-  link?: string | null;
-  isRead: boolean;
-  createdAt: Date | string;
-}
+export type { NotificationItem, TeamInfo };
 
 interface NotifikasiClientProps {
   initialNotifications: NotificationItem[];
   initialUnreadCount: number;
+  initialCurrentTeam?: TeamInfo | null;
+  availableTeams?: TeamInfo[];
+  isSuperAdmin?: boolean;
   initialError?: string | null;
 }
 
 export function NotifikasiClient({
   initialNotifications = [],
   initialUnreadCount = 0,
+  initialCurrentTeam = null,
+  availableTeams = [],
+  isSuperAdmin = false,
   initialError = null,
 }: NotifikasiClientProps) {
   const { setUnreadCount: setGlobalUnreadCount } = useNotifications();
   const [notifications, setNotifications] = useState<NotificationItem[]>(initialNotifications);
   const [unreadCount, setUnreadCount] = useState<number>(initialUnreadCount);
-  const [activeTab, setActiveTab] = useState<'ALL' | 'UNREAD' | 'MEETING' | 'DANGER' | 'INFO'>('ALL');
+  const [selectedTeamId, setSelectedTeamId] = useState<string>('ALL');
+  const [activeTab, setActiveTab] = useState<'ALL' | 'UNREAD' | 'DANGER'>('ALL');
   const [errorMessage, setErrorMessage] = useState<string | null>(initialError || null);
   const [isRetrying, setIsRetrying] = useState(false);
   const [isMarkingAll, setIsMarkingAll] = useState(false);
@@ -64,11 +67,32 @@ export function NotifikasiClient({
     setGlobalUnreadCount(initialUnreadCount);
   }, [initialUnreadCount, setGlobalUnreadCount]);
 
+  // Switch team filter (for Super Admin / Admin)
+  const handleTeamChange = async (teamId: string) => {
+    try {
+      setSelectedTeamId(teamId);
+      setIsRetrying(true);
+      const res = await getNotificationsAction(teamId);
+      if (res.success && res.data) {
+        setNotifications(res.data.notifications);
+        setUnreadCount(res.data.unreadCount);
+        setGlobalUnreadCount(res.data.unreadCount);
+        setErrorMessage(null);
+      } else {
+        toast.error(res.error || 'Gagal memuat notifikasi tim.');
+      }
+    } catch {
+      toast.error('Gagal beralih filter tim notifikasi.');
+    } finally {
+      setIsRetrying(false);
+    }
+  };
+
   // Manual refresh / retry handler with robust error catching
   const handleRetry = async () => {
     try {
       setIsRetrying(true);
-      const res = await getNotificationsAction();
+      const res = await getNotificationsAction(selectedTeamId);
       if (res.success && res.data) {
         setNotifications(res.data.notifications);
         setUnreadCount(res.data.unreadCount);
@@ -101,7 +125,7 @@ export function NotifikasiClient({
       setUnreadCount(0);
       setGlobalUnreadCount(0);
 
-      const res = await markAllNotificationsAsReadAction();
+      const res = await markAllNotificationsAsReadAction(selectedTeamId);
       if (res.success) {
         toast.success('Semua notifikasi telah ditandai sebagai dibaca.');
       } else {
@@ -213,7 +237,7 @@ export function NotifikasiClient({
       // Optimistic
       setNotifications((prev) => prev.filter((n) => !n.isRead));
 
-      const res = await clearAllReadNotificationsAction();
+      const res = await clearAllReadNotificationsAction(selectedTeamId);
       if (res.success) {
         toast.success(`${readItems.length} notifikasi yang telah dibaca berhasil dibersihkan.`);
       } else {
@@ -256,9 +280,7 @@ export function NotifikasiClient({
 
   const filtered = notifications.filter((item) => {
     if (activeTab === 'UNREAD') return !item.isRead;
-    if (activeTab === 'MEETING') return item.type === 'meeting';
     if (activeTab === 'DANGER') return item.type === 'danger' || item.type === 'warning';
-    if (activeTab === 'INFO') return item.type === 'info' || item.type === 'success';
     return true;
   });
 
@@ -274,11 +296,19 @@ export function NotifikasiClient({
             Pusat Pemberitahuan Sistem
           </span>
           <h1 className="text-[24px] font-bold text-slate-900 mt-0.5">
-            Notifikasi &amp; Peringatan Dewan
+            Notifikasi &amp; Peringatan Tim
           </h1>
           <p className="text-[13px] text-slate-500 mt-1">
-            Pemberitahuan resmi mengenai kegiatan terjadwal, pengesahan catatan kegiatan, dan eskalasi tindak lanjut.
+            Pemberitahuan resmi mengenai kegiatan, risalah catatan kegiatan, dan eskalasi per tim kerja.
           </p>
+          {initialCurrentTeam && (
+            <div className="mt-2.5 flex items-center gap-2">
+              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#E8F5F7] border border-[#BCE3EB] text-[#215865] text-[12px] font-bold">
+                <Users className="w-3.5 h-3.5 text-[#31889C]" />
+                <span>Tim Kerja: {initialCurrentTeam.name} ({initialCurrentTeam.code})</span>
+              </span>
+            </div>
+          )}
         </div>
 
         <div className="flex flex-wrap items-center gap-2">
@@ -334,6 +364,49 @@ export function NotifikasiClient({
           )}
         </div>
       </div>
+
+      {/* Super Admin Team Filter Bar */}
+      {isSuperAdmin && availableTeams.length > 0 && (
+        <div className="p-4 bg-white rounded-xl border border-slate-200 shadow-xs flex flex-col gap-2.5">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1">
+            <span className="text-[12.5px] font-bold text-slate-700 flex items-center gap-1.5">
+              <Filter className="w-4 h-4 text-[#31889C]" />
+              Filter Notifikasi Per Tim Kerja:
+            </span>
+            <span className="text-[11.5px] text-slate-500">
+              Menampilkan notifikasi khusus tim kerja yang dipilih
+            </span>
+          </div>
+          <div className="flex items-center gap-2 overflow-x-auto pb-1 pt-0.5">
+            <button
+              type="button"
+              onClick={() => handleTeamChange('ALL')}
+              className={`px-3 py-1.5 rounded-lg text-[12px] font-bold whitespace-nowrap transition-all cursor-pointer ${
+                selectedTeamId === 'ALL'
+                  ? 'bg-[#31889C] text-white shadow-xs'
+                  : 'bg-slate-100 text-slate-600 hover:bg-slate-200 hover:text-slate-900'
+              }`}
+            >
+              Semua Tim ({notifications.length})
+            </button>
+            {availableTeams.map((t) => (
+              <button
+                key={t.id}
+                type="button"
+                onClick={() => handleTeamChange(t.id)}
+                className={`px-3 py-1.5 rounded-lg text-[12px] font-bold whitespace-nowrap transition-all cursor-pointer flex items-center gap-1.5 ${
+                  selectedTeamId === t.id
+                    ? 'bg-[#31889C] text-white shadow-xs ring-2 ring-[#31889C]/30'
+                    : 'bg-slate-100 text-slate-600 hover:bg-slate-200 hover:text-slate-900'
+                }`}
+              >
+                <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-black/10">{t.code}</span>
+                <span>{t.name}</span>
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Error Alert Banner if an error occurred */}
       {errorMessage && (
@@ -401,19 +474,6 @@ export function NotifikasiClient({
 
         <button
           type="button"
-          onClick={() => setActiveTab('MEETING')}
-          className={`px-3.5 py-1.5 rounded-lg text-[13px] font-semibold transition-colors whitespace-nowrap cursor-pointer flex items-center gap-1.5 ${
-            activeTab === 'MEETING'
-              ? 'bg-emerald-600 text-white shadow-xs'
-              : 'text-slate-600 hover:bg-slate-100'
-          }`}
-        >
-          <Calendar className="w-3.5 h-3.5" />
-          <span>Undangan Kegiatan ({notifications.filter((n) => n.type === 'meeting').length})</span>
-        </button>
-
-        <button
-          type="button"
           onClick={() => setActiveTab('DANGER')}
           className={`px-3.5 py-1.5 rounded-lg text-[13px] font-semibold transition-colors whitespace-nowrap cursor-pointer ${
             activeTab === 'DANGER'
@@ -425,24 +485,6 @@ export function NotifikasiClient({
           {
             notifications.filter(
               (n) => n.type === 'danger' || n.type === 'warning'
-            ).length
-          }
-          )
-        </button>
-
-        <button
-          type="button"
-          onClick={() => setActiveTab('INFO')}
-          className={`px-3.5 py-1.5 rounded-lg text-[13px] font-semibold transition-colors whitespace-nowrap cursor-pointer ${
-            activeTab === 'INFO'
-              ? 'bg-[#215865] text-white shadow-xs'
-              : 'text-slate-600 hover:bg-slate-100'
-          }`}
-        >
-          Agenda &amp; Catatan (
-          {
-            notifications.filter(
-              (n) => n.type === 'info' || n.type === 'success'
             ).length
           }
           )
@@ -544,15 +586,23 @@ export function NotifikasiClient({
                 {/* Content */}
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center justify-between gap-2 pr-6">
-                    <h3
-                      className={`text-[14px] leading-snug ${
-                        item.isRead
-                          ? 'font-semibold text-slate-800'
-                          : 'font-bold text-slate-900'
-                      }`}
-                    >
-                      {item.title}
-                    </h3>
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <h3
+                        className={`text-[14px] leading-snug ${
+                          item.isRead
+                            ? 'font-semibold text-slate-800'
+                            : 'font-bold text-slate-900'
+                        }`}
+                      >
+                        {item.title}
+                      </h3>
+                      {item.teamName && (
+                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-[#E8F5F7] border border-[#BCE3EB] text-[#215865] text-[10.5px] font-bold">
+                          <Users className="w-3 h-3 text-[#31889C]" />
+                          <span>{item.teamName}</span>
+                        </span>
+                      )}
+                    </div>
                     <span className="text-[11px] text-slate-400 shrink-0">
                       {formatRelativeTime(item.createdAt)}
                     </span>
