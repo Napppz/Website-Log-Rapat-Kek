@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { Search, Plus, ChevronDown, Menu, LogOut, User as UserIcon } from 'lucide-react';
 import { useSession, signOut } from 'next-auth/react';
 import { cn } from '@/lib/utils';
+import { NotificationBell } from '@/components/notifications/notification-bell';
 
 interface HeaderProps {
   onOpenMobile?: () => void;
@@ -84,8 +85,9 @@ export function Header({
         </button>
       </div>
 
-      {/* Right: Profile */}
+      {/* Right: Notifications & Profile */}
       <div className="flex items-center gap-2 sm:gap-4 shrink-0 ml-3">
+        <NotificationBell />
 
         {/* Profile Avatar & Info */}
         <div className="relative">

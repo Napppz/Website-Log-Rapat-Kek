@@ -3,7 +3,7 @@
 import React, { useState, Suspense } from 'react';
 import Image from 'next/image';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { signIn } from 'next-auth/react';
+import { loginWithCredentialsAction } from '@/app/actions/auth-actions';
 import {
   Lock,
   Mail,
@@ -39,17 +39,17 @@ function LoginForm() {
     setErrorMessage(null);
 
     try {
-      const res = await signIn('credentials', {
+      const res = await loginWithCredentialsAction({
         email: email.trim().toLowerCase(),
         password,
-        redirect: false,
+        redirectTo: callbackUrl,
       });
 
-      if (res?.error) {
-        setErrorMessage('Email atau kata sandi tidak cocok. Silakan periksa kembali kredensial Anda.');
+      if (!res.success) {
+        setErrorMessage(res.error || 'Email atau kata sandi tidak cocok. Silakan periksa kembali kredensial Anda.');
         setIsLoading(false);
       } else {
-        router.push(callbackUrl);
+        router.push(res.url || callbackUrl);
         router.refresh();
       }
     } catch {

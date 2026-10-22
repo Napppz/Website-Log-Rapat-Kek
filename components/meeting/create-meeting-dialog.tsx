@@ -231,6 +231,7 @@ export function CreateMeetingDialog({ isOpen, onClose, onSuccess }: CreateMeetin
         location: 'Biro 3 / Luar Kantor',
         meetingKind: undefined,
         picName: picName.trim() || undefined,
+        participantUserIds: selectedPicIds.length > 0 ? selectedPicIds : undefined,
         chairpersonId: selectedPicIds[0] || undefined,
         progressStatus: date <= todayStr ? 'Dalam Proses' : 'Belum Dimulai',
         meetingNumber: registrationNumber.trim() || undefined,

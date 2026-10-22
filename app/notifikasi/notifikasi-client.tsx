@@ -19,6 +19,7 @@ import {
   Calendar,
   Users,
   Filter,
+  ListTodo,
 } from 'lucide-react';
 import {
   getNotificationsAction,
@@ -55,7 +56,7 @@ export function NotifikasiClient({
   const [notifications, setNotifications] = useState<NotificationItem[]>(initialNotifications);
   const [unreadCount, setUnreadCount] = useState<number>(initialUnreadCount);
   const [selectedTeamId, setSelectedTeamId] = useState<string>('ALL');
-  const [activeTab, setActiveTab] = useState<'ALL' | 'UNREAD' | 'DANGER'>('ALL');
+  const [activeTab, setActiveTab] = useState<'ALL' | 'UNREAD' | 'ASSIGNMENT'>('ALL');
   const [errorMessage, setErrorMessage] = useState<string | null>(initialError || null);
   const [isRetrying, setIsRetrying] = useState(false);
   const [isMarkingAll, setIsMarkingAll] = useState(false);
@@ -280,7 +281,14 @@ export function NotifikasiClient({
 
   const filtered = notifications.filter((item) => {
     if (activeTab === 'UNREAD') return !item.isRead;
-    if (activeTab === 'DANGER') return item.type === 'danger' || item.type === 'warning';
+    if (activeTab === 'ASSIGNMENT') {
+      return (
+        item.type === 'kegiatan' ||
+        item.type === 'tindak_lanjut' ||
+        item.type === 'meeting' ||
+        item.type === 'action_item'
+      );
+    }
     return true;
   });
 
@@ -474,17 +482,21 @@ export function NotifikasiClient({
 
         <button
           type="button"
-          onClick={() => setActiveTab('DANGER')}
+          onClick={() => setActiveTab('ASSIGNMENT')}
           className={`px-3.5 py-1.5 rounded-lg text-[13px] font-semibold transition-colors whitespace-nowrap cursor-pointer ${
-            activeTab === 'DANGER'
-              ? 'bg-red-600 text-white shadow-xs'
+            activeTab === 'ASSIGNMENT'
+              ? 'bg-[#31889C] text-white shadow-xs'
               : 'text-slate-600 hover:bg-slate-100'
           }`}
         >
-          Peringatan &amp; Tenggat (
+          Penugasan PIC (
           {
             notifications.filter(
-              (n) => n.type === 'danger' || n.type === 'warning'
+              (n) =>
+                n.type === 'kegiatan' ||
+                n.type === 'tindak_lanjut' ||
+                n.type === 'meeting' ||
+                n.type === 'action_item'
             ).length
           }
           )
@@ -538,7 +550,8 @@ export function NotifikasiClient({
           </div>
         ) : (
           filtered.map((item) => {
-            const isMeeting = item.type === 'meeting';
+            const isKegiatan = item.type === 'meeting' || item.type === 'kegiatan';
+            const isTindakLanjut = item.type === 'action_item' || item.type === 'tindak_lanjut';
             const isDanger = item.type === 'danger';
             const isWarning = item.type === 'warning';
             const isSuccess = item.type === 'success';
@@ -551,16 +564,20 @@ export function NotifikasiClient({
                 className={`p-4 rounded-xl border transition-all flex items-start gap-4 cursor-pointer group relative ${
                   item.isRead
                     ? 'bg-white border-slate-200 hover:border-slate-300'
-                    : isMeeting
-                    ? 'bg-emerald-50/40 border-emerald-200 shadow-xs'
+                    : isKegiatan
+                    ? 'bg-[#E8F5F7]/30 border-[#BCE3EB] shadow-xs'
+                    : isTindakLanjut
+                    ? 'bg-blue-50/30 border-blue-200 shadow-xs'
                     : 'bg-[#F8FDFF] border-[#BCE3EB] shadow-xs'
                 }`}
               >
                 {/* Icon */}
                 <div
                   className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 border ${
-                    isMeeting
-                      ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                    isKegiatan
+                      ? 'bg-[#E8F5F7] text-[#1E6B7B] border-[#BCE3EB]'
+                      : isTindakLanjut
+                      ? 'bg-blue-50 text-blue-600 border-blue-200'
                       : isDanger
                       ? 'bg-red-50 text-red-600 border-red-200'
                       : isWarning
@@ -570,8 +587,10 @@ export function NotifikasiClient({
                       : 'bg-[#E8F5F7] text-[#31889C] border-[#BCE3EB]'
                   }`}
                 >
-                  {isMeeting ? (
-                    <Calendar className="w-5 h-5 text-emerald-600" />
+                  {isKegiatan ? (
+                    <Calendar className="w-5 h-5 text-[#1E6B7B]" />
+                  ) : isTindakLanjut ? (
+                    <ListTodo className="w-5 h-5 text-blue-600" />
                   ) : isDanger ? (
                     <AlertTriangle className="w-5 h-5" />
                   ) : isWarning ? (
@@ -615,18 +634,20 @@ export function NotifikasiClient({
                   <div className="flex items-center justify-between gap-4 mt-3 pt-2 border-t border-slate-100">
                     <div className="flex items-center gap-2">
                       {!item.isRead && (
-                        <span className={`inline-block w-2 h-2 rounded-full ${isMeeting ? 'bg-emerald-600' : 'bg-[#31889C]'}`} />
+                        <span className={`inline-block w-2 h-2 rounded-full ${isKegiatan ? 'bg-[#1E6B7B]' : isTindakLanjut ? 'bg-blue-600' : 'bg-[#31889C]'}`} />
                       )}
-                      <span className={`text-[11px] font-semibold uppercase tracking-wider ${isMeeting ? 'text-emerald-700' : 'text-slate-400'}`}>
-                        {isMeeting
-                          ? 'Undangan Kegiatan Resmi'
+                      <span className={`text-[11px] font-semibold uppercase tracking-wider ${isKegiatan ? 'text-[#1E6B7B]' : isTindakLanjut ? 'text-blue-700' : 'text-slate-400'}`}>
+                        {isKegiatan
+                          ? 'Penugasan PIC Kegiatan'
+                          : isTindakLanjut
+                          ? 'Tugas Tindak Lanjut'
                           : isDanger
                           ? 'Eskalasi Mendesak'
                           : isWarning
-                          ? 'Perhatian Batas Waktu'
+                          ? 'Perhatian'
                           : isSuccess
-                          ? 'Penyelesaian Catatan Kegiatan'
-                          : 'Informasi Agenda'}
+                          ? 'Penyelesaian Catatan'
+                          : 'Informasi'}
                       </span>
                     </div>
 
@@ -635,13 +656,15 @@ export function NotifikasiClient({
                         <Link
                           href={item.link}
                           className={`inline-flex items-center gap-1 text-[12px] font-bold ${
-                            isMeeting
-                              ? 'text-emerald-700 hover:text-emerald-900 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 px-2.5 py-1 rounded-lg transition-colors'
+                            isKegiatan
+                              ? 'text-[#1E6B7B] hover:text-[#154d58] bg-[#E8F5F7] hover:bg-[#d6f0f4] border border-[#BCE3EB] px-2.5 py-1 rounded-lg transition-colors'
+                              : isTindakLanjut
+                              ? 'text-blue-700 hover:text-blue-900 bg-blue-50 hover:bg-blue-100 border border-blue-200 px-2.5 py-1 rounded-lg transition-colors'
                               : 'text-[#31889C] hover:text-[#215865] hover:underline'
                           }`}
                           onClick={(e) => e.stopPropagation()}
                         >
-                          <span>{isMeeting ? 'Buka Agenda Kegiatan' : 'Buka Rincian'}</span>
+                          <span>{isKegiatan ? 'Buka Detail Kegiatan' : isTindakLanjut ? 'Buka Tindak Lanjut' : 'Buka Rincian'}</span>
                           <ExternalLink className="w-3 h-3" />
                         </Link>
                       )}

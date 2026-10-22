@@ -417,14 +417,14 @@ export async function createMeetingAction(input: CreateMeetingInput) {
           },
         });
 
-        // PER-USER NOTIFICATION: Delivered to this specific invited participant with team scope
+        // PER-USER NOTIFICATION: Delivered to this specific assigned PIC with team scope
         await createNotificationRecord(
           {
             userId: uid,
             teamId: meeting.primaryTeamId,
-            title: `Undangan Rapat: [${finalMeetingNumber}] ${meeting.title}`,
-            message: `Anda diundang untuk menghadiri rapat "${meeting.title}" pada ${meetingDateFormatted} (${input.startTime} - ${input.endTime} WIB) bertempat di ${input.location}.`,
-            type: 'meeting',
+            title: `Penugasan PIC Kegiatan: [${finalMeetingNumber}] ${meeting.title}`,
+            message: `Anda ditugaskan sebagai PIC untuk kegiatan "${meeting.title}" (${meetingDateFormatted}) bertempat di ${input.location}.`,
+            type: 'kegiatan',
             link: `/semua-rapat/${meeting.id}`,
             isRead: false,
           },
@@ -438,9 +438,9 @@ export async function createMeetingAction(input: CreateMeetingInput) {
           {
             userId: input.chairpersonId,
             teamId: meeting.primaryTeamId,
-            title: `Undangan Pimpinan Sidang: [${finalMeetingNumber}] ${meeting.title}`,
-            message: `Anda ditugaskan sebagai Pimpinan Sidang untuk rapat "${meeting.title}" pada ${meetingDateFormatted} (${input.startTime} - ${input.endTime} WIB) bertempat di ${input.location}.`,
-            type: 'meeting',
+            title: `Penugasan PIC Kegiatan: [${finalMeetingNumber}] ${meeting.title}`,
+            message: `Anda ditugaskan sebagai PIC utama untuk kegiatan "${meeting.title}" (${meetingDateFormatted}) bertempat di ${input.location}.`,
+            type: 'kegiatan',
             link: `/semua-rapat/${meeting.id}`,
             isRead: false,
           },
@@ -1130,7 +1130,6 @@ export async function addParticipantToMeetingAction(
             where: {
               userId: targetUserId,
               link: `/semua-rapat/${meetingInfo.id}`,
-              type: 'meeting',
             },
           });
 
@@ -1138,9 +1137,9 @@ export async function addParticipantToMeetingAction(
             await createNotificationRecord({
               userId: targetUserId,
               teamId: meetingInfo.primaryTeamId,
-              title: `Undangan Rapat: [${meetingInfo.meetingNumber}] ${meetingInfo.title}`,
-              message: `Anda telah ditambahkan sebagai peserta rapat "${meetingInfo.title}" pada ${meetingDateFormatted} (${meetingInfo.startTime} - ${meetingInfo.endTime} WIB) bertempat di ${meetingInfo.location}.`,
-              type: 'meeting',
+              title: `Penugasan PIC Kegiatan: [${meetingInfo.meetingNumber}] ${meetingInfo.title}`,
+              message: `Anda telah ditambahkan sebagai PIC kegiatan "${meetingInfo.title}" (${meetingDateFormatted}) bertempat di ${meetingInfo.location}.`,
+              type: 'kegiatan',
               link: `/semua-rapat/${meetingInfo.id}`,
               isRead: false,
             });
