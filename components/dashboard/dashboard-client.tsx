@@ -72,7 +72,7 @@ export function DashboardClient({
   const router = useRouter();
   const { data: session } = useSession();
 
-  const effectiveUserRole = session?.user?.role || initialUserRole || 'SUPER_ADMIN';
+  const effectiveUserRole = session?.user?.role || initialUserRole || 'STAFF';
   const effectiveTeamCode = session?.user?.teamCode ?? initialUserTeamCode ?? null;
   const isStaff = effectiveUserRole === 'STAFF';
 
