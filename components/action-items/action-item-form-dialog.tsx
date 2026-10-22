@@ -511,9 +511,9 @@ export function ActionItemFormDialog({
     if (!finalTitle) {
       setFieldErrors((prev) => ({
         ...prev,
-        title: 'Nama kegiatan tindak lanjut wajib diisi.',
+        title: 'Tindak lanjut wajib diisi.',
       }));
-      setErrorMessage('Nama kegiatan wajib diisi.');
+      setErrorMessage('Tindak lanjut wajib diisi.');
       return;
     }
 
@@ -613,12 +613,12 @@ export function ActionItemFormDialog({
               </div>
             )}
 
-            {/* 1. Nama Kegiatan */}
+            {/* 1. Tindak Lanjut */}
             <div>
               <div className="flex items-center justify-between mb-1.5">
                 <label className="block font-bold text-slate-800 flex items-center gap-1.5 text-[13px]">
                   <Layers className="w-4 h-4 text-[#31889C]" />
-                  <span>1. Nama Kegiatan</span>
+                  <span>1. Tindak Lanjut</span>
                   <span className="text-red-500">*</span>
                 </label>
                 {(() => {
@@ -689,10 +689,9 @@ export function ActionItemFormDialog({
                       });
                     }
                   }}
-                  placeholder="Masukkan nama kegiatan tindak lanjut..."
-                  className={`w-full px-3.5 py-2.5 rounded-xl border text-slate-800 text-[13px] placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-[#31889C]/30 focus:border-[#31889C] transition-all ${
-                    fieldErrors.title ? 'border-red-400 bg-red-50/20' : 'border-slate-200 bg-white'
-                  }`}
+                  placeholder="Masukkan judul tindak lanjut di sini..."
+                  className={`w-full px-3.5 py-2.5 rounded-xl border text-slate-800 text-[13px] placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-[#31889C]/30 focus:border-[#31889C] transition-all ${fieldErrors.title ? 'border-red-400 bg-red-50/20' : 'border-slate-200 bg-white'
+                    }`}
                   required
                 />
                 {fieldErrors.title && (
