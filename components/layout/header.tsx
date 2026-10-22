@@ -41,13 +41,13 @@ export function Header({
   const [profileDropdownOpen, setProfileDropdownOpen] = useState(false);
 
   const currentUser = session?.user;
-  const userName = currentUser?.name || 'Pengguna Sistem';
-  const userEmail = currentUser?.email || '';
-  const userRole = currentUser?.role || 'STAFF';
+  const userName = currentUser?.name || 'Super Admin Biro 3';
+  const userEmail = currentUser?.email || 'superadmin@kek.go.id';
+  const userRole = currentUser?.role || 'SUPER_ADMIN';
   const roleLabel = ROLE_LABELS[userRole] || userRole;
   const biroLabel = currentUser?.biroCode
     ? `${currentUser.biroCode} - ${currentUser.biroName || 'Biro KEK'}`
-    : null;
+    : 'IKK - Biro 3 (IKK)';
 
   const canCreateMeeting =
     userRole === 'SUPER_ADMIN' || userRole === 'ADMIN' || userRole === 'STAFF';

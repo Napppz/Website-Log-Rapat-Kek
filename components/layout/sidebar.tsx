@@ -40,7 +40,7 @@ export function Sidebar({
   const pathname = usePathname();
   const { unreadCount } = useNotifications();
   const { data: session } = useSession();
-  const userRole = session?.user?.role || 'STAFF';
+  const userRole = session?.user?.role || 'SUPER_ADMIN';
 
   const isSuperAdmin = userRole === 'SUPER_ADMIN';
   const isAdmin = userRole === 'ADMIN';
