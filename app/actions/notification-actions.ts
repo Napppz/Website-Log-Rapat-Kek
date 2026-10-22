@@ -91,107 +91,21 @@ export async function createNotificationRecord(
 }
 
 /**
- * Background helper to safely sync automated system notifications scoped per team.
+ * Background helper to safely clean obsolete alerts and sync automated system notifications.
  * Isolated in try/catch so any failure never aborts user notification retrieval.
  */
 async function syncSystemAlertsSilently() {
   try {
-    const now = new Date();
-
-    // 1. Overdue Action Items (due date passed and not completed)
+    // 1. Clean up legacy overdue and deadline warnings (deadlines have been removed per project requirement)
     try {
-      const overdueItems = await prisma.actionItem.findMany({
-        where: {
-          status: { not: 'COMPLETED' },
-          dueDate: { lt: now },
-        },
-        include: {
-          picBiro: true,
-          picTeam: true,
-          meeting: {
-            select: { primaryTeamId: true },
-          },
-        },
-        take: 10,
-      });
+      await prisma.$executeRawUnsafe(`
+        DELETE FROM notifikasi
+        WHERE judul LIKE 'Peringatan: Tindak Lanjut%' 
+           OR judul LIKE 'Tindak Lanjut Mendekati Batas Waktu%'
+      `);
+    } catch {}
 
-      for (const item of overdueItems) {
-        try {
-          const link = `/tindak-lanjut?search=${encodeURIComponent(item.title)}`;
-          const existing: any[] = await prisma.$queryRawUnsafe(
-            `SELECT id_notifikasi FROM notifikasi WHERE tautan = $1 AND tipe = 'danger' LIMIT 1`,
-            link
-          );
-
-          if (!existing || existing.length === 0) {
-            const biroCode = item.picBiro?.code || 'Biro';
-            const teamId = item.picTeamId || item.meeting?.primaryTeamId || null;
-            await createNotificationRecord({
-              title: `Peringatan: Tindak Lanjut ${biroCode} Terlambat`,
-              message: `Komitmen "${item.title}" telah melewati tenggat waktu. Diperlukan percepatan atau eskalasi ke Dewan KEK.`,
-              type: 'danger',
-              link,
-              userId: item.picUserId || null,
-              teamId,
-              isRead: false,
-            });
-          }
-        } catch {
-          // Ignore individual record sync errors
-        }
-      }
-    } catch (e) {
-      console.warn('[syncSystemAlertsSilently] Overdue sync error:', e);
-    }
-
-    // 2. Action Items approaching due date (within 3 days)
-    try {
-      const threeDaysFromNow = new Date(now.getTime() + 3 * 24 * 60 * 60 * 1000);
-      const upcomingItems = await prisma.actionItem.findMany({
-        where: {
-          status: { in: ['PENDING', 'IN_PROGRESS'] },
-          dueDate: { gte: now, lte: threeDaysFromNow },
-        },
-        include: {
-          picBiro: true,
-          picTeam: true,
-          meeting: {
-            select: { primaryTeamId: true },
-          },
-        },
-        take: 5,
-      });
-
-      for (const item of upcomingItems) {
-        try {
-          const link = `/tindak-lanjut?search=${encodeURIComponent(item.title)}`;
-          const existing: any[] = await prisma.$queryRawUnsafe(
-            `SELECT id_notifikasi FROM notifikasi WHERE tautan = $1 AND tipe = 'warning' LIMIT 1`,
-            link
-          );
-
-          if (!existing || existing.length === 0) {
-            const biroCode = item.picBiro?.code || 'Biro';
-            const teamId = item.picTeamId || item.meeting?.primaryTeamId || null;
-            await createNotificationRecord({
-              title: `Tindak Lanjut Mendekati Batas Waktu (${biroCode})`,
-              message: `Komitmen "${item.title}" akan jatuh tempo dalam kurang dari 3 hari.`,
-              type: 'warning',
-              link,
-              userId: item.picUserId || null,
-              teamId,
-              isRead: false,
-            });
-          }
-        } catch {
-          // Ignore individual record sync errors
-        }
-      }
-    } catch (e) {
-      console.warn('[syncSystemAlertsSilently] Upcoming sync error:', e);
-    }
-
-    // 3. Clean up obsolete global broadcast meeting notifications without team assignment
+    // 2. Clean up obsolete global broadcast notifications without team or user assignment
     try {
       await prisma.$executeRawUnsafe(`
         DELETE FROM notifikasi
@@ -200,7 +114,7 @@ async function syncSystemAlertsSilently() {
       `);
     } catch {}
 
-    // 4. Ensure invited participants of recent meetings have received their team-scoped notification
+    // 3. Ensure assigned PIC / participants of recent activities have received their notification
     try {
       const recentMeetings = await prisma.meeting.findMany({
         orderBy: { createdAt: 'desc' },
@@ -226,9 +140,9 @@ async function syncSystemAlertsSilently() {
             await createNotificationRecord({
               userId: p.userId,
               teamId: m.primaryTeamId,
-              title: `Undangan Rapat: [${m.meetingNumber}] ${m.title}`,
-              message: `Anda diundang untuk menghadiri rapat "${m.title}" (${m.startTime} - ${m.endTime} WIB) di ${m.location}.`,
-              type: 'meeting',
+              title: `Penugasan Kegiatan: [${m.meetingNumber}] ${m.title}`,
+              message: `Anda ditugaskan pada arsip kegiatan "${m.title}".`,
+              type: 'kegiatan',
               link,
               isRead: false,
               createdAt: m.createdAt,
@@ -359,8 +273,8 @@ export async function getNotificationsAction(filterTeamId?: string) {
             t.nama_tim AS "teamName"
           FROM notifikasi n
           LEFT JOIN tim_biro t ON n.id_tim = t.id_tim
-          WHERE n.id_tim = ANY($1::text[])
-             OR (n.id_pengguna = $2 AND n.id_tim IS NULL)
+          WHERE n.id_pengguna = $2
+             OR n.id_tim = ANY($1::text[])
           ORDER BY n.dibuat_pada DESC
           LIMIT 60
         `, userTeamIds, currentUser.id);
@@ -488,7 +402,7 @@ export async function markAllNotificationsAsReadAction(filterTeamId?: string) {
         await prisma.$executeRawUnsafe(
           `UPDATE notifikasi SET sudah_dibaca = true
            WHERE sudah_dibaca = false
-             AND (id_tim = ANY($1::text[]) OR (id_pengguna = $2 AND id_tim IS NULL))`,
+             AND (id_pengguna = $2 OR id_tim = ANY($1::text[]))`,
           userTeamIds,
           currentUser.id
         );
@@ -588,7 +502,7 @@ export async function clearAllReadNotificationsAction(filterTeamId?: string) {
         await prisma.$executeRawUnsafe(
           `DELETE FROM notifikasi
            WHERE sudah_dibaca = true
-             AND (id_tim = ANY($1::text[]) OR (id_pengguna = $2 AND id_tim IS NULL))`,
+             AND (id_pengguna = $2 OR id_tim = ANY($1::text[]))`,
           userTeamIds,
           currentUser.id
         );
@@ -665,7 +579,7 @@ export async function getUnreadNotificationCountAction(filterTeamId?: string) {
           `SELECT COUNT(*)::int AS count
            FROM notifikasi
            WHERE sudah_dibaca = false
-             AND (id_tim = ANY($1::text[]) OR (id_pengguna = $2 AND id_tim IS NULL))`,
+             AND (id_pengguna = $2 OR id_tim = ANY($1::text[]))`,
           userTeamIds,
           currentUser.id
         );

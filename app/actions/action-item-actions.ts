@@ -454,6 +454,23 @@ export async function createActionItemAction(input: ActionItemInput) {
       },
     });
 
+    // 6b. Dispatch personal notification to assigned PIC user
+    if (validPicUserId) {
+      try {
+        await createNotificationRecord({
+          userId: validPicUserId,
+          teamId: effectiveTeamId || meeting.primaryTeamId || null,
+          title: `Penugasan Tindak Lanjut: ${title}`,
+          message: `Anda ditugaskan sebagai PIC tindak lanjut "${title}" pada kegiatan "${meeting.title}".`,
+          type: 'tindak_lanjut',
+          link: `/semua-rapat/${meetingId}`,
+          isRead: false,
+        });
+      } catch (notifErr) {
+        console.warn('Could not create notification for action item PIC:', notifErr);
+      }
+    }
+
     // 7. Revalidate relevant routes
     safeRevalidate([
       '/',
@@ -664,6 +681,23 @@ export async function updateActionItemAction(input: UpdateActionItemInput) {
         meeting: true,
       },
     });
+
+    // 7b. Dispatch personal notification if PIC has been assigned or changed
+    if (validPicUserId && validPicUserId !== existing.picUserId) {
+      try {
+        await createNotificationRecord({
+          userId: validPicUserId,
+          teamId: effectiveTeamId || meeting.primaryTeamId || null,
+          title: `Penugasan Tindak Lanjut: ${title}`,
+          message: `Anda ditugaskan sebagai PIC baru untuk tindak lanjut "${title}" pada kegiatan "${meeting.title}".`,
+          type: 'tindak_lanjut',
+          link: `/semua-rapat/${meetingId}`,
+          isRead: false,
+        });
+      } catch (notifErr) {
+        console.warn('Could not create notification for action item reassignment:', notifErr);
+      }
+    }
 
     // 8. Auto-complete meeting if action item is marked COMPLETED
     if (status === 'COMPLETED' && meetingId) {
