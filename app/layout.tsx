@@ -35,8 +35,8 @@ export default async function RootLayout({
   const session = await auth();
 
   return (
-    <html lang="id" className={`${publicSans.variable} ${plusJakartaSans.variable}`}>
-      <body className="bg-[#F8FAFC] text-slate-800 antialiased selection:bg-[#E8F5F7] selection:text-[#215865]">
+    <html lang="id" suppressHydrationWarning className={`${publicSans.variable} ${plusJakartaSans.variable}`}>
+      <body suppressHydrationWarning className="bg-[#F8FAFC] text-slate-800 antialiased selection:bg-[#E8F5F7] selection:text-[#215865]">
         <AuthProvider session={session}>
           <ToastProvider>
             <NotificationProvider>

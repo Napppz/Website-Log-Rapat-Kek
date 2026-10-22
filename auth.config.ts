@@ -1,6 +1,8 @@
 import type { NextAuthConfig } from 'next-auth';
 
 export const authConfig: NextAuthConfig = {
+  basePath: '/api/auth',
+  trustHost: true,
   pages: {
     signIn: '/login',
     error: '/login',
