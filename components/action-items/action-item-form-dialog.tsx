@@ -24,7 +24,7 @@ import {
   SearchableMeetingSelect,
   MeetingOption,
 } from './searchable-meeting-select';
-import { PicCombobox } from './pic-combobox';
+import { PicCombobox, getPicTeamDetails } from './pic-combobox';
 
 interface ActionItemFormDialogProps {
   isOpen: boolean;
@@ -34,7 +34,16 @@ interface ActionItemFormDialogProps {
   actionItem?: ActionItem | null;
   availableMeetings?: Array<MeetingOption>;
   availableBiros?: { id: string; code: string; shortName: string; name: string }[];
-  availableUsers?: { id: string; name: string; email?: string; biroId?: string; teamId?: string | null }[];
+  availableUsers?: Array<{
+    id: string;
+    name: string;
+    email?: string | null;
+    biroId?: string | null;
+    teamId?: string | null;
+    team?: { id?: string; code?: string; name?: string } | null;
+    userTeams?: Array<{ role?: string | null; team: { id?: string; code?: string; name?: string } }>;
+  }>;
+  availableTeams?: Array<{ id: string; code: string; name: string; biroId?: string }>;
   lockedBiroCode?: string;
   lockedTeamCode?: string;
   onClose: () => void;
@@ -50,6 +59,7 @@ export function ActionItemFormDialog({
   availableMeetings = [],
   availableBiros = [],
   availableUsers = [],
+  availableTeams = [],
   lockedBiroCode,
   lockedTeamCode,
   onClose,
@@ -104,7 +114,7 @@ export function ActionItemFormDialog({
   // Resilient biros, users, teams & meetings state with auto-fetch
   const [birosList, setBirosList] = useState(availableBiros);
   const [usersList, setUsersList] = useState(availableUsers);
-  const [teamsList, setTeamsList] = useState<Array<{ id: string; biroId: string; code: string; name: string; description?: string | null }>>([]);
+  const [teamsList, setTeamsList] = useState<Array<{ id: string; biroId?: string; code: string; name: string; description?: string | null }>>(availableTeams as any);
   const [meetingsList, setMeetingsList] = useState<Array<MeetingOption>>(availableMeetings);
   const [selectedMeetingId, setSelectedMeetingId] = useState<string>(
     actionItem?.meetingId || meetingId || normalizedCurrentMeeting?.id || availableMeetings[0]?.id || ''
@@ -189,6 +199,12 @@ export function ActionItemFormDialog({
   }, [availableUsers.length]);
 
   useEffect(() => {
+    if (availableTeams && availableTeams.length > 0) {
+      setTeamsList(availableTeams as any);
+    }
+  }, [availableTeams]);
+
+  useEffect(() => {
     if (availableMeetings.length > 0) {
       setMeetingsList(availableMeetings);
     }
@@ -211,20 +227,17 @@ export function ActionItemFormDialog({
   const [priority, setPriority] = useState<ActionItemPriority>('MEDIUM');
   const [status, setStatus] = useState<ActionItemStatus>('PENDING');
 
-  // Tiga Tim Kerja Resmi Tindak Lanjut Sekretariat KEK (dengan fallback UUID riil database)
+  // Tim Kerja Resmi Tindak Lanjut Sekretariat KEK (dengan fallback UUID riil database)
   const displayTeams = React.useMemo(() => {
-    const officialCodes = ['INV', 'KS', 'KOM'];
     if (teamsList && teamsList.length > 0) {
-      const matched = teamsList.filter((t) => officialCodes.includes(t.code.toUpperCase()));
-      if (matched.length > 0) {
-        return matched;
-      }
       return teamsList;
     }
     return [
       { id: '1c2512e1-1859-42ca-874a-196848ab7acf', code: 'INV', name: 'Tim Investasi', biroId: 'db859e7e-d77e-4247-abf2-91e48a3d95bf' },
       { id: '663d7ff9-585a-4800-8840-389a5e322779', code: 'KS', name: 'Tim Kerja Sama', biroId: 'db859e7e-d77e-4247-abf2-91e48a3d95bf' },
       { id: 'a3b2e91a-566c-46e5-a740-1aa944793290', code: 'KOM', name: 'Tim Komunikasi', biroId: 'db859e7e-d77e-4247-abf2-91e48a3d95bf' },
+      { id: 'c82de951-5fd8-4390-8cce-e663a13bedcc', code: 'SI', name: 'Tim Sistem Informasi', biroId: 'db859e7e-d77e-4247-abf2-91e48a3d95bf' },
+      { id: 'f49c43a1-7256-436c-a1bf-68e7f3201732', code: 'HKM', name: 'Tim Hukum', biroId: 'db859e7e-d77e-4247-abf2-91e48a3d95bf' },
     ];
   }, [teamsList]);
 
@@ -467,9 +480,9 @@ export function ActionItemFormDialog({
     if (!finalMeetingId) {
       setFieldErrors((prev) => ({
         ...prev,
-        meetingId: 'Silakan pilih kegiatan yang relevan dengan tindak lanjut ini.',
+        meetingId: 'Silakan pilih agenda kegiatan yang relevan dengan tindak lanjut ini.',
       }));
-      setErrorMessage('Nama kegiatan wajib dipilih.');
+      setErrorMessage('Agenda kegiatan sumber tindak lanjut wajib dipilih.');
       return;
     }
 
@@ -477,8 +490,10 @@ export function ActionItemFormDialog({
     const selectedUser = effectiveUsers.find((u) => u.id === picUserId);
 
     // Auto resolve team & biro (tidak lagi wajib diisi manual di form oleh pengguna)
+    const userTeamDetails = selectedUser ? getPicTeamDetails(selectedUser, displayTeams) : null;
     let finalPicTeamId =
       picTeamId ||
+      userTeamDetails?.id ||
       selectedUser?.teamId ||
       (currentM as any)?.primaryTeamId ||
       (currentM as any)?.primaryTeam?.id ||
@@ -511,9 +526,9 @@ export function ActionItemFormDialog({
     if (!finalTitle) {
       setFieldErrors((prev) => ({
         ...prev,
-        title: 'Nama kegiatan tindak lanjut wajib diisi.',
+        title: 'Nama tindak lanjut wajib diisi.',
       }));
-      setErrorMessage('Nama kegiatan wajib diisi.');
+      setErrorMessage('Nama tindak lanjut wajib diisi.');
       return;
     }
 
@@ -590,7 +605,7 @@ export function ActionItemFormDialog({
               {isEditing ? 'Perbarui Matriks' : 'Matriks Tindak Lanjut'}
             </span>
             <h2 className="text-[18px] font-bold text-slate-900">
-              {isEditing ? 'Ubah Tindak Lanjut Kegiatan' : 'Tambah Tindak Lanjut Kegiatan'}
+              {isEditing ? 'Ubah Tindak Lanjut' : 'Tambah Tindak Lanjut'}
             </h2>
           </div>
 
@@ -613,12 +628,12 @@ export function ActionItemFormDialog({
               </div>
             )}
 
-            {/* 1. Nama Kegiatan */}
+            {/* 1. Nama Tindak Lanjut */}
             <div>
               <div className="flex items-center justify-between mb-1.5">
                 <label className="block font-bold text-slate-800 flex items-center gap-1.5 text-[13px]">
                   <Layers className="w-4 h-4 text-[#31889C]" />
-                  <span>1. Nama Kegiatan</span>
+                  <span>1. Nama Tindak Lanjut</span>
                   <span className="text-red-500">*</span>
                 </label>
                 {(() => {
@@ -689,7 +704,7 @@ export function ActionItemFormDialog({
                       });
                     }
                   }}
-                  placeholder="Masukkan nama kegiatan tindak lanjut..."
+                  placeholder="Masukkan nama tindak lanjut..."
                   className={`w-full px-3.5 py-2.5 rounded-xl border text-slate-800 text-[13px] placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-[#31889C]/30 focus:border-[#31889C] transition-all ${
                     fieldErrors.title ? 'border-red-400 bg-red-50/20' : 'border-slate-200 bg-white'
                   }`}
@@ -720,14 +735,20 @@ export function ActionItemFormDialog({
                 onChange={(val) => {
                   setPicUserId(val);
                   const u = effectiveUsers.find((x) => x.id === val);
-                  if (u?.teamId) {
-                    setPicTeamId(u.teamId);
-                  }
-                  if (u?.biroId) {
-                    setPicBiroId(u.biroId);
+                  if (u) {
+                    const tDetails = getPicTeamDetails(u, displayTeams);
+                    if (tDetails?.id) {
+                      setPicTeamId(tDetails.id);
+                    } else if (u.teamId) {
+                      setPicTeamId(u.teamId);
+                    }
+                    if (u.biroId) {
+                      setPicBiroId(u.biroId);
+                    }
                   }
                 }}
                 users={effectiveUsers}
+                teams={displayTeams}
                 biros={birosList}
                 selectedBiroId={
                   picBiroId ||

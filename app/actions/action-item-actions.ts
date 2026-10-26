@@ -199,6 +199,25 @@ export async function getActionItemFormOptionsAction() {
           email: true,
           biroId: true,
           teamId: true,
+          team: {
+            select: {
+              id: true,
+              code: true,
+              name: true,
+            },
+          },
+          userTeams: {
+            select: {
+              role: true,
+              team: {
+                select: {
+                  id: true,
+                  code: true,
+                  name: true,
+                },
+              },
+            },
+          },
         },
         orderBy: { name: 'asc' },
       }),
@@ -230,7 +249,7 @@ export async function getActionItemFormOptionsAction() {
             select: { id: true, code: true, name: true },
           },
         },
-        orderBy: { date: 'desc' },
+        orderBy: [{ date: 'desc' }, { meetingNumber: 'desc' }],
         take: 100,
       }),
     ]);

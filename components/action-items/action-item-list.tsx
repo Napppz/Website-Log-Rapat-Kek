@@ -50,7 +50,16 @@ interface ActionItemListProps {
   currentMeeting?: any;
   initialItems: ActionItem[];
   availableBiros?: { id: string; code: string; shortName: string; name: string }[];
-  availableUsers?: { id: string; name: string; email?: string; biroId?: string; teamId?: string | null }[];
+  availableUsers?: Array<{
+    id: string;
+    name: string;
+    email?: string | null;
+    biroId?: string | null;
+    teamId?: string | null;
+    team?: { id?: string; code?: string; name?: string } | null;
+    userTeams?: Array<{ role?: string | null; team: { id?: string; code?: string; name?: string } }>;
+  }>;
+  availableTeams?: Array<{ id: string; code: string; name: string; biroId?: string }>;
   readOnly?: boolean;
 }
 
@@ -60,6 +69,7 @@ export function ActionItemList({
   initialItems = [],
   availableBiros = [],
   availableUsers = [],
+  availableTeams = [],
   readOnly = false,
 }: ActionItemListProps) {
   const router = useRouter();
@@ -815,6 +825,7 @@ export function ActionItemList({
         actionItem={editingItem}
         availableBiros={availableBiros}
         availableUsers={availableUsers}
+        availableTeams={availableTeams}
         lockedBiroCode={userRole === 'STAFF' ? currentUser?.biroCode : undefined}
         lockedTeamCode={userStaffTeamCode || undefined}
         onClose={() => {

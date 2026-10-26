@@ -59,7 +59,15 @@ interface ActionItemMatrixViewProps {
     primaryBiro?: { code: string; name?: string } | null;
   }[];
   availableBiros: { id: string; code: string; shortName: string; name: string }[];
-  availableUsers: { id: string; name: string; email?: string; biroId?: string }[];
+  availableUsers: Array<{
+    id: string;
+    name: string;
+    email?: string | null;
+    biroId?: string | null;
+    teamId?: string | null;
+    team?: { id?: string; code?: string; name?: string } | null;
+    userTeams?: Array<{ role?: string | null; team: { id?: string; code?: string; name?: string } }>;
+  }>;
   availableTeams?: { id: string; code: string; name: string; biroId?: string }[];
   lockedBiroCode?: string;
   lockedTeamCode?: string;
@@ -1426,6 +1434,7 @@ export function ActionItemMatrixView({
         availableMeetings={availableMeetings}
         availableBiros={availableBiros}
         availableUsers={availableUsers}
+        availableTeams={availableTeams}
         lockedBiroCode={lockedBiroCode}
         lockedTeamCode={effectiveLockedTeamCode}
         onClose={() => {

@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useRef, useEffect, useMemo } from 'react';
-import { Search, ChevronDown, Check, User, X, Layers, UserX } from 'lucide-react';
+import { Search, ChevronDown, Check, User, X, Layers, UserX, Filter } from 'lucide-react';
 
 export interface PicUserOption {
   id: string;
@@ -9,6 +9,19 @@ export interface PicUserOption {
   email?: string | null;
   biroId?: string | null;
   teamId?: string | null;
+  team?: {
+    id?: string;
+    code?: string;
+    name?: string;
+  } | null;
+  userTeams?: Array<{
+    role?: string | null;
+    team: {
+      id?: string;
+      code?: string;
+      name?: string;
+    };
+  }>;
 }
 
 export interface PicBiroOption {
@@ -18,10 +31,19 @@ export interface PicBiroOption {
   name: string;
 }
 
+export interface PicTeamOption {
+  id: string;
+  code: string;
+  name: string;
+  shortName?: string;
+  biroId?: string;
+}
+
 interface PicComboboxProps {
   value: string;
   onChange: (userId: string) => void;
   users: PicUserOption[];
+  teams?: PicTeamOption[];
   biros?: PicBiroOption[];
   selectedBiroId?: string;
   selectedTeamId?: string;
@@ -29,65 +51,227 @@ interface PicComboboxProps {
   placeholder?: string;
 }
 
-export const getPicTeamDetails = (teamId?: string | null) => {
-  if (teamId === 'TIM-001') {
-    return {
-      id: 'TIM-001',
-      code: 'INV',
-      name: 'Tim Investasi',
-      shortName: 'Investasi',
-      badgeClass: 'bg-emerald-50 text-emerald-800 border-emerald-200',
-      avatarClass: 'bg-emerald-50 text-emerald-700 border-emerald-200',
-      dotClass: 'bg-emerald-500',
-    };
+export const KNOWN_TEAMS_META: Record<
+  string,
+  {
+    code: string;
+    name: string;
+    shortName: string;
+    badgeClass: string;
+    avatarClass: string;
+    dotClass: string;
   }
-  if (teamId === 'TIM-003') {
-    return {
-      id: 'TIM-003',
-      code: 'KS',
-      name: 'Tim Kerja Sama',
-      shortName: 'Kerja Sama',
-      badgeClass: 'bg-sky-50 text-sky-800 border-sky-200',
-      avatarClass: 'bg-sky-50 text-sky-700 border-sky-200',
-      dotClass: 'bg-sky-500',
-    };
-  }
-  if (teamId === 'TIM-002') {
-    return {
-      id: 'TIM-002',
-      code: 'KOM',
-      name: 'Tim Komunikasi',
-      shortName: 'Komunikasi',
-      badgeClass: 'bg-amber-50 text-amber-800 border-amber-200',
-      avatarClass: 'bg-amber-50 text-amber-700 border-amber-200',
-      dotClass: 'bg-amber-500',
-    };
-  }
-  return null;
+> = {
+  INV: {
+    code: 'INV',
+    name: 'Tim Investasi',
+    shortName: 'Investasi',
+    badgeClass: 'bg-emerald-50 text-emerald-800 border-emerald-200',
+    avatarClass: 'bg-emerald-50 text-emerald-700 border-emerald-200',
+    dotClass: 'bg-emerald-500',
+  },
+  KS: {
+    code: 'KS',
+    name: 'Tim Kerja Sama',
+    shortName: 'Kerja Sama',
+    badgeClass: 'bg-sky-50 text-sky-800 border-sky-200',
+    avatarClass: 'bg-sky-50 text-sky-700 border-sky-200',
+    dotClass: 'bg-sky-500',
+  },
+  KOM: {
+    code: 'KOM',
+    name: 'Tim Komunikasi',
+    shortName: 'Komunikasi',
+    badgeClass: 'bg-amber-50 text-amber-800 border-amber-200',
+    avatarClass: 'bg-amber-50 text-amber-700 border-amber-200',
+    dotClass: 'bg-amber-500',
+  },
+  SI: {
+    code: 'SI',
+    name: 'Tim Sistem Informasi',
+    shortName: 'Sistem Informasi',
+    badgeClass: 'bg-purple-50 text-purple-800 border-purple-200',
+    avatarClass: 'bg-purple-50 text-purple-700 border-purple-200',
+    dotClass: 'bg-purple-500',
+  },
+  HKM: {
+    code: 'HKM',
+    name: 'Tim Hukum',
+    shortName: 'Hukum',
+    badgeClass: 'bg-violet-50 text-violet-800 border-violet-200',
+    avatarClass: 'bg-violet-50 text-violet-700 border-violet-200',
+    dotClass: 'bg-violet-500',
+  },
 };
+
+export type PicUserOrTeam =
+  | PicUserOption
+  | { id?: string; code?: string; name?: string; teamId?: string | null; team?: any; userTeams?: any }
+  | string
+  | null
+  | undefined;
+
+/**
+ * Resolves standard team code ('INV' | 'KS' | 'KOM' | 'SI' | 'HKM') from a user object or teamId string.
+ */
+export function resolveTeamCode(
+  userOrId?: PicUserOrTeam,
+  teamsList: PicTeamOption[] = []
+): string | null {
+  if (!userOrId) return null;
+
+  if (typeof userOrId === 'object') {
+    const u = userOrId as any;
+    if (u.code) {
+      const c = String(u.code).toUpperCase();
+      if (['INV', 'KS', 'KOM', 'SI', 'HKM'].includes(c)) return c;
+    }
+    if (u.team?.code) {
+      const c = String(u.team.code).toUpperCase();
+      if (['INV', 'KS', 'KOM', 'SI', 'HKM'].includes(c)) return c;
+    }
+    if (u.team?.name) {
+      const nm = String(u.team.name).toLowerCase();
+      if (nm.includes('investasi')) return 'INV';
+      if (nm.includes('kerja sama') || nm.includes('kerjasama')) return 'KS';
+      if (nm.includes('komunikasi')) return 'KOM';
+      if (nm.includes('sistem informasi') || nm.includes('si')) return 'SI';
+      if (nm.includes('hukum')) return 'HKM';
+    }
+    if (u.teamId) {
+      const byId = resolveTeamCode(u.teamId, teamsList);
+      if (byId) return byId;
+    }
+    if (Array.isArray(u.userTeams) && u.userTeams.length > 0) {
+      for (const ut of u.userTeams) {
+        const c = ut.team?.code ? String(ut.team.code).toUpperCase() : '';
+        if (c && ['INV', 'KS', 'KOM', 'SI', 'HKM'].includes(c)) return c;
+        const nm = ut.team?.name ? String(ut.team.name).toLowerCase() : '';
+        if (nm.includes('investasi')) return 'INV';
+        if (nm.includes('kerja sama') || nm.includes('kerjasama')) return 'KS';
+        if (nm.includes('komunikasi')) return 'KOM';
+        if (nm.includes('sistem informasi')) return 'SI';
+        if (nm.includes('hukum')) return 'HKM';
+      }
+    }
+    // Heuristic from user name or email
+    const nameLower = (u.name || '').toLowerCase();
+    const emailLower = (u.email || '').toLowerCase();
+    if (nameLower.includes('investasi')) return 'INV';
+    if (nameLower.includes('kerja sama') || nameLower.includes('kerjasama')) return 'KS';
+    if (nameLower.includes('komunikasi')) return 'KOM';
+    if (nameLower.includes('sistem informasi') || emailLower.startsWith('staf.si')) return 'SI';
+    if (nameLower.includes('hukum')) return 'HKM';
+
+    if (u.id) {
+      const byId = resolveTeamCode(u.id, teamsList);
+      if (byId) return byId;
+    }
+    return null;
+  }
+
+  const id = userOrId.trim();
+  const idUpper = id.toUpperCase();
+  if (['INV', 'KS', 'KOM', 'SI', 'HKM'].includes(idUpper)) return idUpper;
+  if (id === 'TIM-001' || id === '1c2512e1-1859-42ca-874a-196848ab7acf') return 'INV';
+  if (id === 'TIM-003' || id === '663d7ff9-585a-4800-8840-389a5e322779') return 'KS';
+  if (id === 'TIM-002' || id === 'a3b2e91a-566c-46e5-a740-1aa944793290') return 'KOM';
+  if (id === 'TIM-004' || id === 'c82de951-5fd8-4390-8cce-e663a13bedcc') return 'SI';
+  if (id === 'f49c43a1-7256-436c-a1bf-68e7f3201732') return 'HKM';
+
+  // Check in teamsList
+  const found = teamsList.find((t) => t.id === id || t.code?.toUpperCase() === idUpper);
+  if (found) {
+    const c = found.code?.toUpperCase();
+    if (c && ['INV', 'KS', 'KOM', 'SI', 'HKM'].includes(c)) return c;
+    const nm = (found.name || '').toLowerCase();
+    if (nm.includes('investasi')) return 'INV';
+    if (nm.includes('kerja sama') || nm.includes('kerjasama')) return 'KS';
+    if (nm.includes('komunikasi')) return 'KOM';
+    if (nm.includes('sistem informasi')) return 'SI';
+    if (nm.includes('hukum')) return 'HKM';
+    return c || null;
+  }
+
+  return null;
+}
+
+/**
+ * Gets styled team details for display
+ */
+export function getPicTeamDetails(
+  userOrId?: PicUserOrTeam,
+  teamsList: PicTeamOption[] = []
+): {
+  id: string;
+  code: string;
+  name: string;
+  shortName: string;
+  badgeClass: string;
+  avatarClass: string;
+  dotClass: string;
+} | null {
+  if (!userOrId) return null;
+
+  const code = resolveTeamCode(userOrId, teamsList);
+  if (code && KNOWN_TEAMS_META[code]) {
+    const meta = KNOWN_TEAMS_META[code];
+    const matchedTeam = teamsList.find(
+      (t) => t.code?.toUpperCase() === code || resolveTeamCode(t.id, teamsList) === code
+    );
+    return {
+      id: matchedTeam?.id || code,
+      ...meta,
+    };
+  }
+
+  // Dynamic / Custom team
+  if (typeof userOrId === 'object' && userOrId.team) {
+    return {
+      id: userOrId.team.id || 'TIM',
+      code: userOrId.team.code || 'TIM',
+      name: userOrId.team.name || 'Tim Kerja',
+      shortName: userOrId.team.name || 'Tim Kerja',
+      badgeClass: 'bg-teal-50 text-teal-800 border-teal-200',
+      avatarClass: 'bg-teal-50 text-teal-700 border-teal-200',
+      dotClass: 'bg-teal-500',
+    };
+  }
+
+  if (typeof userOrId === 'string') {
+    const t = teamsList.find((x) => x.id === userOrId);
+    if (t) {
+      return {
+        id: t.id,
+        code: t.code || 'TIM',
+        name: t.name || 'Tim Kerja',
+        shortName: t.shortName || t.name || 'Tim Kerja',
+        badgeClass: 'bg-teal-50 text-teal-800 border-teal-200',
+        avatarClass: 'bg-teal-50 text-teal-700 border-teal-200',
+        dotClass: 'bg-teal-500',
+      };
+    }
+  }
+
+  return null;
+}
 
 export function PicCombobox({
   value,
   onChange,
   users = [],
+  teams = [],
   biros = [],
   selectedBiroId,
   selectedTeamId,
   disabled = false,
-  placeholder = 'Pilih Pejabat / PIC...',
+  placeholder = 'Pilih Pejabat / PIC Pelaksana...',
 }: PicComboboxProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [activeTeamFilter, setActiveTeamFilter] = useState<string>('ALL');
   const containerRef = useRef<HTMLDivElement>(null);
   const searchInputRef = useRef<HTMLInputElement>(null);
-
-  // Map of biroId -> biro code/name
-  const biroMap = useMemo(() => {
-    const map = new Map<string, PicBiroOption>();
-    biros.forEach((b) => map.set(b.id, b));
-    return map;
-  }, [biros]);
 
   // Selected user object
   const selectedUser = useMemo(() => {
@@ -96,24 +280,88 @@ export function PicCombobox({
 
   // Selected user team details
   const selectedUserTeam = useMemo(() => {
-    return selectedUser ? getPicTeamDetails(selectedUser.teamId) : null;
-  }, [selectedUser]);
+    return selectedUser ? getPicTeamDetails(selectedUser, teams) : null;
+  }, [selectedUser, teams]);
+
+  // Map of userId -> array of team codes it belongs to
+  const userTeamCodesMap = useMemo(() => {
+    const map = new Map<string, string[]>();
+    users.forEach((u) => {
+      const codes: string[] = [];
+      const primaryCode = resolveTeamCode(u, teams);
+      if (primaryCode) codes.push(primaryCode);
+      if (Array.isArray(u.userTeams)) {
+        u.userTeams.forEach((ut) => {
+          const c = resolveTeamCode(ut.team, teams);
+          if (c && !codes.includes(c)) codes.push(c);
+        });
+      }
+      map.set(u.id, codes);
+    });
+    return map;
+  }, [users, teams]);
 
   // Count users per team
   const teamCounts = useMemo(() => {
-    return {
+    const counts: Record<string, number> = {
       ALL: users.length,
-      'TIM-001': users.filter((u) => u.teamId === 'TIM-001').length,
-      'TIM-003': users.filter((u) => u.teamId === 'TIM-003').length,
-      'TIM-002': users.filter((u) => u.teamId === 'TIM-002').length,
+      INV: 0,
+      KS: 0,
+      KOM: 0,
+      SI: 0,
+      HKM: 0,
     };
-  }, [users]);
+    users.forEach((u) => {
+      const codes = userTeamCodesMap.get(u.id) || [];
+      codes.forEach((c) => {
+        if (counts[c] !== undefined) {
+          counts[c]++;
+        } else {
+          counts[c] = (counts[c] || 0) + 1;
+        }
+      });
+    });
+    return counts;
+  }, [users, userTeamCodesMap]);
+
+  // Filter tabs definition
+  const filterTabs = useMemo(() => {
+    const defaultTabs = [
+      { key: 'ALL', label: 'Semua Tim', dotClass: '' },
+      { key: 'INV', label: 'Tim Investasi', dotClass: 'bg-emerald-500' },
+      { key: 'KS', label: 'Tim Kerja Sama', dotClass: 'bg-sky-500' },
+      { key: 'KOM', label: 'Tim Komunikasi', dotClass: 'bg-amber-500' },
+    ];
+    if ((teamCounts.SI || 0) > 0) {
+      defaultTabs.push({ key: 'SI', label: 'Tim Sistem Informasi', dotClass: 'bg-purple-500' });
+    }
+    if ((teamCounts.HKM || 0) > 0) {
+      defaultTabs.push({ key: 'HKM', label: 'Tim Hukum', dotClass: 'bg-violet-500' });
+    }
+    if (teams && teams.length > 0) {
+      teams.forEach((t) => {
+        const code = t.code?.toUpperCase();
+        if (code && !defaultTabs.some((tab) => tab.key === code)) {
+          const count = teamCounts[code] ?? 0;
+          if (count > 0) {
+            defaultTabs.push({
+              key: code,
+              label: t.name || `Tim ${code}`,
+              dotClass: 'bg-teal-500',
+            });
+          }
+        }
+      });
+    }
+    return defaultTabs;
+  }, [teamCounts, teams]);
 
   // Auto-focus search input when opened & sync initial filter tab
   useEffect(() => {
     if (isOpen) {
-      if (selectedTeamId && ['TIM-001', 'TIM-002', 'TIM-003'].includes(selectedTeamId)) {
-        setActiveTeamFilter(selectedTeamId);
+      const initialCode = selectedTeamId ? resolveTeamCode(selectedTeamId, teams) : null;
+      if (initialCode && ['INV', 'KS', 'KOM', 'SI', 'HKM'].includes(initialCode)) {
+        setActiveTeamFilter(initialCode);
       } else {
         setActiveTeamFilter('ALL');
       }
@@ -123,7 +371,7 @@ export function PicCombobox({
     } else {
       setSearchQuery('');
     }
-  }, [isOpen, selectedTeamId]);
+  }, [isOpen, selectedTeamId, teams]);
 
   // Click outside listener & Escape key
   useEffect(() => {
@@ -155,8 +403,12 @@ export function PicCombobox({
 
     return users.filter((u) => {
       // Team filter
-      if (activeTeamFilter !== 'ALL' && u.teamId !== activeTeamFilter) {
-        return false;
+      if (activeTeamFilter !== 'ALL') {
+        const codes = userTeamCodesMap.get(u.id) || [];
+        const filterCode = resolveTeamCode(activeTeamFilter, teams) || activeTeamFilter;
+        if (!codes.includes(filterCode)) {
+          return false;
+        }
       }
 
       // Search query filter
@@ -164,7 +416,7 @@ export function PicCombobox({
 
       const nameMatch = u.name.toLowerCase().includes(query);
       const emailMatch = u.email ? u.email.toLowerCase().includes(query) : false;
-      const team = getPicTeamDetails(u.teamId);
+      const team = getPicTeamDetails(u, teams);
       const teamMatch = team
         ? team.name.toLowerCase().includes(query) ||
           team.shortName.toLowerCase().includes(query) ||
@@ -173,7 +425,7 @@ export function PicCombobox({
 
       return nameMatch || emailMatch || teamMatch;
     });
-  }, [users, searchQuery, activeTeamFilter]);
+  }, [users, searchQuery, activeTeamFilter, userTeamCodesMap, teams]);
 
   const handleSelect = (userId: string) => {
     onChange(userId);
@@ -287,61 +539,42 @@ export function PicCombobox({
               )}
             </div>
 
-            {/* Segmented Team Filter Tabs (3 Tim Kerja) */}
-            <div className="grid grid-cols-4 gap-1 p-1 bg-slate-200/70 rounded-xl text-[11px]">
-              <button
-                type="button"
-                onClick={() => setActiveTeamFilter('ALL')}
-                className={`py-1 px-1 rounded-lg text-center font-medium transition-all cursor-pointer truncate ${
-                  activeTeamFilter === 'ALL'
-                    ? 'bg-white text-slate-900 shadow-2xs font-bold border border-slate-200'
-                    : 'text-slate-600 hover:text-slate-900'
-                }`}
-              >
-                Semua ({teamCounts.ALL})
-              </button>
+            {/* Filter Tim: Dropdown Selector Anti Geser Horizontal */}
+            <div className="flex items-center justify-between gap-2 bg-white px-2.5 py-1.5 rounded-lg border border-slate-200 shadow-2xs">
+              <div className="flex items-center gap-1.5 text-slate-500 text-[11px] font-semibold shrink-0">
+                <Filter className="w-3.5 h-3.5 text-[#31889C]" />
+                <span>Filter Tim:</span>
+              </div>
 
-              <button
-                type="button"
-                onClick={() => setActiveTeamFilter('TIM-001')}
-                className={`py-1 px-1 rounded-lg text-center font-medium transition-all cursor-pointer flex items-center justify-center gap-1 truncate ${
-                  activeTeamFilter === 'TIM-001'
-                    ? 'bg-white text-emerald-800 shadow-2xs font-bold border border-emerald-300'
-                    : 'text-slate-600 hover:text-emerald-700'
-                }`}
-                title="Filter PIC Tim Investasi"
-              >
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 shrink-0" />
-                <span className="truncate">Investasi ({teamCounts['TIM-001']})</span>
-              </button>
+              <div className="relative flex-1 min-w-0">
+                <select
+                  value={activeTeamFilter}
+                  onChange={(e) => setActiveTeamFilter(e.target.value)}
+                  className="w-full bg-slate-50 hover:bg-slate-100 text-slate-800 text-[11.5px] font-medium py-1 pl-2.5 pr-7 rounded-md border border-slate-200 focus:outline-none focus:ring-1 focus:ring-[#31889C] focus:border-[#31889C] cursor-pointer appearance-none truncate transition-colors"
+                >
+                  <option value="ALL">Semua Tim ({teamCounts.ALL} personil)</option>
+                  {filterTabs
+                    .filter((t) => t.key !== 'ALL')
+                    .map((tab) => (
+                      <option key={tab.key} value={tab.key}>
+                        {tab.label} ({teamCounts[tab.key] ?? 0} personil)
+                      </option>
+                    ))}
+                </select>
+                <ChevronDown className="w-3.5 h-3.5 text-slate-400 absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none" />
+              </div>
 
-              <button
-                type="button"
-                onClick={() => setActiveTeamFilter('TIM-003')}
-                className={`py-1 px-1 rounded-lg text-center font-medium transition-all cursor-pointer flex items-center justify-center gap-1 truncate ${
-                  activeTeamFilter === 'TIM-003'
-                    ? 'bg-white text-sky-800 shadow-2xs font-bold border border-sky-300'
-                    : 'text-slate-600 hover:text-sky-700'
-                }`}
-                title="Filter PIC Tim Kerja Sama"
-              >
-                <span className="w-1.5 h-1.5 rounded-full bg-sky-500 shrink-0" />
-                <span className="truncate">Kerja Sama ({teamCounts['TIM-003']})</span>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => setActiveTeamFilter('TIM-002')}
-                className={`py-1 px-1 rounded-lg text-center font-medium transition-all cursor-pointer flex items-center justify-center gap-1 truncate ${
-                  activeTeamFilter === 'TIM-002'
-                    ? 'bg-white text-amber-800 shadow-2xs font-bold border border-amber-300'
-                    : 'text-slate-600 hover:text-amber-700'
-                }`}
-                title="Filter PIC Tim Komunikasi"
-              >
-                <span className="w-1.5 h-1.5 rounded-full bg-amber-500 shrink-0" />
-                <span className="truncate">Komunikasi ({teamCounts['TIM-002']})</span>
-              </button>
+              {activeTeamFilter !== 'ALL' && (
+                <button
+                  type="button"
+                  onClick={() => setActiveTeamFilter('ALL')}
+                  className="text-[11px] text-[#31889C] hover:text-[#215865] font-semibold hover:underline shrink-0 cursor-pointer flex items-center gap-0.5"
+                  title="Tampilkan semua personil"
+                >
+                  <X className="w-3 h-3" />
+                  <span>Reset</span>
+                </button>
+              )}
             </div>
           </div>
 
@@ -369,7 +602,7 @@ export function PicCombobox({
             {filteredUsers.length > 0 ? (
               filteredUsers.map((u) => {
                 const isSelected = u.id === value;
-                const userTeam = getPicTeamDetails(u.teamId);
+                const userTeam = getPicTeamDetails(u, teams);
 
                 return (
                   <button

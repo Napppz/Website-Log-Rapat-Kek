@@ -530,7 +530,7 @@ export async function getMeetingsFromDb(filters?: {
           secretary: true,
           actionItems: true,
         },
-        orderBy: [{ date: 'desc' }, { createdAt: 'desc' }],
+        orderBy: [{ date: 'desc' }, { meetingNumber: 'desc' }, { createdAt: 'desc' }],
       });
 
       return meetings.map((m) => {

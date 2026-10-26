@@ -520,7 +520,7 @@ export function MeetingTable({
     const targetYear = filterYear != null && String(filterYear).trim() !== '' ? parseInt(String(filterYear), 10) : null;
     const targetDate = filterDate ? filterDate.trim() : null;
 
-    return list.filter((m) => {
+    const filtered = list.filter((m) => {
       if (filterBiro) {
         const target = String(filterBiro).toUpperCase().trim();
         const matchTeam =
@@ -644,6 +644,31 @@ export function MeetingTable({
         (m.primaryTeamName && m.primaryTeamName.toLowerCase().includes(q)) ||
         (m.agendaSummary && m.agendaSummary.toLowerCase().includes(q))
       );
+    });
+
+    // Urutkan kegiatan secara konsisten:
+    // 1. Tanggal terbaru -> tanggal terlama (descending)
+    // 2. Jika tanggal sama, urutkan berdasarkan nomor urut rapat terbesar -> terkecil (misal INV-007 sebelum INV-006)
+    return filtered.sort((a, b) => {
+      const timeA = new Date(a.date).getTime();
+      const timeB = new Date(b.date).getTime();
+      if (!isNaN(timeA) && !isNaN(timeB) && timeB !== timeA) {
+        return timeB - timeA;
+      }
+
+      const prefixA = (a.code.split('-')[0] || '').toUpperCase();
+      const prefixB = (b.code.split('-')[0] || '').toUpperCase();
+      if (prefixA !== prefixB) {
+        return prefixA.localeCompare(prefixB);
+      }
+
+      const numA = parseInt(a.code.replace(/^[^\d]+-0*/i, ''), 10) || 0;
+      const numB = parseInt(b.code.replace(/^[^\d]+-0*/i, ''), 10) || 0;
+      if (numA !== numB) {
+        return numB - numA;
+      }
+
+      return b.code.localeCompare(a.code);
     });
   }, [meetings, deletedMeetingIds, effectiveSearch, filterBiro, filterStatus, filterJenis, progressTabFilter, filterMonth, filterYear, filterDayOfWeek, filterDate, filterCategory]);
 

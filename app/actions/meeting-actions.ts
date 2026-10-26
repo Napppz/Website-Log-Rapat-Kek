@@ -1386,7 +1386,7 @@ export async function getMeetingOptionsAction(excludeMeetingId?: string) {
         primaryTeam: { select: { id: true, code: true, name: true } },
         primaryBiro: { select: { code: true, name: true, shortName: true } },
       },
-      orderBy: { date: 'desc' },
+      orderBy: [{ date: 'desc' }, { meetingNumber: 'desc' }],
       take: 300,
     });
     return { success: true, data: meetings };
