@@ -46,7 +46,7 @@ export function Sidebar({
   const isAdmin = userRole === 'ADMIN';
   const isPimpinan = userRole === 'PIMPINAN';
 
-  const isRapatRoute =
+  const isKegiatanRoute =
     pathname.includes('/arsip-kegiatan') ||
     pathname.includes('/catat-kegiatan') ||
     pathname.includes('/semua-rapat') ||
@@ -81,12 +81,12 @@ export function Sidebar({
     };
   }, []);
 
-  const isRapatOpen = toggledSections.rapat !== undefined ? toggledSections.rapat : isRapatRoute;
+  const isKegiatanOpen = toggledSections.kegiatan !== undefined ? toggledSections.kegiatan : isKegiatanRoute;
   const isTimOpen = toggledSections.tim !== undefined ? toggledSections.tim : isTimRoute;
 
   const toggleSection = (section: string) => {
     setToggledSections((prev) => {
-      const current = section === 'rapat' ? isRapatOpen : isTimOpen;
+      const current = section === 'kegiatan' ? isKegiatanOpen : isTimOpen;
       return {
         ...prev,
         [section]: !current,
@@ -104,7 +104,7 @@ export function Sidebar({
   const isDashboardActive = pathname === '/';
   const dashboardLabel = 'Dashboard';
 
-  const rapatSubItems = [
+  const kegiatanSubItems = [
     { name: 'Arsip Kegiatan', href: '/arsip-kegiatan' },
     ...(isSuperAdmin || isAdmin || userRole === 'STAFF'
       ? [{ name: '+ Catat Kegiatan Baru', href: '/catat-kegiatan' }]
@@ -205,7 +205,7 @@ export function Sidebar({
               <div>
                 <button
                   type="button"
-                  onClick={() => toggleSection('rapat')}
+                  onClick={() => toggleSection('kegiatan')}
                   className={cn(
                     "w-full flex items-center justify-between px-3 py-2 rounded-lg text-slate-600 hover:bg-[#F0F9FA] hover:text-[#31889C] transition-all font-medium text-[14px] cursor-pointer",
                     pathname.startsWith('/arsip-kegiatan') ||
@@ -233,15 +233,15 @@ export function Sidebar({
                     <ChevronDown
                       className={cn(
                         "w-4 h-4 text-slate-400 transition-transform duration-200",
-                        isRapatOpen ? "rotate-180" : ""
+                        isKegiatanOpen ? "rotate-180" : ""
                       )}
                     />
                   )}
                 </button>
 
-                {!collapsed && isRapatOpen && (
+                {!collapsed && isKegiatanOpen && (
                   <div className="pl-7 pr-2 py-1 space-y-1">
-                    {rapatSubItems.map((item) => {
+                    {kegiatanSubItems.map((item) => {
                       const isActive = pathname === item.href;
                       return (
                         <Link

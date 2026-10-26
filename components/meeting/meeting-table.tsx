@@ -24,6 +24,8 @@ import {
   Check,
   CheckCircle2,
   Eye,
+  ArrowDown,
+  ArrowUp,
 } from 'lucide-react';
 import { Meeting, BiroCode, MeetingStatus, getMeetingCategoryInfo } from '@/lib/types';
 import { MOCK_MEETINGS } from '@/lib/mock-data';
@@ -82,6 +84,7 @@ export function MeetingTable({
   const router = useRouter();
   const [deletedMeetingIds, setDeletedMeetingIds] = useState<Set<string>>(new Set());
   const [meetings, setMeetings] = useState<Meeting[]>(initialMeetings !== undefined ? initialMeetings : MOCK_MEETINGS);
+  const [sortOrder, setSortOrder] = useState<'desc' | 'asc'>('desc');
 
   // Synchronize state when initialMeetings changes (e.g., from server revalidation or parent state update)
   useEffect(() => {
@@ -646,31 +649,29 @@ export function MeetingTable({
       );
     });
 
-    // Urutkan kegiatan secara konsisten:
-    // 1. Tanggal terbaru -> tanggal terlama (descending)
-    // 2. Jika tanggal sama, urutkan berdasarkan nomor urut rapat terbesar -> terkecil (misal INV-007 sebelum INV-006)
+    // Urutkan kegiatan secara konsisten berdasarkan tanggal dan nomor urut:
     return filtered.sort((a, b) => {
       const timeA = new Date(a.date).getTime();
       const timeB = new Date(b.date).getTime();
       if (!isNaN(timeA) && !isNaN(timeB) && timeB !== timeA) {
-        return timeB - timeA;
+        return sortOrder === 'desc' ? timeB - timeA : timeA - timeB;
       }
 
       const prefixA = (a.code.split('-')[0] || '').toUpperCase();
       const prefixB = (b.code.split('-')[0] || '').toUpperCase();
       if (prefixA !== prefixB) {
-        return prefixA.localeCompare(prefixB);
+        return sortOrder === 'desc' ? prefixA.localeCompare(prefixB) : prefixB.localeCompare(prefixA);
       }
 
       const numA = parseInt(a.code.replace(/^[^\d]+-0*/i, ''), 10) || 0;
       const numB = parseInt(b.code.replace(/^[^\d]+-0*/i, ''), 10) || 0;
       if (numA !== numB) {
-        return numB - numA;
+        return sortOrder === 'desc' ? numB - numA : numA - numB;
       }
 
-      return b.code.localeCompare(a.code);
+      return sortOrder === 'desc' ? b.code.localeCompare(a.code) : a.code.localeCompare(b.code);
     });
-  }, [meetings, deletedMeetingIds, effectiveSearch, filterBiro, filterStatus, filterJenis, progressTabFilter, filterMonth, filterYear, filterDayOfWeek, filterDate, filterCategory]);
+  }, [meetings, deletedMeetingIds, effectiveSearch, filterBiro, filterStatus, filterJenis, progressTabFilter, filterMonth, filterYear, filterDayOfWeek, filterDate, filterCategory, sortOrder]);
 
   const handleResetFilter = () => {
     setEffectiveSearch('');
@@ -955,7 +956,43 @@ export function MeetingTable({
         <table className="w-full text-left text-slate-800">
           <thead className="bg-[#F8FAFC] border-b border-slate-200 text-[11px] font-bold text-slate-700 uppercase tracking-wider">
             <tr>
-              <th className="py-3 px-3 sm:px-3.5 whitespace-nowrap">Nomor &amp; Tanggal</th>
+              <th className="py-2.5 px-3 sm:px-3.5 whitespace-nowrap">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setCurrentPage(1);
+                    setSortOrder((prev) => (prev === 'desc' ? 'asc' : 'desc'));
+                  }}
+                  className="group inline-flex items-center gap-1.5 py-1 px-2 -ml-2 rounded-lg hover:bg-slate-200/70 text-slate-700 hover:text-[#1E6B7B] transition-all cursor-pointer select-none font-bold text-[11px] uppercase tracking-wider focus:outline-none focus:ring-2 focus:ring-[#1E6B7B]/20"
+                  title={
+                    sortOrder === 'desc'
+                      ? 'Saat ini: Terbaru ke Terlama. Klik untuk mengurutkan Terlama ke Terbaru.'
+                      : 'Saat ini: Terlama ke Terbaru. Klik untuk mengurutkan Terbaru ke Terlama.'
+                  }
+                >
+                  <span>Nomor &amp; Tanggal</span>
+                  <span
+                    className={cn(
+                      'inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded text-[9.5px] font-bold normal-case tracking-normal border transition-colors',
+                      sortOrder === 'desc'
+                        ? 'bg-[#E8F5F7] text-[#1E6B7B] border-[#BCE3EB]'
+                        : 'bg-amber-50 text-amber-700 border-amber-200'
+                    )}
+                  >
+                    {sortOrder === 'desc' ? (
+                      <>
+                        <ArrowDown className="w-3 h-3 text-[#1E6B7B]" />
+                        <span>Terbaru</span>
+                      </>
+                    ) : (
+                      <>
+                        <ArrowUp className="w-3 h-3 text-amber-600" />
+                        <span>Terlama</span>
+                      </>
+                    )}
+                  </span>
+                </button>
+              </th>
               <th className="py-3 px-3 sm:px-3.5">Nama Kegiatan</th>
               <th className="py-3 px-3 sm:px-3.5 whitespace-nowrap">Tim Pelaksana</th>
               <th className="py-3 px-3 sm:px-3.5 whitespace-nowrap" title="Status Pemantauan Pekerjaan: Belum Dimulai -> Dalam Proses -> Selesai">Status Pekerjaan</th>

@@ -194,7 +194,7 @@ export async function getMeetingAttachmentsAction(meetingId: string): Promise<{
         nama_pengunggah AS "uploadedBy", 
         kategori AS "category", 
         dibuat_pada AS "createdAt"
-       FROM lampiran_rapat 
+       FROM lampiran_kegiatan 
        WHERE id_rapat = $1 
        ORDER BY dibuat_pada ASC`,
       meetingId
@@ -216,7 +216,7 @@ export async function getMeetingAttachmentsAction(meetingId: string): Promise<{
     // Check if meeting has an invitation document
     const meetingRow: any[] = await prisma.$queryRawUnsafe(
       `SELECT dokumen_undangan_url, nama_dokumen_undangan, ukuran_dokumen_undangan, dibuat_pada 
-       FROM rapat 
+       FROM kegiatan 
        WHERE id_rapat = $1`,
       meetingId
     );

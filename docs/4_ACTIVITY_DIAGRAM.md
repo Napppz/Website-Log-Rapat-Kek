@@ -151,7 +151,7 @@ Alur ini memodelkan proses notulis mencatat dinamika rapat dinas, penyimpanan dr
 
 Alur ini memodelkan proses bisnis pengelolaan tindak lanjut secara komprehensif sesuai arahan mentor lapangan (Diaji Junianto):
 1. **Hulu Disposisi:** Kepala Biro memberikan disposisi dinas dan Koordinator Tim menerima disposisi melalui **Aplikasi SRIKANDI** (Sistem Informasi Kearsipan Dinamis Terintegrasi nasional).
-2. **Pencatatan & Penunjukan PIC:** Koordinator Tim mencatat pekerjaan rapat ke dalam Sistem (*Simpan data* pada tabel `rapat` & `tindak_lanjut`) dan menunjuk staf PIC pelaksana.
+2. **Pencatatan & Penunjukan PIC:** Koordinator Tim mencatat pekerjaan kegiatan ke dalam Sistem (*Simpan data* pada tabel `kegiatan` & `tindak_lanjut`) dan menunjuk staf PIC pelaksana.
 3. **Eksekusi & Histori Audit:** Staf PIC menerima tugas (*Menerima Task*), melaksanakan pekerjaan, memperbarui progres bertahap (*Update Progress* &rarr; *Simpan history* pada tabel `riwayat_tindak_lanjut`), dan menginput bukti/laporan hasil (*Input hasil* &rarr; *Simpan history*).
 4. **Hilir Pengawasan:** Sistem mengagregasi seluruh riwayat status ke dalam **Dashboard Eksekutif**, sehingga Kepala Biro dapat langsung memantau capaian tugas (*Melihat report pekerjaan*).
 
@@ -159,7 +159,7 @@ Alur ini memodelkan proses bisnis pengelolaan tindak lanjut secara komprehensif 
 +--------------------------------------------------------------------------------------------------------------------------------------------------------+
 |                                  Alur Monitoring & Pembaruan Tindak Lanjut / Action Items (Sesuai Arahan Mentor)                                       |
 +------------------------------+------------------------------+------------------------------+-----------------------------------------------------------+
-|         Kepala Biro          |       Koordinator Tim        |     PIC (Staf Pelaksana)     |                   Sistem Log_Book_Rapat                   |
+|         Kepala Biro          |       Koordinator Tim        |     PIC (Staf Pelaksana)     |                   Sistem Pencatatan Kegiatan              |
 +------------------------------+------------------------------+------------------------------+-----------------------------------------------------------+
 |      (Initial Node ●)        |                              |                              |                                                           |
 |             │                |                              |                              |                                                           |
@@ -168,7 +168,7 @@ Alur ini memodelkan proses bisnis pengelolaan tindak lanjut secara komprehensif 
 |  | [Memberikan disposisi] ───┼─> [Menerima disposisi]      | |                              |                                                           |
 |  '---------------------------┼──────────────│─────────────' |                              |                                                           |
 |                              |              ▼               |                              |                                                           |
-|                              |     [Mencatat Pekerjaan] ────┼──────────────────────────────┼─> [«datastore» Simpan data] (Tabel: rapat & tindak_lanjut)|
+|                              |     [Mencatat Pekerjaan] ────┼──────────────────────────────┼─> [«datastore» Simpan data] (Tabel: kegiatan & tindak_lanjut)|
 |                              |              │               |                              |                                                           |
 |                              |     [Menentukan PIC] ────────┼─> [Menerima Task]            |                                                           |
 |                              |                              |          │                   |                                                           |

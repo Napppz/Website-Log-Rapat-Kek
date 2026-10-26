@@ -158,7 +158,7 @@ model Meeting {
   @@index([date])
   @@index([status])
   @@index([createdAt])
-  @@map("rapat")
+  @@map("kegiatan")
 }
 
 model MeetingBiro {
@@ -171,7 +171,7 @@ model MeetingBiro {
   @@id([meetingId, biroId])
   @@index([meetingId])
   @@index([biroId])
-  @@map("rapat_biro")
+  @@map("kegiatan_biro")
 }
 
 model MeetingParticipant {
@@ -187,7 +187,7 @@ model MeetingParticipant {
   @@unique([meetingId, userId])
   @@index([meetingId])
   @@index([userId])
-  @@map("peserta_rapat")
+  @@map("peserta_kegiatan")
 }
 
 model BiroMeetingSequence {
@@ -200,7 +200,7 @@ model BiroMeetingSequence {
   biro Biro @relation(fields: [biroId], references: [id], onDelete: Cascade)
 
   @@index([biroId])
-  @@map("penomoran_rapat_biro")
+  @@map("penomoran_kegiatan_biro")
 }
 
 model MeetingMinutes {
@@ -216,7 +216,7 @@ model MeetingMinutes {
   meeting Meeting @relation(fields: [meetingId], references: [id], onDelete: Cascade)
 
   @@index([meetingId])
-  @@map("notulen_rapat")
+  @@map("notulen_kegiatan")
 }
 
 model ActionItem {
@@ -264,7 +264,7 @@ model MeetingAttachment {
 
   @@index([meetingId])
   @@index([createdAt])
-  @@map("lampiran_rapat")
+  @@map("lampiran_kegiatan")
 }
 
 model ActionItemLog {

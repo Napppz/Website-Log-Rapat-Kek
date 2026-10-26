@@ -1,7 +1,7 @@
 'use server';
 
 import { prisma } from '@/lib/prisma';
-import { requireAuth, requireRole } from '@/lib/auth/authorization';
+import { requireAuth, requireRole, AuthUser } from '@/lib/auth/authorization';
 import { revalidatePath } from 'next/cache';
 import { z } from 'zod';
 
@@ -359,3 +359,255 @@ export async function assignUserTeamsAction(input: { userId: string; teamIds: st
     return { success: false, error: err?.message || 'Gagal menyimpan penugasan tim' };
   }
 }
+
+/**
+ * Check if the current user (especially ADMIN) is authorized to manage members of the target team
+ */
+function canAdminManageTeam(currentUser: AuthUser, _targetTeamId: string): boolean {
+  return currentUser.role === 'SUPER_ADMIN' || currentUser.role === 'ADMIN';
+}
+
+/**
+ * Super Admin or Admin fetches available Biro staff who are not yet members of the specified team
+ */
+export async function getBiroStaffForTeamAction(teamId: string) {
+  try {
+    const currentUser = await requireRole(['SUPER_ADMIN', 'ADMIN']);
+
+    const team = await prisma.biroTeam.findUnique({
+      where: { id: teamId },
+      include: {
+        users: { select: { id: true } },
+        userTeams: { select: { userId: true } },
+      },
+    });
+
+    if (!team) {
+      return { success: false, error: 'Tim kerja tidak ditemukan.' };
+    }
+
+    if (currentUser.role === 'ADMIN' && !canAdminManageTeam(currentUser, teamId)) {
+      return {
+        success: false,
+        error: 'Anda hanya memiliki izin mengelola anggota pada tim kerja Anda sendiri.',
+      };
+    }
+
+    const currentMemberIds = new Set<string>();
+    for (const u of team.users) currentMemberIds.add(u.id);
+    for (const ut of team.userTeams) currentMemberIds.add(ut.userId);
+
+    const biroUsers = await prisma.user.findMany({
+      where: {
+        biroId: team.biroId,
+        role: { not: 'SUPER_ADMIN' },
+        isActive: true,
+      },
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        username: true,
+        role: true,
+        isActive: true,
+        teamId: true,
+        team: { select: { id: true, code: true, name: true } },
+        userTeams: {
+          select: {
+            team: { select: { id: true, code: true, name: true } },
+          },
+        },
+      },
+      orderBy: [{ name: 'asc' }],
+    });
+
+    const availableStaff = biroUsers
+      .filter((u) => !currentMemberIds.has(u.id))
+      .map((u) => {
+        const teamSet = new Map<string, string>();
+        if (u.team) teamSet.set(u.team.id, u.team.name);
+        for (const ut of u.userTeams) {
+          if (ut.team) teamSet.set(ut.team.id, ut.team.name);
+        }
+
+        return {
+          id: u.id,
+          name: u.name,
+          email: u.email,
+          username: u.username,
+          role: u.role,
+          isActive: u.isActive,
+          currentTeams: Array.from(teamSet.values()),
+        };
+      });
+
+    return {
+      success: true,
+      data: availableStaff,
+      teamName: team.name,
+      teamCode: team.code,
+    };
+  } catch (err: any) {
+    console.error('Error in getBiroStaffForTeamAction:', err);
+    return { success: false, error: err?.message || 'Gagal memuat daftar staf biro.' };
+  }
+}
+
+/**
+ * Super Admin or Admin adds staff from Biro to a team (multi-team assignment)
+ */
+export async function addMembersToTeamAction(teamId: string, userIds: string[]) {
+  try {
+    const currentUser = await requireRole(['SUPER_ADMIN', 'ADMIN']);
+
+    if (!teamId || !Array.isArray(userIds) || userIds.length === 0) {
+      return { success: false, error: 'Silakan pilih minimal 1 anggota staf untuk ditambahkan.' };
+    }
+
+    const team = await prisma.biroTeam.findUnique({
+      where: { id: teamId },
+    });
+
+    if (!team) {
+      return { success: false, error: 'Tim kerja tidak ditemukan.' };
+    }
+
+    if (currentUser.role === 'ADMIN' && !canAdminManageTeam(currentUser, teamId)) {
+      return {
+        success: false,
+        error: 'Anda hanya memiliki izin menambah anggota pada tim kerja Anda sendiri.',
+      };
+    }
+
+    await prisma.$transaction(async (tx) => {
+      // 1. Create UserTeam pivot records (multi-team assignment)
+      await tx.userTeam.createMany({
+        data: userIds.map((userId) => ({
+          userId,
+          teamId,
+          role: 'ANGGOTA',
+        })),
+        skipDuplicates: true,
+      });
+
+      // 2. If any user has teamId == null, set this team as primary
+      await tx.user.updateMany({
+        where: {
+          id: { in: userIds },
+          teamId: null,
+        },
+        data: {
+          teamId,
+        },
+      });
+    });
+
+    const addedUsers = await prisma.user.findMany({
+      where: { id: { in: userIds } },
+      select: {
+        id: true,
+        name: true,
+        username: true,
+        email: true,
+        role: true,
+        isActive: true,
+      },
+    });
+
+    safeRevalidate(['/pengguna', '/catat-kegiatan', '/arsip-kegiatan', '/']);
+
+    return {
+      success: true,
+      data: addedUsers.map((u) => ({
+        id: u.id,
+        name: u.name,
+        username: u.username,
+        email: u.email,
+        role: u.role,
+        teamRole: 'ANGGOTA',
+        isActive: u.isActive,
+      })),
+      message: `Berhasil menambahkan ${userIds.length} anggota baru ke ${team.name}!`,
+    };
+  } catch (err: any) {
+    console.error('Error in addMembersToTeamAction:', err);
+    return { success: false, error: err?.message || 'Gagal menambahkan anggota ke tim.' };
+  }
+}
+
+/**
+ * Super Admin or Admin removes an anggota from a team
+ * (removes membership from team, without deleting user account from the system)
+ */
+export async function removeMemberFromTeamAction(teamId: string, userId: string) {
+  try {
+    const currentUser = await requireRole(['SUPER_ADMIN', 'ADMIN']);
+
+    if (!teamId || !userId) {
+      return { success: false, error: 'Parameter tidak valid.' };
+    }
+
+    const team = await prisma.biroTeam.findUnique({
+      where: { id: teamId },
+    });
+
+    if (!team) {
+      return { success: false, error: 'Tim kerja tidak ditemukan.' };
+    }
+
+    if (currentUser.role === 'ADMIN' && !canAdminManageTeam(currentUser, teamId)) {
+      return {
+        success: false,
+        error: 'Anda hanya memiliki izin mengelola anggota pada tim kerja Anda sendiri.',
+      };
+    }
+
+    // Safety: prevent admin from kicking themselves out
+    if (currentUser.id === userId && currentUser.role === 'ADMIN') {
+      return {
+        success: false,
+        error: 'Anda tidak dapat mengeluarkan diri Anda sendiri dari tim kerja Anda.',
+      };
+    }
+
+    const targetUser = await prisma.user.findUnique({
+      where: { id: userId },
+      select: { id: true, name: true, teamId: true },
+    });
+
+    if (!targetUser) {
+      return { success: false, error: 'Pengguna tidak ditemukan.' };
+    }
+
+    await prisma.$transaction(async (tx) => {
+      // 1. Remove from userTeam pivot
+      await tx.userTeam.deleteMany({
+        where: { userId, teamId },
+      });
+
+      // 2. If user's primary team was this team, reassign to another team or null
+      if (targetUser.teamId === teamId) {
+        const remaining = await tx.userTeam.findFirst({
+          where: { userId, teamId: { not: teamId } },
+          select: { teamId: true },
+        });
+
+        await tx.user.update({
+          where: { id: userId },
+          data: { teamId: remaining ? remaining.teamId : null },
+        });
+      }
+    });
+
+    safeRevalidate(['/pengguna', '/catat-kegiatan', '/arsip-kegiatan', '/']);
+
+    return {
+      success: true,
+      message: `"${targetUser.name}" berhasil dikeluarkan dari ${team.name}.`,
+    };
+  } catch (err: any) {
+    console.error('Error in removeMemberFromTeamAction:', err);
+    return { success: false, error: err?.message || 'Gagal mengeluarkan anggota dari tim.' };
+  }
+}
+

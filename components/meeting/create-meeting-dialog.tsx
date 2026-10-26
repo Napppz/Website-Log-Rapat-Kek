@@ -386,7 +386,7 @@ export function CreateMeetingDialog({ isOpen, onClose, onSuccess }: CreateMeetin
               rows={2}
               value={title}
               onChange={(e) => setTitle(e.target.value)}
-              placeholder="Contoh: Rapat Koordinasi Fasilitasi Investasi KEK & Penyiapan Infrastruktur..."
+              placeholder="Contoh: Kegiatan Koordinasi Fasilitasi Investasi KEK & Penyiapan Infrastruktur..."
               className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 bg-white text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-[#1E6B7B]/20 focus:border-[#1E6B7B]"
             />
           </div>

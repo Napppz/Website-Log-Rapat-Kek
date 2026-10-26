@@ -525,7 +525,7 @@ export function PicCombobox({
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Cari nama atau email personil..."
+                placeholder="Cari nama atau email anggota..."
                 className="w-full pl-8 pr-7 py-1.5 bg-white rounded-lg border border-slate-200 text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:border-[#31889C] focus:ring-1 focus:ring-[#31889C] transition-all"
               />
               {searchQuery && (
@@ -552,12 +552,12 @@ export function PicCombobox({
                   onChange={(e) => setActiveTeamFilter(e.target.value)}
                   className="w-full bg-slate-50 hover:bg-slate-100 text-slate-800 text-[11.5px] font-medium py-1 pl-2.5 pr-7 rounded-md border border-slate-200 focus:outline-none focus:ring-1 focus:ring-[#31889C] focus:border-[#31889C] cursor-pointer appearance-none truncate transition-colors"
                 >
-                  <option value="ALL">Semua Tim ({teamCounts.ALL} personil)</option>
+                  <option value="ALL">Semua Tim ({teamCounts.ALL} Anggota)</option>
                   {filterTabs
                     .filter((t) => t.key !== 'ALL')
                     .map((tab) => (
                       <option key={tab.key} value={tab.key}>
-                        {tab.label} ({teamCounts[tab.key] ?? 0} personil)
+                        {tab.label} ({teamCounts[tab.key] ?? 0} Anggota)
                       </option>
                     ))}
                 </select>
@@ -569,7 +569,7 @@ export function PicCombobox({
                   type="button"
                   onClick={() => setActiveTeamFilter('ALL')}
                   className="text-[11px] text-[#31889C] hover:text-[#215865] font-semibold hover:underline shrink-0 cursor-pointer flex items-center gap-0.5"
-                  title="Tampilkan semua personil"
+                  title="Tampilkan semua anggota"
                 >
                   <X className="w-3 h-3" />
                   <span>Reset</span>
@@ -664,13 +664,13 @@ export function PicCombobox({
               })
             ) : (
               <div className="p-4 text-center text-slate-400 space-y-1">
-                <p className="text-xs font-semibold text-slate-700">Personil tidak ditemukan</p>
+                <p className="text-xs font-semibold text-slate-700">Anggota tidak ditemukan</p>
                 <p className="text-[11px] text-slate-400">
                   {searchQuery
                     ? `Tidak ada PIC yang cocok dengan kata kunci "${searchQuery}".`
                     : activeTeamFilter !== 'ALL'
-                    ? 'Tidak ada personil yang terdaftar pada tim ini.'
-                    : 'Tidak ada daftar personil yang tersedia.'}
+                    ? 'Tidak ada anggota yang terdaftar pada tim ini.'
+                    : 'Tidak ada daftar anggota yang tersedia.'}
                 </p>
               </div>
             )}
@@ -681,7 +681,7 @@ export function PicCombobox({
             <span className="flex items-center gap-1">
               <Layers className="w-3 h-3 text-[#31889C]" />
               <span>
-                Menampilkan <strong>{filteredUsers.length}</strong> dari {users.length} personil
+                Menampilkan <strong>{filteredUsers.length}</strong> dari {users.length} anggota
               </span>
             </span>
             <span>Tekan ESC untuk menutup</span>

@@ -999,7 +999,7 @@ export function TeamDetailModal({ isOpen, onClose, team }: TeamDetailModalProps)
                   <Users className="w-8 h-8 text-slate-300 mx-auto mb-2" />
                   <p className="text-[13px] font-bold text-slate-700">Belum ada anggota terdaftar</p>
                   <p className="text-xs text-slate-400 mt-1">
-                    Kelola penempatan personil melalui menu Manajemen Pengguna.
+                    Kelola penempatan anggota melalui menu Manajemen Pengguna.
                   </p>
                 </div>
               )}

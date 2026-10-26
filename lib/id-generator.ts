@@ -44,7 +44,7 @@ async function getNextFormattedId(
 }
 
 export async function getNextMeetingId(tx?: any): Promise<string> {
-  return getNextFormattedId(tx, 'rapat', 'id_rapat', 'MTG-');
+  return getNextFormattedId(tx, 'kegiatan', 'id_rapat', 'MTG-');
 }
 
 export async function getNextActionItemId(tx?: any): Promise<string> {
@@ -52,11 +52,11 @@ export async function getNextActionItemId(tx?: any): Promise<string> {
 }
 
 export async function getNextMinutesId(tx?: any): Promise<string> {
-  return getNextFormattedId(tx, 'notulen_rapat', 'id_notulen', 'NOT-');
+  return getNextFormattedId(tx, 'notulen_kegiatan', 'id_notulen', 'NOT-');
 }
 
 export async function getNextParticipantId(tx?: any): Promise<string> {
-  return getNextFormattedId(tx, 'peserta_rapat', 'id_peserta', 'PRT-');
+  return getNextFormattedId(tx, 'peserta_kegiatan', 'id_peserta', 'PRT-');
 }
 
 export async function getNextUserId(tx?: any): Promise<string> {

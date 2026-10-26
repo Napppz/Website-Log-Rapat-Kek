@@ -279,9 +279,9 @@ export function DashboardClient({
       return [
         {
           id: 'total-rapat',
-          label: `TOTAL RAPAT (YTD ${selectedYear})`,
+          label: `TOTAL KEGIATAN (YTD ${selectedYear})`,
           value: totalYearMeetings,
-          unit: 'Rapat',
+          unit: 'Kegiatan',
           changeValue: totalYearMeetings > 0 ? '+100%' : '0%',
           changeLabel: isStaff && userTeamWorkload ? `Tim ${userTeamWorkload.name}` : `Tahun ${selectedYear}`,
           variant: 'default',
@@ -309,9 +309,9 @@ export function DashboardClient({
         },
         {
           id: 'perlu-atensi',
-          label: 'MONITORING PROSES RAPAT',
+          label: 'MONITORING PROSES KEGIATAN',
           value: yearOnProgress + yearStart,
-          unit: 'Rapat',
+          unit: 'Kegiatan',
           badgeText: `${yearOnProgress} Dalam Proses • ${yearStart} Belum Dimulai`,
           badgeSubtext: isStaff && userTeamWorkload ? `Tim ${userTeamWorkload.name}` : `Tahun ${selectedYear}`,
           variant: yearOnProgress > 0 ? 'default' : 'default',
@@ -333,9 +333,9 @@ export function DashboardClient({
     return [
       {
         id: 'total-rapat',
-        label: `TOTAL RAPAT (YTD s/d ${selectedMonth})`,
+        label: `TOTAL KEGIATAN (YTD s/d ${selectedMonth})`,
         value: ytdMeetings.length,
-        unit: 'Rapat',
+        unit: 'Kegiatan',
         changeValue: `${ytdMeetings.length}/${yearMeetings.length || 1}`,
         changeLabel: isStaff && userTeamWorkload ? `Tim ${userTeamWorkload.name}` : `s/d ${selectedMonth} ${selectedYear}`,
         variant: 'default',
@@ -343,7 +343,7 @@ export function DashboardClient({
       },
       {
         id: 'rapat-bulan-ini',
-        label: `RAPAT BULAN ${fullMonthName.toUpperCase()}`,
+        label: `KEGIATAN BULAN ${fullMonthName.toUpperCase()}`,
         value: totalMonth,
         unit: 'Agenda',
         badgeText: totalMonth > 0 ? `${finishMonth} Selesai • ${onProgressMonth} Dalam Proses` : '0 Agenda',
@@ -363,9 +363,9 @@ export function DashboardClient({
       },
       {
         id: 'perlu-atensi',
-        label: 'MONITORING PROSES RAPAT',
+        label: 'MONITORING PROSES KEGIATAN',
         value: onProgressMonth + startMonth,
-        unit: 'Rapat',
+        unit: 'Kegiatan',
         badgeText: `${onProgressMonth} Dalam Proses • ${startMonth} Belum Dimulai`,
         badgeSubtext: `${fullMonthName} ${selectedYear}`,
         variant: onProgressMonth > 0 ? 'default' : 'default',

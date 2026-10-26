@@ -95,7 +95,7 @@ export function ActionItemUpdateProgressDialog({
         setInitialDriveAcuan(null);
       }
 
-      // 3. Bukti Pelaksanaan Hasil PIC (jika sebelumnya sudah pernah upload bukti)
+      // 3. Bukti Kegiatan (jika sebelumnya sudah pernah upload bukti)
       const evidenceMatch = rawDesc.match(/📎 Bukti Pelaksanaan:\s*\[([^\]]+)\]\(([^)]+)\)/);
       if (evidenceMatch) {
         setUploadedDoc({ name: evidenceMatch[1], url: evidenceMatch[2] });
@@ -348,11 +348,10 @@ export function ActionItemUpdateProgressDialog({
                 <button
                   type="button"
                   onClick={() => setStatus('PENDING')}
-                  className={`p-3 rounded-xl border text-left transition-all cursor-pointer flex flex-col justify-between ${
-                    status === 'PENDING'
-                      ? 'bg-amber-50/90 border-amber-400 ring-2 ring-amber-400/30 shadow-xs'
-                      : 'bg-white border-slate-200 hover:border-amber-300 hover:bg-amber-50/30'
-                  }`}
+                  className={`p-3 rounded-xl border text-left transition-all cursor-pointer flex flex-col justify-between ${status === 'PENDING'
+                    ? 'bg-amber-50/90 border-amber-400 ring-2 ring-amber-400/30 shadow-xs'
+                    : 'bg-white border-slate-200 hover:border-amber-300 hover:bg-amber-50/30'
+                    }`}
                 >
                   <div className="flex items-center justify-between">
                     <span className="w-7 h-7 rounded-lg bg-amber-100 text-amber-700 flex items-center justify-center font-bold text-xs">
@@ -376,11 +375,10 @@ export function ActionItemUpdateProgressDialog({
                 <button
                   type="button"
                   onClick={() => setStatus('IN_PROGRESS')}
-                  className={`p-3 rounded-xl border text-left transition-all cursor-pointer flex flex-col justify-between ${
-                    status === 'IN_PROGRESS'
-                      ? 'bg-[#E8F5F7] border-[#31889C] ring-2 ring-[#31889C]/30 shadow-xs'
-                      : 'bg-white border-slate-200 hover:border-[#31889C]/50 hover:bg-[#F0F8FA]/40'
-                  }`}
+                  className={`p-3 rounded-xl border text-left transition-all cursor-pointer flex flex-col justify-between ${status === 'IN_PROGRESS'
+                    ? 'bg-[#E8F5F7] border-[#31889C] ring-2 ring-[#31889C]/30 shadow-xs'
+                    : 'bg-white border-slate-200 hover:border-[#31889C]/50 hover:bg-[#F0F8FA]/40'
+                    }`}
                 >
                   <div className="flex items-center justify-between">
                     <span className="w-7 h-7 rounded-lg bg-[#D2EDF2] text-[#215865] flex items-center justify-center font-bold text-xs">
@@ -404,11 +402,10 @@ export function ActionItemUpdateProgressDialog({
                 <button
                   type="button"
                   onClick={() => setStatus('COMPLETED')}
-                  className={`p-3 rounded-xl border text-left transition-all cursor-pointer flex flex-col justify-between ${
-                    status === 'COMPLETED'
-                      ? 'bg-emerald-50 border-emerald-500 ring-2 ring-emerald-500/30 shadow-xs'
-                      : 'bg-white border-slate-200 hover:border-emerald-300 hover:bg-emerald-50/30'
-                  }`}
+                  className={`p-3 rounded-xl border text-left transition-all cursor-pointer flex flex-col justify-between ${status === 'COMPLETED'
+                    ? 'bg-emerald-50 border-emerald-500 ring-2 ring-emerald-500/30 shadow-xs'
+                    : 'bg-white border-slate-200 hover:border-emerald-300 hover:bg-emerald-50/30'
+                    }`}
                 >
                   <div className="flex items-center justify-between">
                     <span className="w-7 h-7 rounded-lg bg-emerald-100 text-emerald-800 flex items-center justify-center font-bold text-xs">
@@ -464,7 +461,7 @@ export function ActionItemUpdateProgressDialog({
               <div className="flex items-center justify-between">
                 <label className="font-bold text-slate-800 text-[13px] flex items-center gap-1.5">
                   <Paperclip className="w-4 h-4 text-[#31889C]" />
-                  <span>3. Bukti Pelaksanaan Hasil PIC</span>
+                  <span>3. Bukti Kegiatan</span>
                   <span className="text-slate-400 font-normal text-xs">(Opsional)</span>
                 </label>
                 <span className="text-[10.5px] font-bold text-emerald-700 bg-emerald-50 px-2.5 py-0.5 rounded border border-emerald-200">
