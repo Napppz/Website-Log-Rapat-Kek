@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
 import {
   Users,
@@ -65,7 +65,15 @@ export function TeamManagementPanel({
   currentUserRole = 'SUPER_ADMIN',
 }: TeamManagementPanelProps) {
   const router = useRouter();
+  const [isPending, startTransition] = useTransition();
   const [teams, setTeams] = useState<TeamData[]>(initialTeams);
+
+  useEffect(() => {
+    if (initialTeams && Array.isArray(initialTeams)) {
+      setTeams(initialTeams);
+    }
+  }, [initialTeams]);
+
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState<'ALL' | 'ACTIVE' | 'INACTIVE'>('ALL');
 
@@ -155,7 +163,9 @@ export function TeamManagementPanel({
             )
           );
           handleCloseModal();
-          router.refresh();
+          startTransition(() => {
+            router.refresh();
+          });
         } else {
           toast.error(res.error || 'Gagal memperbarui tim.');
         }
@@ -181,7 +191,9 @@ export function TeamManagementPanel({
             },
           ]);
           handleCloseModal();
-          router.refresh();
+          startTransition(() => {
+            router.refresh();
+          });
         } else {
           toast.error(res.error || 'Gagal menambahkan tim baru.');
         }
@@ -217,7 +229,9 @@ export function TeamManagementPanel({
         setTeams((prev) =>
           prev.map((t) => (t.id === team.id ? { ...t, isActive: nextState } : t))
         );
-        router.refresh();
+        startTransition(() => {
+          router.refresh();
+        });
       } else {
         toast.error(res.error || 'Gagal mengubah status tim.');
       }
@@ -248,7 +262,9 @@ export function TeamManagementPanel({
         if (editingTeam?.id === team.id) {
           handleCloseModal();
         }
-        router.refresh();
+        startTransition(() => {
+          router.refresh();
+        });
       } else {
         toast.error(res.error || 'Gagal menghapus tim kerja.');
       }

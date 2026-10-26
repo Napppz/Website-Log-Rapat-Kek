@@ -329,19 +329,11 @@ export async function updateUserAction(input: UpdateUserInput) {
       ? (parsed.data.biroId || existing.biroId || 'BIRO-IKK')
       : currentUser.biroId;
 
-    if (isGlobalAdmin && teamId) {
-      const team = await prisma.biroTeam.findUnique({ where: { id: teamId } });
+    if (isGlobalAdmin && teamId && teamId !== existing.teamId) {
+      const team = await prisma.biroTeam.findUnique({ where: { id: teamId }, select: { biroId: true } });
       if (team) {
         biroId = team.biroId;
       }
-    }
-
-    // Ensure biro exists
-    const biro = await prisma.biro.findUnique({
-      where: { id: biroId },
-    });
-    if (!biro) {
-      return { success: false, error: 'Biro penempatan tidak ditemukan.' };
     }
 
     // Prepare update data
@@ -362,58 +354,77 @@ export async function updateUserAction(input: UpdateUserInput) {
       updateData.password = await bcrypt.hash(password, 10);
     }
 
+    const selectUserWithTeams = {
+      id: true,
+      name: true,
+      username: true,
+      email: true,
+      role: true,
+      biroId: true,
+      teamId: true,
+      isActive: true,
+      createdAt: true,
+      updatedAt: true,
+      biro: true,
+      team: true,
+      userTeams: {
+        select: {
+          team: {
+            select: {
+              id: true,
+              code: true,
+              name: true,
+              isActive: true,
+            },
+          },
+        },
+      },
+    };
+
+    let updated: any;
+
     if (parsed.data.teamIds !== undefined) {
       const effectiveTeamIds = parsed.data.teamIds;
       updateData.teamId = (teamId && effectiveTeamIds.includes(teamId))
         ? teamId
         : (effectiveTeamIds.length > 0 ? effectiveTeamIds[0] : null);
 
-      await prisma.userTeam.deleteMany({
-        where: { userId: id },
-      });
+      const ops: any[] = [
+        prisma.userTeam.deleteMany({
+          where: { userId: id },
+        }),
+      ];
 
       if (effectiveTeamIds.length > 0) {
-        await prisma.userTeam.createMany({
-          data: effectiveTeamIds.map((tid) => ({
-            userId: id,
-            teamId: tid,
-            role: 'ANGGOTA',
-          })),
-          skipDuplicates: true,
-        });
+        ops.push(
+          prisma.userTeam.createMany({
+            data: effectiveTeamIds.map((tid) => ({
+              userId: id,
+              teamId: tid,
+              role: 'ANGGOTA',
+            })),
+            skipDuplicates: true,
+          })
+        );
       }
-    }
 
-    const updated = await prisma.user.update({
-      where: { id },
-      data: updateData,
-      select: {
-        id: true,
-        name: true,
-        username: true,
-        email: true,
-        role: true,
-        biroId: true,
-        teamId: true,
-        isActive: true,
-        createdAt: true,
-        updatedAt: true,
-        biro: true,
-        team: true,
-        userTeams: {
-          select: {
-            team: {
-              select: {
-                id: true,
-                code: true,
-                name: true,
-                isActive: true,
-              },
-            },
-          },
-        },
-      },
-    });
+      ops.push(
+        prisma.user.update({
+          where: { id },
+          data: updateData,
+          select: selectUserWithTeams,
+        })
+      );
+
+      const results = await prisma.$transaction(ops);
+      updated = results[results.length - 1];
+    } else {
+      updated = await prisma.user.update({
+        where: { id },
+        data: updateData,
+        select: selectUserWithTeams,
+      });
+    }
 
     safeRevalidate(['/pengguna']);
 

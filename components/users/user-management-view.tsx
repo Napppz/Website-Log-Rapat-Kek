@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
 import {
   Users,
@@ -122,11 +122,18 @@ export function UserManagementView({
   currentUserBiroCode,
 }: UserManagementViewProps) {
   const router = useRouter();
+  const [isPending, startTransition] = useTransition();
   const [activeTab, setActiveTab] = useState<'users' | 'teams'>('users');
   const [users, setUsers] = useState<UserItem[]>(initialUsers);
   const [search, setSearch] = useState('');
   const [selectedRole, setSelectedRole] = useState<string>('ALL');
   const [selectedTeam, setSelectedTeam] = useState<string>('ALL');
+
+  useEffect(() => {
+    if (initialUsers && Array.isArray(initialUsers)) {
+      setUsers(initialUsers);
+    }
+  }, [initialUsers]);
 
   const isScopedAdmin = currentUserRole === 'ADMIN';
 
@@ -243,7 +250,9 @@ export function UserManagementView({
           );
           setIsDialogOpen(false);
           toast.success(`Data pengguna "${finalFullName}" berhasil diperbarui.`);
-          router.refresh();
+          startTransition(() => {
+            router.refresh();
+          });
         } else {
           setFormError(res.error || 'Gagal memperbarui pengguna.');
         }
@@ -264,7 +273,9 @@ export function UserManagementView({
           setUsers((prev) => [res.data as unknown as UserItem, ...prev]);
           setIsDialogOpen(false);
           toast.success(`Pengguna baru "${finalFullName}" berhasil ditambahkan.`);
-          router.refresh();
+          startTransition(() => {
+            router.refresh();
+          });
         } else {
           setFormError(res.error || 'Gagal menambahkan pengguna.');
         }
@@ -300,7 +311,9 @@ export function UserManagementView({
             ? 'Akun pengguna berhasil diaktifkan kembali.'
             : 'Akun pengguna berhasil dinonaktifkan.'
         );
-        router.refresh();
+        startTransition(() => {
+          router.refresh();
+        });
       } else {
         toast.error(res.error || 'Gagal mengubah status aktif pengguna.');
       }
@@ -338,7 +351,9 @@ export function UserManagementView({
       if (res.success) {
         setUsers((prev) => prev.filter((u) => u.id !== user.id));
         toast.success(res.message || `Pengguna "${user.name}" berhasil dihapus.`);
-        router.refresh();
+        startTransition(() => {
+          router.refresh();
+        });
       } else {
         toast.error(res.error || 'Gagal menghapus pengguna.');
       }
