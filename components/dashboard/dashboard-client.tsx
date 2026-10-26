@@ -114,14 +114,16 @@ export function DashboardClient({
   const CANONICAL_CODES = ['INV', 'KS', 'KOM', 'SI', 'HKM', 'UMUM'];
   const sanitizedTeamWorkload = useMemo(() => {
     if (!teamWorkload || teamWorkload.length === 0) return [];
-    return [...teamWorkload].sort((a, b) => {
-      const idxA = CANONICAL_CODES.indexOf(a.code.toUpperCase());
-      const idxB = CANONICAL_CODES.indexOf(b.code.toUpperCase());
-      if (idxA !== -1 && idxB !== -1) return idxA - idxB;
-      if (idxA !== -1) return -1;
-      if (idxB !== -1) return 1;
-      return a.name.localeCompare(b.name);
-    });
+    return [...teamWorkload]
+      .filter((t) => (t.code || '').toUpperCase() !== 'POKJA' && !(t.name || '').toLowerCase().includes('pokja'))
+      .sort((a, b) => {
+        const idxA = CANONICAL_CODES.indexOf(a.code.toUpperCase());
+        const idxB = CANONICAL_CODES.indexOf(b.code.toUpperCase());
+        if (idxA !== -1 && idxB !== -1) return idxA - idxB;
+        if (idxA !== -1) return -1;
+        if (idxB !== -1) return 1;
+        return a.name.localeCompare(b.name);
+      });
   }, [teamWorkload]);
 
   // Khusus staf: temukan data beban kerja dan pekerjaan tim yang sesuai

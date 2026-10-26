@@ -47,7 +47,7 @@ export async function loginWithCredentialsAction(credentials: {
     // In Next.js, redirect() throws a special error which must be re-thrown if redirect is true
     // But since redirect is false, check if error has digest starting with NEXT_REDIRECT
     const err = error as Error & { digest?: string };
-    if (err?.digest?.startsWith('NEXT_REDIRECT')) {
+    if (err?.digest?.includes('NEXT_REDIRECT') || err?.message === 'NEXT_REDIRECT') {
       return {
         success: true,
         url: redirectTo,

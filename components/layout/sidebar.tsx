@@ -318,7 +318,11 @@ export function Sidebar({
                         }
 
                         // Seluruh tim kerja dapat dilihat oleh semua pengguna (mengecualikan Pokja)
-                        return allTeams.filter((t) => t.code.toUpperCase() !== 'POKJA');
+                        return allTeams.filter(
+                          (t) =>
+                            t.code.toUpperCase() !== 'POKJA' &&
+                            !t.name.toLowerCase().includes('pokja')
+                        );
                       })().map((tim) => (
                         <Link
                           key={tim.code}

@@ -705,9 +705,8 @@ export function ActionItemFormDialog({
                     }
                   }}
                   placeholder="Masukkan nama tindak lanjut..."
-                  className={`w-full px-3.5 py-2.5 rounded-xl border text-slate-800 text-[13px] placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-[#31889C]/30 focus:border-[#31889C] transition-all ${
-                    fieldErrors.title ? 'border-red-400 bg-red-50/20' : 'border-slate-200 bg-white'
-                  }`}
+                  className={`w-full px-3.5 py-2.5 rounded-xl border text-slate-800 text-[13px] placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-[#31889C]/30 focus:border-[#31889C] transition-all ${fieldErrors.title ? 'border-red-400 bg-red-50/20' : 'border-slate-200 bg-white'
+                    }`}
                   required
                 />
                 {fieldErrors.title && (

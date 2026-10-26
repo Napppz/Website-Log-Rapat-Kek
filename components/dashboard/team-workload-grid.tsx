@@ -32,14 +32,16 @@ export function TeamWorkloadGrid({ teams, onTeamClick }: TeamWorkloadGridProps) 
 
   const allTeams = useMemo(() => {
     if (!teams || teams.length === 0) return [];
-    return [...teams].sort((a, b) => {
-      const idxA = CANONICAL_CODES.indexOf((a.code || '').toUpperCase());
-      const idxB = CANONICAL_CODES.indexOf((b.code || '').toUpperCase());
-      if (idxA !== -1 && idxB !== -1) return idxA - idxB;
-      if (idxA !== -1) return -1;
-      if (idxB !== -1) return 1;
-      return a.name.localeCompare(b.name);
-    });
+    return [...teams]
+      .filter((t) => (t.code || '').toUpperCase() !== 'POKJA' && !(t.name || '').toLowerCase().includes('pokja'))
+      .sort((a, b) => {
+        const idxA = CANONICAL_CODES.indexOf((a.code || '').toUpperCase());
+        const idxB = CANONICAL_CODES.indexOf((b.code || '').toUpperCase());
+        if (idxA !== -1 && idxB !== -1) return idxA - idxB;
+        if (idxA !== -1) return -1;
+        if (idxB !== -1) return 1;
+        return a.name.localeCompare(b.name);
+      });
   }, [teams]);
 
   // Filter & Search untuk Pimpinan jika jumlah tim banyak
