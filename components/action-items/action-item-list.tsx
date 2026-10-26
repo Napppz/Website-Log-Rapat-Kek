@@ -272,6 +272,27 @@ export function ActionItemList({
     }
   };
 
+  const formatIndonesianDateTime = (dateVal: Date | string, forceTime = false) => {
+    try {
+      const d = new Date(dateVal);
+      if (isNaN(d.getTime())) return String(dateVal);
+      const datePart = d.toLocaleDateString('id-ID', {
+        day: 'numeric',
+        month: 'short',
+        year: 'numeric',
+      });
+      const hours = d.getHours();
+      const minutes = d.getMinutes();
+      if (forceTime || hours !== 0 || minutes !== 0) {
+        const timePart = d.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
+        return `${datePart}, ${timePart} WIB`;
+      }
+      return datePart;
+    } catch {
+      return String(dateVal);
+    }
+  };
+
   return (
     <div className="space-y-6">
       {/* Top Summary Banner */}
@@ -737,13 +758,47 @@ export function ActionItemList({
                       </div>
                     )}
 
+                    {/* Mulai Tindak Lanjut */}
+                    {item.dueDate && (
+                      <div className="flex items-center gap-1.5">
+                        <Calendar className="w-3.5 h-3.5 text-[#31889C]" />
+                        <span className="text-slate-600">
+                          Mulai Tindak Lanjut:{' '}
+                          <strong
+                            className={
+                              item.status === 'COMPLETED'
+                                ? 'text-slate-700'
+                                : isItemOverdue
+                                ? 'text-rose-600 font-bold'
+                                : 'text-slate-800'
+                            }
+                          >
+                            {formatIndonesianDate(item.dueDate)}
+                          </strong>
+                        </span>
+                        {item.status !== 'COMPLETED' && isItemOverdue && (
+                          <span className="text-[10px] font-bold text-rose-600 bg-rose-50 px-1.5 py-0.5 rounded border border-rose-200">
+                            Terlambat
+                          </span>
+                        )}
+                      </div>
+                    )}
 
+                    {/* Tanggal & Jam Dibuat (Upload) */}
+                    {item.createdAt && (
+                      <div className="flex items-center gap-1.5 text-slate-500">
+                        <Clock className="w-3.5 h-3.5 text-slate-400" />
+                        <span>
+                          Dibuat: {formatIndonesianDateTime(item.createdAt, true)}
+                        </span>
+                      </div>
+                    )}
 
                     {/* Completed At */}
                     {item.completedAt && (
                       <div className="flex items-center gap-1 text-[#4D8F3D] font-medium">
                         <Check className="w-3.5 h-3.5" />
-                        <span>Selesai: {formatIndonesianDate(item.completedAt)}</span>
+                        <span>Selesai: {formatIndonesianDateTime(item.completedAt, true)}</span>
                       </div>
                     )}
                   </div>

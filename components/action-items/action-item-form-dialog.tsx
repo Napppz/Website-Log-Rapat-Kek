@@ -876,17 +876,16 @@ export function ActionItemFormDialog({
               />
             </div>
 
-            {/* Atur Tanggal Tindak Lanjut & Status Tindak Lanjut */}
+            {/* Mulai Tindak Lanjut & Status Tindak Lanjut */}
             <div className={isEditing ? "grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2 border-t border-slate-100" : "pt-2 border-t border-slate-100"}>
-              {/* Atur Tanggal Tindak Lanjut */}
+              {/* Mulai Tindak Lanjut */}
               <div className={!isEditing ? "sm:w-1/2" : ""}>
-                <label className="block font-bold text-slate-800 mb-1 text-[13px] flex items-center justify-between">
+                <label className="block font-bold text-slate-800 mb-1.5 text-[13px] flex items-center justify-between">
                   <span className="flex items-center gap-1.5">
                     <Calendar className="w-3.5 h-3.5 text-[#31889C]" />
-                    <span>Atur Tanggal Tindak Lanjut</span>
+                    <span>Mulai Tindak Lanjut</span>
                     <span className="text-red-500">*</span>
                   </span>
-                  <span className="text-slate-400 font-normal text-xs"></span>
                 </label>
                 <input
                   type="date"
