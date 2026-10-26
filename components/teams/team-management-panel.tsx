@@ -80,9 +80,21 @@ export function TeamManagementPanel({
   // Modal states
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [editingTeam, setEditingTeam] = useState<TeamData | null>(null);
-  const [expandedTeamId, setExpandedTeamId] = useState<string | null>(null);
   const [memberModalTeam, setMemberModalTeam] = useState<TeamData | null>(null);
   const [memberSearch, setMemberSearch] = useState('');
+
+  // ESC key listener for Member Modal
+  useEffect(() => {
+    if (!memberModalTeam) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        e.preventDefault();
+        setMemberModalTeam(null);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [memberModalTeam]);
 
   // Form states
   const [formCode, setFormCode] = useState('');
@@ -245,7 +257,7 @@ export function TeamManagementPanel({
   const handleDeleteTeam = async (team: TeamData) => {
     const ok = await confirmModal({
       title: `Hapus Tim Kerja "${team.name}"?`,
-      message: `Apakah Anda yakin ingin menghapus tim "${team.name}" (${team.code}) secara permanen? Seluruh penugasan personil ke tim ini akan dilepaskan secara aman. Tindakan ini tidak dapat dibatalkan.`,
+      message: `Apakah Anda yakin ingin menghapus tim "${team.name}" (${team.code}) secara permanen? Seluruh penugasan anggota ke tim ini akan dilepaskan secara aman. Tindakan ini tidak dapat dibatalkan.`,
       confirmText: 'Ya, Hapus Tim',
       cancelText: 'Batal',
       variant: 'danger',
@@ -455,130 +467,58 @@ export function TeamManagementPanel({
                   </div>
                 </div>
 
-                {/* Member Preview & Toggle Button */}
-                <div className="pt-2.5 border-t border-slate-100/90">
-                  <div className="flex items-center justify-between gap-2">
-                    {/* Avatars row */}
-                    <div className="flex items-center gap-1.5 min-w-0">
-                      <div className="flex -space-x-2 overflow-hidden shrink-0">
-                        {team.members && team.members.length > 0 ? (
-                          team.members.slice(0, 4).map((m, idx) => (
-                            <div
-                              key={m.id || idx}
-                              className={cn(
-                                "inline-block h-6 w-6 rounded-full ring-2 ring-white text-[9px] font-bold flex items-center justify-center uppercase shadow-2xs",
-                                m.teamRole === 'PJ_UTAMA'
-                                  ? "bg-[#31889C] text-white"
-                                  : "bg-slate-700 text-white"
-                              )}
-                              title={`${m.name} (${m.teamRole || m.role})`}
-                            >
-                              {m.name.slice(0, 2).toUpperCase()}
-                            </div>
-                          ))
-                        ) : (
-                          <div className="h-6 w-6 rounded-full bg-slate-100 text-slate-400 text-[10px] flex items-center justify-center border border-slate-200">
-                            -
-                          </div>
-                        )}
-                        {team.members && team.members.length > 4 && (
-                          <div className="inline-block h-6 w-6 rounded-full ring-2 ring-white bg-[#E8F5F7] text-[#215865] border border-[#BCE3EB] text-[9.5px] font-extrabold flex items-center justify-center shadow-2xs">
-                            +{team.members.length - 4}
-                          </div>
-                        )}
-                      </div>
-                      <span className="text-[11.5px] font-semibold text-slate-600 truncate">
-                        {team.members?.length || team.memberCount || 0} personil
-                      </span>
-                    </div>
-
-                    {/* Toggle button */}
-                    <button
-                      type="button"
-                      onClick={() => setExpandedTeamId(expandedTeamId === team.id ? null : team.id)}
-                      className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-slate-50 hover:bg-[#E8F5F7] border border-slate-200/90 hover:border-[#BCE3EB] text-[#215865] text-[11px] font-bold transition-all cursor-pointer shrink-0"
-                    >
-                      <span>{expandedTeamId === team.id ? 'Tutup' : 'Lihat Anggota'}</span>
-                      {expandedTeamId === team.id ? (
-                        <ChevronUp className="w-3.5 h-3.5" />
-                      ) : (
-                        <ChevronDown className="w-3.5 h-3.5" />
-                      )}
-                    </button>
-                  </div>
-
-                  {/* Expandable Member List */}
-                  {expandedTeamId === team.id && (
-                    <div className="mt-3 pt-3 border-t border-slate-100 animate-in fade-in slide-in-from-top-1 duration-200 space-y-2">
-                      <div className="flex items-center justify-between text-[11px] text-slate-500 font-bold px-1">
-                        <span>DAFTAR ANGGOTA TIM</span>
-                        {team.members && team.members.length > 3 && (
-                          <button
-                            type="button"
-                            onClick={() => {
-                              setMemberModalTeam(team);
-                              setMemberSearch('');
-                            }}
-                            className="text-[#31889C] hover:text-[#215865] font-bold hover:underline cursor-pointer flex items-center gap-0.5"
-                          >
-                            <span>Modal Lengkap</span>
-                            <ExternalLink className="w-3 h-3" />
-                          </button>
-                        )}
-                      </div>
-
+                {/* Member Preview & View Members Button */}
+                <div className="pt-3 border-t border-slate-100 flex items-center justify-between gap-2">
+                  {/* Avatars row - clickable to open modal */}
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setMemberModalTeam(team);
+                      setMemberSearch('');
+                    }}
+                    className="flex items-center gap-2 group cursor-pointer text-left min-w-0 hover:opacity-85 transition-opacity"
+                    title="Klik untuk membuka rincian lengkap anggota tim"
+                  >
+                    <div className="flex -space-x-2 overflow-hidden shrink-0">
                       {team.members && team.members.length > 0 ? (
-                        <div className="max-h-52 overflow-y-auto space-y-1.5 pr-1 [scrollbar-width:thin]">
-                          {team.members.map((member) => (
-                            <div
-                              key={member.id}
-                              className="p-2 rounded-xl bg-slate-50/90 hover:bg-slate-100/90 border border-slate-200/80 flex items-center justify-between gap-2 text-xs transition-colors"
-                            >
-                              <div className="flex items-center gap-2 min-w-0">
-                                <div
-                                  className={cn(
-                                    "w-7 h-7 rounded-full text-[10px] font-bold flex items-center justify-center shrink-0 border",
-                                    member.teamRole === 'PJ_UTAMA'
-                                      ? "bg-[#31889C] text-white border-[#266F80]"
-                                      : "bg-white text-slate-700 border-slate-300"
-                                  )}
-                                >
-                                  {member.name.slice(0, 2).toUpperCase()}
-                                </div>
-                                <div className="min-w-0">
-                                  <p className="font-bold text-slate-800 text-[11.5px] truncate leading-tight">
-                                    {member.name}
-                                  </p>
-                                  <div className="flex items-center gap-1.5 text-[10px] text-slate-400 truncate">
-                                    <span>{member.email}</span>
-                                    {member.username && (
-                                      <span className="font-mono text-[#1E6B7B]">(@{member.username})</span>
-                                    )}
-                                  </div>
-                                </div>
-                              </div>
-
-                              <div className="flex items-center gap-1 shrink-0">
-                                {member.teamRole === 'PJ_UTAMA' ? (
-                                  <span className="px-1.5 py-0.5 rounded text-[9.5px] font-bold bg-[#E8F5F7] text-[#215865] border border-[#BCE3EB]">
-                                    PJ Utama
-                                  </span>
-                                ) : (
-                                  <span className="px-1.5 py-0.5 rounded text-[9.5px] font-medium bg-slate-100 text-slate-600 border border-slate-200">
-                                    Anggota
-                                  </span>
-                                )}
-                              </div>
-                            </div>
-                          ))}
-                        </div>
+                        team.members.slice(0, 4).map((m, idx) => (
+                          <div
+                            key={m.id || idx}
+                            className="inline-block h-6 w-6 rounded-full ring-2 ring-white text-[9px] font-bold flex items-center justify-center uppercase shadow-2xs bg-[#31889C] text-white"
+                            title={`${m.name} (${m.role})`}
+                          >
+                            {m.name.slice(0, 2).toUpperCase()}
+                          </div>
+                        ))
                       ) : (
-                        <p className="text-[11.5px] text-slate-400 italic p-3 text-center bg-slate-50 rounded-xl">
-                          Belum ada personil staf yang terdaftar di tim ini.
-                        </p>
+                        <div className="h-6 w-6 rounded-full bg-slate-100 text-slate-400 text-[10px] flex items-center justify-center border border-slate-200">
+                          -
+                        </div>
+                      )}
+                      {team.members && team.members.length > 4 && (
+                        <div className="inline-block h-6 w-6 rounded-full ring-2 ring-white bg-[#E8F5F7] text-[#215865] border border-[#BCE3EB] text-[9.5px] font-extrabold flex items-center justify-center shadow-2xs">
+                          +{team.members.length - 4}
+                        </div>
                       )}
                     </div>
-                  )}
+                    <span className="text-[11.5px] font-semibold text-slate-600 group-hover:text-[#1E6B7B] transition-colors truncate">
+                      {team.members?.length || team.memberCount || 0} Anggota
+                    </span>
+                  </button>
+
+                  {/* Button to open member modal */}
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setMemberModalTeam(team);
+                      setMemberSearch('');
+                    }}
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-50 hover:bg-[#E8F5F7] border border-slate-200 hover:border-[#BCE3EB] text-[#1E6B7B] hover:text-[#164E59] text-[11.5px] font-bold transition-all cursor-pointer shadow-2xs hover:shadow-xs shrink-0"
+                    title="Buka daftar lengkap anggota tim"
+                  >
+                    <Users className="w-3.5 h-3.5 text-[#1E6B7B]" />
+                    <span>Lihat Anggota</span>
+                  </button>
                 </div>
 
                 {/* Team Footer Metrics & Action Buttons */}
@@ -793,153 +733,198 @@ export function TeamManagementPanel({
 
       {/* Modal: Detail Lengkap Anggota Tim */}
       {memberModalTeam && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs animate-in fade-in duration-150">
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-900/60 backdrop-blur-xs animate-in fade-in duration-150"
+          onClick={() => setMemberModalTeam(null)}
+        >
           <div
-            className="bg-white w-full max-w-2xl rounded-2xl shadow-2xl border border-slate-200 overflow-hidden flex flex-col max-h-[85vh] animate-in zoom-in-95 duration-150"
+            className="bg-white w-full max-w-3xl rounded-2xl shadow-2xl border border-slate-200 overflow-hidden flex flex-col max-h-[85vh] animate-in zoom-in-95 duration-150"
+            onClick={(e) => e.stopPropagation()}
             role="dialog"
             aria-modal="true"
           >
             {/* Modal Header */}
-            <div className="px-6 py-4.5 bg-gradient-to-r from-[#31889C] to-[#266F80] text-white flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <div className="p-2.5 bg-white/10 rounded-xl border border-white/20 shrink-0">
-                  <Users className="w-5 h-5 text-white" />
+            <div className="px-6 py-4.5 bg-gradient-to-r from-[#175360] via-[#1E6B7B] to-[#266F80] text-white flex items-center justify-between">
+              <div className="flex items-center gap-3 min-w-0">
+                <div className="p-2.5 bg-white/10 rounded-xl border border-white/20 shrink-0 shadow-2xs">
+                  <Users className="w-5 h-5 text-teal-200" />
                 </div>
-                <div>
-                  <div className="flex items-center gap-2">
-                    <span className="px-2 py-0.5 rounded font-mono text-[11px] font-bold bg-white/20 text-white uppercase border border-white/20">
+                <div className="min-w-0">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <span className="px-2.5 py-0.5 rounded font-mono text-[11px] font-bold bg-white/20 text-white uppercase border border-white/25">
                       {memberModalTeam.code}
                     </span>
-                    <h3 className="text-base font-bold text-white">
+                    <h3 className="text-base font-bold text-white truncate">
                       Daftar Anggota: {memberModalTeam.name}
                     </h3>
                   </div>
-                  <p className="text-xs text-teal-100 mt-0.5 line-clamp-1">
-                    {memberModalTeam.description || 'Personil dan staf pelaksana yang bertugas pada tim kerja ini.'}
+                  <p className="text-xs text-teal-100/90 mt-0.5 line-clamp-1">
+                    {memberModalTeam.description || 'Anggota dan staf pelaksana yang bertugas pada kelompok kerja ini.'}
                   </p>
                 </div>
               </div>
-              <button
-                type="button"
-                onClick={() => setMemberModalTeam(null)}
-                className="p-1.5 rounded-lg text-teal-100 hover:text-white hover:bg-white/10 transition-colors cursor-pointer"
-                title="Tutup Modal"
-              >
-                <X className="w-5 h-5" />
-              </button>
+              <div className="flex items-center gap-2 shrink-0 ml-3">
+                <button
+                  type="button"
+                  onClick={() => setMemberModalTeam(null)}
+                  className="hidden sm:inline-flex items-center px-2 py-0.5 text-[11px] font-mono font-medium text-teal-100 hover:text-white bg-white/10 hover:bg-white/20 border border-white/20 rounded-md cursor-pointer transition-colors"
+                  title="Tutup Modal (ESC)"
+                >
+                  ESC
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setMemberModalTeam(null)}
+                  className="p-1.5 rounded-lg text-teal-100 hover:text-white hover:bg-white/10 transition-colors cursor-pointer"
+                  title="Tutup Modal"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
             </div>
 
-            {/* Search within team */}
-            <div className="p-4 border-b border-slate-100 bg-slate-50/70 flex flex-col sm:flex-row items-center justify-between gap-3">
-              <div className="relative w-full sm:w-80">
-                <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
-                <input
-                  type="text"
-                  value={memberSearch}
-                  onChange={(e) => setMemberSearch(e.target.value)}
-                  placeholder="Cari nama atau email personil..."
-                  className="w-full pl-9 pr-4 py-2 text-xs rounded-xl border border-slate-200 bg-white focus:outline-none focus:ring-2 focus:ring-[#1E6B7B]/20 focus:border-[#1E6B7B]"
-                />
-              </div>
-              <div className="flex items-center gap-2 text-xs font-semibold text-slate-600 shrink-0 self-end sm:self-auto">
-                <span className="px-2.5 py-1 rounded-full bg-white border border-slate-200 font-bold text-[#1E6B7B]">
-                  {memberModalTeam.members?.length || 0} Personil Terdaftar
-                </span>
+            {/* Search & Counter Bar */}
+            <div className="p-4 border-b border-slate-100 bg-slate-50/80">
+              <div className="flex flex-col sm:flex-row items-center justify-between gap-3">
+                <div className="relative w-full sm:w-80">
+                  <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+                  <input
+                    type="text"
+                    value={memberSearch}
+                    onChange={(e) => setMemberSearch(e.target.value)}
+                    placeholder="Cari nama, email, atau @username..."
+                    className="w-full pl-9 pr-4 py-2 text-xs rounded-xl border border-slate-200 bg-white focus:outline-none focus:ring-2 focus:ring-[#1E6B7B]/20 focus:border-[#1E6B7B]"
+                  />
+                  {memberSearch && (
+                    <button
+                      type="button"
+                      onClick={() => setMemberSearch('')}
+                      className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 p-0.5 cursor-pointer"
+                    >
+                      <X className="w-3.5 h-3.5" />
+                    </button>
+                  )}
+                </div>
+
+                <div className="flex items-center gap-2 self-end sm:self-auto text-xs">
+                  <span className="px-3 py-1.5 rounded-lg font-bold bg-white text-[#1E6B7B] border border-slate-200 shadow-2xs flex items-center gap-1.5">
+                    <Users className="w-3.5 h-3.5 text-[#1E6B7B]" />
+                    <span>{memberModalTeam.members?.length || 0} Total Anggota</span>
+                  </span>
+                </div>
               </div>
             </div>
 
             {/* Members List */}
-            <div className="p-5 overflow-y-auto flex-1 space-y-2 [scrollbar-width:thin]">
+            <div className="p-4 sm:p-5 overflow-y-auto flex-1 space-y-2.5 [scrollbar-width:thin]">
               {(() => {
                 const q = memberSearch.trim().toLowerCase();
-                const filteredMembers = (memberModalTeam.members || []).filter(
-                  (m) =>
-                    !q ||
+                const filteredMembers = (memberModalTeam.members || []).filter((m) => {
+                  if (!q) return true;
+                  return (
                     m.name.toLowerCase().includes(q) ||
                     m.email.toLowerCase().includes(q) ||
                     (m.username && m.username.toLowerCase().includes(q)) ||
                     (m.role && m.role.toLowerCase().includes(q))
-                );
+                  );
+                });
 
                 if (filteredMembers.length === 0) {
                   return (
-                    <div className="p-8 text-center bg-slate-50 rounded-2xl border border-slate-200 text-slate-400 text-xs">
-                      {memberSearch
-                        ? `Tidak ada personil yang cocok dengan "${memberSearch}".`
-                        : 'Belum ada staf yang terdaftar pada tim kerja ini.'}
+                    <div className="p-10 text-center bg-slate-50 rounded-2xl border border-slate-200 text-slate-500 text-xs space-y-2">
+                      <Users className="w-8 h-8 text-slate-300 mx-auto" />
+                      <p className="font-bold text-slate-700">
+                        {memberSearch
+                          ? 'Tidak ada anggota yang cocok dengan pencarian.'
+                          : 'Belum ada anggota yang terdaftar pada tim kerja ini.'}
+                      </p>
+                      {memberSearch && (
+                        <button
+                          type="button"
+                          onClick={() => setMemberSearch('')}
+                          className="px-3 py-1 bg-white hover:bg-slate-100 border border-slate-200 rounded-lg text-xs font-semibold text-[#1E6B7B] cursor-pointer"
+                        >
+                          Reset Pencarian
+                        </button>
+                      )}
                     </div>
                   );
                 }
 
-                return filteredMembers.map((member) => (
-                  <div
-                    key={member.id}
-                    className="p-3 rounded-xl bg-white hover:bg-slate-50 border border-slate-200 flex items-center justify-between gap-3 transition-colors shadow-2xs"
-                  >
-                    <div className="flex items-center gap-3 min-w-0">
+                return (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                    {filteredMembers.map((member) => (
                       <div
-                        className={cn(
-                          "w-9 h-9 rounded-full text-xs font-black flex items-center justify-center shrink-0 border shadow-2xs",
-                          member.teamRole === 'PJ_UTAMA'
-                            ? "bg-[#31889C] text-white border-[#266F80]"
-                            : "bg-[#F0F8FA] text-[#1E6B7B] border-[#BCE3EB]"
-                        )}
+                        key={member.id}
+                        className="p-3.5 rounded-xl bg-white hover:bg-slate-50/80 border border-slate-200 flex flex-col justify-between gap-3 transition-colors shadow-2xs"
                       >
-                        {member.name.slice(0, 2).toUpperCase()}
-                      </div>
-                      <div className="min-w-0">
-                        <div className="flex items-center gap-2">
-                          <p className="font-bold text-slate-900 text-xs truncate">
-                            {member.name}
-                          </p>
-                          {member.teamRole === 'PJ_UTAMA' && (
-                            <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-[#E8F5F7] text-[#215865] border border-[#BCE3EB]">
-                              PJ Utama Tim
-                            </span>
-                          )}
+                        <div className="flex items-start gap-3 min-w-0">
+                          <div className="w-10 h-10 rounded-xl text-xs font-black flex items-center justify-center shrink-0 border shadow-2xs mt-0.5 bg-[#F0F8FA] text-[#1E6B7B] border-[#BCE3EB]">
+                            {member.name.slice(0, 2).toUpperCase()}
+                          </div>
+                          <div className="min-w-0 flex-1">
+                            <div className="flex items-center gap-1.5 flex-wrap">
+                              <p className="font-bold text-slate-900 text-xs leading-snug">
+                                {member.name}
+                              </p>
+                            </div>
+                            <div className="flex items-center gap-1.5 text-[11px] text-slate-500 mt-1 truncate">
+                              <Mail className="w-3 h-3 text-slate-400 shrink-0" />
+                              <span className="truncate">{member.email}</span>
+                            </div>
+                            {member.username && (
+                              <div className="mt-1">
+                                <span className="font-mono text-[10px] text-[#1E6B7B] bg-[#E8F5F7] px-1.5 py-0.2 rounded border border-[#BCE3EB]">
+                                  @{member.username}
+                                </span>
+                              </div>
+                            )}
+                          </div>
                         </div>
-                        <div className="flex items-center gap-1.5 text-[11px] text-slate-500 truncate mt-0.5">
-                          <span>{member.email}</span>
-                          {member.username && (
-                            <span className="font-mono text-[10.5px] text-[#1E6B7B] bg-[#E8F5F7] px-1.5 py-0.2 rounded border border-[#BCE3EB]">
-                              @{member.username}
-                            </span>
-                          )}
-                        </div>
-                      </div>
-                    </div>
 
-                    <div className="flex items-center gap-2 shrink-0">
-                      <span className="px-2 py-0.5 rounded text-[10px] font-semibold bg-slate-100 text-slate-700 border border-slate-200">
-                        {member.role}
-                      </span>
-                      <span
-                        className={cn(
-                          "px-2 py-0.5 rounded-full text-[10px] font-bold border",
-                          member.isActive
-                            ? "bg-emerald-50 text-emerald-800 border-emerald-200"
-                            : "bg-slate-100 text-slate-500 border-slate-200"
-                        )}
-                      >
-                        {member.isActive ? 'Aktif' : 'Nonaktif'}
-                      </span>
-                    </div>
+                        <div className="pt-2 border-t border-slate-100 flex items-center justify-between gap-2">
+                          <div>
+                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-semibold bg-slate-100 text-slate-600 border border-slate-200">
+                              <Users className="w-3 h-3 text-slate-400" />
+                              Anggota
+                            </span>
+                          </div>
+
+                          <div className="flex items-center gap-1.5">
+                            <span className="px-2 py-0.5 rounded text-[10px] font-semibold bg-slate-100 text-slate-700 border border-slate-200">
+                              {member.role}
+                            </span>
+                            <span
+                              className={cn(
+                                "px-2 py-0.5 rounded-full text-[10px] font-bold border flex items-center gap-1",
+                                member.isActive
+                                  ? "bg-emerald-50 text-emerald-800 border-emerald-200"
+                                  : "bg-slate-100 text-slate-500 border-slate-200"
+                              )}
+                            >
+                              <span className={cn("w-1.5 h-1.5 rounded-full", member.isActive ? "bg-emerald-600" : "bg-slate-400")} />
+                              {member.isActive ? 'Aktif' : 'Nonaktif'}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
                   </div>
-                ));
+                );
               })()}
             </div>
 
             {/* Modal Footer */}
             <div className="px-6 py-3.5 border-t border-slate-200 bg-slate-50 flex items-center justify-between text-xs">
-              <span className="text-slate-500">
-                Data anggota terintegrasi dengan penugasan kegiatan &amp; tindak lanjut.
+              <span className="text-slate-500 text-[11px]">
+                Daftar anggota terintegrasi dengan penugasan kegiatan &amp; tindak lanjut.
               </span>
               <button
                 type="button"
                 onClick={() => setMemberModalTeam(null)}
-                className="px-4 py-2 rounded-xl bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold transition-colors cursor-pointer"
+                className="px-4 py-2 rounded-xl bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold transition-colors cursor-pointer text-xs"
               >
-                Tutup
+                Tutup (ESC)
               </button>
             </div>
           </div>
