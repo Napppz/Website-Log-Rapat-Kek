@@ -134,31 +134,41 @@ export function CommandPalette({ isOpen, onClose }: CommandPaletteProps) {
     return list;
   }, [activeTab, filteredMeetings, filteredTeams]);
 
-  // Handle keyboard events (ArrowUp, ArrowDown, Enter, Escape)
-  const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === 'Escape') {
-      e.preventDefault();
-      onClose();
-    } else if (e.key === 'ArrowDown') {
-      e.preventDefault();
-      setSelectedIndex((prev) => (prev + 1 < activeItems.length ? prev + 1 : 0));
-    } else if (e.key === 'ArrowUp') {
-      e.preventDefault();
-      setSelectedIndex((prev) => (prev - 1 >= 0 ? prev - 1 : activeItems.length - 1));
-    } else if (e.key === 'Enter') {
-      e.preventDefault();
-      const current = activeItems[selectedIndex];
-      if (current) {
-        if (current.type === 'meeting') {
+  // Global keydown listener when modal is open (so Escape, Arrow keys, Enter work even when a tab or list item is clicked)
+  useEffect(() => {
+    if (!isOpen) return;
+
+    const handleGlobalKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        e.preventDefault();
+        e.stopPropagation();
+        onClose();
+        return;
+      }
+
+      if (e.key === 'ArrowDown') {
+        e.preventDefault();
+        setSelectedIndex((prev) => (prev + 1 < activeItems.length ? prev + 1 : 0));
+      } else if (e.key === 'ArrowUp') {
+        e.preventDefault();
+        setSelectedIndex((prev) => (prev - 1 >= 0 ? prev - 1 : Math.max(0, activeItems.length - 1)));
+      } else if (e.key === 'Enter') {
+        const current = activeItems[selectedIndex];
+        if (current) {
+          e.preventDefault();
           onClose();
-          router.push(`/arsip-kegiatan/${current.item.id}`);
-        } else if (current.type === 'team') {
-          onClose();
-          router.push(current.item.href);
+          if (current.type === 'meeting') {
+            router.push(`/arsip-kegiatan/${current.item.id}`);
+          } else if (current.type === 'team') {
+            router.push(current.item.href);
+          }
         }
       }
-    }
-  };
+    };
+
+    window.addEventListener('keydown', handleGlobalKeyDown, true);
+    return () => window.removeEventListener('keydown', handleGlobalKeyDown, true);
+  }, [isOpen, onClose, activeItems, selectedIndex, router]);
 
   // Ensure selected item stays scrolled into view
   useEffect(() => {
@@ -190,25 +200,32 @@ export function CommandPalette({ isOpen, onClose }: CommandPaletteProps) {
               setQuery(e.target.value);
               setSelectedIndex(0);
             }}
-            onKeyDown={handleKeyDown}
             placeholder="Ketik nomor kegiatan (misal: 012), nama agenda, atau tim kerja..."
             className="w-full bg-transparent text-slate-800 text-[14px] placeholder:text-slate-400 focus:outline-none"
           />
-          {query ? (
+          <div className="flex items-center gap-1.5 shrink-0 ml-2">
+            {query && (
+              <button
+                type="button"
+                onClick={() => {
+                  setQuery('');
+                  inputRef.current?.focus();
+                }}
+                className="p-1 rounded-md text-slate-400 hover:text-slate-600 hover:bg-slate-200/60 cursor-pointer transition-colors"
+                title="Hapus pencarian"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            )}
             <button
-              onClick={() => {
-                setQuery('');
-                inputRef.current?.focus();
-              }}
-              className="p-1 rounded-md text-slate-400 hover:text-slate-600 hover:bg-slate-200/60 cursor-pointer"
+              type="button"
+              onClick={onClose}
+              className="inline-flex items-center gap-0.5 px-2 py-0.5 text-[11px] font-mono font-medium text-slate-500 hover:text-slate-800 bg-white hover:bg-slate-100 border border-slate-200 rounded-md shadow-2xs cursor-pointer transition-colors"
+              title="Tutup (ESC)"
             >
-              <X className="w-4 h-4" />
-            </button>
-          ) : (
-            <kbd className="hidden sm:inline-flex items-center gap-0.5 px-2 py-0.5 text-[11px] font-mono font-medium text-slate-500 bg-white border border-slate-200 rounded-md shadow-2xs">
               ESC
-            </kbd>
-          )}
+            </button>
+          </div>
         </div>
 
         {/* Category Tabs: Semua, Kegiatan, Tim (Aksi Cepat dihapus) */}
@@ -218,6 +235,7 @@ export function CommandPalette({ isOpen, onClose }: CommandPaletteProps) {
             onClick={() => {
               setActiveTab('all');
               setSelectedIndex(0);
+              inputRef.current?.focus();
             }}
             className={cn(
               'px-3 py-1 rounded-lg transition-colors cursor-pointer shrink-0',
@@ -233,6 +251,7 @@ export function CommandPalette({ isOpen, onClose }: CommandPaletteProps) {
             onClick={() => {
               setActiveTab('meetings');
               setSelectedIndex(0);
+              inputRef.current?.focus();
             }}
             className={cn(
               'px-3 py-1 rounded-lg transition-colors cursor-pointer shrink-0 inline-flex items-center gap-1.5',
@@ -249,6 +268,7 @@ export function CommandPalette({ isOpen, onClose }: CommandPaletteProps) {
             onClick={() => {
               setActiveTab('teams');
               setSelectedIndex(0);
+              inputRef.current?.focus();
             }}
             className={cn(
               'px-3 py-1 rounded-lg transition-colors cursor-pointer shrink-0 inline-flex items-center gap-1.5',
