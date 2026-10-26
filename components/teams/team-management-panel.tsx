@@ -24,6 +24,10 @@ import {
   ExternalLink,
   UserCheck,
   Trash2,
+  UserPlus,
+  UserMinus,
+  CheckSquare,
+  Square,
 } from 'lucide-react';
 import { toast, confirmModal } from '@/components/providers/toast-provider';
 import {
@@ -31,6 +35,9 @@ import {
   updateTeamAction,
   toggleTeamStatusAction,
   deleteTeamAction,
+  getBiroStaffForTeamAction,
+  addMembersToTeamAction,
+  removeMemberFromTeamAction,
 } from '@/app/actions/team-actions';
 import { cn } from '@/lib/utils';
 
@@ -42,6 +49,16 @@ export interface TeamMember {
   role: string;
   teamRole?: string;
   isActive: boolean;
+}
+
+export interface AvailableBiroStaff {
+  id: string;
+  name: string;
+  email: string;
+  username?: string | null;
+  role: string;
+  isActive: boolean;
+  currentTeams: string[];
 }
 
 export interface TeamData {
@@ -58,11 +75,17 @@ export interface TeamData {
 interface TeamManagementPanelProps {
   initialTeams: TeamData[];
   currentUserRole?: string;
+  currentUserTeamId?: string;
+  currentUserTeamCode?: string;
+  currentUserId?: string;
 }
 
 export function TeamManagementPanel({
   initialTeams = [],
   currentUserRole = 'SUPER_ADMIN',
+  currentUserTeamId,
+  currentUserTeamCode,
+  currentUserId,
 }: TeamManagementPanelProps) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
@@ -83,18 +106,32 @@ export function TeamManagementPanel({
   const [memberModalTeam, setMemberModalTeam] = useState<TeamData | null>(null);
   const [memberSearch, setMemberSearch] = useState('');
 
-  // ESC key listener for Member Modal
+  // Add Member Modal states
+  const [isAddMemberModalOpen, setIsAddMemberModalOpen] = useState(false);
+  const [targetTeamForAdd, setTargetTeamForAdd] = useState<TeamData | null>(null);
+  const [biroStaffList, setBiroStaffList] = useState<AvailableBiroStaff[]>([]);
+  const [isLoadingBiroStaff, setIsLoadingBiroStaff] = useState(false);
+  const [biroStaffSearch, setBiroStaffSearch] = useState('');
+  const [selectedStaffIds, setSelectedStaffIds] = useState<string[]>([]);
+  const [isSavingMembers, setIsSavingMembers] = useState(false);
+  const [removingMemberId, setRemovingMemberId] = useState<string | null>(null);
+
+  // ESC key listener for Member Modal and Add Member Modal
   useEffect(() => {
-    if (!memberModalTeam) return;
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
-        e.preventDefault();
-        setMemberModalTeam(null);
+        if (isAddMemberModalOpen) {
+          e.preventDefault();
+          setIsAddMemberModalOpen(false);
+        } else if (memberModalTeam) {
+          e.preventDefault();
+          setMemberModalTeam(null);
+        }
       }
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [memberModalTeam]);
+  }, [isAddMemberModalOpen, memberModalTeam]);
 
   // Form states
   const [formCode, setFormCode] = useState('');
@@ -104,7 +141,169 @@ export function TeamManagementPanel({
   const [togglingId, setTogglingId] = useState<string | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
 
-  const isSuperAdmin = currentUserRole === 'SUPER_ADMIN' || currentUserRole === 'ADMIN';
+  const isSuperAdmin = currentUserRole === 'SUPER_ADMIN';
+
+  // Check if current user is authorized to manage members of teams (SUPER_ADMIN and ADMIN)
+  const canManageTeamMembers = (_team?: TeamData | null) => {
+    return currentUserRole === 'SUPER_ADMIN' || currentUserRole === 'ADMIN';
+  };
+
+  // Open Add Member Modal
+  const handleOpenAddMemberModal = async (team: TeamData) => {
+    setTargetTeamForAdd(team);
+    setSelectedStaffIds([]);
+    setBiroStaffSearch('');
+    setIsAddMemberModalOpen(true);
+    setIsLoadingBiroStaff(true);
+
+    try {
+      const res = await getBiroStaffForTeamAction(team.id);
+      if (res.success && res.data) {
+        setBiroStaffList(res.data as AvailableBiroStaff[]);
+      } else {
+        toast.error(res.error || 'Gagal memuat data staf biro.');
+        setBiroStaffList([]);
+      }
+    } catch (err: any) {
+      toast.error(err?.message || 'Terjadi kesalahan sistem.');
+      setBiroStaffList([]);
+    } finally {
+      setIsLoadingBiroStaff(false);
+    }
+  };
+
+  // Submit adding members to team
+  const handleSaveAddMembers = async () => {
+    if (!targetTeamForAdd || selectedStaffIds.length === 0) {
+      toast.warning('Pilih minimal 1 anggota staf untuk ditambahkan.');
+      return;
+    }
+
+    setIsSavingMembers(true);
+    try {
+      const res = await addMembersToTeamAction(targetTeamForAdd.id, selectedStaffIds);
+      if (res.success && res.data) {
+        toast.success(res.message || 'Anggota baru berhasil ditambahkan!');
+
+        const newMembers = res.data as TeamMember[];
+
+        // 1. Update teams list in state
+        setTeams((prev) =>
+          prev.map((t) => {
+            if (t.id === targetTeamForAdd.id) {
+              const existingMembers = t.members || [];
+              const updatedMembers = [...existingMembers, ...newMembers];
+              return {
+                ...t,
+                members: updatedMembers,
+                memberCount: updatedMembers.length,
+              };
+            }
+            return t;
+          })
+        );
+
+        // 2. Update currently open member modal if it matches
+        setMemberModalTeam((prev) => {
+          if (!prev || prev.id !== targetTeamForAdd.id) return prev;
+          const existingMembers = prev.members || [];
+          const updatedMembers = [...existingMembers, ...newMembers];
+          return {
+            ...prev,
+            members: updatedMembers,
+            memberCount: updatedMembers.length,
+          };
+        });
+
+        setIsAddMemberModalOpen(false);
+        setTargetTeamForAdd(null);
+        setSelectedStaffIds([]);
+
+        startTransition(() => {
+          router.refresh();
+        });
+      } else {
+        toast.error(res.error || 'Gagal menambahkan anggota.');
+      }
+    } catch (err: any) {
+      toast.error(err?.message || 'Terjadi kesalahan sistem.');
+    } finally {
+      setIsSavingMembers(false);
+    }
+  };
+
+  // Remove member from team
+  const handleRemoveMember = async (team: TeamData, member: TeamMember) => {
+    if (currentUserRole === 'ADMIN' && member.id === currentUserId) {
+      toast.warning('Anda tidak dapat mengeluarkan diri Anda sendiri dari tim kerja.');
+      return;
+    }
+
+    const confirmed = await confirmModal({
+      title: 'Keluarkan Anggota dari Tim?',
+      message: `Apakah Anda yakin ingin mengeluarkan "${member.name}" dari ${team.name}? Akun staf tetap aktif di Biro dan hanya dilepas dari penugasan tim ini.`,
+      confirmText: 'Ya, Keluarkan dari Tim',
+      variant: 'danger',
+    });
+
+    if (!confirmed) return;
+
+    try {
+      setRemovingMemberId(member.id);
+      const res = await removeMemberFromTeamAction(team.id, member.id);
+      if (res.success) {
+        toast.success(res.message || `Anggota "${member.name}" berhasil dikeluarkan.`);
+
+        // 1. Update main teams state
+        setTeams((prev) =>
+          prev.map((t) => {
+            if (t.id === team.id) {
+              const updatedMembers = (t.members || []).filter((m) => m.id !== member.id);
+              return {
+                ...t,
+                members: updatedMembers,
+                memberCount: updatedMembers.length,
+              };
+            }
+            return t;
+          })
+        );
+
+        // 2. Update currently open member modal
+        setMemberModalTeam((prev) => {
+          if (!prev || prev.id !== team.id) return prev;
+          const updatedMembers = (prev.members || []).filter((m) => m.id !== member.id);
+          return {
+            ...prev,
+            members: updatedMembers,
+            memberCount: updatedMembers.length,
+          };
+        });
+
+        startTransition(() => {
+          router.refresh();
+        });
+      } else {
+        toast.error(res.error || 'Gagal mengeluarkan anggota dari tim.');
+      }
+    } catch (err: any) {
+      toast.error(err?.message || 'Terjadi kesalahan sistem.');
+    } finally {
+      setRemovingMemberId(null);
+    }
+  };
+
+  // Filtered available staff for Add Member Modal
+  const filteredAvailableStaff = biroStaffList.filter((s) => {
+    if (!biroStaffSearch.trim()) return true;
+    const q = biroStaffSearch.toLowerCase();
+    return (
+      s.name.toLowerCase().includes(q) ||
+      s.email.toLowerCase().includes(q) ||
+      (s.username && s.username.toLowerCase().includes(q)) ||
+      s.currentTeams.some((t) => t.toLowerCase().includes(q))
+    );
+  });
 
   // Filtered teams
   const filteredTeams = teams.filter((t) => {
@@ -424,16 +623,24 @@ export function TeamManagementPanel({
                 {/* Team Header */}
                 <div className="space-y-2">
                   <div className="flex items-center justify-between gap-2">
-                    <span
-                      className={cn(
-                        'px-2.5 py-1 rounded-md font-mono text-xs font-black tracking-wider uppercase border',
-                        team.isActive
-                          ? 'bg-[#E8F5F7] text-[#1E6B7B] border-[#BCE3EB]'
-                          : 'bg-slate-100 text-slate-500 border-slate-200'
-                      )}
-                    >
-                      {team.code}
-                    </span>
+                    <div className="flex items-center gap-1.5">
+                      <span
+                        className={cn(
+                          'px-2.5 py-1 rounded-md font-mono text-xs font-black tracking-wider uppercase border',
+                          team.isActive
+                            ? 'bg-[#E8F5F7] text-[#1E6B7B] border-[#BCE3EB]'
+                            : 'bg-slate-100 text-slate-500 border-slate-200'
+                        )}
+                      >
+                        {team.code}
+                      </span>
+                      {currentUserRole === 'ADMIN' &&
+                        (currentUserTeamId === team.id || currentUserTeamCode === team.code) && (
+                          <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-[#1E6B7B] text-white shadow-2xs">
+                            Tim Anda
+                          </span>
+                        )}
+                    </div>
 
                     <span
                       className={cn(
@@ -811,6 +1018,17 @@ export function TeamManagementPanel({
                     <Users className="w-3.5 h-3.5 text-[#1E6B7B]" />
                     <span>{memberModalTeam.members?.length || 0} Total Anggota</span>
                   </span>
+
+                  {canManageTeamMembers(memberModalTeam) && (
+                    <button
+                      type="button"
+                      onClick={() => handleOpenAddMemberModal(memberModalTeam)}
+                      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg font-bold bg-[#1E6B7B] hover:bg-[#164E59] text-white shadow-2xs transition-colors cursor-pointer text-xs"
+                    >
+                      <UserPlus className="w-3.5 h-3.5" />
+                      <span>+ Tambah Anggota ke Tim</span>
+                    </button>
+                  )}
                 </div>
               </div>
             </div>
@@ -831,14 +1049,21 @@ export function TeamManagementPanel({
 
                 if (filteredMembers.length === 0) {
                   return (
-                    <div className="p-10 text-center bg-slate-50 rounded-2xl border border-slate-200 text-slate-500 text-xs space-y-2">
+                    <div className="p-10 text-center bg-slate-50 rounded-2xl border border-slate-200 text-slate-500 text-xs space-y-3">
                       <Users className="w-8 h-8 text-slate-300 mx-auto" />
-                      <p className="font-bold text-slate-700">
-                        {memberSearch
-                          ? 'Tidak ada anggota yang cocok dengan pencarian.'
-                          : 'Belum ada anggota yang terdaftar pada tim kerja ini.'}
-                      </p>
-                      {memberSearch && (
+                      <div>
+                        <p className="font-bold text-slate-700">
+                          {memberSearch
+                            ? 'Tidak ada anggota yang cocok dengan pencarian.'
+                            : 'Belum ada anggota yang terdaftar pada tim kerja ini.'}
+                        </p>
+                        <p className="text-[11px] text-slate-400 mt-0.5">
+                          {memberSearch
+                            ? 'Silakan coba kata kunci pencarian lain.'
+                            : 'Tambahkan anggota tim dari staf Biro 3.'}
+                        </p>
+                      </div>
+                      {memberSearch ? (
                         <button
                           type="button"
                           onClick={() => setMemberSearch('')}
@@ -846,6 +1071,17 @@ export function TeamManagementPanel({
                         >
                           Reset Pencarian
                         </button>
+                      ) : (
+                        canManageTeamMembers(memberModalTeam) && (
+                          <button
+                            type="button"
+                            onClick={() => handleOpenAddMemberModal(memberModalTeam)}
+                            className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-[#1E6B7B] hover:bg-[#164E59] text-white text-xs font-bold shadow-xs transition-all cursor-pointer"
+                          >
+                            <UserPlus className="w-3.5 h-3.5" />
+                            <span>+ Tambah Anggota ke Tim</span>
+                          </button>
+                        )
                       )}
                     </div>
                   );
@@ -905,6 +1141,22 @@ export function TeamManagementPanel({
                               <span className={cn("w-1.5 h-1.5 rounded-full", member.isActive ? "bg-emerald-600" : "bg-slate-400")} />
                               {member.isActive ? 'Aktif' : 'Nonaktif'}
                             </span>
+
+                            {canManageTeamMembers(memberModalTeam) && (
+                              <button
+                                type="button"
+                                disabled={removingMemberId === member.id}
+                                onClick={() => handleRemoveMember(memberModalTeam, member)}
+                                className="p-1 rounded-md text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition-colors cursor-pointer border border-transparent hover:border-rose-200 ml-1"
+                                title={`Keluarkan ${member.name} dari tim`}
+                              >
+                                {removingMemberId === member.id ? (
+                                  <Loader2 className="w-3.5 h-3.5 animate-spin text-rose-600" />
+                                ) : (
+                                  <UserMinus className="w-3.5 h-3.5" />
+                                )}
+                              </button>
+                            )}
                           </div>
                         </div>
                       </div>
@@ -930,6 +1182,258 @@ export function TeamManagementPanel({
           </div>
         </div>
       )}
+
+      {/* Sub-Modal: Tambah Anggota dari Tim Biro */}
+      {isAddMemberModalOpen && targetTeamForAdd && (
+        <div
+          className="fixed inset-0 z-[60] flex items-center justify-center p-3 sm:p-4 bg-slate-900/60 backdrop-blur-xs animate-in fade-in duration-150"
+          onClick={() => !isSavingMembers && setIsAddMemberModalOpen(false)}
+        >
+          <div
+            className="bg-white w-full max-w-xl rounded-2xl shadow-2xl border border-slate-200 overflow-hidden flex flex-col max-h-[85vh] animate-in zoom-in-95 duration-150"
+            onClick={(e) => e.stopPropagation()}
+            role="dialog"
+            aria-modal="true"
+          >
+            {/* Header */}
+            <div className="px-6 py-4 bg-gradient-to-r from-[#175360] via-[#1E6B7B] to-[#266F80] text-white flex items-center justify-between">
+              <div className="flex items-center gap-3 min-w-0">
+                <div className="p-2.5 bg-white/10 rounded-xl border border-white/20 shrink-0">
+                  <UserPlus className="w-5 h-5 text-teal-200" />
+                </div>
+                <div className="min-w-0">
+                  <h3 className="text-base font-bold text-white truncate">
+                    Tambah Anggota: {targetTeamForAdd.name}
+                  </h3>
+                  <p className="text-xs text-teal-100/90 mt-0.5">
+                    Pilih staf dari Biro 3 untuk ditambahkan ke kelompok kerja ini.
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                disabled={isSavingMembers}
+                onClick={() => setIsAddMemberModalOpen(false)}
+                className="p-1.5 rounded-lg text-teal-100 hover:text-white hover:bg-white/10 transition-colors cursor-pointer"
+                title="Tutup"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Search and Selection Tools */}
+            <div className="p-4 border-b border-slate-100 bg-slate-50/80 space-y-2.5">
+              <div className="relative">
+                <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+                <input
+                  type="text"
+                  value={biroStaffSearch}
+                  onChange={(e) => setBiroStaffSearch(e.target.value)}
+                  placeholder="Cari staf biro berdasarkan nama atau email..."
+                  className="w-full pl-9 pr-4 py-2 text-xs rounded-xl border border-slate-200 bg-white focus:outline-none focus:ring-2 focus:ring-[#1E6B7B]/20 focus:border-[#1E6B7B]"
+                />
+                {biroStaffSearch && (
+                  <button
+                    type="button"
+                    onClick={() => setBiroStaffSearch('')}
+                    className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 p-0.5 cursor-pointer"
+                  >
+                    <X className="w-3.5 h-3.5" />
+                  </button>
+                )}
+              </div>
+
+              {/* Selection Summary & Quick Actions */}
+              <div className="flex items-center justify-between text-xs">
+                <div className="flex items-center gap-2">
+                  <span className="font-semibold text-slate-600 text-[11.5px]">
+                    {selectedStaffIds.length} staf dipilih
+                  </span>
+                  {selectedStaffIds.length > 0 && (
+                    <button
+                      type="button"
+                      onClick={() => setSelectedStaffIds([])}
+                      className="text-[11px] font-bold text-rose-600 hover:underline cursor-pointer"
+                    >
+                      Batal Pilih
+                    </button>
+                  )}
+                </div>
+
+                {filteredAvailableStaff.length > 0 && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (selectedStaffIds.length === filteredAvailableStaff.length) {
+                        setSelectedStaffIds([]);
+                      } else {
+                        setSelectedStaffIds(filteredAvailableStaff.map((s) => s.id));
+                      }
+                    }}
+                    className="text-[11px] font-bold text-[#1E6B7B] hover:underline cursor-pointer flex items-center gap-1"
+                  >
+                    {selectedStaffIds.length === filteredAvailableStaff.length ? (
+                      <>
+                        <CheckSquare className="w-3.5 h-3.5" />
+                        <span>Hapus Semua Pilihan</span>
+                      </>
+                    ) : (
+                      <>
+                        <Square className="w-3.5 h-3.5" />
+                        <span>Pilih Semua ({filteredAvailableStaff.length})</span>
+                      </>
+                    )}
+                  </button>
+                )}
+              </div>
+            </div>
+
+            {/* Staff List */}
+            <div className="p-4 sm:p-5 overflow-y-auto flex-1 space-y-2 [scrollbar-width:thin] max-h-[50vh]">
+              {isLoadingBiroStaff ? (
+                <div className="py-12 text-center text-slate-500 space-y-2">
+                  <Loader2 className="w-6 h-6 animate-spin text-[#1E6B7B] mx-auto" />
+                  <p className="text-xs font-semibold">Memuat daftar seluruh staf dari Biro 3...</p>
+                </div>
+              ) : filteredAvailableStaff.length === 0 ? (
+                <div className="py-10 text-center bg-slate-50 rounded-2xl border border-slate-200 text-slate-500 text-xs space-y-2">
+                  <Users className="w-8 h-8 text-slate-300 mx-auto" />
+                  <p className="font-bold text-slate-700">
+                    {biroStaffSearch
+                      ? 'Tidak ada staf yang sesuai dengan kata kunci pencarian.'
+                      : 'Semua staf di Biro 3 sudah terdaftar pada tim kerja ini.'}
+                  </p>
+                  <p className="text-[11px] text-slate-400">
+                    {biroStaffSearch
+                      ? 'Coba gunakan kata kunci pencarian lain.'
+                      : 'Tidak ada personel baru yang tersedia untuk ditambahkan.'}
+                  </p>
+                </div>
+              ) : (
+                filteredAvailableStaff.map((staff) => {
+                  const isSelected = selectedStaffIds.includes(staff.id);
+                  return (
+                    <div
+                      key={staff.id}
+                      onClick={() => {
+                        setSelectedStaffIds((prev) =>
+                          isSelected ? prev.filter((id) => id !== staff.id) : [...prev, staff.id]
+                        );
+                      }}
+                      className={cn(
+                        'p-3 rounded-xl border transition-all cursor-pointer flex items-center justify-between gap-3 shadow-2xs',
+                        isSelected
+                          ? 'bg-[#F0F8FA] border-[#1E6B7B] ring-1 ring-[#1E6B7B]'
+                          : 'bg-white hover:bg-slate-50/80 border-slate-200'
+                      )}
+                    >
+                      <div className="flex items-center gap-3 min-w-0">
+                        {/* Checkbox Icon */}
+                        <div className="shrink-0 text-[#1E6B7B]">
+                          {isSelected ? (
+                            <CheckSquare className="w-4 h-4 fill-[#1E6B7B] text-white" />
+                          ) : (
+                            <Square className="w-4 h-4 text-slate-300" />
+                          )}
+                        </div>
+
+                        {/* Avatar */}
+                        <div
+                          className={cn(
+                            'w-9 h-9 rounded-xl text-xs font-black flex items-center justify-center shrink-0 border shadow-2xs',
+                            isSelected
+                              ? 'bg-[#1E6B7B] text-white border-[#1E6B7B]'
+                              : 'bg-slate-100 text-slate-700 border-slate-200'
+                          )}
+                        >
+                          {staff.name.slice(0, 2).toUpperCase()}
+                        </div>
+
+                        {/* Info */}
+                        <div className="min-w-0">
+                          <div className="flex items-center gap-1.5 flex-wrap">
+                            <p className="font-bold text-slate-900 text-xs leading-snug">
+                              {staff.name}
+                            </p>
+                            {staff.username && (
+                              <span className="font-mono text-[10px] text-[#1E6B7B] bg-[#E8F5F7] px-1.5 py-0.2 rounded border border-[#BCE3EB]">
+                                @{staff.username}
+                              </span>
+                            )}
+                          </div>
+                          <p className="text-[11px] text-slate-500 truncate mt-0.5">
+                            {staff.email}
+                          </p>
+
+                          {/* Existing Teams preview */}
+                          <div className="flex items-center gap-1 mt-1 flex-wrap">
+                            {staff.currentTeams.length > 0 ? (
+                              staff.currentTeams.map((tName, idx) => (
+                                <span
+                                  key={idx}
+                                  className="text-[9.5px] px-1.5 py-0.2 rounded font-medium bg-slate-100 text-slate-600 border border-slate-200"
+                                >
+                                  {tName}
+                                </span>
+                              ))
+                            ) : (
+                              <span className="text-[9.5px] px-1.5 py-0.2 rounded font-medium bg-amber-50 text-amber-700 border border-amber-200">
+                                Belum ada tim
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="shrink-0">
+                        <span className="text-[10px] px-2 py-0.5 rounded font-semibold bg-slate-100 text-slate-600 border border-slate-200">
+                          {staff.role}
+                        </span>
+                      </div>
+                    </div>
+                  );
+                })
+              )}
+            </div>
+
+            {/* Footer */}
+            <div className="px-6 py-3.5 border-t border-slate-200 bg-slate-50 flex items-center justify-between text-xs">
+              <span className="text-slate-500 text-[11px]">
+                Staf yang ditambahkan tetap dapat aktif di tim kerja biro lainnya.
+              </span>
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  disabled={isSavingMembers}
+                  onClick={() => setIsAddMemberModalOpen(false)}
+                  className="px-4 py-2 rounded-xl text-xs font-bold text-slate-600 hover:bg-slate-200 transition-colors cursor-pointer"
+                >
+                  Batal
+                </button>
+                <button
+                  type="button"
+                  disabled={isSavingMembers || selectedStaffIds.length === 0}
+                  onClick={handleSaveAddMembers}
+                  className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-[#1E6B7B] hover:bg-[#164E59] text-white text-xs font-bold shadow-xs transition-all cursor-pointer disabled:opacity-50"
+                >
+                  {isSavingMembers ? (
+                    <>
+                      <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                      <span>Menambahkan...</span>
+                    </>
+                  ) : (
+                    <>
+                      <UserPlus className="w-3.5 h-3.5" />
+                      <span>Tambahkan ke Tim ({selectedStaffIds.length})</span>
+                    </>
+                  )}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
     </div>
   );
 }

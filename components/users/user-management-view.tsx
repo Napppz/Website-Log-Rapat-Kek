@@ -481,6 +481,9 @@ export function UserManagementView({
         <TeamManagementPanel
           initialTeams={(availableTeams && availableTeams.length > 0 ? availableTeams : teamsList) as TeamData[]}
           currentUserRole={currentUserRole}
+          currentUserTeamId={myTeam?.id || currentUserTeamId}
+          currentUserTeamCode={myTeam?.code || currentUserTeamCode}
+          currentUserId={currentUserId}
         />
       ) : (
         <>
