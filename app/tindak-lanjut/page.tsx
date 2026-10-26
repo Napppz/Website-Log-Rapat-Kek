@@ -31,11 +31,11 @@ export default async function TindakLanjutPage() {
       prisma.meeting.findMany({
         where: userBiroCode
           ? {
-              OR: [
-                { primaryBiro: { code: userBiroCode } },
-                { meetingBiros: { some: { biro: { code: userBiroCode } } } },
-              ],
-            }
+            OR: [
+              { primaryBiro: { code: userBiroCode } },
+              { meetingBiros: { some: { biro: { code: userBiroCode } } } },
+            ],
+          }
           : undefined,
         select: {
           id: true,

@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useSession } from 'next-auth/react';
-import { X, AlertCircle, Save, ExternalLink, Layers, Lock, CheckCircle2, UploadCloud, Paperclip, FileCheck, Trash2, Loader2, User } from 'lucide-react';
+import { X, AlertCircle, Save, ExternalLink, Layers, Lock, CheckCircle2, UploadCloud, Paperclip, FileCheck, Trash2, Loader2, User, Calendar } from 'lucide-react';
 import {
   actionItemSchema,
   ActionItemInput,
@@ -332,10 +332,24 @@ export function ActionItemFormDialog({
     setFieldErrors({});
 
     if (actionItem) {
-      const due = new Date(actionItem.dueDate);
-      const yyyy = due.getFullYear();
-      const mm = String(due.getMonth() + 1).padStart(2, '0');
-      const dd = String(due.getDate()).padStart(2, '0');
+      let dueStr = '';
+      if (actionItem.dueDate) {
+        const due = new Date(actionItem.dueDate);
+        if (!isNaN(due.getTime())) {
+          const yyyy = due.getFullYear();
+          const mm = String(due.getMonth() + 1).padStart(2, '0');
+          const dd = String(due.getDate()).padStart(2, '0');
+          dueStr = `${yyyy}-${mm}-${dd}`;
+        }
+      }
+      if (!dueStr) {
+        const nextWeek = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
+        const yyyy = nextWeek.getFullYear();
+        const mm = String(nextWeek.getMonth() + 1).padStart(2, '0');
+        const dd = String(nextWeek.getDate()).padStart(2, '0');
+        dueStr = `${yyyy}-${mm}-${dd}`;
+      }
+      setDueDate(dueStr);
 
       setSelectedMeetingId(actionItem.meetingId || meetingId || normalizedCurrentMeeting?.id || '');
       setTitle(actionItem.title || '');
@@ -366,7 +380,6 @@ export function ActionItemFormDialog({
       setPicBiroId(actionItem.picBiroId || displayTeams[0]?.biroId || '');
       setPicTeamId(actionItem.picTeamId || displayTeams[0]?.id || '');
       setPicUserId(actionItem.picUserId || '');
-      setDueDate(`${yyyy}-${mm}-${dd}`);
       setPriority(actionItem.priority || 'MEDIUM');
       setStatus(actionItem.status || 'PENDING');
     } else {
@@ -525,8 +538,12 @@ export function ActionItemFormDialog({
 
     let finalDueDate = dueDate;
     if (!finalDueDate) {
-      const defaultDate = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
-      finalDueDate = defaultDate.toISOString().split('T')[0];
+      setFieldErrors((prev) => ({
+        ...prev,
+        dueDate: 'Tindak lanjut wajib diisi.',
+      }));
+      setErrorMessage('Tindak lanjut wajib diisi.');
+      return;
     }
 
     // Zod client validation
@@ -859,23 +876,58 @@ export function ActionItemFormDialog({
               />
             </div>
 
-            {/* Status Tindak Lanjut (Hanya tampil saat Edit) */}
-            {isEditing && (
-              <div className="pt-2 border-t border-slate-100">
-                <label className="block font-semibold text-slate-700 mb-1 text-[12px]">
-                  Status Tindak Lanjut
+            {/* Atur Tanggal Tindak Lanjut & Status Tindak Lanjut */}
+            <div className={isEditing ? "grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2 border-t border-slate-100" : "pt-2 border-t border-slate-100"}>
+              {/* Atur Tanggal Tindak Lanjut */}
+              <div className={!isEditing ? "sm:w-1/2" : ""}>
+                <label className="block font-bold text-slate-800 mb-1 text-[13px] flex items-center justify-between">
+                  <span className="flex items-center gap-1.5">
+                    <Calendar className="w-3.5 h-3.5 text-[#31889C]" />
+                    <span>Atur Tanggal Tindak Lanjut</span>
+                    <span className="text-red-500">*</span>
+                  </span>
+                  <span className="text-slate-400 font-normal text-xs"></span>
                 </label>
-                <select
-                  value={status}
-                  onChange={(e) => setStatus(e.target.value as ActionItemStatus)}
-                  className="w-full px-3 py-2 rounded-lg border border-slate-200 focus:outline-none focus:ring-2 focus:ring-[#31889C]/30 focus:border-[#31889C] bg-white font-medium text-slate-800 text-[13px] cursor-pointer"
-                >
-                  <option value="PENDING">Belum Dimulai</option>
-                  <option value="IN_PROGRESS">Dalam Proses</option>
-                  <option value="COMPLETED">Selesai</option>
-                </select>
+                <input
+                  type="date"
+                  value={dueDate}
+                  onChange={(e) => {
+                    setDueDate(e.target.value);
+                    if (fieldErrors.dueDate) {
+                      setFieldErrors((prev) => {
+                        const next = { ...prev };
+                        delete next.dueDate;
+                        return next;
+                      });
+                    }
+                  }}
+                  className={`w-full px-3.5 py-2.5 rounded-xl border text-slate-800 text-[13px] focus:outline-none focus:ring-2 focus:ring-[#31889C]/30 focus:border-[#31889C] transition-all cursor-pointer ${fieldErrors.dueDate ? 'border-red-400 bg-red-50/20' : 'border-slate-200 bg-white'
+                    }`}
+                  required
+                />
+                {fieldErrors.dueDate && (
+                  <p className="mt-1 text-[11px] text-red-600 font-semibold">{fieldErrors.dueDate}</p>
+                )}
               </div>
-            )}
+
+              {/* Status Tindak Lanjut (Hanya tampil saat Edit) */}
+              {isEditing && (
+                <div>
+                  <label className="block font-bold text-slate-800 mb-1 text-[13px]">
+                    Status Tindak Lanjut
+                  </label>
+                  <select
+                    value={status}
+                    onChange={(e) => setStatus(e.target.value as ActionItemStatus)}
+                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-[#31889C]/30 focus:border-[#31889C] bg-white font-medium text-slate-800 text-[13px] cursor-pointer"
+                  >
+                    <option value="PENDING">Belum Dimulai</option>
+                    <option value="IN_PROGRESS">Dalam Proses</option>
+                    <option value="COMPLETED">Selesai</option>
+                  </select>
+                </div>
+              )}
+            </div>
           </div>
 
           {/* Modal Footer */}
