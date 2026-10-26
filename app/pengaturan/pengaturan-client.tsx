@@ -181,11 +181,7 @@ export function PengaturanClient({
                 <label className="block font-semibold text-slate-700">
                   Nama Lengkap &amp; Gelar
                 </label>
-                {isStaff ? (
-                  <span className="text-[11px] text-amber-700 bg-amber-50 px-2 py-0.5 rounded font-semibold border border-amber-200">
-                    Hanya Super Admin
-                  </span>
-                ) : (
+                {!isStaff && (
                   <span className="text-[11px] text-[#31889C] font-semibold">
                     Role: ({getRoleSuffix(role)})
                   </span>
@@ -225,7 +221,7 @@ export function PengaturanClient({
               </div>
               <span className="text-[11px] text-slate-400 mt-1 block">
                 {isStaff
-                  ? 'Nama lengkap akun staf hanya dapat diatur dan diubah oleh Super Administrator.'
+                  ? 'Nama lengkap akun dinas resmi terdaftar.'
                   : `Suffix role otomatis disematkan sesuai peran akun Anda (${getRoleSuffix(role)}).`}
               </span>
             </div>
@@ -236,11 +232,6 @@ export function PengaturanClient({
                 <label className="block font-semibold text-slate-700">
                   Alamat Email Dinas
                 </label>
-                {isStaff && (
-                  <span className="text-[11px] text-amber-700 bg-amber-50 px-2 py-0.5 rounded font-semibold border border-amber-200">
-                    Hanya Super Admin
-                  </span>
-                )}
               </div>
               <input
                 type="email"
@@ -257,9 +248,7 @@ export function PengaturanClient({
                 required
               />
               <span className="text-[11px] text-slate-400 mt-1 block">
-                {isStaff
-                  ? 'Alamat email dinas resmi hanya dapat diatur dan diubah oleh Super Administrator.'
-                  : 'Email dinas resmi terdaftar'}
+                Alamat email dinas resmi terdaftar.
               </span>
             </div>
 
@@ -293,7 +282,7 @@ export function PengaturanClient({
                 className="w-full px-3 py-2 rounded-lg border border-slate-200 bg-slate-50 text-slate-500 font-bold"
               />
               <span className="text-[11px] text-slate-400 mt-1 block">
-                Hak akses diatur langsung oleh Super Administrator dewan
+                Hak akses resmi akun Anda pada sistem
               </span>
             </div>
           </div>
