@@ -299,7 +299,9 @@ export function ActionItemLogDialog({
             )}
             <span className="flex items-center gap-1">
               <Building2 className="w-3.5 h-3.5 text-slate-400" />
-              {item.picBiro?.code || 'Biro'} — {item.picBiro?.shortName}
+              {item.picBiro?.shortName && item.picBiro?.code && item.picBiro.shortName.toUpperCase().includes(item.picBiro.code.toUpperCase())
+                ? item.picBiro.shortName
+                : `${item.picBiro?.code || 'Biro'}${item.picBiro?.shortName ? ` — ${item.picBiro.shortName}` : ''}`}
             </span>
             {item.picUser && (
               <span className="flex items-center gap-1">

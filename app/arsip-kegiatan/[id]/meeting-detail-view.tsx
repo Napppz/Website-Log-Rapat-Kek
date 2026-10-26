@@ -1704,11 +1704,16 @@ export function MeetingDetailView({
                         onChange={(e) => setCustomBiroId(e.target.value)}
                         className="w-full px-3 py-2 rounded-xl border border-slate-300 focus:border-[#31889C] focus:ring-1 focus:ring-[#31889C] bg-white text-slate-800 text-[12px] outline-none"
                       >
-                        {availableBiros.map((b: any) => (
-                          <option key={b.id} value={b.id}>
-                            {b.code} — {b.shortName}
-                          </option>
-                        ))}
+                        {availableBiros.map((b: any) => {
+                          const label = b.shortName && b.code && b.shortName.toUpperCase().includes(b.code.toUpperCase())
+                            ? b.shortName
+                            : `${b.code} — ${b.shortName}`;
+                          return (
+                            <option key={b.id} value={b.id}>
+                              {label}
+                            </option>
+                          );
+                        })}
                       </select>
                     </div>
 

@@ -45,9 +45,15 @@ export function Header({
   const userEmail = currentUser?.email || '';
   const userRole = currentUser?.role || 'STAFF';
   const roleLabel = ROLE_LABELS[userRole] || userRole;
-  const biroLabel = currentUser?.biroCode
-    ? `${currentUser.biroCode} - ${currentUser.biroName || 'Biro KEK'}`
-    : null;
+
+  const rawBiroCode = currentUser?.biroCode?.trim() || '';
+  const rawBiroName = currentUser?.biroName?.trim() || '';
+  // Cegah duplikasi jika nama biro sudah memuat kode biro (misal: "Biro 3 (IKK)" sudah ada "IKK")
+  const biroLabel = rawBiroName && rawBiroCode
+    ? rawBiroName.toUpperCase().includes(rawBiroCode.toUpperCase())
+      ? rawBiroName
+      : `${rawBiroCode} - ${rawBiroName}`
+    : rawBiroName || rawBiroCode || null;
 
   const canCreateMeeting =
     userRole === 'SUPER_ADMIN' || userRole === 'ADMIN' || userRole === 'STAFF';
