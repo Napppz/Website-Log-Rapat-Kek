@@ -3,7 +3,6 @@
 import React, { useState } from 'react';
 import {
   User,
-  Bell,
   Save,
   Lock,
   Building2,
@@ -67,9 +66,6 @@ export function PengaturanClient({
   const [confirmPassword, setConfirmPassword] = useState('');
   const [showPasswords, setShowPasswords] = useState(false);
 
-  // Preference toggles
-  const [emailNotif, setEmailNotif] = useState(true);
-  const [deadlineNotif, setDeadlineNotif] = useState(true);
 
   const [isSaving, setIsSaving] = useState(false);
 
@@ -362,48 +358,6 @@ export function PengaturanClient({
           )}
         </div>
 
-        {/* Section 3: Preferensi Notifikasi */}
-        <div className="pt-4 border-t border-slate-100">
-          <h3 className="text-[15px] font-bold text-slate-900 mb-4 flex items-center gap-2">
-            <Bell className="w-4 h-4 text-[#31889C]" />
-            Preferensi Pemberitahuan &amp; Peringatan
-          </h3>
-          <div className="space-y-3">
-            <div className="flex items-center justify-between p-3.5 rounded-lg bg-[#F0F9FA] border border-[#BCE3EB]">
-              <div>
-                <div className="font-semibold text-slate-800">
-                  Pemberitahuan Email Otomatis
-                </div>
-                <div className="text-[12px] text-slate-500">
-                  Terima email saat ada catatan kegiatan baru atau dokumen resmi disahkan dewan.
-                </div>
-              </div>
-              <input
-                type="checkbox"
-                checked={emailNotif}
-                onChange={(e) => setEmailNotif(e.target.checked)}
-                className="w-4 h-4 text-[#31889C] rounded border-slate-300 focus:ring-[#31889C] cursor-pointer"
-              />
-            </div>
-
-            <div className="flex items-center justify-between p-3.5 rounded-lg bg-amber-50/60 border border-amber-200/80">
-              <div>
-                <div className="font-semibold text-slate-800">
-                  Peringatan Jatuh Tempo Tindak Lanjut (H-3 &amp; Terlambat)
-                </div>
-                <div className="text-[12px] text-slate-500">
-                  Tampilkan notifikasi prioritas saat komitmen biro mendekati batas waktu.
-                </div>
-              </div>
-              <input
-                type="checkbox"
-                checked={deadlineNotif}
-                onChange={(e) => setDeadlineNotif(e.target.checked)}
-                className="w-4 h-4 text-amber-600 rounded border-slate-300 focus:ring-amber-500 cursor-pointer"
-              />
-            </div>
-          </div>
-        </div>
 
         {/* Submit Button */}
         <div className="pt-4 border-t border-slate-100 flex justify-end">
