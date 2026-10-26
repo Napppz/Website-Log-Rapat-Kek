@@ -150,7 +150,7 @@ export function UploadMeetingDialog({
           `Kegiatan "${res.data.title}" dan naskah catatan resmi berhasil disimpan langsung ke sistem!`
         );
         onClose();
-        router.push(`/semua-rapat/${res.data.id}`);
+        router.push(`/arsip-kegiatan/${res.data.id}`);
         router.refresh();
       } else {
         toast.error(res.error || 'Gagal menyimpan kegiatan otomatis.');

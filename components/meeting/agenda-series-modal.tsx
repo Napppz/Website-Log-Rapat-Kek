@@ -379,14 +379,14 @@ export function AgendaSeriesModal({
           <div className="text-[12px] text-slate-500 flex items-center gap-1.5">
             <Info className="w-4 h-4 text-[#31889C] shrink-0" />
             <span>
-              Setiap kegiatan dalam rangkaian ini saling terhubung untuk pelacakan notula dan evaluasi tindak lanjut berkelanjutan.
+              Setiap kegiatan dalam rangkaian ini saling terhubung untuk pelacakan arsip kegiatan dan evaluasi tindak lanjut berkelanjutan.
             </span>
           </div>
 
           <div className="flex items-center gap-2 self-end sm:self-auto shrink-0">
             {lastSession && (
               <Link
-                href={`/buat-rapat?previousMeetingId=${lastSession.id}&title=${encodeURIComponent(
+                href={`/catat-kegiatan?previousMeetingId=${lastSession.id}&title=${encodeURIComponent(
                   data?.agendaTitle || lastSession.title
                 )}&biro=${lastSession.biroCode}`}
                 onClick={onClose}

@@ -517,7 +517,7 @@ export function BiroDashboardClient({
           <div className="flex flex-col sm:flex-row lg:flex-col gap-2.5 shrink-0 self-start lg:self-center min-w-[200px]">
             {canCreate && (
               <Link
-                href={`/buat-rapat?biro=${biro.code}`}
+                href={`/catat-kegiatan?biro=${biro.code}`}
                 className="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-[#31889C] text-white hover:bg-[#266F80] transition-all shadow-xs font-semibold text-[12.5px] cursor-pointer"
               >
                 <PlusCircle className="w-4 h-4" />
@@ -559,7 +559,7 @@ export function BiroDashboardClient({
         />
         <BureauDistribution
           meetings={selectedMonth ? monthMeetings : yearMeetings}
-          onCategoryClick={(categoryKey: string) => router.push(`/semua-rapat?kategori=${categoryKey}`)}
+          onCategoryClick={(categoryKey: string) => router.push(`/arsip-kegiatan?kategori=${categoryKey}`)}
         />
       </div>
 
@@ -581,7 +581,7 @@ export function BiroDashboardClient({
           filterBiro={biro.code as BiroCode}
           initialMeetings={yearMeetings}
           filterMonth={selectedMonth}
-          onViewAllMeetings={() => router.push(`/semua-rapat?biro=${biro.code.toLowerCase()}`)}
+          onViewAllMeetings={() => router.push(`/arsip-kegiatan?biro=${biro.code.toLowerCase()}`)}
           onMeetingDeleted={(deletedId) => {
             setDeletedIds((prev) => new Set(prev).add(deletedId));
             setMeetingsList((prev) => prev.filter((m) => m.id !== deletedId));

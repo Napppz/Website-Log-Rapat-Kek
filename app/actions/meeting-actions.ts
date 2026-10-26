@@ -425,7 +425,7 @@ export async function createMeetingAction(input: CreateMeetingInput) {
             title: `Penugasan PIC Kegiatan: [${finalMeetingNumber}] ${meeting.title}`,
             message: `Anda ditugaskan sebagai PIC untuk kegiatan "${meeting.title}" (${meetingDateFormatted}) bertempat di ${input.location}.`,
             type: 'kegiatan',
-            link: `/semua-rapat/${meeting.id}`,
+            link: `/arsip-kegiatan/${meeting.id}`,
             isRead: false,
           },
           tx
@@ -441,7 +441,7 @@ export async function createMeetingAction(input: CreateMeetingInput) {
             title: `Penugasan PIC Kegiatan: [${finalMeetingNumber}] ${meeting.title}`,
             message: `Anda ditugaskan sebagai PIC utama untuk kegiatan "${meeting.title}" (${meetingDateFormatted}) bertempat di ${input.location}.`,
             type: 'kegiatan',
-            link: `/semua-rapat/${meeting.id}`,
+            link: `/arsip-kegiatan/${meeting.id}`,
             isRead: false,
           },
           tx
@@ -461,7 +461,7 @@ export async function createMeetingAction(input: CreateMeetingInput) {
 
     safeRevalidate([
       '/',
-      '/semua-rapat',
+      '/arsip-kegiatan',
       '/notifikasi',
       `/biro/${effectiveBiroCode.toLowerCase()}`,
     ]);
@@ -603,8 +603,8 @@ export async function updateMeetingStatusAction(
 
     safeRevalidate([
       '/',
-      '/semua-rapat',
-      `/semua-rapat/${meetingId}`,
+      '/arsip-kegiatan',
+      `/arsip-kegiatan/${meetingId}`,
       `/rapat/${meetingId}`,
       `/biro/${updated.primaryBiro.code.toLowerCase()}`,
     ]);
@@ -670,7 +670,7 @@ export async function approveMeetingAction(meetingId: string) {
           title: `Hasil Rapat Disetujui: [${existing.meetingNumber}] ${existing.title}`,
           message: `Hasil dan risalah rapat telah disetujui resmi oleh ${currentUser.name || 'Pimpinan'}. Status rapat kini telah SELESAI.`,
           type: 'meeting',
-          link: `/semua-rapat/${existing.id}`,
+          link: `/arsip-kegiatan/${existing.id}`,
           isRead: false,
         });
       }
@@ -680,8 +680,8 @@ export async function approveMeetingAction(meetingId: string) {
 
     safeRevalidate([
       '/',
-      '/semua-rapat',
-      `/semua-rapat/${meetingId}`,
+      '/arsip-kegiatan',
+      `/arsip-kegiatan/${meetingId}`,
       `/rapat/${meetingId}`,
       '/laporan',
       `/biro/${updated.primaryBiro.code.toLowerCase()}`,
@@ -773,8 +773,8 @@ export async function updateMeetingOutputAction(input: UpdateMeetingOutputInput)
 
     safeRevalidate([
       '/',
-      '/semua-rapat',
-      `/semua-rapat/${input.meetingId}`,
+      '/arsip-kegiatan',
+      `/arsip-kegiatan/${input.meetingId}`,
       `/rapat/${input.meetingId}`,
       '/laporan',
     ]);
@@ -856,8 +856,8 @@ export async function updateMeetingNumberAction(meetingId: string, newMeetingNum
 
     safeRevalidate([
       '/',
-      '/semua-rapat',
-      `/semua-rapat/${meetingId}`,
+      '/arsip-kegiatan',
+      `/arsip-kegiatan/${meetingId}`,
       `/rapat/${meetingId}`,
       `/biro/${updated.primaryBiro.code.toLowerCase()}`,
     ]);
@@ -944,8 +944,8 @@ export async function updateMeetingCategoryAction(
 
     safeRevalidate([
       '/',
-      '/semua-rapat',
-      `/semua-rapat/${meetingId}`,
+      '/arsip-kegiatan',
+      `/arsip-kegiatan/${meetingId}`,
       `/rapat/${meetingId}`,
       `/biro/${updated.primaryBiro.code.toLowerCase()}`,
     ]);
@@ -978,9 +978,9 @@ export async function updateParticipantAttendanceAction(
     });
 
     safeRevalidate([
-      `/semua-rapat/${updated.meetingId}`,
+      `/arsip-kegiatan/${updated.meetingId}`,
       `/rapat/${updated.meetingId}`,
-      '/semua-rapat',
+      '/arsip-kegiatan',
       '/',
     ]);
 
@@ -1129,7 +1129,7 @@ export async function addParticipantToMeetingAction(
           const existingNotif = await prisma.notification.findFirst({
             where: {
               userId: targetUserId,
-              link: `/semua-rapat/${meetingInfo.id}`,
+              link: `/arsip-kegiatan/${meetingInfo.id}`,
             },
           });
 
@@ -1140,7 +1140,7 @@ export async function addParticipantToMeetingAction(
               title: `Penugasan PIC Kegiatan: [${meetingInfo.meetingNumber}] ${meetingInfo.title}`,
               message: `Anda telah ditambahkan sebagai PIC kegiatan "${meetingInfo.title}" (${meetingDateFormatted}) bertempat di ${meetingInfo.location}.`,
               type: 'kegiatan',
-              link: `/semua-rapat/${meetingInfo.id}`,
+              link: `/arsip-kegiatan/${meetingInfo.id}`,
               isRead: false,
             });
           }
@@ -1151,9 +1151,9 @@ export async function addParticipantToMeetingAction(
     }
 
     safeRevalidate([
-      `/semua-rapat/${meetingId}`,
+      `/arsip-kegiatan/${meetingId}`,
       `/rapat/${meetingId}`,
-      '/semua-rapat',
+      '/arsip-kegiatan',
       '/notifikasi',
       '/',
     ]);
@@ -1177,9 +1177,9 @@ export async function removeParticipantFromMeetingAction(participantId: string) 
     });
 
     safeRevalidate([
-      `/semua-rapat/${deleted.meetingId}`,
+      `/arsip-kegiatan/${deleted.meetingId}`,
       `/rapat/${deleted.meetingId}`,
-      '/semua-rapat',
+      '/arsip-kegiatan',
       '/',
     ]);
 
@@ -1244,7 +1244,7 @@ export async function deleteMeetingAction(meetingId: string) {
 
     safeRevalidate([
       '/',
-      '/semua-rapat',
+      '/arsip-kegiatan',
       '/kalender',
       '/dokumen',
       '/tindak-lanjut',
@@ -1291,7 +1291,7 @@ export async function deleteAllMeetingsAction() {
 
     safeRevalidate([
       '/',
-      '/semua-rapat',
+      '/arsip-kegiatan',
       '/tindak-lanjut',
       '/kalender',
       '/dokumen',
@@ -1339,8 +1339,8 @@ export async function linkPreviousMeetingAction(
     });
 
     safeRevalidate([
-      `/semua-rapat/${meetingId}`,
-      '/semua-rapat',
+      `/arsip-kegiatan/${meetingId}`,
+      '/arsip-kegiatan',
       '/',
     ]);
 

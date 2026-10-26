@@ -259,11 +259,11 @@ export function KalenderClient({ initialMeetings, biros }: KalenderClientProps) 
         {canCreate && (
           <div className="flex flex-wrap items-center gap-3 shrink-0">
             <Link
-              href="/buat-rapat"
+              href="/catat-kegiatan"
               className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#31889C] text-white font-semibold text-[13px] hover:bg-[#266F80] shadow-sm shadow-[#31889C]/20 transition-all"
             >
               <PlusCircle className="w-4 h-4" />
-              <span>+ Jadwalkan Rapat Baru</span>
+              <span>+ Catat Kegiatan Baru</span>
             </Link>
           </div>
         )}
@@ -538,10 +538,10 @@ export function KalenderClient({ initialMeetings, biros }: KalenderClientProps) 
                             {m.attendees?.length || 0} Undangan
                           </span>
                           <Link
-                            href={`/semua-rapat/${m.id}`}
+                            href={`/arsip-kegiatan/${m.id}`}
                             className="inline-flex items-center gap-1 text-[11.5px] font-bold text-[#31889C] hover:text-[#266F80] transition-colors"
                           >
-                            <span>Buka Risalah</span>
+                            <span>Buka Catatan</span>
                             <Eye className="w-3 h-3" />
                           </Link>
                         </div>
@@ -554,11 +554,11 @@ export function KalenderClient({ initialMeetings, biros }: KalenderClientProps) 
 
             <div className="mt-4 pt-3 border-t border-slate-100">
               <Link
-                href="/buat-rapat"
+                href="/catat-kegiatan"
                 className="w-full inline-flex items-center justify-center gap-2 py-2 rounded-xl bg-[#F0F9FA] hover:bg-[#E8F5F7] border border-[#BCE3EB] text-[#215865] font-semibold text-[12px] transition-colors"
               >
                 <PlusCircle className="w-4 h-4 text-[#31889C]" />
-                <span>Tambah Agenda Sidang Baru</span>
+                <span>+ Catat Kegiatan Baru</span>
               </Link>
             </div>
           </div>
@@ -641,11 +641,11 @@ export function KalenderClient({ initialMeetings, biros }: KalenderClientProps) 
 
                     <div className="flex items-center gap-2 shrink-0 self-end md:self-center">
                       <Link
-                        href={`/semua-rapat/${m.id}`}
+                        href={`/arsip-kegiatan/${m.id}`}
                         className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-[#31889C] hover:bg-[#266F80] text-white font-semibold text-[12.5px] transition-all shadow-xs"
                       >
                         <Eye className="w-3.5 h-3.5" />
-                        <span>Buka Risalah</span>
+                        <span>Buka Catatan</span>
                       </Link>
                     </div>
                   </div>

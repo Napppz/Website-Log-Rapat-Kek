@@ -329,7 +329,7 @@ export function DokumenClient({ initialMeetings, biros }: DokumenClientProps) {
                     <div className="space-y-1">
                       <div className="flex flex-wrap items-center gap-2">
                         <Link
-                          href={`/semua-rapat/${m.id}`}
+                          href={`/arsip-kegiatan/${m.id}`}
                           className="font-bold text-[12px] text-[#215865] bg-[#F0F9FA] hover:bg-[#E8F5F7] hover:underline px-2.5 py-0.5 rounded-lg border border-[#BCE3EB] transition-colors"
                           title={`Buka Catatan Kegiatan ${m.code}`}
                         >
@@ -341,7 +341,7 @@ export function DokumenClient({ initialMeetings, biros }: DokumenClientProps) {
                           size="sm"
                         />
                         <Link
-                          href={`/semua-rapat/${m.id}`}
+                          href={`/arsip-kegiatan/${m.id}`}
                           className="text-[12px] text-slate-500 hover:text-[#31889C] hover:underline font-medium flex items-center gap-1 transition-colors"
                           title={`Buka Catatan Kegiatan ${m.code}`}
                         >
@@ -351,7 +351,7 @@ export function DokumenClient({ initialMeetings, biros }: DokumenClientProps) {
                       </div>
 
                       <Link
-                        href={`/semua-rapat/${m.id}`}
+                        href={`/arsip-kegiatan/${m.id}`}
                         className="font-bold text-[15px] text-slate-900 group-hover:text-[#31889C] hover:underline transition-colors block"
                         title={`Buka Catatan Kegiatan ${m.code}`}
                       >
@@ -377,7 +377,7 @@ export function DokumenClient({ initialMeetings, biros }: DokumenClientProps) {
                   {/* Right: Actions */}
                   <div className="flex items-center gap-2.5 self-end lg:self-center shrink-0 pt-2 lg:pt-0">
                     <Link
-                      href={`/semua-rapat/${m.id}`}
+                      href={`/arsip-kegiatan/${m.id}`}
                       className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 font-semibold text-[12.5px] transition-all hover:border-slate-300"
                     >
                       <Eye className="w-3.5 h-3.5 text-slate-600" />

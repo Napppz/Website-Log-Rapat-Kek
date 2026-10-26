@@ -208,7 +208,7 @@ export function MeetingMinutesSection({
         <Loader2 className="w-8 h-8 text-[#31889C] animate-spin mb-3" />
         <p className="text-[14px] font-semibold text-slate-800">Menyiapkan Lembar Naskah Kegiatan...</p>
         <p className="text-[12px] text-slate-500 mt-1">
-          Menyusun format resmi Notula / Nota Dinas dan butir pembahasan dari basis data
+          Menyusun format resmi Laporan Hasil Kegiatan / Nota Dinas dan butir pembahasan dari basis data
         </p>
       </div>
     );
@@ -264,7 +264,7 @@ export function MeetingMinutesSection({
               className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#31889C] hover:bg-[#266F80] text-white font-semibold text-[11.5px] shrink-0 transition-colors shadow-xs cursor-pointer self-start sm:self-auto"
             >
               <FileEdit className="w-3.5 h-3.5" />
-              <span>+ Isi Notula / Nota Dinas</span>
+              <span>+ Isi Laporan Hasil / Nota Dinas</span>
             </button>
           )}
         </div>

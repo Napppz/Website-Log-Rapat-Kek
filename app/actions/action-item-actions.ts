@@ -482,7 +482,7 @@ export async function createActionItemAction(input: ActionItemInput) {
           title: `Penugasan Tindak Lanjut: ${title}`,
           message: `Anda ditugaskan sebagai PIC tindak lanjut "${title}" pada kegiatan "${meeting.title}".`,
           type: 'tindak_lanjut',
-          link: `/semua-rapat/${meetingId}`,
+          link: `/arsip-kegiatan/${meetingId}`,
           isRead: false,
         });
       } catch (notifErr) {
@@ -493,9 +493,9 @@ export async function createActionItemAction(input: ActionItemInput) {
     // 7. Revalidate relevant routes
     safeRevalidate([
       '/',
-      '/semua-rapat',
+      '/arsip-kegiatan',
       '/tindak-lanjut',
-      `/semua-rapat/${meetingId}`,
+      `/arsip-kegiatan/${meetingId}`,
       biro.code ? `/biro/${biro.code.toLowerCase()}` : '',
       meeting.primaryBiro?.code
         ? `/biro/${meeting.primaryBiro.code.toLowerCase()}`
@@ -710,7 +710,7 @@ export async function updateActionItemAction(input: UpdateActionItemInput) {
           title: `Penugasan Tindak Lanjut: ${title}`,
           message: `Anda ditugaskan sebagai PIC baru untuk tindak lanjut "${title}" pada kegiatan "${meeting.title}".`,
           type: 'tindak_lanjut',
-          link: `/semua-rapat/${meetingId}`,
+          link: `/arsip-kegiatan/${meetingId}`,
           isRead: false,
         });
       } catch (notifErr) {
@@ -732,9 +732,9 @@ export async function updateActionItemAction(input: UpdateActionItemInput) {
     // 9. Revalidate
     safeRevalidate([
       '/',
-      '/semua-rapat',
+      '/arsip-kegiatan',
       '/tindak-lanjut',
-      `/semua-rapat/${meetingId}`,
+      `/arsip-kegiatan/${meetingId}`,
       biro.code ? `/biro/${biro.code.toLowerCase()}` : '',
       meeting.primaryBiro?.code
         ? `/biro/${meeting.primaryBiro.code.toLowerCase()}`
@@ -825,9 +825,9 @@ export async function updateActionItemStatusAction(input: UpdateActionItemStatus
 
     safeRevalidate([
       '/',
-      '/semua-rapat',
+      '/arsip-kegiatan',
       '/tindak-lanjut',
-      `/semua-rapat/${existing.meetingId}`,
+      `/arsip-kegiatan/${existing.meetingId}`,
       existing.picBiro?.code ? `/biro/${existing.picBiro.code.toLowerCase()}` : '',
     ].filter(Boolean));
 
@@ -887,9 +887,9 @@ export async function deleteActionItemAction(id: string) {
 
     safeRevalidate([
       '/',
-      '/semua-rapat',
+      '/arsip-kegiatan',
       '/tindak-lanjut',
-      `/semua-rapat/${existing.meetingId}`,
+      `/arsip-kegiatan/${existing.meetingId}`,
       existing.picBiro?.code ? `/biro/${existing.picBiro.code.toLowerCase()}` : '',
     ].filter(Boolean));
 
@@ -1139,7 +1139,7 @@ export async function addActionItemLogAction(input: AddActionItemLogInput) {
         title: `Pembaruan Tindak Lanjut: ${existing.title.slice(0, 40)}`,
         message: `${currentUser?.name || 'Staf'} mencatat progres (${progress ?? 0}%): "${notes.slice(0, 80)}"`,
         type: targetStatus === 'COMPLETED' ? 'success' : 'info',
-        link: `/semua-rapat/${existing.meetingId}`,
+        link: `/arsip-kegiatan/${existing.meetingId}`,
         teamId: effectiveTeamId,
         isRead: false,
       });
@@ -1149,9 +1149,9 @@ export async function addActionItemLogAction(input: AddActionItemLogInput) {
 
     safeRevalidate([
       '/',
-      '/semua-rapat',
+      '/arsip-kegiatan',
       '/tindak-lanjut',
-      `/semua-rapat/${existing.meetingId}`,
+      `/arsip-kegiatan/${existing.meetingId}`,
       existing.picBiro?.code ? `/biro/${existing.picBiro.code.toLowerCase()}` : '',
       existing.meeting?.primaryBiro?.code
         ? `/biro/${existing.meeting.primaryBiro.code.toLowerCase()}`

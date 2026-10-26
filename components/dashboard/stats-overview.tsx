@@ -41,11 +41,11 @@ const FULL_MONTH_NAMES: Record<string, string> = {
 };
 
 const METRIC_LINKS: Record<string, { href: string; actionLabel: string }> = {
-  'total-rapat': { href: '/semua-rapat', actionLabel: 'Lihat Semua' },
-  'rapat-bulan-ini': { href: '/semua-rapat', actionLabel: 'Buka Jadwal' },
-  'tindak-lanjut-aktif': { href: '/semua-rapat?status=Dalam+Proses', actionLabel: 'Pantau Progres' },
-  'perlu-atensi': { href: '/semua-rapat?status=Dalam+Proses', actionLabel: 'Atasi Masalah' },
-  'tindak-lanjut-selesai': { href: '/semua-rapat?status=Selesai', actionLabel: 'Cek Arsip' },
+  'total-rapat': { href: '/arsip-kegiatan', actionLabel: 'Lihat Semua' },
+  'rapat-bulan-ini': { href: '/arsip-kegiatan', actionLabel: 'Buka Jadwal' },
+  'tindak-lanjut-aktif': { href: '/arsip-kegiatan?status=Dalam+Proses', actionLabel: 'Pantau Progres' },
+  'perlu-atensi': { href: '/arsip-kegiatan?status=Dalam+Proses', actionLabel: 'Atasi Masalah' },
+  'tindak-lanjut-selesai': { href: '/arsip-kegiatan?status=Selesai', actionLabel: 'Cek Arsip' },
 };
 
 export function StatsOverview({
@@ -84,7 +84,7 @@ export function StatsOverview({
       {metrics.map((metric, idx) => {
         const isDanger = metric.variant === 'danger';
         const isSuccess = metric.variant === 'success';
-        const baseLinkInfo = METRIC_LINKS[metric.id] || { href: '/semua-rapat', actionLabel: 'Buka' };
+        const baseLinkInfo = METRIC_LINKS[metric.id] || { href: '/arsip-kegiatan', actionLabel: 'Buka' };
         const linkHref = selectedMonth && (metric.id === 'total-rapat' || metric.id === 'rapat-bulan-ini')
           ? `${baseLinkInfo.href}?bulan=${encodeURIComponent(selectedMonth)}`
           : baseLinkInfo.href;

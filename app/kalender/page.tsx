@@ -1,5 +1,5 @@
 import { redirect } from 'next/navigation';
 
 export default function KalenderPage() {
-  redirect('/semua-rapat');
+  redirect('/arsip-kegiatan');
 }

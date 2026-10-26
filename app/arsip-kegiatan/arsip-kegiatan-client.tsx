@@ -44,6 +44,7 @@ import {
 } from '@/lib/utils';
 import { getMeetingStatusDetail, normalizeProgressStatus, mapStatusToProgress } from '@/lib/meeting-status';
 import { BIRO_LIST } from '@/lib/mock-data';
+import { isMeetingMatchTeam } from '@/lib/team-utils';
 
 interface SemuaRapatClientProps {
   initialMeetings: Meeting[];
@@ -206,19 +207,7 @@ export function SemuaRapatClient({
   }, [meetingsList]);
 
   const isMatchTeam = (m: Meeting, code: string) => {
-    const c = code.toUpperCase().trim();
-    if (c === 'ALL' || c === 'IKK' || c === 'BIRO-IKK') return true;
-    if (m.primaryTeamCode?.toUpperCase() === c) return true;
-    if (m.primaryTeamId?.toUpperCase() === c) return true;
-    if (m.primaryTeamId?.toUpperCase().includes(c)) return true;
-    if (m.code?.toUpperCase().startsWith(`${c}-`)) return true;
-    if (m.primaryTeamName && m.primaryTeamName.toUpperCase().includes(c)) return true;
-    if (c === 'INV' && (m.primaryTeamName?.toLowerCase().includes('investasi') || m.primaryTeamCode === 'TIM-001' || m.primaryTeamId === 'TIM-001')) return true;
-    if (c === 'KS' && (m.primaryTeamName?.toLowerCase().includes('kerja sama') || m.primaryTeamName?.toLowerCase().includes('kerjasama') || m.primaryTeamCode === 'TIM-003' || m.primaryTeamId === 'TIM-003')) return true;
-    if (c === 'KOM' && (m.primaryTeamName?.toLowerCase().includes('komunikasi') || m.primaryTeamCode === 'TIM-002' || m.primaryTeamId === 'TIM-002')) return true;
-    if (c === 'SI' && (m.primaryTeamName?.toLowerCase().includes('sistem informasi') || m.primaryTeamCode === 'TIM-004' || m.primaryTeamId === 'TIM-004')) return true;
-    if (c === 'POKJA' && (m.primaryTeamName?.toLowerCase().includes('pokja') || m.primaryTeamCode === 'TIM-005' || m.primaryTeamId === 'TIM-005')) return true;
-    return false;
+    return isMeetingMatchTeam(m, code);
   };
 
   // Meetings filtered by the selected Tim (Investasi, Kerja Sama, Komunikasi, dll)
@@ -264,6 +253,8 @@ export function SemuaRapatClient({
           if (cat !== 'DISPOSISI_BIRO' && !(cat === 'NASKAH_MASUK' && subCat === 'DISPOSISI_BIRO')) return false;
         } else if (kategoriParam === 'SURAT_DITUNDA' || kategoriParam === 'TUNDA_RAPAT') {
           if (cat !== 'SURAT_DITUNDA' && cat !== 'TUNDA_RAPAT') return false;
+        } else if (kategoriParam === 'LAINNYA' || kategoriParam === 'OTHER') {
+          if (cat !== 'LAINNYA' && cat !== 'OTHER') return false;
         }
       }
       if (jenisParam && jenisParam !== 'ALL') {
@@ -331,6 +322,11 @@ export function SemuaRapatClient({
     return cat === 'SURAT_DITUNDA' || cat === 'TUNDA_RAPAT';
   }).length;
 
+  const countLainnya = teamFilteredMeetings.filter((m) => {
+    const cat = ((m as any).documentCategory || '').toUpperCase();
+    return cat === 'LAINNYA' || cat === 'OTHER';
+  }).length;
+
   const categoryFilters = [
     { label: 'Semua Kategori', value: 'ALL', count: teamFilteredMeetings.length, icon: '🏷️' },
     { label: 'Undangan Internal', value: 'UNDANGAN_INTERNAL', count: countUndanganInternal, icon: '🏢' },
@@ -338,6 +334,7 @@ export function SemuaRapatClient({
     { label: 'Disposisi Setjen', value: 'DISPOSISI_Setjen', count: countDisposisiSetjen, icon: '🏛️' },
     { label: 'Disposisi Biro', value: 'DISPOSISI_BIRO', count: countDisposisiBiro, icon: '📑' },
     { label: 'Tunda Kegiatan', value: 'SURAT_DITUNDA', count: countTundaRapat, icon: '⏳' },
+    { label: 'Lainnya / Other', value: 'LAINNYA', count: countLainnya, icon: '📌' },
   ];
 
   const handleSelectCategory = (val: string) => {
@@ -347,7 +344,7 @@ export function SemuaRapatClient({
     } else {
       params.set('kategori', val);
     }
-    router.push(params.toString() ? `/semua-rapat?${params.toString()}` : '/semua-rapat');
+    router.push(params.toString() ? `/arsip-kegiatan?${params.toString()}` : '/arsip-kegiatan');
   };
 
   const STANDARD_JENIS_RAPAT = [
@@ -412,7 +409,7 @@ export function SemuaRapatClient({
     } else {
       params.set('jenis', val);
     }
-    router.push(params.toString() ? `/semua-rapat?${params.toString()}` : '/semua-rapat');
+    router.push(params.toString() ? `/arsip-kegiatan?${params.toString()}` : '/arsip-kegiatan');
   };
 
   const statusFilters: {
@@ -510,7 +507,7 @@ export function SemuaRapatClient({
       params.set('tahun', currentYear.toString());
     }
 
-    router.push(params.toString() ? `/semua-rapat?${params.toString()}` : '/semua-rapat');
+    router.push(params.toString() ? `/arsip-kegiatan?${params.toString()}` : '/arsip-kegiatan');
   };
 
   const handleUpdateFilter = (updates: Record<string, string | null>) => {
@@ -522,7 +519,7 @@ export function SemuaRapatClient({
         params.set(key, val);
       }
     });
-    router.push(params.toString() ? `/semua-rapat?${params.toString()}` : '/semua-rapat');
+    router.push(params.toString() ? `/arsip-kegiatan?${params.toString()}` : '/arsip-kegiatan');
   };
 
   const handleClearTimeFilters = () => {
@@ -536,7 +533,7 @@ export function SemuaRapatClient({
     params.delete('tanggal');
     params.delete('date');
     params.delete('periode');
-    router.push(params.toString() ? `/semua-rapat?${params.toString()}` : '/semua-rapat');
+    router.push(params.toString() ? `/arsip-kegiatan?${params.toString()}` : '/arsip-kegiatan');
   };
 
   const handleClearAllFilters = () => {
@@ -558,7 +555,7 @@ export function SemuaRapatClient({
     params.delete('tanggal');
     params.delete('date');
     params.delete('periode');
-    router.push(params.toString() ? `/semua-rapat?${params.toString()}` : '/semua-rapat');
+    router.push(params.toString() ? `/arsip-kegiatan?${params.toString()}` : '/arsip-kegiatan');
   };
 
   const getYearCount = (yr: number) => {
@@ -594,7 +591,7 @@ export function SemuaRapatClient({
     } else {
       params.set('status', val);
     }
-    router.push(params.toString() ? `/semua-rapat?${params.toString()}` : '/semua-rapat');
+    router.push(params.toString() ? `/arsip-kegiatan?${params.toString()}` : '/arsip-kegiatan');
   };
 
   const DEFAULT_TEAMS: TeamWithMembers[] = [
@@ -682,7 +679,7 @@ export function SemuaRapatClient({
       }
       params.set('tim', val);
     }
-    router.push(params.toString() ? `/semua-rapat?${params.toString()}` : '/semua-rapat');
+    router.push(params.toString() ? `/arsip-kegiatan?${params.toString()}` : '/arsip-kegiatan');
   };
 
   const handleSelectBiro = (val: string) => {
@@ -801,7 +798,7 @@ export function SemuaRapatClient({
           {canCreate && (
             <div className="flex items-center gap-2">
               <Link
-                href="/buat-rapat"
+                href="/catat-kegiatan"
                 className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-[#31889C] text-white font-semibold text-[12.5px] hover:bg-[#266F80] shadow-2xs hover:shadow-xs transition-all cursor-pointer"
               >
                 <PlusCircle className="w-4 h-4" />

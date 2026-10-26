@@ -18,7 +18,7 @@ export default function NotFound() {
       </h2>
 
       <p className="text-[14px] text-slate-600 max-w-md mb-6 leading-relaxed">
-        Tautan agenda rapat atau halaman yang Anda tuju tidak tersedia atau telah dipindahkan dalam sistem Log Book Notula Rapat KEK RI.
+        Tautan kegiatan atau halaman yang Anda tuju tidak tersedia atau telah dipindahkan dalam sistem Pencatatan Arsip Kegiatan &amp; Tindak Lanjut KEK RI.
       </p>
 
       <Link

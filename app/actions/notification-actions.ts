@@ -48,8 +48,8 @@ export async function createNotificationRecord(
 
   // Auto-resolve teamId if not explicitly provided
   if (!effectiveTeamId) {
-    if (data.link?.includes('/semua-rapat/')) {
-      const match = data.link.match(/\/semua-rapat\/([^?#/]+)/);
+    if (data.link?.includes('/arsip-kegiatan/') || data.link?.includes('/semua-rapat/')) {
+      const match = data.link.match(/\/(?:arsip-kegiatan|semua-rapat)\/([^?#/]+)/);
       if (match && match[1]) {
         try {
           const m = await db.meeting.findUnique({
@@ -127,7 +127,7 @@ async function syncSystemAlertsSilently() {
       });
 
       for (const m of recentMeetings) {
-        const link = `/semua-rapat/${m.id}`;
+        const link = `/arsip-kegiatan/${m.id}`;
         for (const p of m.participants) {
           if (!p.userId) continue;
           const existing: any[] = await prisma.$queryRawUnsafe(

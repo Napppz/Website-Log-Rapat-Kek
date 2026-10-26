@@ -8,8 +8,8 @@ import { createNotificationRecord } from '@/app/actions/notification-actions';
 
 function safeRevalidate(meetingId: string) {
   try {
-    revalidatePath(`/semua-rapat/${meetingId}`);
-    revalidatePath('/semua-rapat');
+    revalidatePath(`/arsip-kegiatan/${meetingId}`);
+    revalidatePath('/arsip-kegiatan');
   } catch {}
 }
 
@@ -61,7 +61,7 @@ export async function addCommentAction(
           title: `Komentar Baru: ${meeting.meetingNumber}`,
           message: `${user.name || 'Pengguna'} memberikan catatan: "${preview}"`,
           type: 'info',
-          link: `/semua-rapat/${meetingId}?tab=komentar`,
+          link: `/arsip-kegiatan/${meetingId}?tab=komentar`,
           isRead: false,
           userId: targetUserId,
           teamId: meeting.primaryTeamId || null,

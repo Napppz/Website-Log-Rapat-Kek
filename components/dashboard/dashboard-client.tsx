@@ -12,6 +12,7 @@ import { useRouter } from 'next/navigation';
 import { useSession } from 'next-auth/react';
 import { Meeting, DashboardMetric, BureauWorkload, FollowUpStatusMetric, MonthlyActivity, TeamWorkloadMetric } from '@/lib/types';
 import { normalizeProgressStatus, mapStatusToProgress } from '@/lib/meeting-status';
+import { isMeetingMatchTeam } from '@/lib/team-utils';
 
 interface DashboardClientProps {
   initialMeetings: Meeting[];
@@ -47,14 +48,7 @@ const FULL_MONTH_NAMES: Record<string, string> = {
 };
 
 function isMatchTeam(m: Meeting, code: string): boolean {
-  const c = code.toUpperCase();
-  if (c === 'ALL' || c === 'IKK' || c === 'BIRO-IKK') return true;
-  if (m.primaryTeamCode?.toUpperCase() === c) return true;
-  if (m.primaryTeamId?.toUpperCase().includes(c)) return true;
-  if (c === 'INV' && (m.primaryTeamName?.toLowerCase().includes('investasi') || m.primaryTeamCode === 'TIM-001' || m.primaryTeamId === 'TIM-001')) return true;
-  if (c === 'KS' && (m.primaryTeamName?.toLowerCase().includes('kerja sama') || m.primaryTeamCode === 'TIM-003' || m.primaryTeamId === 'TIM-003')) return true;
-  if (c === 'KOM' && (m.primaryTeamName?.toLowerCase().includes('komunikasi') || m.primaryTeamCode === 'TIM-002' || m.primaryTeamId === 'TIM-002')) return true;
-  return false;
+  return isMeetingMatchTeam(m, code);
 }
 
 export function DashboardClient({
@@ -492,7 +486,7 @@ function computeDonutMetrics(
     <div className="flex flex-col w-full gap-6">
       {/* 1. Executive Welcome Banner */}
       <WelcomeBanner
-        onScheduleMeeting={() => router.push('/buat-rapat')}
+        onScheduleMeeting={() => router.push('/catat-kegiatan')}
       />
 
       {/* 3. Executive Tim Kerja KEK (Investasi, Kerja Sama, Komunikasi, dll) - Tampil untuk Semua Tim Kerja */}
@@ -516,11 +510,11 @@ function computeDonutMetrics(
         />
         <BureauDistribution
           meetings={selectedMonth ? monthMeetings : yearMeetings}
-          onCategoryClick={(categoryKey) => router.push(`/semua-rapat?kategori=${categoryKey}`)}
+          onCategoryClick={(categoryKey) => router.push(`/arsip-kegiatan?kategori=${categoryKey}`)}
           workload={workload}
           teamWorkload={sanitizedTeamWorkload}
           onTeamClick={handleOpenTeamModal}
-          onBiroClick={(code) => router.push(`/semua-rapat?tim=${code}`)}
+          onBiroClick={(code) => router.push(`/arsip-kegiatan?tim=${code}`)}
         />
       </div>
 
@@ -528,7 +522,7 @@ function computeDonutMetrics(
       <MeetingTable
         initialMeetings={yearMeetings}
         filterMonth={selectedMonth}
-        onViewAllMeetings={() => router.push('/semua-rapat')}
+        onViewAllMeetings={() => router.push('/arsip-kegiatan')}
         onMeetingDeleted={(deletedId) => {
           setDeletedIds((prev) => new Set(prev).add(deletedId));
           setMeetingsList((prev) => prev.filter((m) => m.id !== deletedId));

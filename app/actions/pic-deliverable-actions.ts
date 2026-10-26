@@ -20,8 +20,8 @@ import {
 
 function safeRevalidateMeeting(meetingId: string) {
   try {
-    revalidatePath(`/semua-rapat/${meetingId}`);
-    revalidatePath(`/semua-rapat`);
+    revalidatePath(`/arsip-kegiatan/${meetingId}`);
+    revalidatePath(`/arsip-kegiatan`);
     revalidatePath(`/tindak-lanjut`);
     revalidatePath(`/`);
   } catch (err) {
@@ -383,7 +383,7 @@ export async function submitPicProgressAction(formData: FormData): Promise<{
         title: `Update Output PIC: ${existing.title}`,
         message: `${currentUser.name || 'PIC'} memperbarui capaian (${progressNum}%): "${(notes || 'Progres diperbarui').slice(0, 80)}"`,
         type: 'action_item',
-        link: `/semua-rapat/${effectiveMeetingId}`,
+        link: `/arsip-kegiatan/${effectiveMeetingId}`,
         teamId: effectiveTeamId,
         isRead: false,
       });
@@ -509,7 +509,7 @@ export async function createPicDeliverableAction(input: {
           title: `Penugasan Output Baru: ${title}`,
           message: `Anda ditugaskan mengerjakan luaran "${title}" pada kegiatan "${meeting.title}".`,
           type: 'action_item',
-          link: `/semua-rapat/${meetingId}`,
+          link: `/arsip-kegiatan/${meetingId}`,
           isRead: false,
         });
       } catch {}

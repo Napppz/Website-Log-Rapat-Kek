@@ -301,7 +301,7 @@ export function TeamDetailModal({ isOpen, onClose, team }: TeamDetailModalProps)
 
   const getMeetingHref = (job: NonNullable<TeamWorkloadMetric['actionItems']>[number]) => {
     const targetId = job.meetingId || team.meetings?.find((m) => m.meetingNumber === job.meetingNumber)?.id || job.meetingNumber;
-    return targetId ? `/semua-rapat/${targetId}` : null;
+    return targetId ? `/arsip-kegiatan/${targetId}` : null;
   };
 
   const periodDateLabel = (() => {
@@ -885,7 +885,7 @@ export function TeamDetailModal({ isOpen, onClose, team }: TeamDetailModalProps)
             <div className="space-y-2.5">
               {filteredMeetings.length > 0 ? (
                 filteredMeetings.map((m) => {
-                  const meetingDetailHref = `/semua-rapat/${m.id || m.meetingNumber}`;
+                  const meetingDetailHref = `/arsip-kegiatan/${m.id || m.meetingNumber}`;
 
                   return (
                     <div
@@ -1011,7 +1011,7 @@ export function TeamDetailModal({ isOpen, onClose, team }: TeamDetailModalProps)
         <div className="p-4 bg-white border-t border-slate-200 flex flex-wrap items-center justify-between gap-2.5">
           <div className="flex items-center gap-2">
             <Link
-              href={`/buat-rapat?tim=${team.code}`}
+              href={`/catat-kegiatan?tim=${team.code}`}
               onClick={onClose}
               className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-[#31889C] hover:bg-[#266F80] text-white text-xs font-bold transition shadow-xs cursor-pointer"
             >
@@ -1019,7 +1019,7 @@ export function TeamDetailModal({ isOpen, onClose, team }: TeamDetailModalProps)
               <span>Catat Kegiatan {team.fullName}</span>
             </Link>
             <Link
-              href={`/semua-rapat?tim=${team.code}`}
+              href={`/arsip-kegiatan?tim=${team.code}`}
               onClick={onClose}
               className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 text-xs font-bold transition cursor-pointer"
             >

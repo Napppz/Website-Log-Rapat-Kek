@@ -196,7 +196,7 @@ export function MeetingTable({
           )
         );
         toast.success(`Kegiatan ${meeting.code || meeting.meetingNumber || ''} resmi dimulai (Dalam Proses).`);
-        router.push(`/semua-rapat/${meeting.id}?tab=minutes`);
+        router.push(`/arsip-kegiatan/${meeting.id}?tab=minutes`);
       } else {
         toast.error(res.error || 'Gagal memulai kegiatan.');
       }
@@ -325,7 +325,7 @@ export function MeetingTable({
 
   const handleSelectMeetingFromSeries = (sessionId: string) => {
     setIsSeriesModalOpen(false);
-    router.push(`/semua-rapat/${sessionId}`);
+    router.push(`/arsip-kegiatan/${sessionId}`);
   };
 
   const handleDeleteSingleMeeting = async (m: Meeting) => {
@@ -1045,7 +1045,7 @@ export function MeetingTable({
                         const teamInfo = getTeamBadgeInfo(meeting.code, meeting.primaryTeamCode, meeting.primaryTeamName);
                         return (
                           <Link
-                            href={`/semua-rapat/${meeting.id}`}
+                            href={`/arsip-kegiatan/${meeting.id}`}
                             className="group/link inline-flex flex-col cursor-pointer"
                             title={`Buka Catatan Kegiatan ${meeting.code}`}
                           >
@@ -1071,7 +1071,7 @@ export function MeetingTable({
                         return (
                           <div className="flex flex-col gap-1.5">
                             <Link
-                              href={`/semua-rapat/${meeting.id}`}
+                              href={`/arsip-kegiatan/${meeting.id}`}
                               className="text-left font-bold text-[14px] text-slate-900 hover:text-[#31889C] hover:underline transition-colors line-clamp-2 cursor-pointer group-hover:text-[#31889C]"
                               title="Buka rincian lengkap kegiatan ini"
                             >

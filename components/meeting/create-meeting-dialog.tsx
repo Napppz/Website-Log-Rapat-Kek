@@ -31,7 +31,7 @@ import { getTeamsAction } from '@/app/actions/team-actions';
 import { uploadInvitationFileAction } from '@/app/actions/meeting-upload-actions';
 import { cn } from '@/lib/utils';
 import { MultiPicSelector, PicOptionUser } from './pic-selector';
-import { TIM_OPTIONS } from '@/app/buat-rapat/page';
+import { TIM_OPTIONS } from '@/app/catat-kegiatan/page';
 
 interface CreateMeetingDialogProps {
   isOpen: boolean;
@@ -252,7 +252,7 @@ export function CreateMeetingDialog({ isOpen, onClose, onSuccess }: CreateMeetin
           onSuccess();
         } else {
           router.refresh();
-          router.push(`/semua-rapat/${res.data.id}`);
+          router.push(`/arsip-kegiatan/${res.data.id}`);
         }
       } else {
         toast.error(res.error || 'Gagal menyimpan pencatatan kegiatan');
@@ -423,6 +423,7 @@ export function CreateMeetingDialog({ isOpen, onClose, onSuccess }: CreateMeetin
               >
                 <option value="PEKERJAAN_RUTIN">Pekerjaan Rutin</option>
                 <option value="DISPOSISI">Disposisi</option>
+                <option value="LAINNYA">Lainnya / Other</option>
               </select>
               <ChevronDown className="w-3.5 h-3.5 text-slate-400 absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
             </div>

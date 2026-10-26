@@ -225,7 +225,7 @@ export async function upsertMeetingMinutesAction(input: MeetingMinutesInput) {
                 title: notifTitle,
                 message: notifMessage,
                 type: 'info',
-                link: `/semua-rapat/${meetingId}`,
+                link: `/arsip-kegiatan/${meetingId}`,
                 teamId: meeting.primaryTeamId || null,
                 isRead: false,
               });
@@ -242,8 +242,8 @@ export async function upsertMeetingMinutesAction(input: MeetingMinutesInput) {
     try {
       revalidatePath('/');
       revalidatePath('/notifikasi');
-      revalidatePath('/semua-rapat');
-      revalidatePath(`/semua-rapat/${meetingId}`);
+      revalidatePath('/arsip-kegiatan');
+      revalidatePath(`/arsip-kegiatan/${meetingId}`);
       if (meeting.primaryBiro?.code) {
         revalidatePath(`/biro/${meeting.primaryBiro.code.toLowerCase()}`);
       }

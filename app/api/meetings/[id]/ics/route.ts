@@ -36,7 +36,7 @@ export async function GET(
 
     const host = request.headers.get('host') || 'localhost:3000';
     const protocol = request.headers.get('x-forwarded-proto') || 'http';
-    const meetingUrl = `${protocol}://${host}/semua-rapat/${meeting.id}`;
+    const meetingUrl = `${protocol}://${host}/arsip-kegiatan/${meeting.id}`;
 
     const attendees = meeting.participants.map((p) => ({
       name: p.user.name,

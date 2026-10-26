@@ -279,6 +279,42 @@ export function getMeetingCategoryInfo(
     };
   }
 
+  if (cat === 'KEGIATAN_INTERNAL') {
+    return {
+      key: 'KEGIATAN_INTERNAL',
+      label: 'Kegiatan Internal',
+      subLabel: null,
+      badgeLabel: 'Kegiatan Internal',
+      badgeClass: 'bg-[#E8F5F7] text-[#215865] border-[#BCE3EB]',
+      badgeIcon: '🏢',
+      description: 'Kegiatan koordinasi internal, pembahasan teknis, atau agenda tim kerja.',
+    };
+  }
+
+  if (cat === 'LAPORAN_RUTIN') {
+    return {
+      key: 'LAPORAN_RUTIN',
+      label: 'Laporan Rutin',
+      subLabel: null,
+      badgeLabel: 'Laporan Rutin',
+      badgeClass: 'bg-teal-50 text-teal-800 border-teal-200',
+      badgeIcon: '📊',
+      description: 'Laporan berkala atau rekapitulasi capaian mingguan/bulanan.',
+    };
+  }
+
+  if (cat === 'LAINNYA' || cat === 'OTHER') {
+    return {
+      key: 'LAINNYA',
+      label: sub || 'Lainnya / Other',
+      subLabel: sub || null,
+      badgeLabel: sub || 'Lainnya',
+      badgeClass: 'bg-slate-100 text-slate-700 border-slate-300',
+      badgeIcon: '📌',
+      description: 'Kategori kegiatan atau agenda lainnya.',
+    };
+  }
+
   return {
     key: 'UNDANGAN_INTERNAL',
     label: 'Undangan Internal',

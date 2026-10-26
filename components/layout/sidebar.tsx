@@ -46,7 +46,11 @@ export function Sidebar({
   const isAdmin = userRole === 'ADMIN';
   const isPimpinan = userRole === 'PIMPINAN';
 
-  const isRapatRoute = pathname.includes('/semua-rapat') || pathname.includes('/buat-rapat');
+  const isRapatRoute =
+    pathname.includes('/arsip-kegiatan') ||
+    pathname.includes('/catat-kegiatan') ||
+    pathname.includes('/semua-rapat') ||
+    pathname.includes('/buat-rapat');
   const isTimRoute = pathname.includes('/biro');
 
   const [toggledSections, setToggledSections] = useState<Record<string, boolean>>({ tim: true });
@@ -101,9 +105,9 @@ export function Sidebar({
   const dashboardLabel = 'Dashboard';
 
   const rapatSubItems = [
-    { name: 'Arsip Kegiatan', href: '/semua-rapat' },
+    { name: 'Arsip Kegiatan', href: '/arsip-kegiatan' },
     ...(isSuperAdmin || isAdmin || userRole === 'STAFF'
-      ? [{ name: '+ Catat Kegiatan Baru', href: '/buat-rapat' }]
+      ? [{ name: '+ Catat Kegiatan Baru', href: '/catat-kegiatan' }]
       : []),
   ];
 
@@ -204,7 +208,10 @@ export function Sidebar({
                   onClick={() => toggleSection('rapat')}
                   className={cn(
                     "w-full flex items-center justify-between px-3 py-2 rounded-lg text-slate-600 hover:bg-[#F0F9FA] hover:text-[#31889C] transition-all font-medium text-[14px] cursor-pointer",
-                    pathname.startsWith('/semua-rapat') || pathname === '/buat-rapat'
+                    pathname.startsWith('/arsip-kegiatan') ||
+                    pathname === '/catat-kegiatan' ||
+                    pathname.startsWith('/semua-rapat') ||
+                    pathname === '/buat-rapat'
                       ? "text-[#31889C] font-semibold bg-[#F0F9FA]/60"
                       : ""
                   )}
@@ -213,7 +220,12 @@ export function Sidebar({
                   <div className="flex items-center gap-3">
                     <Users className={cn(
                       "w-5 h-5 shrink-0",
-                      pathname.startsWith('/semua-rapat') || pathname === '/buat-rapat' ? "text-[#31889C]" : "text-slate-400"
+                      pathname.startsWith('/arsip-kegiatan') ||
+                      pathname === '/catat-kegiatan' ||
+                      pathname.startsWith('/semua-rapat') ||
+                      pathname === '/buat-rapat'
+                        ? "text-[#31889C]"
+                        : "text-slate-400"
                     )} />
                     {!collapsed && <span>Arsip Kegiatan</span>}
                   </div>
@@ -285,11 +297,11 @@ export function Sidebar({
                     <div className="pl-7 pr-2 py-1 space-y-1">
                       {(() => {
                         const defaultTeams = [
-                          { code: 'INV', name: 'Tim Investasi', href: '/semua-rapat?tim=INV' },
-                          { code: 'KS', name: 'Tim Kerja Sama', href: '/semua-rapat?tim=KS' },
-                          { code: 'KOM', name: 'Tim Komunikasi', href: '/semua-rapat?tim=KOM' },
-                          { code: 'SI', name: 'Tim Sistem Informasi', href: '/semua-rapat?tim=SI' },
-                          { code: 'HKM', name: 'Tim Hukum', href: '/semua-rapat?tim=HKM' },
+                          { code: 'INV', name: 'Tim Investasi', href: '/arsip-kegiatan?tim=INV' },
+                          { code: 'KS', name: 'Tim Kerja Sama', href: '/arsip-kegiatan?tim=KS' },
+                          { code: 'KOM', name: 'Tim Komunikasi', href: '/arsip-kegiatan?tim=KOM' },
+                          { code: 'SI', name: 'Tim Sistem Informasi', href: '/arsip-kegiatan?tim=SI' },
+                          { code: 'HKM', name: 'Tim Hukum', href: '/arsip-kegiatan?tim=HKM' },
                         ];
 
                         const userAssigned = (session?.user as any)?.assignedTeams || [];
@@ -301,7 +313,7 @@ export function Sidebar({
                             allTeams.push({
                               code: dt.code,
                               name: dt.name,
-                              href: `/semua-rapat?tim=${dt.code}`,
+                              href: `/arsip-kegiatan?tim=${dt.code}`,
                             });
                           }
                         }
@@ -312,7 +324,7 @@ export function Sidebar({
                             allTeams.push({
                               code: u.code,
                               name: u.name?.startsWith('Tim ') ? u.name : `Tim ${u.name}`,
-                              href: `/semua-rapat?tim=${u.code}`,
+                              href: `/arsip-kegiatan?tim=${u.code}`,
                             });
                           }
                         }

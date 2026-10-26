@@ -6,5 +6,5 @@ interface Props {
 
 export default async function RapatRedirectPage({ params }: Props) {
   const { id } = await params;
-  redirect(`/semua-rapat/${id}`);
+  redirect(`/arsip-kegiatan/${id}`);
 }

@@ -258,7 +258,7 @@ export function MeetingDetailDialog({
       if (res.success) {
         toast.success(`Kegiatan ${meeting.code} resmi dimulai (Status: Dalam Proses).`);
         onClose();
-        router.push(`/semua-rapat/${meeting.id}?tab=minutes`);
+        router.push(`/arsip-kegiatan/${meeting.id}?tab=minutes`);
       } else {
         toast.error(res.error || 'Gagal memulai kegiatan');
       }
@@ -378,7 +378,7 @@ export function MeetingDetailDialog({
             )}
 
             <Link
-              href={`/semua-rapat/${meeting.id}`}
+              href={`/arsip-kegiatan/${meeting.id}`}
               onClick={onClose}
               className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md text-[12px] font-semibold text-[#215865] bg-[#E8F5F7] hover:bg-[#BCE3EB] transition-colors"
               title="Buka Halaman Kegiatan Penuh"

@@ -286,8 +286,8 @@ export async function directSaveUploadedMeetingAction(
 
     try {
       revalidatePath('/');
-      revalidatePath('/semua-rapat');
-      revalidatePath(`/semua-rapat/${result.id}`);
+      revalidatePath('/arsip-kegiatan');
+      revalidatePath(`/arsip-kegiatan/${result.id}`);
       revalidatePath('/tindak-lanjut');
     } catch {}
 
@@ -407,8 +407,8 @@ export async function saveMinutesAndActionsToMeetingAction(
 
     try {
       revalidatePath('/');
-      revalidatePath('/semua-rapat');
-      revalidatePath(`/semua-rapat/${meetingId}`);
+      revalidatePath('/arsip-kegiatan');
+      revalidatePath(`/arsip-kegiatan/${meetingId}`);
       revalidatePath('/tindak-lanjut');
     } catch {}
 
@@ -529,8 +529,8 @@ export async function updateMeetingInvitationDocAction(
 
     try {
       revalidatePath('/');
-      revalidatePath('/semua-rapat');
-      revalidatePath(`/semua-rapat/${meetingId}`);
+      revalidatePath('/arsip-kegiatan');
+      revalidatePath(`/arsip-kegiatan/${meetingId}`);
     } catch {}
 
     return { success: true, data: updated };

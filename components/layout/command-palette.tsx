@@ -32,14 +32,14 @@ interface TeamItem {
 }
 
 const STATIC_TEAMS: TeamItem[] = [
-  { id: 'team-hukum', code: 'HUKUM', name: 'Tim HKM', category: 'team', biroCode: 'IKK', href: '/semua-rapat?tim=hukum' },
-  { id: 'team-inv', code: 'INV', name: 'Tim Investasi', category: 'team', biroCode: 'IKK', href: '/semua-rapat?tim=inv' },
-  { id: 'team-kom', code: 'KOM', name: 'Tim Komunikasi', category: 'team', biroCode: 'IKK', href: '/semua-rapat?tim=kom' },
-  { id: 'team-ks', code: 'KS', name: 'Tim Kerja Sama', category: 'team', biroCode: 'IKK', href: '/semua-rapat?tim=ks' },
-  { id: 'team-si', code: 'SI', name: 'Tim Sistem Informasi', category: 'team', biroCode: 'IKK', href: '/semua-rapat?tim=si' },
-  { id: 'team-sdm', code: 'SDM', name: 'Sumber Daya Manusia', category: 'team', biroCode: 'HSDMO', href: '/semua-rapat?tim=sdm' },
-  { id: 'team-keu', code: 'KEU', name: 'Keuangan & Akuntansi', category: 'team', biroCode: 'UK', href: '/semua-rapat?tim=keu' },
-  { id: 'team-tu', code: 'TU', name: 'Tata Usaha & Persuratan', category: 'team', biroCode: 'UK', href: '/semua-rapat?tim=tu' },
+  { id: 'team-hukum', code: 'HUKUM', name: 'Tim HKM', category: 'team', biroCode: 'IKK', href: '/arsip-kegiatan?tim=hukum' },
+  { id: 'team-inv', code: 'INV', name: 'Tim Investasi', category: 'team', biroCode: 'IKK', href: '/arsip-kegiatan?tim=inv' },
+  { id: 'team-kom', code: 'KOM', name: 'Tim Komunikasi', category: 'team', biroCode: 'IKK', href: '/arsip-kegiatan?tim=kom' },
+  { id: 'team-ks', code: 'KS', name: 'Tim Kerja Sama', category: 'team', biroCode: 'IKK', href: '/arsip-kegiatan?tim=ks' },
+  { id: 'team-si', code: 'SI', name: 'Tim Sistem Informasi', category: 'team', biroCode: 'IKK', href: '/arsip-kegiatan?tim=si' },
+  { id: 'team-sdm', code: 'SDM', name: 'Sumber Daya Manusia', category: 'team', biroCode: 'HSDMO', href: '/arsip-kegiatan?tim=sdm' },
+  { id: 'team-keu', code: 'KEU', name: 'Keuangan & Akuntansi', category: 'team', biroCode: 'UK', href: '/arsip-kegiatan?tim=keu' },
+  { id: 'team-tu', code: 'TU', name: 'Tata Usaha & Persuratan', category: 'team', biroCode: 'UK', href: '/arsip-kegiatan?tim=tu' },
 ];
 
 export function CommandPalette({ isOpen, onClose }: CommandPaletteProps) {
@@ -81,7 +81,7 @@ export function CommandPalette({ isOpen, onClose }: CommandPaletteProps) {
                 category: 'team' as const,
                 biroCode: item.biro?.code || '',
                 biroName: item.biro?.name || '',
-                href: `/semua-rapat?tim=${encodeURIComponent(item.code.toLowerCase())}`,
+                href: `/arsip-kegiatan?tim=${encodeURIComponent(item.code.toLowerCase())}`,
               }))
             );
           }
@@ -151,7 +151,7 @@ export function CommandPalette({ isOpen, onClose }: CommandPaletteProps) {
       if (current) {
         if (current.type === 'meeting') {
           onClose();
-          router.push(`/semua-rapat/${current.item.id}`);
+          router.push(`/arsip-kegiatan/${current.item.id}`);
         } else if (current.type === 'team') {
           onClose();
           router.push(current.item.href);
@@ -284,7 +284,7 @@ export function CommandPalette({ isOpen, onClose }: CommandPaletteProps) {
                     id={`cmd-item-${index}`}
                     onClick={() => {
                       onClose();
-                      router.push(`/semua-rapat/${m.id}`);
+                      router.push(`/arsip-kegiatan/${m.id}`);
                     }}
                     onMouseEnter={() => setSelectedIndex(index)}
                     className={cn(

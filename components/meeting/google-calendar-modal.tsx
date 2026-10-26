@@ -38,7 +38,7 @@ export function GoogleCalendarModal({ isOpen, onClose, event }: GoogleCalendarMo
   if (!isOpen) return null;
 
   const currentHost = typeof window !== 'undefined' ? window.location.origin : '';
-  const meetingUrl = event.meetingUrl || (event.id ? `${currentHost}/semua-rapat/${event.id}` : currentHost);
+  const meetingUrl = event.meetingUrl || (event.id ? `${currentHost}/arsip-kegiatan/${event.id}` : currentHost);
 
   const fullEventData: CalendarEventData = {
     ...event,

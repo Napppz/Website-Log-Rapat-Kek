@@ -123,7 +123,7 @@ export async function createTeamAction(input: z.infer<typeof createTeamSchema>) 
       },
     });
 
-    safeRevalidate(['/pengguna', '/buat-rapat', '/semua-rapat', '/pengaturan']);
+    safeRevalidate(['/pengguna', '/catat-kegiatan', '/arsip-kegiatan', '/pengaturan']);
 
     return {
       success: true,
@@ -185,7 +185,7 @@ export async function updateTeamAction(input: z.infer<typeof updateTeamSchema>) 
       data: updateData,
     });
 
-    safeRevalidate(['/pengguna', '/buat-rapat', '/semua-rapat', '/pengaturan']);
+    safeRevalidate(['/pengguna', '/catat-kegiatan', '/arsip-kegiatan', '/pengaturan']);
 
     return {
       success: true,
@@ -217,7 +217,7 @@ export async function toggleTeamStatusAction(teamId: string, isActive: boolean) 
       data: { isActive },
     });
 
-    safeRevalidate(['/pengguna', '/buat-rapat', '/semua-rapat', '/pengaturan']);
+    safeRevalidate(['/pengguna', '/catat-kegiatan', '/arsip-kegiatan', '/pengaturan']);
 
     return {
       success: true,
@@ -292,7 +292,7 @@ export async function deleteTeamAction(teamId: string) {
       });
     });
 
-    safeRevalidate(['/pengguna', '/buat-rapat', '/semua-rapat', '/pengaturan', '/']);
+    safeRevalidate(['/pengguna', '/catat-kegiatan', '/arsip-kegiatan', '/pengaturan', '/']);
 
     return {
       success: true,
@@ -348,7 +348,7 @@ export async function assignUserTeamsAction(input: { userId: string; teamIds: st
       }
     });
 
-    safeRevalidate(['/pengguna', '/buat-rapat', '/semua-rapat']);
+    safeRevalidate(['/pengguna', '/catat-kegiatan', '/arsip-kegiatan']);
 
     return {
       success: true,

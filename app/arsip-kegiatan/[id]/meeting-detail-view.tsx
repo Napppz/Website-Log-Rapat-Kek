@@ -759,7 +759,7 @@ export function MeetingDetailView({
       const res = await deleteMeetingAction(meeting.id);
       if (res.success) {
         toast.flash('success', `Kegiatan ${meeting.meetingNumber} berhasil dihapus dari database.`, 'Berhasil Dihapus');
-        window.location.href = '/semua-rapat';
+        window.location.href = '/arsip-kegiatan';
       } else {
         toast.error(res.error || 'Gagal menghapus kegiatan');
         setIsDeleting(false);
@@ -959,7 +959,7 @@ export function MeetingDetailView({
       {/* Breadcrumb & Navigation */}
       <div className="flex items-center justify-between">
         <Link
-          href="/semua-rapat"
+          href="/arsip-kegiatan"
           className="inline-flex items-center gap-1.5 text-slate-600 hover:text-[#31889C] text-[13px] font-semibold transition-colors"
         >
           <ArrowLeft className="w-4 h-4" />
@@ -1004,7 +1004,7 @@ export function MeetingDetailView({
                 Mode Pratinjau (Lihat Saja)
               </p>
               <p className="text-[12px] text-sky-700">
-                Anda dapat melihat seluruh rincian kegiatan, notula, materi, dan tindak lanjut milik {meeting.primaryTeam?.name || 'tim kerja lain'} tanpa hak untuk mengubah atau menghapus.
+                Anda dapat melihat seluruh rincian kegiatan, laporan hasil, materi, dan tindak lanjut milik {meeting.primaryTeam?.name || 'tim kerja lain'} tanpa hak untuk mengubah atau menghapus.
               </p>
             </div>
           </div>
@@ -1496,7 +1496,7 @@ export function MeetingDetailView({
                 </span>
                 <span className="flex items-center gap-1">
                   <FileText className="w-3.5 h-3.5 text-[#31889C]" />
-                  {previousMeeting.minutes ? 'Notula Tersedia' : 'Belum Ada Notula'}
+                  {previousMeeting.minutes ? 'Laporan Hasil Tersedia' : 'Belum Ada Laporan Hasil'}
                 </span>
                 {previousMeeting.actionItems && (
                   <span className="flex items-center gap-1">
@@ -1826,7 +1826,7 @@ export function MeetingDetailView({
         onSelectMeeting={(selectedId) => {
           setShowSeriesModal(false);
           if (selectedId !== meeting.id) {
-            router.push(`/semua-rapat/${selectedId}`);
+            router.push(`/arsip-kegiatan/${selectedId}`);
           }
         }}
       />

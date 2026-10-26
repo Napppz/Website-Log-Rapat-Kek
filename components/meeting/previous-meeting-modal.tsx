@@ -196,7 +196,7 @@ export function PreviousMeetingModal({
               <span>{isDownloadingPdf ? 'Mengunduh...' : 'Unduh PDF'}</span>
             </button>
             <Link
-              href={`/semua-rapat/${previousMeeting.id}`}
+              href={`/arsip-kegiatan/${previousMeeting.id}`}
               target="_blank"
               className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-[#31889C] text-white hover:bg-[#266F80] text-[11px] font-semibold transition-colors shadow-2xs cursor-pointer"
             >
@@ -218,7 +218,7 @@ export function PreviousMeetingModal({
             }`}
           >
             <FileText className="w-4 h-4" />
-            <span>Notula &amp; Kesimpulan Kegiatan</span>
+            <span>Catatan &amp; Hasil Kegiatan</span>
           </button>
           <button
             type="button"
@@ -241,7 +241,7 @@ export function PreviousMeetingModal({
               {!minutes && (
                 <div className="p-8 text-center text-slate-500 bg-slate-50 rounded-xl border border-dashed border-slate-300">
                   <FileText className="w-8 h-8 text-slate-400 mx-auto mb-2 opacity-50" />
-                  <p className="font-semibold text-slate-700">Belum ada dokumen notula yang tersimpan untuk kegiatan ini.</p>
+                  <p className="font-semibold text-slate-700">Belum ada catatan hasil kegiatan yang tersimpan untuk agenda ini.</p>
                 </div>
               )}
 

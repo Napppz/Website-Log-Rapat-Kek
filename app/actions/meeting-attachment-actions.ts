@@ -155,8 +155,8 @@ export async function uploadMeetingAttachmentAction(formData: FormData): Promise
     };
 
     try {
-      revalidatePath(`/semua-rapat/${meetingId}`);
-      revalidatePath(`/semua-rapat`);
+      revalidatePath(`/arsip-kegiatan/${meetingId}`);
+      revalidatePath(`/arsip-kegiatan`);
       revalidatePath('/');
     } catch {}
 
@@ -322,8 +322,8 @@ export async function deleteMeetingAttachmentAction(
     }
 
     try {
-      revalidatePath(`/semua-rapat/${meetingId}`);
-      revalidatePath(`/semua-rapat`);
+      revalidatePath(`/arsip-kegiatan/${meetingId}`);
+      revalidatePath(`/arsip-kegiatan`);
       revalidatePath('/');
     } catch {}
 

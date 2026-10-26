@@ -14,6 +14,7 @@ import {
 } from '@/app/actions/action-item-actions';
 import { uploadGenericMeetingFileAction } from '@/app/actions/meeting-upload-actions';
 import { ActionItem, ActionItemPriority, ActionItemStatus } from '@/lib/types';
+import { isMeetingMatchTeam } from '@/lib/team-utils';
 import {
   GoogleDriveIcon,
   extractDriveLink,
@@ -138,17 +139,7 @@ export function ActionItemFormDialog({
   }, [usersList, currentMeeting?.chairperson]);
 
   const isMatchTeamOption = (m: any, code: string) => {
-    const c = code.toUpperCase();
-    if (c === 'ALL' || c === 'IKK' || c === 'BIRO-IKK') return true;
-    const mNum = m.meetingNumber?.toUpperCase() || '';
-    if (mNum.startsWith(`${c}-`)) return true;
-    const primaryTeamCode = m.primaryTeam?.code?.toUpperCase() || m.primaryTeamCode?.toUpperCase();
-    if (primaryTeamCode === c) return true;
-    const primaryTeamId = m.primaryTeamId?.toUpperCase() || m.primaryTeam?.id?.toUpperCase();
-    if (c === 'INV' && (primaryTeamId === 'TIM-001' || m.title?.toLowerCase().includes('investasi'))) return true;
-    if (c === 'KS' && (primaryTeamId === 'TIM-003' || m.title?.toLowerCase().includes('kerja sama'))) return true;
-    if (c === 'KOM' && (primaryTeamId === 'TIM-002' || m.title?.toLowerCase().includes('komunikasi'))) return true;
-    return false;
+    return isMeetingMatchTeam(m, code);
   };
 
   // Guaranteed unified meetings list including normalizedCurrentMeeting & scoped by team for staff

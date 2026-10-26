@@ -1067,7 +1067,7 @@ export function ActionItemMatrixView({
                       <td className="py-3.5 px-4 align-top">
                         {task.meeting ? (
                           <Link
-                            href={`/semua-rapat/${task.meeting.id}`}
+                            href={`/arsip-kegiatan/${task.meeting.id}`}
                             className={cn(
                               "inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg border font-mono font-bold text-[12px] shadow-2xs transition-all",
                               teamInfo.refBadgeClass
