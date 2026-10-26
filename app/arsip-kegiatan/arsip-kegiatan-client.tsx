@@ -349,8 +349,8 @@ export function SemuaRapatClient({
 
   const STANDARD_JENIS_RAPAT = [
     'Kunker',
-    'Rapat Kerja',
-    'Rapat/Audiensi',
+    'Kegiatan Kerja',
+    'Audiensi/Pertemuan',
     'Seminar/Forum',
     'Media Gathering',
     'Penandatanganan Mou',
@@ -943,7 +943,7 @@ export function SemuaRapatClient({
               )}
             </div>
 
-            {/* Dropdown: Status Rapat */}
+            {/* Dropdown: Status Kegiatan */}
             <div className="relative">
               <button
                 type="button"
@@ -1091,7 +1091,7 @@ export function SemuaRapatClient({
               )}
             </div>
 
-            {/* Dropdown: Jenis Rapat */}
+            {/* Dropdown: Jenis Kegiatan */}
             <div className="relative">
               <button
                 type="button"

@@ -159,7 +159,7 @@ export function LocationPicker({
             <span className="text-red-500 font-bold">*</span>
           </span>
           <span className="text-xs text-slate-500 font-normal">
-            Pilih metode kehadiran peserta rapat
+            Pilih metode kehadiran peserta kegiatan
           </span>
         </label>
 
@@ -201,7 +201,7 @@ export function LocationPicker({
               </span>
             </div>
             <p className="text-[11px] text-slate-500 leading-tight">
-              Pertemuan fisik langsung di ruang rapat gedung
+              Pertemuan fisik langsung di lokasi kegiatan gedung
             </p>
           </button>
 
@@ -283,7 +283,7 @@ export function LocationPicker({
               </span>
             </div>
             <p className="text-[11px] text-slate-500 leading-tight">
-              Pertemuan virtual penuh melalui ruang rapat Zoom
+              Pertemuan virtual penuh melalui ruang Zoom
             </p>
           </button>
         </div>
@@ -297,7 +297,7 @@ export function LocationPicker({
             <span>
               {meetingType === 'ONLINE'
                 ? 'Ruang Host / Lokasi Studio (Opsional)'
-                : 'Lokasi Fisik / Gedung Ruang Rapat'}
+                : 'Lokasi Fisik / Gedung Kegiatan'}
             </span>
             {meetingType !== 'ONLINE' && required && (
               <span className="text-red-500 font-bold">*</span>
@@ -480,11 +480,11 @@ export function LocationPicker({
               </div>
               <div>
                 <label className="font-bold text-slate-900 text-sm flex items-center gap-1.5">
-                  <span>Tautan Rapat Virtual (Link Zoom)</span>
+                  <span>Tautan Kegiatan Virtual (Link Zoom)</span>
                   <span className="text-red-500 font-bold">*</span>
                 </label>
                 <p className="text-[11.5px] text-slate-500">
-                  Tautan akses rapat daring untuk peserta (otomatis tersinkron ke Google Kalender)
+                  Tautan akses kegiatan daring untuk peserta (otomatis tersinkron ke Google Kalender)
                 </p>
               </div>
             </div>
@@ -527,7 +527,7 @@ export function LocationPicker({
               <span>
                 {showAdvancedZoom
                   ? 'Sembunyikan Meeting ID & Passcode'
-                  : '+ Tambahkan Meeting ID & Passcode Rapat (Opsional)'}
+                  : '+ Tambahkan Meeting ID & Passcode Kegiatan (Opsional)'}
               </span>
             </button>
           </div>

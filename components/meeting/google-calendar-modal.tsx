@@ -63,7 +63,7 @@ export function GoogleCalendarModal({ isOpen, onClose, event }: GoogleCalendarMo
     try {
       await navigator.clipboard.writeText(waShareText);
       setCopiedText(true);
-      toast.success('Format naskah undangan rapat berhasil disalin!');
+      toast.success('Format naskah undangan kegiatan berhasil disalin!');
       setTimeout(() => setCopiedText(false), 2500);
     } catch {
       toast.error('Gagal menyalin naskah.');
@@ -165,7 +165,7 @@ export function GoogleCalendarModal({ isOpen, onClose, event }: GoogleCalendarMo
                   </div>
                   <div>
                     <h5 className="font-bold text-xs text-blue-950 flex items-center gap-1.5">
-                      <span>Tautan Rapat Virtual (Zoom)</span>
+                      <span>Tautan Kegiatan Virtual (Zoom)</span>
                       <span className="px-2 py-0.5 rounded-full bg-blue-100 text-[#0B5CFF] text-[10px] font-extrabold uppercase">
                         Terintegrasi Kalender
                       </span>

@@ -64,7 +64,7 @@ const CATEGORY_DEFINITIONS: Array<{
     },
     {
       key: 'SURAT_DITUNDA',
-      label: 'Tunda Rapat',
+      label: 'Tunda Kegiatan',
       icon: '⏳',
       barColor: 'bg-rose-500',
       textColor: 'text-rose-600',
@@ -264,7 +264,7 @@ export function BureauDistribution({
       <div className="mt-4 pt-2.5 text-center border-t border-slate-100">
         <span className="text-[11px] text-slate-500 font-medium flex items-center justify-center gap-1">
           <span>💡</span>
-          <span>Klik kategori untuk memfilter daftar rapat</span>
+          <span>Klik kategori untuk memfilter daftar kegiatan</span>
         </span>
       </div>
     </div>

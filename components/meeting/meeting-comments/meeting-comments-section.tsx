@@ -364,7 +364,7 @@ export function MeetingCommentsSection({ meetingId }: MeetingCommentsProps) {
         <textarea
           value={newContent}
           onChange={(e) => setNewContent(e.target.value)}
-          placeholder="Tulis komentar atau pertanyaan terkait notulen rapat ini..."
+          placeholder="Tulis komentar atau pertanyaan terkait catatan kegiatan ini..."
           rows={3}
           className="w-full text-[13px] border border-slate-200 rounded-xl px-4 py-3 resize-none focus:outline-none focus:ring-2 focus:ring-[#31889C]/30 focus:border-[#31889C] placeholder-slate-400 transition-all"
         />
