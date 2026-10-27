@@ -115,8 +115,6 @@ export function ActionItemMatrixView({
     if (s === 'SEDANG-BERJALAN' || s === 'IN_PROGRESS' || s === 'ON PROGRESS' || s === 'ON PROGRES' || s === 'BERJALAN') return 'IN_PROGRESS';
     if (s === 'SELESAI' || s === 'COMPLETED' || s === 'FINISH') return 'COMPLETED';
     if (s === 'BELUM-DIMULAI' || s === 'PENDING' || s === 'START' || s === 'MENUNGGU') return 'PENDING';
-    if (s === 'TERLAMBAT' || s === 'OVERDUE') return 'OVERDUE';
-    if (s === 'MENDEKATI-DEADLINE' || s === 'MENDEKATI_DEADLINE' || s === 'NEAR_DEADLINE' || s === 'DEADLINE') return 'NEAR_DEADLINE';
     return s;
   }, [rawStatus]);
   const teamParam = searchParams.get('tim') || 'ALL';
@@ -319,9 +317,7 @@ export function ActionItemMatrixView({
   const overdueCount = items.filter((i) => {
     return i.status !== 'COMPLETED' && new Date(i.dueDate).getTime() < Date.now();
   }).length;
-  const pendingCount = items.filter(
-    (i) => i.status === 'PENDING' && new Date(i.dueDate).getTime() >= Date.now()
-  ).length;
+  const pendingCount = items.filter((i) => i.status === 'PENDING').length;
 
   // Check if task is approaching deadline (due in <= 3 days, not overdue, not completed)
   const isNearDeadlineTask = (i: any) => {
@@ -339,8 +335,6 @@ export function ActionItemMatrixView({
     { label: 'Belum Dimulai', value: 'PENDING', count: pendingCount, dotColor: 'bg-amber-500' },
     { label: 'Dalam Proses', value: 'IN_PROGRESS', count: inProgressCount, dotColor: 'bg-sky-500' },
     { label: 'Selesai', value: 'COMPLETED', count: completedCount, dotColor: 'bg-emerald-500' },
-    { label: 'Mendekati Tenggat', value: 'NEAR_DEADLINE', count: nearDeadlineCount, dotColor: 'bg-amber-500' },
-    { label: 'Terlambat', value: 'OVERDUE', count: overdueCount, dotColor: 'bg-rose-500' },
   ];
 
   const priorityOptions = [
@@ -424,13 +418,7 @@ export function ActionItemMatrixView({
 
       // Status filter
       if (statusParam !== 'ALL') {
-        if (statusParam === 'OVERDUE') {
-          if (!isOverdue) return false;
-        } else if (statusParam === 'NEAR_DEADLINE') {
-          if (!isNearDeadlineTask(task)) return false;
-        } else if (task.status !== statusParam) {
-          return false;
-        }
+        if (task.status !== statusParam) return false;
       }
 
       // Team filter
@@ -538,9 +526,9 @@ export function ActionItemMatrixView({
           </div>
         </div>
 
-        {/* Baris Bawah: Grid 6 Interactive KPI Status Cards */}
+        {/* Baris Bawah: Grid 4 Interactive KPI Status Cards */}
         <div className="p-4 sm:p-5 bg-slate-50/50">
-          <div className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-6 gap-2.5 sm:gap-3 w-full">
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 sm:gap-3 w-full">
             {/* Total */}
             <button
               type="button"
@@ -653,64 +641,7 @@ export function ActionItemMatrixView({
               </div>
             </button>
 
-            {/* Mendekati Tenggat (NEAR_DEADLINE) */}
-            <button
-              type="button"
-              onClick={() => handleSelectStatus('NEAR_DEADLINE')}
-              className={cn(
-                "p-3 rounded-xl border text-left transition-all cursor-pointer flex flex-col justify-between group",
-                statusParam === 'NEAR_DEADLINE'
-                  ? "bg-amber-100/80 border-amber-500 ring-2 ring-amber-500/30 shadow-2xs"
-                  : "bg-white border-amber-200/90 hover:border-amber-300 hover:bg-amber-50/40 shadow-2xs hover:-translate-y-0.5"
-              )}
-              title="Pekerjaan aktif dengan tenggat waktu ≤ 3 hari ke depan"
-            >
-              <div className="flex items-center justify-between gap-1">
-                <span className="text-[10px] sm:text-[10.5px] text-amber-800 font-bold uppercase tracking-wider flex items-center gap-1.5 truncate">
-                  <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse shrink-0" />
-                  Mendekati Tenggat
-                </span>
-                {statusParam === 'NEAR_DEADLINE' && (
-                  <span className="text-[9px] font-bold px-1.5 py-0.2 rounded-full bg-amber-300 text-amber-950 shrink-0">
-                    Aktif
-                  </span>
-                )}
-              </div>
-              <div className="flex items-baseline gap-1 mt-1.5">
-                <span className="text-xl sm:text-[22px] font-black text-amber-800 tracking-tight">{nearDeadlineCount}</span>
-                <span className="text-[10.5px] text-amber-700/70 font-medium">H ≤ 3 hari</span>
-              </div>
-            </button>
-
-            {/* Terlambat (OVERDUE) */}
-            <button
-              type="button"
-              onClick={() => handleSelectStatus('OVERDUE')}
-              className={cn(
-                "p-3 rounded-xl border text-left transition-all cursor-pointer flex flex-col justify-between group",
-                statusParam === 'OVERDUE'
-                  ? "bg-rose-100/80 border-rose-400 ring-2 ring-rose-400/30 shadow-2xs"
-                  : "bg-white border-rose-200/90 hover:border-rose-300 hover:bg-rose-50/50 shadow-2xs hover:-translate-y-0.5"
-              )}
-              title="Pekerjaan yang telah melewati batas tenggat waktu"
-            >
-              <div className="flex items-center justify-between gap-1">
-                <span className="text-[10px] sm:text-[10.5px] text-rose-700 font-bold uppercase tracking-wider flex items-center gap-1.5 truncate">
-                  <span className="w-1.5 h-1.5 rounded-full bg-rose-500 animate-pulse shrink-0" />
-                  Terlambat
-                </span>
-                {statusParam === 'OVERDUE' && (
-                  <span className="text-[9px] font-bold px-1.5 py-0.2 rounded-full bg-rose-200 text-rose-950 shrink-0">
-                    Aktif
-                  </span>
-                )}
-              </div>
-              <div className="flex items-baseline gap-1 mt-1.5">
-                <span className="text-xl sm:text-[22px] font-black text-rose-700 tracking-tight">{overdueCount}</span>
-                <span className="text-[10.5px] text-rose-600/70 font-medium">atensi</span>
-              </div>
-            </button>
-          </div>
+            </div>
         </div>
       </div>
 
@@ -1305,16 +1236,10 @@ export function ActionItemMatrixView({
                             className="cursor-pointer transition-transform hover:scale-105 text-left inline-block"
                             title="Klik untuk memperbarui status tindak lanjut"
                           >
-                            <ActionItemStatusBadge
-                              status={task.status}
-                              isOverdue={isItemOverdue}
-                            />
+                            <ActionItemStatusBadge status={task.status} />
                           </button>
                         ) : (
-                          <ActionItemStatusBadge
-                            status={task.status}
-                            isOverdue={isItemOverdue}
-                          />
+                          <ActionItemStatusBadge status={task.status} />
                         )}
                       </td>
 

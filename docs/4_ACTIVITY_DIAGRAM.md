@@ -1,202 +1,120 @@
 # PERANCANGAN UML ACTIVITY DIAGRAM (SUB-BAB 3.2.2.b)
-## Sistem Informasi Log & Notula Rapat (Log_Book_Rapat KEK RI)
-**Sekretariat Jenderal Dewan Nasional Kawasan Ekonomi Khusus Republik Indonesia**
+## Aplikasi Jadwal dan Pengarsipan Kegiatan pada Sekretariat Jenderal Dewan Nasional Kawasan Ekonomi Khusus
+**Program Studi Informatika — Fakultas Teknik & Informatika Universitas Bina Sarana Informatika (UBSI) 2026**
 
-Dokumen ini memuat perancangan resmi **UML Activity Diagram (Diagram Alur Aktivitas Bisnis)** dengan format baku laporan Skripsi / Tugas Akhir (*Swimlane Table Layout: Aktor 1 | System | Aktor 2*), memodelkan 3 proses bisnis utama pada Sistem Informasi Log_Book_Rapat KEK RI sesuai dengan format acuan laporan akademik.
+Dokumen ini memuat perancangan resmi **UML Activity Diagram (Diagram Alur Aktivitas Bisnis)** dengan format baku laporan akademik (*Swimlane Layout*), memodelkan 3 proses bisnis utama pada Aplikasi Jadwal dan Pengarsipan Kegiatan KEK. Seluruh alur dirancang selaras 100% dengan **UML Use Case Diagram** dan aturan operasional instansi:
 
-> [!NOTE]
-> **Penempatan pada Laporan PKL (Pedoman PKL UBSI Tahun 2026 Halaman 30 – 31 No. 3):**  
-> Diagram ini ditempatkan pada **BAB III PEMBAHASAN &rarr; 3.2. Pembuatan Program &rarr; 3.2.2. Design Program &rarr; b. Activity Diagram**.
-
----
-
-## 1. File Diagram & Tautan Preview
-
-* **File Asli Draw.io (Multi-Tab):** [`docs/ACTIVITY_DIAGRAM_Log_Book_Rapat.drawio`](file:///c:/Users/nappz/Documents/Project%20Website/Projek%20Log%20Rapat/docs/ACTIVITY_DIAGRAM_Log_Book_Rapat.drawio)
-* **Tautan Download Langsung:** [http://localhost:3000/ACTIVITY_DIAGRAM_Log_Book_Rapat.drawio](http://localhost:3000/ACTIVITY_DIAGRAM_Log_Book_Rapat.drawio)
-* **Tautan Pratinjau Interaktif di Browser:** [http://localhost:3000/activity-diagram-preview.html](http://localhost:3000/activity-diagram-preview.html)
-
-> [!TIP]
-> **Struktur Multi-Tab Draw.io (`.drawio`):**
-> Saat file dibuka di aplikasi **Draw.io (diagrams.net)**, terdapat 3 lembar tab terpisah:
-> 1. `1) Penjadwalan Rapat` (Swimlane: Admin Biro/Tim | System | Pimpinan & Peserta Rapat)
-> 2. `2) Notulensi & Risalah` (Swimlane: Notulis Rapat | System | Pimpinan Sidang)
-> 3. `3) Tindak Lanjut & PIC` (Swimlane: Staf Pelaksana PIC | System | Pimpinan / Admin Biro)
+> [!IMPORTANT]
+> **Prinsip Keselarasan Sistem (Tidak Melenceng dari Use Case):**
+> 1. **Tanpa Modul Presensi/Absensi Kehadiran:** Seluruh peserta kegiatan dikelola sebagai *Daftar Pihak Terkait / Undangan Kedinasan* untuk keperluan arsip naskah dinas (tanpa tiket QR, izin/hadir, maupun hitung kuorum).
+> 2. **Status Konsisten 3 Tahapan Resmi:** Status kegiatan dan butir tindak lanjut strictly hanya 3 tahapan: `Belum Dimulai`, `Dalam Proses`, dan `Selesai`.
+> 3. **Sinkronisasi Peran Aktor:** Selaras dengan 3 aktor pada Use Case Diagram: *Staf Pelaksana (PIC)*, *Admin Biro / Tim*, dan *Super Admin (Pimpinan Setjen)*.
 
 ---
 
-## 2. Standar Notasi & Palet Warna Visual (UML 2.5 Standard)
+## 1. Pemetaan Use Case ke Activity Diagram
 
-Sesuai dengan standar baku **OMG UML 2.5 Activity Diagram**, perancangan ini menerapkan notasi dan palet warna semantik:
-
-| Bentuk Notasi | Gaya / Palet Warna | Makna / Fungsi dalam Alur |
-|:---|:---|:---|
-| **Initial Node (`●`)** | Lingkaran solid hijau `#10B981` (28px) | Titik awal dimulainya alur aktivitas proses bisnis. |
-| **User Action State** | Kotak rounded hijau lembut `#ECFDF5`, border `#059669` | Tindakan aktif yang dieksekusi oleh pengguna/aktor (*Admin, Notulis, PIC, Pimpinan*). |
-| **System Action State** | Kotak rounded biru lembut `#EFF6FF`, border `#2563EB` | Pemrosesan data otomatis oleh sistem (*validasi, simpan database, auto-generate, broadcast*). |
-| **Decision Node (`◇`)** | Belah ketupat kuning `#FFFBEB`, border `#D97706` | Titik evaluasi kondisi percabangan (*verifikasi kelengkapan, persetujuan, tenggat*). |
-| **Guard Condition `[...]`** | Label putih berkontur `#CBD5E1`, font tebal | Syarat kondisi transisi yang harus dipenuhi (*[Data Lengkap]*, *[Berhalangan]*, *[Disetujui]*). |
-| **Fork / Join Bar** | Balok persegi panjang hitam `#1E293B` | Sinkronisasi alur paralel (misal: notifikasi admin sekaligus broadcast ke peserta). |
-| **Activity Final Node (`◉`)** | Lingkaran ganda (*bullseye*) merah `#DC2626` (30px) | Titik akhir pemberhentian seluruh alur aktivitas. |
+| No | Activity Diagram | Use Case Terkait | Aktor Terlibat | Fokus Proses Bisnis |
+|:---|:---|:---|:---|:---|
+| 1 | **Alur Pencatatan & Penjadwalan Kegiatan Baru** | UC-06, UC-07, UC-02 | Admin Biro/Tim & Sistem | Penginputan kategori naskah dinas, waktu, ruang/lokasi, penunjukan PIC, penerbitan nomor registrasi otomatis, status awal `Belum Dimulai`, sinkronisasi kalender dinas. |
+| 2 | **Alur Pengarsipan Berkas Dokumen & Catatan Hasil** | UC-08, UC-09, UC-04 | Admin Biro/Tim, PIC, & Sistem | Unggah berkas dokumen acuan rapat (surat undangan dinas, nota dinas konsumsi, bahan tayang materi, tautan rilis), input catatan hasil rapat, validasi file, dan penyimpanan repositori permanen. |
+| 3 | **Alur Monitoring & Pembaruan Status Kegiatan serta Tindak Lanjut** | UC-05, UC-10, UC-11 | Admin Biro/Tim, Staf PIC, Sistem, & Super Admin (Pimpinan) | Perumusan butir tindak lanjut (*action items*), penugasan PIC & deadline, pembaruan status 3 tahapan (`Belum Dimulai` &rarr; `Dalam Proses` &rarr; `Selesai`), agregasi 4 kartu KPI, dan monitoring eksekutif pimpinan. |
 
 ---
 
-## 3. Rincian Pemodelan Activity Diagram (Sub-Bab 3.2.2.b)
+## 2. Activity Diagram 1: Alur Pencatatan dan Penjadwalan Kegiatan Baru
 
-Sesuai dengan **Pedoman PKL UBSI Tahun 2026 Halaman 30 – 31 No. 3 (BAB III PEMBAHASAN &rarr; 3.2. Pembuatan Program &rarr; 3.2.2. Design Program &rarr; b. Activity Diagram)**, berikut adalah rincian 3 alur proses bisnis utama (*Activity Diagram*) pada Log_Book_Rapat KEK RI:
+Memodelkan alur kerja petugas administrasi mencatat agenda kegiatan dinas baru berdasarkan disposisi atau surat naskah masuk hingga terdaftar di kalender kegiatan terpadu.
 
----
+### A. Visualisasi Mermaid Activity Diagram 1
+```mermaid
+flowchart TD
+    StartNode([● Mulai]) --> Step1[Admin Biro/Tim Membuka Menu 'Catat Kegiatan Baru']
+    Step1 --> Step2[Sistem Menampilkan Formulir Penjadwalan Kegiatan]
+    Step2 --> Step3[Admin Memilih Klasifikasi Kategori Naskah Dinas<br/><i>Naskah Masuk / Disposisi Sekjen / Disposisi Karo / Internal / Laporan Rutin</i>]
+    Step3 --> Step4[Admin Mengisi Rincian: Judul Agenda, Waktu Pelaksanaan, Ruang/Tautan, & Staf PIC]
+    Step4 --> Step5[Admin Menambahkan Daftar Pihak Terkait / Undangan Kedinasan]
+    Step5 --> Step6[Admin Menekan Tombol 'Simpan Jadwal Kegiatan']
+    Step6 --> Dec1{Validasi Kolom Wajib<br/>Terisi Lengkap?}
 
-### a. Alur Penjadwalan Rapat Dinas
+    Dec1 -- Tidak Lengkap --> Err1[Sistem Menandai Field Kosong Berwarna Merah<br/>dan Menampilkan Notifikasi 'Field ini wajib diisi']
+    Err1 --> Step4
 
-Alur ini memodelkan proses dari inisiasi pembuatan agenda rapat dinas oleh Admin Biro/Tim, pembuatan nomor registrasi rapat otomatis oleh sistem, penyebaran undangan notifikasi kepada pimpinan & peserta, konfirmasi kehadiran, hingga penutupan status pelaksanaan rapat.
-
-```
-+----------------------------------------------------------------------------------------------------+
-|                                    Alur Penjadwalan Rapat Dinas                                    |
-+------------------------------------+--------------------------+------------------------------------+
-|    Admin Biro / Tim Pemrakarsa     |     Sistem Log_Book_Rapat     |      Pimpinan & Peserta Rapat      |
-+------------------------------------+--------------------------+------------------------------------+
-|  (Initial Node ●)                  |                          |                                    |
-|         │                          |                          |                                    |
-|  [Pilih Buat Rapat & Tim Kerja] ───┼─> [Form & Auto No INV]   |                                    |
-|                                    │           │              |                                    |
-|  [Isi Formulir Lengkap] <──────────┼───────────┘              |                                    |
-|         │                          |                          |                                    |
-|  [Klik "Jadwalkan Rapat"] ─────────┼─> <Data Lengkap?>        |                                    |
-|         ▲                          |      │           │       |                                    |
-|         │                          | [Data Kurang] [Lengkap]  |                                    |
-|         │                          |      │           │       |                                    |
-|         └──────────────────────────┼─ [Notif Validasi]│       |                                    |
-|                                    |                  ▼       |                                    |
-|                                    | [Status: SCHEDULED]      |                                    |
-|                                    |         │                |                                    |
-|                                    |  (=== FORK BAR ===)      |                                    |
-|                                    |    │           │         |                                    |
-|  [Menerima QR Tiket Presensi] <────┼────┘           └─────────┼─> [Menerima Undangan Rapat]        |
-|                                    |                          |          │                         |
-|                                    |                          |  <Konfirmasi Kehadiran?>           |
-|                                    |                          |    │              │                |
-|                                    |                          | [Berhalangan]  [Siap Hadir]        |
-|                                    |                          |    │              │                |
-|                                    |                          | [Input Izin]   [Input Hadir]       |
-|                                    |                          |    │              │                |
-|                                    | [Rekap Presensi & Kuorum]<────┴──────────────┘                |
-|                                    |         │                |                                    |
-|                                    |         └────────────────┼─> [Rapat Dinas Berlangsung]        |
-|                                    |                          |          │                         |
-|                                    |                          |  <Sidang Selesai Lengkap?>         |
-|                                    |                          |    │              │                |
-|                                    |                          | [Lanjutan]     [Selesai]           |
-|                                    |                          |    │              │                |
-|  [Jadwal Ulang (Reschedule)] <─────┼──────────────────────────┼────┘              │                |
-|                                    | [Status: COMPLETED] <────┼───────────────────┘                |
-|                                    |         │                |                                    |
-|  [Notifikasi Selesai & Siap Notula]<─────────┘                |                                    |
-|         │                          |                          |                                    |
-|   (Final Node ◉)                   |                          |                                    |
-+------------------------------------+--------------------------+------------------------------------+
+    Dec1 -- Lengkap --> Sys1[Sistem Menerbitkan Nomor Registrasi Unik Otomatis<br/><i>Contoh: REG-2026-X-001</i>]
+    Sys1 --> Sys2[Sistem Menyimpan Data ke Basis Data PostgreSQL<br/>dengan Status Awal: <b>'Belum Dimulai'</b>]
+    Sys2 --> Sys3[Sistem Menyinkronkan Agenda ke Kalender Dinas Terpadu]
+    Sys3 --> End1[Sistem Mengarahkan ke Halaman Detail Agenda Kegiatan]
+    End1 --> FinalNode([◉ Selesai])
 ```
 
 ---
 
-### b. Alur Notulensi & Risalah Rapat
+## 3. Activity Diagram 2: Alur Pengarsipan Berkas Dokumen & Catatan Hasil Kegiatan
 
-Alur ini memodelkan proses notulis mencatat dinamika rapat dinas, penyimpanan draft risalah, pengajuan telaah pimpinan sidang, keputusan revisi vs persetujuan pengesahan (*approval*), pembuatan dokumen PDF resmi ber-QR Code, hingga perumusan butir tindak lanjut (*action items*).
+Memodelkan proses pengarsipan naskah dokumen digital pendukung kegiatan dinas dan pendokumentasian catatan ringkas hasil pembahasan kegiatan.
 
-```
-+----------------------------------------------------------------------------------------------------+
-|                          Alur Penyusunan & Pengesahan Risalah Notulensi                            |
-+------------------------------------+--------------------------+------------------------------------+
-|            Notulis Rapat           |     Sistem Log_Book_Rapat     |        Pimpinan Sidang / Biro      |
-+------------------------------------+--------------------------+------------------------------------+
-|  (Initial Node ●)                  |                          |                                    |
-|         │                          |                          |                                    |
-|  [Catat Dinamika & Poin Pokok] ────┼─> [Auto-Save & Versi Log]|                                    |
-|                                    │           │              |                                    |
-|  [Ajukan Telaah ke Pimpinan] <─────┼───────────┘              |                                    |
-|         │                          |                          |                                    |
-|         └──────────────────────────┼─> [Status: REVIEW] ──────┼─> [Buka Draf & Telaah Substansi]   |
-|                                    |                          |          │                         |
-|                                    |                          |  <Substansi Disetujui?>            |
-|                                    |                          |    │              │                |
-|                                    |                          | [Perlu Revisi] [Disetujui]         |
-|                                    |                          |    │              │                |
-|  [Perbaiki Naskah Risalah] <───────┼─ [Status: REVISION] <────┼─ [Beri Catatan]   │                |
-|         │ (Loop back)              |                          |                   ▼                |
-|                                    |                          | [Sahkan Risalah (PIN/TTD Digital)] |
-|                                    |                          |          │                         |
-|                                    | [Generate PDF Ber-QR] <──┼──────────┘                         |
-|                                    | [Status: APPROVED]       |                                    |
-|                                    |         │                |                                    |
-|                                    | [Broadcast Terbit Risalah]                                    |
-|                                    |         │                |                                    |
-|                                    |         └────────────────┼─> <Ada Tindak Lanjut ke Tim?>      |
-|                                    |                          |    │              │                |
-|                                    |                          | [Tindak Lanjut] [Arsip Saja]       |
-|                                    |                          |    │              │                |
-|                                    |                          | [Tentukan PIC] [Arsip Repositori]  |
-|                                    |                          |    │              │                |
-|                                    | [Kunci & Simpan Permanen]<────┴──────────────┘                |
-|                                    |         │                |                                    |
-|  [Unduh PDF Risalah Resmi Ber-QR] <┼─────────┘                |                                    |
-|         │                          |                          |                                    |
-|   (Final Node ◉)                   |                          |                                    |
-+------------------------------------+--------------------------+------------------------------------+
+### A. Visualisasi Mermaid Activity Diagram 2
+```mermaid
+flowchart TD
+    StartNode2([● Mulai]) --> StepB1[Admin Biro atau Staf PIC Membuka Rincian Kegiatan Kedinasan]
+    StepB1 --> StepB2[Sistem Menyajikan Tab 'Arsip Dokumen' & 'Catatan Hasil Kegiatan']
+    StepB2 --> StepB3[Pengguna Memilih Kategori Berkas yang Akan Diunggah<br/><i>Surat Undangan / Nota Dinas Konsumsi / Bahan Paparan / Tautan Rilis</i>]
+    StepB3 --> StepB4[Pengguna Memilih File Lokal atau Memasukkan Tautan Digital]
+    StepB4 --> StepB5[Pengguna Menginput Intisari Pokok Pembahasan & Kesimpulan Rapat]
+    StepB5 --> StepB6[Pengguna Menekan Tombol 'Simpan Arsip & Catatan']
+    StepB6 --> Dec2{Validasi Format File<br/>MIME & Ukuran < 10MB?}
+
+    Dec2 -- Tidak Valid --> Err2[Sistem Menolak Unggahan dan Menampilkan Error<br/>'Format berkas tidak didukung atau ukuran melebihi 10MB']
+    Err2 --> StepB3
+
+    Dec2 -- Valid --> SysB1[Sistem Mengunggah Berkas ke Repositori Cloud Terstruktur]
+    SysB1 --> SysB2[Sistem Menautkan Dokumen & Catatan Hasil ke ID Registrasi Kegiatan]
+    SysB2 --> SysB3[Sistem Menyimpan Riwayat Metadata Pengunggah & Waktu Simpan]
+    SysB3 --> EndB1[Sistem Mengaktifkan Tombol Pratinjau & Unduh Dokumen]
+    EndB1 --> FinalNode2([◉ Selesai])
 ```
 
 ---
 
-### c. Alur Tindak Lanjut & Monitoring PIC (Sesuai Arahan Mentor Lapangan)
+## 4. Activity Diagram 3: Alur Monitoring & Pembaruan Status Kegiatan serta Tindak Lanjut
 
-Alur ini memodelkan proses bisnis pengelolaan tindak lanjut secara komprehensif sesuai arahan mentor lapangan (Diaji Junianto):
-1. **Hulu Disposisi:** Kepala Biro memberikan disposisi dinas dan Koordinator Tim menerima disposisi melalui **Aplikasi SRIKANDI** (Sistem Informasi Kearsipan Dinamis Terintegrasi nasional).
-2. **Pencatatan & Penunjukan PIC:** Koordinator Tim mencatat pekerjaan kegiatan ke dalam Sistem (*Simpan data* pada tabel `kegiatan` & `tindak_lanjut`) dan menunjuk staf PIC pelaksana.
-3. **Eksekusi & Histori Audit:** Staf PIC menerima tugas (*Menerima Task*), melaksanakan pekerjaan, memperbarui progres bertahap (*Update Progress* &rarr; *Simpan history* pada tabel `riwayat_tindak_lanjut`), dan menginput bukti/laporan hasil (*Input hasil* &rarr; *Simpan history*).
-4. **Hilir Pengawasan:** Sistem mengagregasi seluruh riwayat status ke dalam **Dashboard Eksekutif**, sehingga Kepala Biro dapat langsung memantau capaian tugas (*Melihat report pekerjaan*).
+Memodelkan interaksi terpadu antara 4 swimlane (Admin Biro, Staf PIC, Sistem, dan Pimpinan/Super Admin) dalam mengelola siklus butir tindak lanjut (*action items*) menggunakan strictly 3 tahapan status.
 
-```
-+--------------------------------------------------------------------------------------------------------------------------------------------------------+
-|                                  Alur Monitoring & Pembaruan Tindak Lanjut / Action Items (Sesuai Arahan Mentor)                                       |
-+------------------------------+------------------------------+------------------------------+-----------------------------------------------------------+
-|         Kepala Biro          |       Koordinator Tim        |     PIC (Staf Pelaksana)     |                   Sistem Pencatatan Kegiatan              |
-+------------------------------+------------------------------+------------------------------+-----------------------------------------------------------+
-|      (Initial Node ●)        |                              |                              |                                                           |
-|             │                |                              |                              |                                                           |
-|  .--------------------------------------------------------. |                              |                                                           |
-|  |                 [ Aplikasi SRIKANDI ]                  | |                              |                                                           |
-|  | [Memberikan disposisi] ───┼─> [Menerima disposisi]      | |                              |                                                           |
-|  '---------------------------┼──────────────│─────────────' |                              |                                                           |
-|                              |              ▼               |                              |                                                           |
-|                              |     [Mencatat Pekerjaan] ────┼──────────────────────────────┼─> [«datastore» Simpan data] (Tabel: kegiatan & tindak_lanjut)|
-|                              |              │               |                              |                                                           |
-|                              |     [Menentukan PIC] ────────┼─> [Menerima Task]            |                                                           |
-|                              |                              |          │                   |                                                           |
-|                              |                              |   [Melaksanakan Tugas]       |                                                           |
-|                              |                              |          │                   |                                                           |
-|                              |                              |   [Update Progress] ─────────┼─> [«datastore» Simpan history] (Tabel: riwayat audit log) |
-|                              |                              |          │                   |                                                           |
-|                              |                              |   [Input Hasil / Eviden] ────┼─> [«datastore» Simpan history] (Status Selesai 100%)       |
-|                              |                              |                              |                 │ (data flow)                             |
-|                              |                              |                              |                 ▼                                         |
-|                              |                              |                              |         [Dashboard Eksekutif]                             |
-|                              |                              |                              |                 │                                         |
-|  [Melihat report pekerjaan]<─┼──────────────────────────────┼──────────────────────────────┼─────────────────┘                                         |
-|             │                |                              |                              |                                                           |
-|       (Final Node ◉)         |                              |                              |                                                           |
-+------------------------------+------------------------------+------------------------------+-----------------------------------------------------------+
+### A. Visualisasi Mermaid Activity Diagram 3 (4 Swimlane)
+```mermaid
+sequenceDiagram
+    autonumber
+    actor Admin as Admin Biro / Tim
+    actor PIC as Staf Pelaksana (PIC)
+    participant Sys as Sistem Aplikasi KEK
+    actor Leader as Super Admin (Pimpinan)
+
+    Note over Admin,Sys: Tahap 1: Perumusan Butir Tindak Lanjut
+    Admin->>Sys: Akses Modul Matriks Tindak Lanjut Kegiatan
+    Admin->>Sys: Input Butir Tugas, Tim Penanggung Jawab, Staf PIC, & Tenggat Waktu (Deadline)
+    Sys->>Sys: Simpan Butir Tindak Lanjut dengan Status Awal: "Belum Dimulai"
+    Sys->>Sys: Agregasi Otomatis pada 4 Kartu KPI (Total, Belum Dimulai, Dalam Proses, Selesai)
+
+    Note over PIC,Sys: Tahap 2: Eksekusi & Pembaruan Progres (3 Tahapan)
+    PIC->>Sys: Login & Buka Dashboard Tugas / Rincian Kegiatan
+    PIC->>Sys: Klik Quick Status Popover: Ubah Status "Belum Dimulai" -> "Dalam Proses"
+    Sys->>Sys: Rekam Riwayat Progres ke Basis Data & Update Lencana Badge Status
+    PIC->>Sys: Selesaikan Tugas & Unggah Bukti Eviden Hasil Pelaksanaan
+    PIC->>Sys: Ubah Status Progres menjadi "Selesai"
+    Sys->>Sys: Validasi Capaian & Rekam Waktu Penyelesaian Tugas
+    Sys->>Sys: Update Agregasi Kartu KPI (Counter "Selesai" Bertambah)
+
+    Note over Leader,Sys: Tahap 3: Pengawasan & Monitoring Eksekutif Lintas Tim
+    Leader->>Sys: Akses Dashboard Monitoring Eksekutif Lintas 3 Tim Kerja
+    Sys-->>Leader: Sajikan Grafik Komparasi & Rekapitulasi Persentase Selesai Tiap Tim Kerja
+    Leader->>Sys: Ekspor Laporan Rekapitulasi Matriks Tindak Lanjut (PDF Resmi / Excel)
+    Sys-->>Leader: Unduh Dokumen Rekapitulasi Ber-Kop Surat Resmi Setjen DN KEK
 ```
 
 ---
 
-## 4. Cara Menggunakan File di Draw.io
+## 5. Ringkasan Kepatuhan Pedoman PKL UBSI 2026
 
-1. Buka browser dan kunjungi [https://app.diagrams.net](https://app.diagrams.net).
-2. Pilih menu **Open Existing Diagram**.
-3. Pilih berkas [`docs/ACTIVITY_DIAGRAM_Log_Book_Rapat.drawio`](file:///c:/Users/nappz/Documents/Project%20Website/Projek%20Log%20Rapat/docs/ACTIVITY_DIAGRAM_Log_Book_Rapat.drawio) yang ada di direktori proyek ini.
-4. Di bagian bawah jendela Draw.io, Anda dapat memilih antara tab **1) Penjadwalan Rapat**, **2) Notulensi & Risalah**, atau **3) Tindak Lanjut & PIC**.
-5. Untuk menyalin ke laporan Microsoft Word / LaTeX, gunakan menu **File &rarr; Export as &rarr; PNG / SVG / PDF** dengan resolusi 300 DPI untuk kualitas cetak dokumen tugas akhir yang tajam.
-
----
-
-*Dokumen ini merupakan bagian dari rangkaian dokumentasi resmi rekayasa perangkat lunak Log_Book_Rapat KEK RI ([Tahap 1: ERD](file:///c:/Users/nappz/Documents/Project%20Website/Projek%20Log%20Rapat/docs/1_ERD_DIAGRAM.md) &bull; [Tahap 2: LRS](file:///c:/Users/nappz/Documents/Project%20Website/Projek%20Log%20Rapat/docs/2_LRS_DIAGRAM.md) &bull; [Tahap 3: Use Case](file:///c:/Users/nappz/Documents/Project%20Website/Projek%20Log%20Rapat/docs/3_USE_CASE_DIAGRAM.md) &bull; [Tahap 4: Activity Diagram](file:///c:/Users/nappz/Documents/Project%20Website/Projek%20Log%20Rapat/docs/4_ACTIVITY_DIAGRAM.md)).*
+1. **Notasi Baku UML 2.5:** Menggunakan *Initial Node* (lingkaran solid), *Action State* (persegi panjang bersudut tumpul), *Decision Node* (belah ketupat dengan *Guard Condition*), dan *Final Node* (lingkaran ganda).
+2. **Kejelasan Swimlane:** Membagi tanggung jawab tugas secara transparan antara aktor manusia dan proses komputasi sistem.
+3. **Integritas Konseptual:** Alur aktivitas ini merupakan realisasi langsung dari Use Case Diagram Sub-Bab 3.2.2.a dan tidak ada satu pun alur yang menyimpang dari batasan sistem yang telah ditetapkan.

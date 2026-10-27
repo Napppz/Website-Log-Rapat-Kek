@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { CheckCircle2, Clock, AlertTriangle, PlayCircle } from 'lucide-react';
+import { CheckCircle2, Clock, PlayCircle } from 'lucide-react';
 import { ActionItemStatus, ActionItemPriority } from '@/lib/types';
 
 interface ActionItemStatusBadgeProps {
@@ -9,7 +9,7 @@ interface ActionItemStatusBadgeProps {
   isOverdue?: boolean;
 }
 
-export function ActionItemStatusBadge({ status, isOverdue }: ActionItemStatusBadgeProps) {
+export function ActionItemStatusBadge({ status }: ActionItemStatusBadgeProps) {
   const s = String(status || '').toUpperCase();
 
   if (s === 'COMPLETED' || s === 'FINISH' || s === 'SELESAI') {
@@ -30,27 +30,11 @@ export function ActionItemStatusBadge({ status, isOverdue }: ActionItemStatusBad
     );
   }
 
-  if (s === 'PENDING' || s === 'START' || s === 'BELUM DIMULAI' || s === 'BELUM MULAI') {
-    return (
-      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-[#FFF8CC] text-[#8A7200] text-[11px] font-bold border border-[#FFEE99] shadow-2xs whitespace-nowrap select-none">
-        <PlayCircle className="w-3.5 h-3.5 text-[#B96800] shrink-0" />
-        <span>Belum Dimulai</span>
-      </span>
-    );
-  }
-
-  if (s === 'OVERDUE' || (isOverdue && s !== 'COMPLETED')) {
-    return (
-      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-[#FEF2F2] text-[#DC2626] text-[11px] font-bold border border-red-200 shadow-2xs whitespace-nowrap select-none">
-        <AlertTriangle className="w-3.5 h-3.5 text-[#DC2626] shrink-0" />
-        <span>Terlambat</span>
-      </span>
-    );
-  }
-
+  // Default is strictly 'Belum Dimulai'
   return (
-    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-slate-100 text-slate-700 text-[11px] font-bold border border-slate-200 shadow-2xs whitespace-nowrap select-none">
-      <span>{status}</span>
+    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-[#FFF8CC] text-[#8A7200] text-[11px] font-bold border border-[#FFEE99] shadow-2xs whitespace-nowrap select-none">
+      <PlayCircle className="w-3.5 h-3.5 text-[#B96800] shrink-0" />
+      <span>Belum Dimulai</span>
     </span>
   );
 }
@@ -65,31 +49,27 @@ export function ActionItemPriorityBadge({ priority }: ActionItemPriorityBadgePro
   switch (p) {
     case 'URGENT':
       return (
-        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-[#FEF2F2] text-[#DC2626] text-[11px] font-bold border border-red-200 shadow-2xs whitespace-nowrap select-none">
-          <span className="w-1.5 h-1.5 rounded-full bg-[#DC2626] shrink-0" />
-          <span>Sangat Mendesak</span>
+        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-rose-50 text-rose-700 text-[10.5px] font-bold border border-rose-200 shadow-2xs">
+          <span>⚡ Sangat Mendesak</span>
         </span>
       );
     case 'HIGH':
       return (
-        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-[#FFF0DC] text-[#B96800] text-[11px] font-bold border border-[#FEDEBE] shadow-2xs whitespace-nowrap select-none">
-          <span className="w-1.5 h-1.5 rounded-full bg-[#B96800] shrink-0" />
-          <span>Tinggi</span>
+        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-amber-50 text-amber-800 text-[10.5px] font-bold border border-amber-200 shadow-2xs">
+          <span>🔺 Tinggi</span>
         </span>
       );
     case 'MEDIUM':
       return (
-        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-[#EBF3FF] text-[#1D4ED8] text-[11px] font-bold border border-[#BFDBFE] shadow-2xs whitespace-nowrap select-none">
-          <span className="w-1.5 h-1.5 rounded-full bg-[#3B82F6] shrink-0" />
-          <span>Sedang</span>
+        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-blue-50 text-blue-700 text-[10.5px] font-bold border border-blue-200 shadow-2xs">
+          <span>🔷 Sedang</span>
         </span>
       );
     case 'LOW':
     default:
       return (
-        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-slate-100 text-slate-700 text-[11px] font-bold border border-slate-200 shadow-2xs whitespace-nowrap select-none">
-          <span className="w-1.5 h-1.5 rounded-full bg-slate-400 shrink-0" />
-          <span>Rendah</span>
+        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-slate-100 text-slate-600 text-[10.5px] font-semibold border border-slate-200 shadow-2xs">
+          <span>🔹 Rendah</span>
         </span>
       );
   }

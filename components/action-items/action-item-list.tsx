@@ -128,9 +128,7 @@ export function ActionItemList({
   const overdue = visibleItems.filter((i) => {
     return i.status !== 'COMPLETED' && new Date(i.dueDate).getTime() < Date.now();
   }).length;
-  const pending = visibleItems.filter(
-    (i) => i.status === 'PENDING' && new Date(i.dueDate).getTime() >= Date.now()
-  ).length;
+  const pending = visibleItems.filter((i) => i.status === 'PENDING').length;
 
   // Filter States
   const [filterSearch, setFilterSearch] = useState('');
@@ -205,13 +203,7 @@ export function ActionItemList({
 
       // Status filter
       if (filterStatus !== 'ALL') {
-        if (filterStatus === 'OVERDUE') {
-          const isOverdue =
-            item.status !== 'COMPLETED' && new Date(item.dueDate).getTime() < Date.now();
-          if (!isOverdue) return false;
-        } else if (item.status !== filterStatus) {
-          return false;
-        }
+        if (item.status !== filterStatus) return false;
       }
 
       return true;
@@ -317,22 +309,20 @@ export function ActionItemList({
               <span className="text-[14px] font-bold text-slate-900">{total}</span>
             </div>
 
+            <div className="px-3 py-1.5 rounded-lg border bg-[#FFF8CC] border-[#FFEE99] text-center">
+              <span className="text-[10px] text-[#8A7200] font-semibold uppercase block">Belum Dimulai</span>
+              <span className="text-[14px] font-bold text-[#8A7200]">{pending}</span>
+            </div>
+
+            <div className="px-3 py-1.5 rounded-lg border bg-[#E8F5F7] border-[#BCE3EB] text-center">
+              <span className="text-[10px] text-[#31889C] font-semibold uppercase block">Dalam Proses</span>
+              <span className="text-[14px] font-bold text-[#31889C]">{inProgress}</span>
+            </div>
+
             <div className="px-3 py-1.5 rounded-lg border bg-[#ECF8E9] border-[#D2EFCA] text-center">
               <span className="text-[10px] text-[#4D8F3D] font-semibold uppercase block">Selesai</span>
               <span className="text-[14px] font-bold text-[#4D8F3D]">{completed}</span>
             </div>
-
-            <div className="px-3 py-1.5 rounded-lg border bg-[#E8F5F7] border-[#BCE3EB] text-center">
-              <span className="text-[10px] text-[#31889C] font-semibold uppercase block">Berjalan</span>
-              <span className="text-[14px] font-bold text-[#31889C]">{inProgress}</span>
-            </div>
-
-            {overdue > 0 && (
-              <div className="px-3 py-1.5 rounded-lg border bg-[#FEF2F2] border-red-200 text-center">
-                <span className="text-[10px] text-[#DC2626] font-semibold uppercase block">Terlambat</span>
-                <span className="text-[14px] font-bold text-[#DC2626]">{overdue}</span>
-              </div>
-            )}
           </div>
 
           {canCreateItem && (
@@ -425,7 +415,6 @@ export function ActionItemList({
                   <option value="PENDING">Belum Dimulai</option>
                   <option value="IN_PROGRESS">Dalam Proses</option>
                   <option value="COMPLETED">Selesai</option>
-                  {overdue > 0 && <option value="OVERDUE">Terlambat ({overdue})</option>}
                 </select>
               </div>
 
@@ -532,10 +521,10 @@ export function ActionItemList({
                           className="cursor-pointer transition-opacity hover:opacity-80 text-left"
                           title="Klik untuk memperbarui progres status"
                         >
-                          <ActionItemStatusBadge status={item.status} isOverdue={isItemOverdue} />
+                          <ActionItemStatusBadge status={item.status} />
                         </button>
                       ) : (
-                        <ActionItemStatusBadge status={item.status} isOverdue={isItemOverdue} />
+                        <ActionItemStatusBadge status={item.status} />
                       )}
                       <ActionItemPriorityBadge priority={item.priority} />
                     </div>
