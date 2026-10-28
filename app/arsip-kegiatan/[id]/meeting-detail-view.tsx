@@ -365,7 +365,7 @@ export function MeetingDetailView({
   const [customName, setCustomName] = useState<string>('');
   const [customEmail, setCustomEmail] = useState<string>('');
   const [customBiroId, setCustomBiroId] = useState<string>(meeting.primaryBiroId || '');
-  const [newParticipantStatus, setNewParticipantStatus] = useState<AttendanceStatus>('PRESENT');
+  const [newParticipantStatus, setNewParticipantStatus] = useState<AttendanceStatus>('INVITED');
   const [isAddingParticipant, setIsAddingParticipant] = useState<boolean>(false);
 
   // Invitation Document states
@@ -1128,6 +1128,15 @@ export function MeetingDetailView({
                   <div className="space-y-1.5">
                     {[
                       {
+                        key: 'Belum Dimulai' as const,
+                        label: 'Belum Dimulai',
+                        sublabel: 'Persiapan Agenda & Penjadwalan',
+                        desc: 'Kegiatan telah dijadwalkan, materi atau administrasi sedang disiapkan.',
+                        color: 'bg-amber-50/70 hover:bg-amber-100 text-amber-900 border-amber-200',
+                        activeColor: 'bg-amber-100 text-amber-950 border-amber-400 ring-2 ring-amber-300/40 shadow-2xs font-bold',
+                        dot: 'bg-amber-500',
+                      },
+                      {
                         key: 'Dalam Proses' as const,
                         label: 'Dalam Proses',
                         sublabel: 'Sedang Berlangsung / Pelaksanaan & Telaah',
@@ -1736,34 +1745,7 @@ export function MeetingDetailView({
                 </div>
               )}
 
-              {/* Status Kehadiran Awal */}
-              <div className="space-y-1.5 pt-1">
-                <label className="font-bold text-slate-800 block text-[12px]">
-                  Status Presensi Awal
-                </label>
-                <div className="grid grid-cols-2 gap-2">
-                  {ATTENDANCE_OPTIONS.map((opt) => {
-                    const isSelected = newParticipantStatus === opt.value;
-                    const Icon = opt.icon;
-                    return (
-                      <button
-                        key={opt.value}
-                        type="button"
-                        onClick={() => setNewParticipantStatus(opt.value)}
-                        className={`flex items-center gap-2 p-2.5 rounded-xl border text-left transition-all cursor-pointer ${isSelected
-                          ? 'bg-[#F0F9FA] border-[#31889C] text-[#31889C] font-bold shadow-xs'
-                          : 'bg-white border-slate-200 text-slate-700 hover:bg-slate-50'
-                          }`}
-                      >
-                        <Icon className="w-3.5 h-3.5 text-[#31889C] shrink-0" />
-                        <div>
-                          <p className="text-[12px]">{opt.label}</p>
-                        </div>
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
+              {/* Status Kehadiran dihilangkan (daftar pihak terkait resmi) */}
 
               {/* Action Buttons */}
               <div className="flex items-center justify-end gap-2 pt-4 border-t border-slate-100">
