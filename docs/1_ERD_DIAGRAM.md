@@ -23,7 +23,7 @@ Hasil inspeksi langsung terhadap tabel pada basis data produksi:
 | 5 | **`peserta_kegiatan`** (`MeetingParticipant`) | **38 baris** | **Dimodelkan (Aktif)** | Daftar pihak terkait / undangan kedinasan sebagai rujukan dokumen. |
 | 6 | **`lampiran_kegiatan`** (`MeetingAttachment`) | **9 baris** | **Dimodelkan (Aktif)** | Berkas digital naskah acuan (undangan, nota dinas, paparan, rilis). |
 | 7 | **`tindak_lanjut`** (`ActionItem`) | **36 baris** | **Dimodelkan (Aktif)** | Butir komitmen tugas tindak lanjut dan tenggat waktu. |
-| 8 | **`riwayat_tindak_lanjut`** (`ActionItemLog`) | **34 baris** | **Dimodelkan (Aktif)** | Catatan log progres persentase dan pembaruan tugas tindak lanjut. |
+| 8 | **`riwayat_tindak_lanjut`** (`ActionItemLog`) | **34 baris** | **Dimodelkan (Aktif)** | Catatan log riwayat pembaruan status dan progres tugas tindak lanjut. |
 | 9 | **`notifikasi`** (`Notification`) | **35 baris** | **Dimodelkan (Aktif)** | Pesan pemberitahuan jadwal kegiatan dan tugas aparatur. |
 | 10 | `notulen_kegiatan` (`MeetingMinutes`) | **0 baris** | *Dieliminasi (Kosong)* | Ringkasan hasil disimpan langsung pada atribut entitas `kegiatan`. |
 | 11 | `komentar_notulen` (`MinutesComment`) | **0 baris** | *Dieliminasi (Kosong)* | Tidak ada record data aktif di database. |
@@ -160,14 +160,12 @@ erDiagram
         string judul_tindakan "Deskripsi Arahan Tugas"
         datetime tenggat_waktu "Batas Waktu Penyelesaian"
         string status_tindak_lanjut "Belum Dimulai / Dalam Proses / Selesai"
-        string skala_prioritas "LOW / MEDIUM / HIGH / URGENT"
     }
 
     RIWAYAT_TINDAK_LANJUT {
         string id_riwayat PK "UUID Riwayat"
         string id_tindak_lanjut FK "Relasi ke tindak lanjut"
         string catatan_progres "Uraian Kemajuan Pekerjaan"
-        int persentase_progres "Persentase 0-100%"
         string status_terbaru "Status Terkini"
     }
 
@@ -229,13 +227,11 @@ erDiagram
 * **`judul_tindakan`** `VARCHAR(255)` : Uraian ringkas arahan tugas tindak lanjut.
 * **`tenggat_waktu`** `DATE` : Batas akhir waktu penyelesaian tugas (*deadline*).
 * **`status_tindak_lanjut`** `VARCHAR(50)` : Status 3 tahapan (`Belum Dimulai`, `Dalam Proses`, `Selesai`).
-* **`skala_prioritas`** `VARCHAR(30)` : Tingkat urgensi (`LOW`, `MEDIUM`, `HIGH`, `URGENT`).
 
 ### 8. Entitas `riwayat_tindak_lanjut` (Catatan Log Progres Tindak Lanjut)
 * **`id_riwayat`** `VARCHAR(50)` **[PK]** : Kunci utama riwayat catatan log tugas.
 * **`id_tindak_lanjut`** `VARCHAR(50)` **[FK]** : Mengacu ke `tindak_lanjut(id_tindak_lanjut)`.
 * **`catatan_progres`** `TEXT` : Uraian kemajuan pekerjaan atau kendala di lapangan.
-* **`persentase_progres`** `INT` : Persentase penyelesaian fisik (0 - 100%).
 * **`status_terbaru`** `VARCHAR(50)` : Status tahapan terkini (`Belum Dimulai`, `Dalam Proses`, `Selesai`).
 
 ### 9. Entitas `notifikasi` (Pemberitahuan Sistem ke Akun Aparatur)

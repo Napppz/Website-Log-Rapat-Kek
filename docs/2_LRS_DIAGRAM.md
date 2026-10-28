@@ -242,9 +242,7 @@ KLASTER 4: TINDAK LANJUT / ACTION ITEMS (2 TABEL)
     ├── judul_tindakan : VARCHAR(255)
     ├── deskripsi_tindakan : TEXT
     ├── tenggat_waktu : TIMESTAMP
-    ├── status_tindak_lanjut : ENUM('PENDING', 'IN_PROGRESS', 'COMPLETED', 'OVERDUE')
-    ├── skala_prioritas : ENUM('LOW', 'MEDIUM', 'HIGH', 'URGENT')
-    ├── diselesaikan_pada : TIMESTAMP
+    ├── status_tindak_lanjut : ENUM('PENDING', 'IN_PROGRESS', 'COMPLETED', 'OVERDUE')    ├── diselesaikan_pada : TIMESTAMP
     ├── dibuat_pada : TIMESTAMP
     └── diperbarui_pada : TIMESTAMP
 
@@ -254,9 +252,7 @@ KLASTER 4: TINDAK LANJUT / ACTION ITEMS (2 TABEL)
     ├── **id_pengguna : VARCHAR(50) <FK> ─── (Relasi 1:N dari pengguna)
     ├── status_sebelumnya : ENUM('PENDING', 'IN_PROGRESS', 'COMPLETED', 'OVERDUE')
     ├── status_terbaru : ENUM('PENDING', 'IN_PROGRESS', 'COMPLETED', 'OVERDUE')
-    ├── catatan_progres : TEXT
-    ├── persentase_progres : INTEGER
-    └── dibuat_pada : TIMESTAMP
+    ├── catatan_progres : TEXT    └── dibuat_pada : TIMESTAMP
 
 ================================================================================
 KLASTER 5: KOMUNIKASI SISTEM (1 TABEL)

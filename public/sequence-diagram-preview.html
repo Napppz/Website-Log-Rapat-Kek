@@ -181,7 +181,7 @@ sequenceDiagram
       <div class="mb-6">
         <h2 class="text-xl font-bold text-slate-900">SD-03: Alur Monitoring & Pembaruan Status Tindak Lanjut (PIC)</h2>
         <p class="text-sm text-slate-500 mt-1">
-          Memodelkan pelaporan progres tugas oleh PIC, pembaruan persentase 100% (COMPLETED), pencatatan linimasa riwayat progres, dan notifikasi pengesahan ke pimpinan sidang.
+          Memodelkan pelaporan progres tugas oleh PIC, pembaruan status (COMPLETED), pencatatan linimasa riwayat progres, dan notifikasi pengesahan ke pimpinan biro.
         </p>
       </div>
 
@@ -195,7 +195,7 @@ sequenceDiagram
     participant DB_Act as 🗄️ tindak_lanjut
     participant DB_Log as 🗄️ riwayat_tindak_lanjut
     participant DB_Notif as 🗄️ notifikasi
-    actor Pimpinan as 👔 Pimpinan Sidang / Biro
+    actor Pimpinan as 👔 Pimpinan Biro
 
     PIC->>UI: 1. Buka Menu Matriks Tindak Lanjut Tim
     UI->>Action: 2. getActionItemsByFilter(timId, status)
@@ -203,9 +203,9 @@ sequenceDiagram
     DB_Act-->>Action: 4. Data Butir Tindak Lanjut Aktif
     Action-->>UI: 5. Render Papan Kanban / Tabel Tugas PIC
     
-    PIC->>UI: 6. Input Bukti Kinerja & Progres 100% (COMPLETED)
+    PIC->>UI: 6. Input Bukti Kinerja & Ubah Status Selesai (COMPLETED)
     PIC->>UI: 7. Klik 'Kirim Pembaruan Status'
-    UI->>Action: 8. updateActionProgress(id_tl, 100, 'COMPLETED', catatan)
+    UI->>Action: 8. updateActionProgress(id_tl, 'COMPLETED', catatan)
     
     rect rgb(255, 250, 240)
         note over Action, DB_Notif: Update Tugas & Audit Riwayat
@@ -216,7 +216,7 @@ sequenceDiagram
     end
 
     Action-->>UI: 13. Return { success: true }
-    UI-->>PIC: 14. Tampilkan Badge 'Selesai' & Indikator 100%
+    UI-->>PIC: 14. Tampilkan Badge 'Selesai'
     DB_Notif-->>Pimpinan: 15. Notifikasi: Tindak lanjut siap diverifikasi
         </div>
       </div>

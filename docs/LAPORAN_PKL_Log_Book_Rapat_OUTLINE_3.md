@@ -1,5 +1,5 @@
 # LAPORAN PRAKTIK KERJA LAPANGAN (PKL)
-## PERANCANGAN DAN PEMBUATAN APLIKASI JADWAL DAN PENGARSIPAN KEGIATAN PADA SEKRETARIAT JENDERAL DEWAN NASIONAL KAWASAN EKONOMI KHUSUS
+## PERANCANGAN DAN PEMBUATAN APLIKASI LOG BOOK KEGIATAN PADA SEKRETARIAT JENDERAL DEWAN NASIONAL KAWASAN EKONOMI KHUSUS
 
 ---
 
@@ -35,7 +35,7 @@ Dalam rangka mendukung tata kelola pemerintahan yang efektif, transparan, dan ak
 Selama ini, pengelolaan log rapat dinas, penyusunan risalah notulensi, dan pemantauan butir tindak lanjut (*action items*) yang masih dilakukan secara konvensional atau terpisah-pisah menimbulkan beberapa kendala administratif, antara lain:
 1. **Redundansi dan Ketidaksinkronan Penomoran:** Sering terjadi tumpang tindih (*overlap*) nomor registrasi agenda rapat dinas lintas biro/tim kerja karena pencatatan agenda masih menggunakan spreadsheet manual.
 2. **Keterlambatan Distribusi Risalah:** Notulensi dan arahan pimpinan rapat membutuhkan waktu berhari-hari untuk didistribusikan kepada tim kerja atau pejabat penanggung jawab (*Person-in-Charge / PIC*).
-3. **Ketiadaan Monitoring Real-Time:** Pimpinan kesulitan memantau persentase dan progres realisasi tindak lanjut hasil rapat dinas secara terpusat, sehingga batas waktu penyelesaian (*due date*) kerap terlewati (*overdue*).
+3. **Ketiadaan Monitoring Real-Time:** Pimpinan kesulitan memantau progres realisasi tindak lanjut hasil kegiatan secara terpusat, sehingga batas waktu penyelesaian (*due date*) kerap terlewati (*overdue*).
 4. **Hilangnya Jejak Audit (*Audit Trail*):** Tidak adanya rekam jejak riwayat perubahan naskah notulensi, sehingga sulit melacak siapa yang melakukan penyuntingan dan kapan revisi dilakukan.
 
 Berdasarkan permasalahan tersebut, dibangun **Sistem Informasi Log & Notula Rapat (Log_Book_Rapat KEK)** berbasis web modern yang mengintegrasikan penjadwalan rapat, pencatatan presensi, penyusunan notulensi terstruktur, pengesahan risalah, hingga pemantauan status penyelesaian tindak lanjut (*action items*) dalam satu ekosistem terpadu.
@@ -49,7 +49,7 @@ Maksud dan tujuan dari pelaksanaan Praktik Kerja Lapangan dan pembuatan proyek a
 2. **Tujuan:**
    a. Membangun aplikasi web Log_Book_Rapat KEK yang memiliki generator nomor registrasi rapat otomatis per biro/tim kerja.  
    b. Menyediakan editor notulensi digital terstruktur yang mendukung riwayat audit trail versi dokumen.  
-   c. Mengembangkan modul matriks monitoring tindak lanjut (*action items*) berbasis batas waktu (*deadline*) dan skala prioritas.  
+   c. Mengembangkan modul matriks monitoring tindak lanjut (*action items*) berbasis batas waktu (*deadline*).  
    d. Menyediakan dashboard eksekutif bagi pimpinan untuk memantau KPI penyelesaian penugasan rapat dinas secara *real-time*.
 
 ### 1.3. Metode Penelitian
@@ -72,7 +72,7 @@ Ruang lingkup proyek aplikasi Log_Book_Rapat KEK dibatasi pada:
 2. Registrasi dan penjadwalan rapat dinas baru dengan otomasi penomoran urut berbasis biro.
 3. Manajemen presensi kehadiran peserta rapat (*Invited, Present, Absent, Excused*).
 4. Pencatatan notulensi digital (agenda, dinamika sidang, arahan pimpinan, dan kesimpulan) beserta audit trail perubahannya.
-5. Perumusan dan pemantauan butir tindak lanjut (*action items*) dengan penugasan PIC, prioritas, dan tenggat waktu (*due date*).
+5. Perumusan dan pemantauan butir tindak lanjut (*action items*) dengan penugasan PIC dan tenggat waktu (*due date*).
 6. Dashboard monitoring eksekutif dengan filter periode waktu dinamis (*Hari Ini, Minggu Ini, Bulan Ini, Semua*).
 7. Pembuatan dan ekspor dokumen PDF risalah resmi ber-QR Code.
 
@@ -118,20 +118,20 @@ e. **Peramban Web Pengujian:** Google Chrome DevTools dan Microsoft Edge untuk i
 #### 3.2.2. Design Program
 Perancangan program dimodelkan secara komprehensif menggunakan notasi UML resmi:
 
-a. **Use Case Diagram ([`docs/USE_CASE_Log_Book_Rapat.drawio`](file:///c:/Users/nappz/Documents/Project%20Website/Projek%20Log%20Rapat/docs/USE_CASE_Log_Book_Rapat.drawio)):**
-   1) **Aktor Sistem:** Memodelkan 3 aktor berjenjang (*Super Admin*, *Admin Biro/Tim*, dan *Staf Pelaksana PIC*).
-   2) **Batasan Modul Sistem:** Terdiri dari 6 modul fungsional (*Autentikasi*, *Manajemen Rapat*, *Presensi Kehadiran*, *Risalah Notulensi*, *Matriks Tindak Lanjut*, dan *Dashboard Eksekutif*).
-   3) **Daftar Use Case:** Terdiri dari 27 use case terdefinisi (`UC-01` s.d `UC-27`) dengan relasi `«include»` dan `«extend»`.
+a. **Use Case Diagram ([`docs/USE_CASE_Log_Book_Kegiatan.drawio`](file:///c:/Users/nappz/Documents/Magang/Projek%20Web%20Pencatatan%20Kegiatan/docs/USE_CASE_Log_Book_Kegiatan.drawio)):**
+   1) **Aktor Sistem:** Memodelkan 3 aktor berjenjang (*Staf Pelaksana PIC*, *Admin Biro/Tim*, dan *Super Admin/Pimpinan*).
+   2) **Batasan Modul Sistem:** Terdiri dari 5 modul fungsional (*Autentikasi*, *Manajemen Log Book Kegiatan*, *Pengelolaan Pihak Terkait*, *Matriks Tindak Lanjut & PIC*, dan *Monitoring Eksekutif*).
+   3) **Daftar Use Case:** Terdiri dari 12 use case terdefinisi (`UC-01` s.d `UC-12`) yang memodelkan seluruh fungsionalitas pencatatan log book kegiatan tanpa presensi fisik dan dengan 3 status tahapan progres resmi (`Belum Dimulai`, `Dalam Proses`, `Selesai`).
 
-b. **Activity Diagram ([`docs/ACTIVITY_DIAGRAM_Log_Book_Rapat.drawio`](file:///c:/Users/nappz/Documents/Project%20Website/Projek%20Log%20Rapat/docs/ACTIVITY_DIAGRAM_Log_Book_Rapat.drawio)):**
-   Menggunakan *Swimlane Table Layout 3 Kolom* (Aktor 1 | System | Aktor 2):
-   1) **Alur Penjadwalan Rapat Dinas:** Alur pembuatan rapat oleh Admin Biro, penomoran urut otomatis oleh sistem, distribusi undangan ke pimpinan/peserta, konfirmasi presensi, hingga rapat tuntas.
-   2) **Alur Notulensi & Risalah:** Alur notulis mencatat dinamika rapat, pengajuan telaah draf ke pimpinan sidang, revisi vs persetujuan (*approval*), kompilasi PDF resmi, dan perumusan butir tindak lanjut.
-   3) **Alur Tindak Lanjut & PIC:** Alur pendelegasian butir penugasan, pengerjaan tugas oleh PIC, pelaporan status *Completed*, audit linimasa, hingga penutupan tugas (*Closed*).
+b. **Activity Diagram ([`docs/ACTIVITY_DIAGRAM_Log_Book_Kegiatan.drawio`](file:///c:/Users/nappz/Documents/Magang/Projek%20Web%20Pencatatan%20Kegiatan/docs/ACTIVITY_DIAGRAM_Log_Book_Kegiatan.drawio)):**
+   Menggunakan *Swimlane Table Layout* terstandarisasi yang memodelkan 3 proses bisnis utama:
+   1) **Alur Pencatatan & Penjadwalan Kegiatan Baru:** Alur registrasi kegiatan oleh Admin Biro, verifikasi data, penerbitan nomor registrasi unik otomatis (`REG-xxx`), status awal `Belum Dimulai`, sinkronisasi kalender, serta transisi ke `Dalam Proses` saat kegiatan dilaksanakan.
+   2) **Alur Pencatatan Dokumen & Catatan Hasil Kegiatan:** Alur pengunggahan berkas eviden (undangan, nota konsumsi, materi paparan, tautan berita/drive), input ringkasan catatan hasil kegiatan, validasi format berkas (< 10MB), penyimpanan repositori cloud terstruktur, pengaktifan unduh rekapitulasi PDF resmi, serta peninjauan pimpinan.
+   3) **Alur Monitoring Status Kegiatan & Tindak Lanjut:** Alur perumusan butir tindak lanjut (*action items*), penunjukan PIC dan tenggat waktu (*due date*), pembaruan 3 tahapan status oleh PIC (`Belum Dimulai` &rarr; `Dalam Proses` &rarr; `Selesai`), pencatatan audit log, serta agregasi KPI pada Dashboard Eksekutif.
 
 c. **Class Diagram ([`docs/CLASS_DIAGRAM_Log_Book_Rapat.drawio`](file:///c:/Users/nappz/Documents/Project%20Website/Projek%20Log%20Rapat/docs/CLASS_DIAGRAM_Log_Book_Rapat.drawio)):**
    1) **Struktur Kelas 3-Kompartemen:** Memodelkan 14 kelas entitas dengan kompartemen Nama Kelas, Atribut (PK/FK), dan Metode Layanan (*Service Methods*).
-   2) **Enumerasi Sistem:** 5 enumerasi tipe data status (`PeranPengguna`, `StatusRapat`, `StatusKehadiran`, `StatusTindakLanjut`, `PrioritasTindakLanjut`).
+   2) **Enumerasi Sistem:** 4 enumerasi tipe data status (`PeranPengguna`, `StatusKegiatan`, `StatusKehadiran`, `StatusTindakLanjut`).
    3) **Relasi Antar-Kelas:** Menerapkan relasi komposisi (`*--`), asosiasi berarah (`-->`), dan kardinalitas multiplisitas (`1`, `0..1`, `1..*`).
 
 d. **Sequence Diagram ([`docs/SEQUENCE_DIAGRAM_Log_Book_Rapat.drawio`](file:///c:/Users/nappz/Documents/Project%20Website/Projek%20Log%20Rapat/docs/SEQUENCE_DIAGRAM_Log_Book_Rapat.drawio)):**
@@ -158,22 +158,22 @@ c. **Middleware Otorisasi:** Menggunakan NextAuth.js v5 pada `middleware.ts` unt
 
 #### 3.2.4. Database* (Perancangan Basis Data Relasional)
 Perancangan basis data relasional disusun untuk memenuhi Bentuk Normal Ketiga (3NF) guna mencegah anomali:
-a. **Entity Relationship Diagram (ERD) ([`docs/ERD_Log_Book_Rapat.drawio`](file:///c:/Users/nappz/Documents/Project%20Website/Projek%20Log%20Rapat/docs/ERD_Log_Book_Rapat.drawio)):**
-   1) **ERD Notasi Chen Resmi (Tab 1):** Menampilkan 14 Entitas Persegi Panjang, 18 Belah Ketupat Relasi, atribut elips dengan garis bawah untuk Primary Key (`PK`), dan kardinalitas berpanah (`1:N`, `1:1`, `M:N`).
-   2) **ERD Notasi Crow's Foot Relasional Modern (Tab 2):** Menampilkan 14 tabel dengan kolom tipe data, penanda PK/FK, dan notasi kaki gagak (*crow's foot*).
-b. **Logical Record Structure (LRS) ([`docs/LRS_Log_Book_Rapat.drawio`](file:///c:/Users/nappz/Documents/Project%20Website/Projek%20Log%20Rapat/docs/LRS_Log_Book_Rapat.drawio)):**
-   Memetakan struktur rekaman logis 14 tabel dengan penempatan Foreign Key yang konsisten dan kardinalitas tepat.
+a. **Entity Relationship Diagram (ERD) ([`docs/ERD_Log_Book_Kegiatan.drawio`](file:///c:/Users/nappz/Documents/Magang/Projek%20Web%20Pencatatan%20Kegiatan/docs/ERD_Log_Book_Kegiatan.drawio)):**
+   1) **ERD Notasi Chen Resmi:** Menampilkan 9 Entitas Persegi Panjang aktif, relasi Belah Ketupat, atribut elips dengan garis bawah untuk Primary Key (`PK`), dan kardinalitas berpanah (`1:N`, `1:1`).
+   2) **Eliminasi Entitas Kosong:** Tabel-tabel yang tidak memiliki data riil (0 rows seperti `notulen_kegiatan`, `komentar_notulen`, `riwayat_notulen`, `penomoran_kegiatan_biro`, dan `kegiatan_biro`) dieliminasi.
+b. **Logical Record Structure (LRS) ([`docs/LRS_Log_Book_Rapat.drawio`](file:///c:/Users/nappz/Documents/Magang/Projek%20Web%20Pencatatan%20Kegiatan/docs/LRS_Log_Book_Rapat.drawio)):**
+   Memetakan struktur rekaman logis tabel dengan penempatan Foreign Key yang konsisten dan kardinalitas tepat.
 c. **Spesifikasi Basis Data (Data Dictionary):**
-   Memuat rincian struktur field, tipe data, dan keterangan eksplisit untuk setiap *Primary Key* (PK) dan *Foreign Key* (FK) pada 8 tabel inti skema aplikasi (Tabel III.1 s/d III.8):
+   Memuat rincian struktur field, tipe data, dan keterangan eksplisit untuk setiap *Primary Key* (PK) dan *Foreign Key* (FK) pada tabel aktif skema aplikasi (Tabel III.1 s/d III.8):
    1) `pengguna` (Tabel III.1: `id_pengguna` [PK], `id_biro` [FK Biro], `id_tim` [FK Tim])
    2) `biro` (Tabel III.2: `id_biro` [PK Unit Eselon II])
    3) `tim_biro` (Tabel III.3: `id_tim` [PK], `id_biro` [FK Biro Induk])
-   4) `rapat` (Tabel III.4: `id_rapat` [PK], `id_biro` [FK Pemrakarsa], `id_tim` [FK Tim], `id_pengguna` [FK Pimpinan Rapat], `id_notulis` [FK Notulis])
-   5) `peserta_rapat` (Tabel III.5: `id_peserta` [PK], `id_rapat` [FK Rapat], `id_pengguna` [FK Peserta])
-   6) `notulen_rapat` (Tabel III.6: `id_notulen` [PK], `id_rapat` [FK Rapat Relasi 1:1])
-   7) `tindak_lanjut` (Tabel III.7: `id_tindak_lanjut` [PK], `id_rapat` [FK Rapat], `id_biro` [FK Biro PJ], `id_tim` [FK Tim PJ], `id_pengguna` [FK Staf PIC])
-   8) `lampiran_rapat` (Tabel III.8: `id_lampiran` [PK], `id_rapat` [FK Rapat Pemilik Berkas])
-   *Serta 6 tabel pendukung pelengkap 3NF: `penomoran_rapat_biro`, `rapat_biro`, `komentar_notulen`, `riwayat_notulen`, `riwayat_tindak_lanjut`, dan `notifikasi`.*
+   4) `kegiatan` (Tabel III.4: `id_rapat` [PK], `id_biro` [FK Pemrakarsa], `id_tim` [FK Tim], `id_pengguna` [FK Pimpinan Kegiatan], `id_notulis` [FK Pencatat Log])
+   5) `peserta_kegiatan` (Tabel III.5: `id_peserta` [PK], `id_rapat` [FK Kegiatan], `id_pengguna` [FK Aparatur/Peserta Terkait])
+   6) `riwayat_tindak_lanjut` (Tabel III.6: `id_riwayat` [PK], `id_tindak_lanjut` [FK Tindak Lanjut], `id_pengguna` [FK Aparatur PIC])
+   7) `tindak_lanjut` (Tabel III.7: `id_tindak_lanjut` [PK], `id_rapat` [FK Kegiatan], `id_biro` [FK Biro PJ], `id_tim` [FK Tim PJ], `id_pengguna` [FK Staf Aparatur PIC])
+   8) `lampiran_kegiatan` (Tabel III.8: `id_lampiran` [PK], `id_rapat` [FK Kegiatan Pemilik Berkas])
+   *Serta entitas pendukung aktif `notifikasi` (Tabel III.9: notifikasi pesan sistem).*
 
 ### 3.3. Evaluasi Program (Black Box Testing)
 Pengujian sistem dilakukan menggunakan metode **Black Box Testing** untuk memverifikasi fungsionalitas tombol, validasi formulir, dan integritas transaksi basis data:

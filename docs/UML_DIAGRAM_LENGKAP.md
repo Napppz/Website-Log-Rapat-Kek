@@ -35,7 +35,7 @@ Dalam prinsip pemodelan basis data relasional akademik, ketika Entitas Induk (*P
 * **Lokasi File Draw.io Resmi (Multi-Diagram Suite):**
   - [`docs/ERD_Log_Book_Rapat.drawio`](file:///c:/Users/nappz/Documents/Project%20Website/Projek%20Log%20Rapat/docs/ERD_Log_Book_Rapat.drawio) (Tab 1: Chen 14 Entitas, Tab 2: Crow's Foot Relasional)
   - [`docs/LRS_Log_Book_Rapat.drawio`](file:///c:/Users/nappz/Documents/Project%20Website/Projek%20Log%20Rapat/docs/LRS_Log_Book_Rapat.drawio) (Logical Record Structure 14 Entitas 3NF)
-  - [`docs/USE_CASE_Log_Book_Rapat.drawio`](file:///c:/Users/nappz/Documents/Project%20Website/Projek%20Log%20Rapat/docs/USE_CASE_Log_Book_Rapat.drawio) (3 Aktor, 6 Modul, 27 Use Case Lengkap)
+  - [`docs/USE_CASE_Log_Book_Rapat.drawio`](file:///c:/Users/nappz/Documents/Project%20Website/Projek%20Log%20Rapat/docs/USE_CASE_Log_Book_Rapat.drawio) (3 Aktor, 12 Use Case Terstandar)
   - [`docs/CLASS_DIAGRAM_Log_Book_Rapat.drawio`](file:///c:/Users/nappz/Documents/Project%20Website/Projek%20Log%20Rapat/docs/CLASS_DIAGRAM_Log_Book_Rapat.drawio) (14 Kelas 3-Kompartemen, 5 Enum)
   - [`docs/ACTIVITY_DIAGRAM_Log_Book_Rapat.drawio`](file:///c:/Users/nappz/Documents/Project%20Website/Projek%20Log%20Rapat/docs/ACTIVITY_DIAGRAM_Log_Book_Rapat.drawio) (Tab 1 s.d Tab 3 Swimlane Table)
   - [`docs/SEQUENCE_DIAGRAM_Log_Book_Rapat.drawio`](file:///c:/Users/nappz/Documents/Project%20Website/Projek%20Log%20Rapat/docs/SEQUENCE_DIAGRAM_Log_Book_Rapat.drawio) (SD-01 s.d SD-03 Interaksi Kronologis)
@@ -84,13 +84,6 @@ classDiagram
         OVERDUE
     }
 
-    class PrioritasTindakLanjut {
-        <<enumeration>>
-        LOW
-        MEDIUM
-        HIGH
-        URGENT
-    }
 
     %% Klaster 1: Organisasi & Akun
     class Biro {
@@ -251,9 +244,7 @@ classDiagram
         +String judul_tindakan
         +String deskripsi_tindakan
         +DateTime tenggat_waktu
-        +StatusTindakLanjut status_tindak_lanjut
-        +PrioritasTindakLanjut skala_prioritas
-        +DateTime diselesaikan_pada
+        +StatusTindakLanjut status_tindak_lanjut        +DateTime diselesaikan_pada
         +DateTime dibuat_pada
         +DateTime diperbarui_pada
         +perbaruiStatus()
@@ -267,9 +258,7 @@ classDiagram
         +String id_pengguna FK
         +StatusTindakLanjut status_sebelumnya
         +StatusTindakLanjut status_terbaru
-        +String catatan_progres
-        +Int persentase_progres
-        +DateTime dibuat_pada
+        +String catatan_progres        +DateTime dibuat_pada
         +tambahLogProgres()
     }
 
@@ -424,19 +413,19 @@ sequenceDiagram
     DB_Act-->>Action: List Tindak Lanjut Aktif
     Action-->>UI: Render kartu Kanban / Tabel Tugas
 
-    PIC->>UI: Klik 'Update Progres': Persentase 100%, Status 'COMPLETED', Catatan
-    UI->>Action: updateActionProgress(id_tindak_lanjut, 100, 'COMPLETED', catatan)
+    PIC->>UI: Klik 'Update Progres': Status 'COMPLETED', Catatan
+    UI->>Action: updateActionProgress(id_tindak_lanjut, 'COMPLETED', catatan)
     
     rect rgb(255, 250, 240)
         note over Action, DB_Log: Update Tindakan & Catat Riwayat
         Action->>DB_Act: UPDATE tindak_lanjut SET status = 'COMPLETED', diselesaikan_pada = NOW()
         DB_Act-->>Action: SUCCESS
-        Action->>DB_Log: INSERT INTO riwayat_tindak_lanjut (id_tindak_lanjut, id_pengguna, persentase: 100, status: 'COMPLETED')
+        Action->>DB_Log: INSERT INTO riwayat_tindak_lanjut (id_tindak_lanjut, id_pengguna, status: 'COMPLETED')
         Action->>DB_Notif: INSERT INTO notifikasi (pimpinanId, "Tugas Telah Diselesaikan oleh PIC")
     end
 
     Action-->>UI: Return { success: true }
-    UI-->>PIC: Tampilkan Badge Hijau 'Selesai' & Grafik Progres 100%
+    UI-->>PIC: Tampilkan Badge Hijau 'Selesai'
 ```
 
 ---

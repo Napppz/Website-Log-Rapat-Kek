@@ -224,7 +224,6 @@ class TindakLanjut {
   + String deskripsi_tindakan
   + DateTime tenggat_waktu
   + StatusTindakLanjut status_tindak_lanjut
-  + PrioritasTindakLanjut skala_prioritas
   + DateTime diselesaikan_pada
   + DateTime dibuat_pada
   + DateTime diperbarui_pada
@@ -241,7 +240,6 @@ class RiwayatTindakLanjut {
   + StatusTindakLanjut status_sebelumnya
   + StatusTindakLanjut status_terbaru
   + String catatan_progres
-  + Int persentase_progres
   + DateTime dibuat_pada
   --
   + tambahLogProgres()

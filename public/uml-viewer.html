@@ -440,7 +440,7 @@ flowchart LR
                   <div><span class="mono bg-slate-100 text-slate-700 px-1.5 py-0.5 rounded">id_tindak_lanjut &rarr; tindak_lanjut</span></div>
                   <div><span class="mono bg-slate-100 text-slate-700 px-1.5 py-0.5 rounded">id_pengguna &rarr; pengguna</span></div>
                 </td>
-                <td class="py-3.5 px-4 text-slate-600">Catatan log berkala perkembangan tugas tindak lanjut dan persentase progres (0-100%).</td>
+                <td class="py-3.5 px-4 text-slate-600">Catatan log berkala perkembangan dan pembaruan status tugas tindak lanjut.</td>
               </tr>
 
               <!-- Klaster 5 -->
@@ -674,7 +674,7 @@ classDiagram
         +String deskripsi_tindakan
         +DateTime tenggat_waktu
         +StatusTindakLanjut status_tindak_lanjut
-        +PrioritasTindakLanjut skala_prioritas
+        
         +DateTime diselesaikan_pada
         +DateTime dibuat_pada
         +DateTime diperbarui_pada
@@ -690,7 +690,7 @@ classDiagram
         +StatusTindakLanjut status_sebelumnya
         +StatusTindakLanjut status_terbaru
         +String catatan_progres
-        +Int persentase_progres
+        
         +DateTime dibuat_pada
         +tambahLogProgres()
     }
@@ -917,8 +917,8 @@ erDiagram
 9. notulen_rapat (*id_notulen &lt;PK&gt;, **id_rapat &lt;FK, UK&gt;, agenda_pembahasan, hasil_pembahasan, poin_keputusan, kesimpulan)
 10. komentar_notulen (*id_komentar &lt;PK&gt;, **id_rapat &lt;FK&gt;, **id_pengguna &lt;FK&gt;, **id_induk &lt;FK&gt;, isi_komentar, sudah_diselesaikan)
 11. riwayat_notulen (*id_riwayat &lt;PK&gt;, **id_rapat &lt;FK&gt;, **id_pengguna &lt;FK&gt;, tipe_perubahan, nama_kolom, nilai_lama, nilai_baru)
-12. tindak_lanjut (*id_tindak_lanjut &lt;PK&gt;, **id_rapat &lt;FK&gt;, **id_biro &lt;FK&gt;, **id_tim &lt;FK&gt;, **id_pengguna &lt;FK&gt;, judul_tindakan, tenggat_waktu, status_tindak_lanjut, skala_prioritas)
-13. riwayat_tindak_lanjut (*id_riwayat &lt;PK&gt;, **id_tindak_lanjut &lt;FK&gt;, **id_pengguna &lt;FK&gt;, status_terbaru, catatan_progres, persentase_progres)
+12. tindak_lanjut (*id_tindak_lanjut &lt;PK&gt;, **id_rapat &lt;FK&gt;, **id_biro &lt;FK&gt;, **id_tim &lt;FK&gt;, **id_pengguna &lt;FK&gt;, judul_tindakan, tenggat_waktu, status_tindak_lanjut)
+13. riwayat_tindak_lanjut (*id_riwayat &lt;PK&gt;, **id_tindak_lanjut &lt;FK&gt;, **id_pengguna &lt;FK&gt;, status_terbaru, catatan_progres)
 14. notifikasi (*id_notifikasi &lt;PK&gt;, **id_pengguna &lt;FK&gt;, judul, pesan, tipe, tautan, sudah_dibaca)
           </pre>
         </div>
@@ -1154,7 +1154,7 @@ class TindakLanjut {
   + String deskripsi_tindakan
   + DateTime tenggat_waktu
   + StatusTindakLanjut status_tindak_lanjut
-  + PrioritasTindakLanjut skala_prioritas
+  
   + DateTime diselesaikan_pada
   + DateTime dibuat_pada
   + DateTime diperbarui_pada
@@ -1171,7 +1171,7 @@ class RiwayatTindakLanjut {
   + StatusTindakLanjut status_sebelumnya
   + StatusTindakLanjut status_terbaru
   + String catatan_progres
-  + Int persentase_progres
+  
   + DateTime dibuat_pada
   --
   + tambahLogProgres()

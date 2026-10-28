@@ -41,7 +41,7 @@ b. Otomasi penomoran urut rapat dinas berbasis kode tim kerja pemrakarsa (*Biro 
 c. Pengelolaan daftar kehadiran dan konfirmasi presensi peserta rapat dinas.  
 d. Penyusunan risalah notulensi rapat terstruktur (agenda, dinamika sidang, arahan pimpinan, dan kesimpulan).  
 e. Pengesahan (*approval*) dan penerbitan naskah notulensi resmi.  
-f. Perumusan dan pemantauan butir tindak lanjut (*action items*) dengan penugasan PIC, prioritas, dan tenggat waktu (*due date*).  
+f. Perumusan dan pemantauan butir tindak lanjut (*action items*) dengan penugasan PIC dan tenggat waktu (*due date*).  
 g. Pelacakan (*tracking*) status progres tindak lanjut (*Pending*, *In Progress*, *Completed*, *Overdue*).  
 h. Pencatatan log riwayat pembaruan progres dan jejak audit versi notulensi.  
 i. Dashboard monitoring eksekutif dengan filter periode dinamis (*Hari Ini, Minggu Ini, Bulan Ini, Semua Periode*).  
@@ -176,7 +176,7 @@ Alur ini memodelkan proses notulis mencatat jalannya rapat dinas, penyimpanan dr
 |                                    |                            │              │                   |
 |                                    |                          (Tidak)         (Ya)                 |
 |                                    |                            │              │                   |
-|                                    |                          [Arsip]    [rumuskan butir PIC]      |
+|                                    |                          [Log Book]    [rumuskan butir PIC]      |
 |  [notifikasi proses rapat tuntas] <┼───────────────────────────────────────────┘                   |
 |         │                          |                                                               |
 |   (◉ End)                          |                                                               |
@@ -230,7 +230,7 @@ Fitur utama yang diimplementasikan pada website Log_Book_Rapat KEK meliputi:
 1. **Formulir Penjadwalan Rapat Dinas:** Registrasi rapat dengan penentuan tim kerja, tanggal, waktu, lokasi fisik/virtual, pimpinan rapat, dan notulis.
 2. **Generator Nomor Urut Rapat Otomatis:** Perhitungan otomatis nomor agenda rapat dinas per biro/tim kerja (*misal: INV-015*).
 3. **Editor Risalah Notulensi Terstruktur:** Antarmuka khusus pencatatan poin pembahasan, dinamika diskusi, arahan pimpinan, dan kesimpulan rapat.
-4. **Matriks Tindak Lanjut (*Action Items Tracker*):** Manajemen butir instruksi kerja yang dilengkapi target tanggal selesai (*due date*), skala prioritas (*Urgent, High, Medium, Low*), dan penugasan staf PIC.
+4. **Matriks Tindak Lanjut (*Action Items Tracker*):** Manajemen butir instruksi kerja yang dilengkapi target tanggal selesai (*due date*) dan penugasan staf PIC.
 5. **Dashboard Monitoring Kinerja Eksekutif:** Ringkasan capaian kinerja tim kerja KEK dengan visualisasi kartu statistik, bar progres, dan filter periode waktu (*Hari Ini, Minggu Ini, Bulan Ini, Semua*).
 6. **Modul Presensi Kehadiran:** Pencatatan dan rekap kehadiran peserta rapat (*Invited, Present, Absent, Excused*).
 7. **Jejak Audit & Riwayat Versi (*Audit Trail*):** Pencatatan riwayat setiap kali notulensi disunting dan catatan log saat status tindak lanjut diperbarui.
@@ -403,9 +403,8 @@ Berikut kamus data terperinci untuk tabel-tabel utama yang membentuk operasional
 | 5 | `id_pengguna` | Varchar(50) | Foreign Key &rarr; `pengguna.id_pengguna` (Staf PIC) |
 | 6 | `judul_tindak_lanjut` | Varchar(255) | Uraian instruksi tugas pekerjaan |
 | 7 | `status_tindak_lanjut` | Enum | Status (`PENDING`, `IN_PROGRESS`, `COMPLETED`, `OVERDUE`) |
-| 8 | `prioritas` | Enum | Tingkat urgensi (`LOW`, `MEDIUM`, `HIGH`, `URGENT`) |
-| 9 | `tenggat_waktu` | Timestamp | Batas akhir penyelesaian (*Due Date*) |
-| 10 | `diselesaikan_pada` | Timestamp | Waktu tugas dituntaskan oleh PIC |
+| 8 | `tenggat_waktu` | Timestamp | Batas akhir penyelesaian (*Due Date*) |
+| 9 | `diselesaikan_pada` | Timestamp | Waktu tugas dituntaskan oleh PIC |
 
 #### Tabel 7: `peserta_rapat` (Daftar Undangan & Kehadiran)
 | No | Nama Field | Tipe Data | Keterangan |

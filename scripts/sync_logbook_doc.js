@@ -1,9 +1,39 @@
 const fs = require('fs');
 
+async function getValidAccessToken() {
+  const keys = JSON.parse(fs.readFileSync('C:/Users/nappz/.config/google-drive-mcp/gcp-oauth.keys.json', 'utf8'));
+  const tokens = JSON.parse(fs.readFileSync('C:/Users/nappz/.config/google-drive-mcp/tokens.json', 'utf8'));
+  const account = tokens.accounts[tokens.defaultAccount];
+
+  const clientId = keys.installed?.client_id || keys.web?.client_id;
+  const clientSecret = keys.installed?.client_secret || keys.web?.client_secret;
+
+  const params = new URLSearchParams();
+  params.append('client_id', clientId);
+  params.append('client_secret', clientSecret);
+  params.append('refresh_token', account.refreshToken);
+  params.append('grant_type', 'refresh_token');
+
+  const res = await fetch('https://oauth2.googleapis.com/token', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    body: params
+  });
+
+  const data = await res.json();
+  if (data.access_token) {
+    account.accessToken = data.access_token;
+    account.expiryDate = Date.now() + (data.expires_in * 1000);
+    account.lastRefreshedAt = Date.now();
+    fs.writeFileSync('C:/Users/nappz/.config/google-drive-mcp/tokens.json', JSON.stringify(tokens, null, 2));
+    return data.access_token;
+  }
+  return account.accessToken;
+}
+
 async function main() {
-  const tokenData = JSON.parse(fs.readFileSync('C:/Users/nappz/.config/google-drive-mcp/tokens.json', 'utf8'));
-  const accessToken = tokenData.accounts[tokenData.defaultAccount].accessToken;
   const docId = '1hHZ7iRT0eZCBlff_KHBPtp69n0C5TTlWxDx06RX8kM0';
+  const accessToken = await getValidAccessToken();
 
   console.log('Fetching live document...');
   let res = await fetch('https://docs.googleapis.com/v1/documents/' + docId, {
@@ -14,422 +44,118 @@ async function main() {
   console.log('Fetched document revision:', doc.revisionId);
 
   const content = doc.body.content;
-  const tables = [];
-  content.forEach((el, idx) => {
-    if (el.table) {
-      tables.push({
-        elementIndex: idx,
-        table: el.table
-      });
-    }
-  });
 
-  console.log('Total tables in doc:', tables.length);
-
-  function findHeading(c, tableIdx) {
-    for (let i = tableIdx - 1; i >= Math.max(0, tableIdx - 5); i--) {
-      const p = c[i]?.paragraph;
-      if (p) {
-        const text = p.elements?.map(e => e.textRun?.content || '').join('').trim();
-        if (text.startsWith('MINGGU KE')) {
-          return { index: i, text, p };
-        }
-      }
-    }
-    return null;
-  }
-
-  // Define target data for tables 4 through 14 (indices 3 through 13)
-  // Formatted with leading newlines matching the exact structure above 15 October:
-  // Col 1: \n\nHari,\nTanggal Bulan 2026
-  // Col 2: \n\n8:00 – 16:30
-  // Col 3: \nKegiatan (concise, natural single sentence matching earlier rows)
   const updates = {
-    // Table 4 (Week 4 Month 1): update row 4 & 5
-    3: {
-      rows: {
-        4: {
-          col1: '\n\nSenin,\n19 Oktober 2026',
-          col2: '\n\n8:00 – 16:30',
-          col3: '\nPengarahan dan koordinasi perancangan sistem Log Book Rapat KEK bersama mentor'
-        },
-        5: {
-          col1: '\n\nSelasa,\n20 Oktober 2026',
-          col2: '\n\n8:00 – 16:30',
-          col3: '\nObservasi dan identifikasi kebutuhan sistem notula rapat dinas'
-        }
-      }
+    // Table at element [26] (Minggu ke-4 Bulan ke-1 - September)
+    26: {
+      4: '\nPengarahan dan koordinasi perancangan Aplikasi Log Book Kegiatan bersama mentor',
+      5: '\nObservasi dan identifikasi alur kerja penjadwalan serta pengarsipan berkas kegiatan kedinasan'
     },
-    // Table 5 (Week 1 Month 2 - Oktober)
-    4: {
-      heading: 'MINGGU KE 1 (Satu)\tBULAN KE 2 (Oktober)',
-      rows: {
-        1: {
-          col1: '\n\nRabu,\n21 Oktober 2026',
-          col2: '\n\n8:00 – 16:30',
-          col3: '\nAnalisis kebutuhan fungsional aplikasi Log Book Notula Rapat KEK'
-        },
-        2: {
-          col1: '\n\nKamis,\n22 Oktober 2026',
-          col2: '\n\n8:00 – 16:30',
-          col3: '\nMenyusun spesifikasi kebutuhan sistem dan hak akses pengguna'
-        },
-        3: {
-          col1: '\n\nJumat,\n23 Oktober 2026',
-          col2: '\n\n8:00 – 16:30',
-          col3: '\nWFH'
-        },
-        4: {
-          col1: '\n\nSenin,\n26 Oktober 2026',
-          col2: '\n\n8:00 – 16:30',
-          col3: '\nMerancang Use Case Diagram sistem Log Book Rapat'
-        },
-        5: {
-          col1: '\n\nSelasa,\n27 Oktober 2026',
-          col2: '\n\n8:00 – 16:30',
-          col3: '\nMerancang Activity Diagram alur persidangan dan notulensi rapat'
-        }
-      }
+    // Table at element [33] (Minggu ke-1 Bulan ke-2 - Oktober)
+    33: {
+      1: '\nAnalisis kebutuhan fungsional Aplikasi Log Book Kegiatan KEK',
+      2: '\nMenyusun spesifikasi kebutuhan sistem serta pembagian hak akses pengguna multi-role',
+      3: '\nWFH',
+      4: '\nMerancang Use Case Diagram sistem log book kegiatan kedinasan',
+      5: '\nMerancang Activity Diagram alur penjadwalan dan pengarsipan dokumen kegiatan'
     },
-    // Table 6 (Week 2 Month 2 - Oktober)
-    5: {
-      heading: 'MINGGU KE 2 (Dua)\tBULAN KE 2 (Oktober)',
-      rows: {
-        1: {
-          col1: '\n\nRabu,\n28 Oktober 2026',
-          col2: '\n\n8:00 – 16:30',
-          col3: '\nMerancang Entity Relationship Diagram (ERD) basis data sistem'
-        },
-        2: {
-          col1: '\n\nKamis,\n29 Oktober 2026',
-          col2: '\n\n8:00 – 16:30',
-          col3: '\nMelakukan normalisasi basis data dan perancangan relasi tabel LRS'
-        },
-        3: {
-          col1: '\n\nJumat,\n30 Oktober 2026',
-          col2: '\n\n8:00 – 16:30',
-          col3: '\nWFH'
-        },
-        4: {
-          col1: '\n\nSenin,\n2 November 2026',
-          col2: '\n\n8:00 – 16:30',
-          col3: '\nSetup basis data PostgreSQL dan konfigurasi Prisma ORM'
-        },
-        5: {
-          col1: '\n\nSelasa,\n3 November 2026',
-          col2: '\n\n8:00 – 16:30',
-          col3: '\nMembuat skema tabel basis data dan migrasi database'
-        }
-      }
+    // Table at element [40] (Minggu ke-2 Bulan ke-2 - Oktober)
+    40: {
+      1: '\nMerancang Entity Relationship Diagram (ERD) notasi Chen basis data kegiatan',
+      2: '\nMelakukan normalisasi basis data dan perancangan Logical Record Structure (LRS)',
+      3: '\nWFH',
+      4: '\nSetup basis data serverless PostgreSQL dan konfigurasi Prisma ORM',
+      5: '\nMembuat skema tabel basis data kegiatan serta eksekusi migrasi database'
     },
-    // Table 7 (Week 3 Month 2 - November)
-    6: {
-      heading: 'MINGGU KE 3 (Tiga)\tBULAN KE 2 (November)',
-      rows: {
-        1: {
-          col1: '\n\nRabu,\n4 November 2026',
-          col2: '\n\n8:00 – 16:30',
-          col3: '\nMembuat antarmuka dan modul autentikasi login pengguna'
-        },
-        2: {
-          col1: '\n\nKamis,\n5 November 2026',
-          col2: '\n\n8:00 – 16:30',
-          col3: '\nMenerapkan pembatasan hak akses halaman berbasis peran pengguna'
-        },
-        3: {
-          col1: '\n\nJumat,\n6 November 2026',
-          col2: '\n\n8:00 – 16:30',
-          col3: '\nWFH'
-        },
-        4: {
-          col1: '\n\nSenin,\n9 November 2026',
-          col2: '\n\n8:00 – 16:30',
-          col3: '\nMembuat modul manajemen data unit kerja dan tim biro'
-        },
-        5: {
-          col1: '\n\nSelasa,\n10 November 2026',
-          col2: '\n\n8:00 – 16:30',
-          col3: '\nMembuat modul manajemen data pengguna sistem'
-        }
-      }
+    // Table at element [47] (Minggu ke-3 Bulan ke-2 - November)
+    47: {
+      1: '\nMengembangkan antarmuka dan modul autentikasi login akun pengguna',
+      2: '\nMenerapkan proteksi routing dan otorisasi hak akses halaman berbasis peran pengguna',
+      3: '\nWFH',
+      4: '\nMembuat modul manajemen data master biro dan unit kerja kedinasan',
+      5: '\nMembuat modul manajemen data pengguna sistem dan penugasan tim kerja biro'
     },
-    // Table 8 (Week 4 Month 2 - November)
-    7: {
-      heading: 'MINGGU KE 4 (Empat)\tBULAN KE 2 (November)',
-      rows: {
-        1: {
-          col1: '\n\nRabu,\n11 November 2026',
-          col2: '\n\n8:00 – 16:30',
-          col3: '\nMembuat formulir penjadwalan rapat dinas baru'
-        },
-        2: {
-          col1: '\n\nKamis,\n12 November 2026',
-          col2: '\n\n8:00 – 16:30',
-          col3: '\nMembuat fitur generate nomor registrasi rapat dinas otomatis'
-        },
-        3: {
-          col1: '\n\nJumat,\n13 November 2026',
-          col2: '\n\n8:00 – 16:30',
-          col3: '\nWFH'
-        },
-        4: {
-          col1: '\n\nSenin,\n16 November 2026',
-          col2: '\n\n8:00 – 16:30',
-          col3: '\nMembuat tampilan kalender rapat dan daftar riwayat rapat dinas'
-        },
-        5: {
-          col1: '\n\nSelasa,\n17 November 2026',
-          col2: '\n\n8:00 – 16:30',
-          col3: '\nPengujian fungsi penjadwalan rapat dan penyimpanan data rapat'
-        }
-      }
+    // Table at element [54] (Minggu ke-4 Bulan ke-2 - November)
+    54: {
+      1: '\nMembuat formulir registrasi dan penginputan jadwal kegiatan kedinasan',
+      2: '\nMengembangkan generator kode registrasi dan penomoran agenda kegiatan otomatis',
+      3: '\nWFH',
+      4: '\nMembuat tampilan kalender agenda serta daftar riwayat kegiatan kedinasan',
+      5: '\nPengujian fungsional modul penjadwalan dan penyimpanan data kegiatan'
     },
-    // Table 9 (Week 1 Month 3 - November)
-    8: {
-      heading: 'MINGGU KE 1 (Satu)\tBULAN KE 3 (November)',
-      rows: {
-        1: {
-          col1: '\n\nRabu,\n18 November 2026',
-          col2: '\n\n8:00 – 16:30',
-          col3: '\nMembuat modul pengelolaan daftar peserta rapat dinas'
-        },
-        2: {
-          col1: '\n\nKamis,\n19 November 2026',
-          col2: '\n\n8:00 – 16:30',
-          col3: '\nMembuat sistem presensi kehadiran rapat secara digital'
-        },
-        3: {
-          col1: '\n\nJumat,\n20 November 2026',
-          col2: '\n\n8:00 – 16:30',
-          col3: '\nWFH'
-        },
-        4: {
-          col1: '\n\nSenin,\n23 November 2026',
-          col2: '\n\n8:00 – 16:30',
-          col3: '\nPenerapan validasi presensi dan penguncian kehadiran peserta'
-        },
-        5: {
-          col1: '\n\nSelasa,\n24 November 2026',
-          col2: '\n\n8:00 – 16:30',
-          col3: '\nMembuat rekapitulasi kehadiran dan persentase kehadiran rapat'
-        }
-      }
+    // Table at element [61] (Minggu ke-1 Bulan ke-3 - November)
+    61: {
+      1: '\nMembuat modul pengelolaan daftar pihak dan aparatur terkait kegiatan kedinasan',
+      2: '\nMengembangkan modul pengarsipan berkas dan dokumen digital kegiatan',
+      3: '\nWFH',
+      4: '\nPenerapan validasi unggah dokumen arsip dan tautan berkas pendukung kegiatan',
+      5: '\nMembuat rekapitulasi data arsip berkas kegiatan dan statistik kegiatan biro'
     },
-    // Table 10 (Week 2 Month 3 - November)
-    9: {
-      heading: 'MINGGU KE 2 (Dua)\tBULAN KE 3 (November)',
-      rows: {
-        1: {
-          col1: '\n\nRabu,\n25 November 2026',
-          col2: '\n\n8:00 – 16:30',
-          col3: '\nMembuat antarmuka editor pencatatan notula rapat'
-        },
-        2: {
-          col1: '\n\nKamis,\n26 November 2026',
-          col2: '\n\n8:00 – 16:30',
-          col3: '\nMengembangkan fungsi penyimpanan draf naskah notulensi rapat'
-        },
-        3: {
-          col1: '\n\nJumat,\n27 November 2026',
-          col2: '\n\n8:00 – 16:30',
-          col3: '\nWFH'
-        },
-        4: {
-          col1: '\n\nSenin,\n30 November 2026',
-          col2: '\n\n8:00 – 16:30',
-          col3: '\nMembuat alur telaah dan verifikasi pengesahan notula oleh pimpinan'
-        },
-        5: {
-          col1: '\n\nSelasa,\n1 Desember 2026',
-          col2: '\n\n8:00 – 16:30',
-          col3: '\nMembuat fitur catatan telaah dan persetujuan notula rapat dinas'
-        }
-      }
+    // Table at element [68] (Minggu ke-2 Bulan ke-3 - November)
+    68: {
+      1: '\nMembuat antarmuka editor pencatatan ringkasan dan hasil pelaksanaan kegiatan',
+      2: '\nMengembangkan fungsi penyimpanan draf catatan dan audit trail arsip kegiatan',
+      3: '\nWFH',
+      4: '\nMembuat alur verifikasi dan telaah berkas hasil kegiatan oleh pimpinan',
+      5: '\nMengembangkan fitur catatan telaah pimpinan dan pengesahan status kegiatan'
     },
-    // Table 11 (Week 3 Month 3 - Desember)
-    10: {
-      heading: 'MINGGU KE 3 (Tiga)\tBULAN KE 3 (Desember)',
-      rows: {
-        1: {
-          col1: '\n\nRabu,\n2 Desember 2026',
-          col2: '\n\n8:00 – 16:30',
-          col3: '\nMembuat matriks monitoring tindak lanjut arahan rapat dinas'
-        },
-        2: {
-          col1: '\n\nKamis,\n3 Desember 2026',
-          col2: '\n\n8:00 – 16:30',
-          col3: '\nMembuat formulir penetapan PIC penugasan dan tenggat waktu tugas'
-        },
-        3: {
-          col1: '\n\nJumat,\n4 Desember 2026',
-          col2: '\n\n8:00 – 16:30',
-          col3: '\nWFH'
-        },
-        4: {
-          col1: '\n\nSenin,\n7 Desember 2026',
-          col2: '\n\n8:00 – 16:30',
-          col3: '\nMembuat fitur pembaruan status progres tindak lanjut oleh PIC'
-        },
-        5: {
-          col1: '\n\nSelasa,\n8 Desember 2026',
-          col2: '\n\n8:00 – 16:30',
-          col3: '\nMembuat notifikasi dan indikator pemantauan status tindak lanjut'
-        }
-      }
+    // Table at element [75] (Minggu ke-3 Bulan ke-3 - Desember)
+    75: {
+      1: '\nMembuat matriks monitoring tindak lanjut arahan kegiatan kedinasan',
+      2: '\nMembuat formulir penetapan penanggung jawab (PIC) dan tenggat waktu tugas',
+      3: '\nWFH',
+      4: '\nMembuat fitur pembaruan status progres tindak lanjut penugasan kegiatan',
+      5: '\nMembuat sistem notifikasi dan indikator progres penyelesaian tindak lanjut'
     },
-    // Table 12 (Week 4 Month 3 - Desember)
-    11: {
-      heading: 'MINGGU KE 4 (Empat)\tBULAN KE 3 (Desember)',
-      rows: {
-        1: {
-          col1: '\n\nRabu,\n9 Desember 2026',
-          col2: '\n\n8:00 – 16:30',
-          col3: '\nMembuat fitur ekspor dokumen PDF resmi notula rapat dinas'
-        },
-        2: {
-          col1: '\n\nKamis,\n10 Desember 2026',
-          col2: '\n\n8:00 – 16:30',
-          col3: '\nPenyematan QR Code verifikasi legalitas dokumen risalah rapat'
-        },
-        3: {
-          col1: '\n\nJumat,\n11 Desember 2026',
-          col2: '\n\n8:00 – 16:30',
-          col3: '\nWFH'
-        },
-        4: {
-          col1: '\n\nSenin,\n14 Desember 2026',
-          col2: '\n\n8:00 – 16:30',
-          col3: '\nMelakukan pengujian sistem bersama mentor menggunakan Black Box Testing'
-        },
-        5: {
-          col1: '\n\nSelasa,\n15 Desember 2026',
-          col2: '\n\n8:00 – 16:30',
-          col3: '\nPerbaikan dan penyempurnaan antarmuka serta kueri sistem'
-        }
-      }
+    // Table at element [82] (Minggu ke-4 Bulan ke-3 - Desember)
+    82: {
+      1: '\nMembuat fitur ekspor dokumen PDF ringkasan arsip laporan kegiatan kedinasan',
+      2: '\nPenyematan fitur QR Code verifikasi keabsahan dokumen arsip kegiatan',
+      3: '\nWFH',
+      4: '\nMelakukan pengujian fungsional sistem menggunakan metode Black Box Testing',
+      5: '\nPerbaikan antarmuka pengguna (UI/UX) dan optimalisasi kueri data kegiatan'
     },
-    // Table 13 (Week 1 Month 4 - Desember)
-    12: {
-      heading: 'MINGGU KE 1 (Satu)\tBULAN KE 4 (Desember)',
-      rows: {
-        1: {
-          col1: '\n\nRabu,\n16 Desember 2026',
-          col2: '\n\n8:00 – 16:30',
-          col3: '\nDeployment sistem Log Book Rapat KEK ke server cloud'
-        },
-        2: {
-          col1: '\n\nKamis,\n17 Desember 2026',
-          col2: '\n\n8:00 – 16:30',
-          col3: '\nDemonstrasi sistem dan pengujian oleh pengguna bersama mentor'
-        },
-        3: {
-          col1: '\n\nJumat,\n18 Desember 2026',
-          col2: '\n\n8:00 – 16:30',
-          col3: '\nWFH'
-        },
-        4: {
-          col1: '\n\nSenin,\n21 Desember 2026',
-          col2: '\n\n8:00 – 16:30',
-          col3: '\nBimbingan dan penyusunan draf akhir Laporan PKL bersama mentor'
-        },
-        5: {
-          col1: '\n\nSelasa,\n22 Desember 2026',
-          col2: '\n\n8:00 – 16:30',
-          col3: '\nSerah terima sistem aplikasi Log Book Rapat KEK dan dokumentasi teknis'
-        }
-      }
+    // Table at element [89] (Minggu ke-1 Bulan ke-4 - Desember)
+    89: {
+      1: '\nDeployment Aplikasi Log Book Kegiatan ke lingkungan cloud',
+      2: '\nDemonstrasi alur kerja aplikasi dan uji coba pengguna (UAT) bersama mentor',
+      3: '\nWFH',
+      4: '\nBimbingan dan penyusunan naskah akhir Laporan PKL bersama mentor instansi',
+      5: '\nSerah terima Aplikasi Log Book Kegiatan serta dokumentasi teknis'
     },
-    // Table 14 (Week 2 Month 4 - Final Day)
-    13: {
-      heading: 'MINGGU KE 2 (Dua)\tBULAN KE 4 (Desember)',
-      rows: {
-        1: {
-          col1: '\n\nRabu,\n23 Desember 2026',
-          col2: '\n\n8:00 – 16:30',
-          col3: '\nEvaluasi akhir kegiatan PKL, penyerahan plakat kenang-kenangan, dan penutupan'
-        }
-      }
+    // Table at element [96] (Minggu ke-2 Bulan ke-4 - Desember)
+    96: {
+      1: '\nEvaluasi akhir kegiatan PKL, penyerahan plakat kenang-kenangan, dan penutupan'
     }
   };
 
-  // Build batchUpdate requests for Phase 1 (Content replacement)
   const ops = [];
 
-  for (const tblIdxStr of Object.keys(updates)) {
+  for (const [tblIdxStr, rows] of Object.entries(updates)) {
     const tblIdx = parseInt(tblIdxStr, 10);
-    const tableObj = tables[tblIdx];
-    const updateData = updates[tblIdx];
+    const tableEl = content[tblIdx];
+    if (!tableEl || !tableEl.table) continue;
+    const t = tableEl.table;
 
-    // Check heading
-    if (updateData.heading) {
-      const h = findHeading(content, tableObj.elementIndex);
-      if (h) {
-        const start = h.p.elements[0].startIndex;
-        const end = h.p.elements[h.p.elements.length - 1].endIndex - 1;
-        ops.push({
-          startIndex: start,
-          endIndex: end,
-          text: updateData.heading,
-          desc: 'Heading Table ' + (tblIdx + 1)
-        });
-      }
-    }
+    for (const [rowIdxStr, newText] of Object.entries(rows)) {
+      const rowIdx = parseInt(rowIdxStr, 10);
+      const row = t.tableRows[rowIdx];
+      if (!row) continue;
+      const cell = row.tableCells[3];
+      const start = cell.content[0].startIndex;
+      const end = cell.content[cell.content.length - 1].endIndex - 1;
 
-    // Process rows
-    if (updateData.rows) {
-      for (const rowIdxStr of Object.keys(updateData.rows)) {
-        const rowIdx = parseInt(rowIdxStr, 10);
-        const rowData = updateData.rows[rowIdx];
-        const tblRow = tableObj.table.tableRows[rowIdx];
-
-        // Col 1 (Hari/Tanggal)
-        if (rowData.col1) {
-          const cell = tblRow.tableCells[1];
-          const start = cell.content[0].startIndex;
-          const end = cell.content[cell.content.length - 1].endIndex - 1;
-          ops.push({
-            startIndex: start,
-            endIndex: end,
-            text: rowData.col1,
-            desc: `T${tblIdx + 1} R${rowIdx} C1`
-          });
-        }
-
-        // Col 2 (Waktu)
-        if (rowData.col2) {
-          const cell = tblRow.tableCells[2];
-          const start = cell.content[0].startIndex;
-          const end = cell.content[cell.content.length - 1].endIndex - 1;
-          ops.push({
-            startIndex: start,
-            endIndex: end,
-            text: rowData.col2,
-            desc: `T${tblIdx + 1} R${rowIdx} C2`
-          });
-        }
-
-        // Col 3 (Jenis Kegiatan)
-        if (rowData.col3) {
-          const cell = tblRow.tableCells[3];
-          const start = cell.content[0].startIndex;
-          const end = cell.content[cell.content.length - 1].endIndex - 1;
-          ops.push({
-            startIndex: start,
-            endIndex: end,
-            text: rowData.col3,
-            desc: `T${tblIdx + 1} R${rowIdx} C3`
-          });
-        }
-      }
+      ops.push({
+        startIndex: start,
+        endIndex: end,
+        text: newText,
+        desc: `Table [${tblIdx}] Row ${rowIdx}`
+      });
     }
   }
 
-  console.log('Total operations generated:', ops.length);
-
-  // Sort operations in DESCENDING order by startIndex
   ops.sort((a, b) => b.startIndex - a.startIndex);
 
-  // Build Google Docs API requests
   const requests = [];
   ops.forEach(op => {
     if (op.endIndex > op.startIndex) {
@@ -452,9 +178,7 @@ async function main() {
     }
   });
 
-  console.log('Total Phase 1 batchUpdate requests:', requests.length);
-
-  console.log('Sending Phase 1 batchUpdate to Google Docs API...');
+  console.log(`Sending ${requests.length} batchUpdate requests for content replacement...`);
   let updateRes = await fetch('https://docs.googleapis.com/v1/documents/' + docId + ':batchUpdate', {
     method: 'POST',
     headers: {
@@ -466,85 +190,14 @@ async function main() {
 
   if (!updateRes.ok) {
     const errText = await updateRes.text();
-    throw new Error('Phase 1 batchUpdate failed: ' + updateRes.status + ' ' + errText);
+    throw new Error('Content batchUpdate failed: ' + updateRes.status + ' ' + errText);
   }
 
-  let result = await updateRes.json();
-  console.log('Phase 1 SUCCESS! Content replaced. Replies count:', result.replies?.length);
-
-  // Phase 2: Formatting / Styling Normalization to MATCH ABOVE 15 OCTOBER EXACTLY
-  console.log('Fetching document again for Phase 2 styling normalization...');
-  res = await fetch('https://docs.googleapis.com/v1/documents/' + docId, {
-    headers: { 'Authorization': 'Bearer ' + accessToken }
-  });
-  doc = await res.json();
-  const refreshedTables = doc.body.content.filter(el => el.table).map(el => el.table);
-
-  const styleRequests = [];
-
-  // Normalize Table 4 (rows 4 and 5) and Table 5 through Table 14
-  for (let ti = 3; ti < refreshedTables.length; ti++) {
-    const tbl = refreshedTables[ti];
-    tbl.tableRows.forEach((r, ri) => {
-      if (ri === 0) return; // keep table headers untouched
-
-      // If Table 4, only normalize rows 4 and 5
-      if (ti === 3 && ri < 4) return;
-
-      r.tableCells.forEach((c, ci) => {
-        const start = c.content[0].startIndex;
-        const end = c.content[c.content.length - 1].endIndex;
-
-        // Paragraph Style matching above 15 October:
-        // Col 0, 1, 2: alignment CENTER, lineSpacing 100
-        // Col 3 (Kegiatan): alignment CENTER, lineSpacing 150 (1.5 spasi)
-        // Col 4 (Tanda tangan): alignment START, lineSpacing 100
-        const alignment = (ci === 4) ? 'START' : 'CENTER';
-        const lineSpacing = (ci === 3) ? 150 : 100;
-
-        styleRequests.push({
-          updateParagraphStyle: {
-            range: { startIndex: start, endIndex: end },
-            paragraphStyle: {
-              alignment: alignment,
-              lineSpacing: lineSpacing,
-              spaceAbove: { magnitude: 0, unit: 'PT' },
-              spaceBelow: { magnitude: 0, unit: 'PT' },
-              indentStart: { magnitude: 0, unit: 'PT' },
-              indentFirstLine: { magnitude: 0, unit: 'PT' }
-            },
-            fields: 'alignment,lineSpacing,spaceAbove,spaceBelow,indentStart,indentFirstLine'
-          }
-        });
-      });
-    });
-  }
-
-  console.log('Total Phase 2 styling requests:', styleRequests.length);
-
-  if (styleRequests.length > 0) {
-    console.log('Sending Phase 2 styling batchUpdate to Google Docs API...');
-    updateRes = await fetch('https://docs.googleapis.com/v1/documents/' + docId + ':batchUpdate', {
-      method: 'POST',
-      headers: {
-        'Authorization': 'Bearer ' + accessToken,
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({ requests: styleRequests })
-    });
-
-    if (!updateRes.ok) {
-      const errText = await updateRes.text();
-      throw new Error('Phase 2 batchUpdate failed: ' + updateRes.status + ' ' + errText);
-    }
-    result = await updateRes.json();
-    console.log('Phase 2 SUCCESS! Styling normalized.');
-  }
-
-  console.log('ALL SYNCHRONIZATION AND TIDYING UP COMPLETE!');
+  console.log('Content updated successfully.');
 }
 
-main().catch(err => {
-  console.error('ERROR:', err);
-  process.exit(1);
-});
+if (require.main === module) {
+  main().catch(console.error);
+}
+
+module.exports = { main };

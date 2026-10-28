@@ -5,7 +5,7 @@
       <root>
         <mxCell id="0" />
         <mxCell id="1" parent="0" />
-        <mxCell id="t1_title" value="&lt;b style=&quot;font-size: 15px; color: #1E3A8A;&quot;&gt;3.2.4.a. Entity Relationship Diagram (ERD) — Notasi Chen (8 Entitas Inti Aplikasi Jadwal &amp; Pengarsipan Kegiatan KEK RI)&lt;/b&gt;&#xa;&lt;span style=&quot;font-size: 11px; color: #475569;&quot;&gt;Standar Baku Akademik Peter Chen: Persegi Panjang Polos (Entitas), Belah Ketupat (Relasi), Elips (Atribut), dan Kardinalitas 1 : N / 1 : 1 (Tanpa Tabel Swimlane LRS)&lt;/span&gt;" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;spacingLeft=4;fontFamily=Helvetica;" vertex="1" parent="1">
+        <mxCell id="t1_title" value="&lt;b style=&quot;font-size: 15px; color: #1E3A8A;&quot;&gt;3.2.4.a. Entity Relationship Diagram (ERD) — Notasi Chen (8 Entitas Inti Aplikasi Log Book Kegiatan KEK RI)&lt;/b&gt;&#xa;&lt;span style=&quot;font-size: 11px; color: #475569;&quot;&gt;Standar Baku Akademik Peter Chen: Persegi Panjang Polos (Entitas), Belah Ketupat (Relasi), Elips (Atribut), dan Kardinalitas 1 : N / 1 : 1 (Tanpa Tabel Swimlane LRS)&lt;/span&gt;" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;spacingLeft=4;fontFamily=Helvetica;" vertex="1" parent="1">
           <mxGeometry x="90" y="15" width="1370" height="42" as="geometry" />
         </mxCell>
         <mxCell id="e_biro" value="biro" style="shape=rectangle;rounded=0;whiteSpace=wrap;html=1;fillColor=#F8FAFC;strokeColor=#1E3A8A;strokeWidth=2.2;fontColor=#1E3A8A;fontStyle=1;fontSize=13;align=center;verticalAlign=middle;fontFamily=Helvetica;shadow=1;" vertex="1" parent="1">
@@ -404,12 +404,7 @@
         <mxCell id="ea_a_ac_st" style="endArrow=none;html=1;strokeColor=#94A3B8;strokeWidth=1.1;" edge="1" parent="1" source="e_act" target="a_ac_st">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-        <mxCell id="a_ac_pr" value="skala_prioritas" style="shape=ellipse;whiteSpace=wrap;html=1;fillColor=#F8FAFC;strokeColor=#64748B;strokeWidth=1.1;fontColor=#334155;fontSize=9.5;align=center;verticalAlign=middle;fontFamily=Helvetica;" vertex="1" parent="1">
-          <mxGeometry x="585" y="940" width="95" height="34" as="geometry" />
-        </mxCell>
-        <mxCell id="ea_a_ac_pr" style="endArrow=none;html=1;strokeColor=#94A3B8;strokeWidth=1.1;" edge="1" parent="1" source="e_act" target="a_ac_pr">
-          <mxGeometry relative="1" as="geometry" />
-        </mxCell>
+        
       </root>
     </mxGraphModel>
   </diagram>
@@ -624,10 +619,7 @@
       <mxGeometry x="1040" y="640" width="105" height="40" as="geometry" />
     </mxCell>
 <mxCell id="ea_a_act_4" style="endArrow=none;html=1;strokeColor=#94A3B8;strokeWidth=1.1;" edge="1" parent="c2_1" source="ent_act" target="a_act_4"><mxGeometry relative="1" as="geometry" /></mxCell>
-<mxCell id="a_act_5" value="skala_prioritas" style="shape=ellipse;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#64748B;strokeWidth=1.2;fontColor=#1E293B;fontStyle=0;fontSize=10;align=center;verticalAlign=middle;fontFamily=Helvetica;" vertex="1" parent="c2_1">
-      <mxGeometry x="1030" y="580" width="100" height="40" as="geometry" />
-    </mxCell>
-<mxCell id="ea_a_act_5" style="endArrow=none;html=1;strokeColor=#94A3B8;strokeWidth=1.1;" edge="1" parent="c2_1" source="ent_act" target="a_act_5"><mxGeometry relative="1" as="geometry" /></mxCell>
+
 <mxCell id="a_ah_1" value="&lt;u&gt;&lt;b&gt;id_riwayat&lt;/b&gt;&lt;/u&gt;" style="shape=ellipse;whiteSpace=wrap;html=1;fillColor=#FFFBEB;strokeColor=#B7791F;strokeWidth=2;fontColor=#B7791F;fontStyle=1;fontSize=10.5;align=center;verticalAlign=middle;fontFamily=Helvetica;" vertex="1" parent="c2_1">
       <mxGeometry x="670" y="845" width="100" height="40" as="geometry" />
     </mxCell>
@@ -636,10 +628,7 @@
       <mxGeometry x="700" y="920" width="100" height="40" as="geometry" />
     </mxCell>
 <mxCell id="ea_a_ah_2" style="endArrow=none;html=1;strokeColor=#94A3B8;strokeWidth=1.1;" edge="1" parent="c2_1" source="ent_acthist" target="a_ah_2"><mxGeometry relative="1" as="geometry" /></mxCell>
-<mxCell id="a_ah_3" value="persentase_progres" style="shape=ellipse;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#64748B;strokeWidth=1.2;fontColor=#1E293B;fontStyle=0;fontSize=9.5;align=center;verticalAlign=middle;fontFamily=Helvetica;" vertex="1" parent="c2_1">
-      <mxGeometry x="840" y="925" width="110" height="40" as="geometry" />
-    </mxCell>
-<mxCell id="ea_a_ah_3" style="endArrow=none;html=1;strokeColor=#94A3B8;strokeWidth=1.1;" edge="1" parent="c2_1" source="ent_acthist" target="a_ah_3"><mxGeometry relative="1" as="geometry" /></mxCell>
+
 <mxCell id="a_ah_4" value="status_terbaru" style="shape=ellipse;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#64748B;strokeWidth=1.2;fontColor=#1E293B;fontStyle=0;fontSize=10;align=center;verticalAlign=middle;fontFamily=Helvetica;" vertex="1" parent="c2_1">
       <mxGeometry x="1030" y="845" width="100" height="40" as="geometry" />
     </mxCell>

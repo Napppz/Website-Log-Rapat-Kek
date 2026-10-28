@@ -15,7 +15,7 @@ Dokumen ini mencatat seluruh konteks, struktur, aturan pedoman, dan progres peng
 - **Mentor Magang:** Diaji Junianto
 - **Pimpinan Unit:** Noviar Iskandar (Kepala Tata Kelola Biro 3 KEK)
 - **Judul Laporan PKL:**
-  > *"Perancangan dan Pembuatan Aplikasi Jadwal dan Pengarsipan Kegiatan pada Sekretariat Jenderal Dewan Nasional Kawasan Ekonomi Khusus"*
+  > *"Perancangan dan Pembuatan Aplikasi Log Book Kegiatan pada Sekretariat Jenderal Dewan Nasional Kawasan Ekonomi Khusus"*
 
 ---
 
@@ -23,7 +23,7 @@ Dokumen ini mencatat seluruh konteks, struktur, aturan pedoman, dan progres peng
 - **Google Doc Laporan PKL:**
   - **Doc ID:** `1dBGQ4RXnUhx2E4afkoQgKItVCMv2sQcfNHLGKdy4o7s`
   - **Tautan Akses:** https://docs.google.com/document/d/1dBGQ4RXnUhx2E4afkoQgKItVCMv2sQcfNHLGKdy4o7s/edit
-  - **Judul Dokumen:** *Perancangan dan Pembuatan Aplikasi Jadwal dan Pengarsipan Kegiatan pada Sekretariat Jenderal Dewan Nasional Kawasan Ekonomi Khusus*
+  - **Judul Dokumen:** *Perancangan dan Pembuatan Aplikasi Log Book Kegiatan pada Sekretariat Jenderal Dewan Nasional Kawasan Ekonomi Khusus*
 - **File Desain Diagram & Dokumentasi Lokal:**
   - `docs/ERD_Log_Book_Rapat.drawio` (ERD Chen & LRS Relasional)
   - `docs/5_DESAIN_DATABASE.md` (Kamus Data & Spesifikasi Tabel)
@@ -81,7 +81,7 @@ Seluruh naskah pada Google Docs telah distandarisasi secara otomatis sesuai **Bu
 ---
 
 ## 4. Referensi Jurnal 5 Tahun Terakhir (SINTA Terakreditasi)
-Landasan teori pada Sub-bab 2.2.1 dan DAFTAR PUSTAKA telah diperbarui 100% menggunakan 5 jurnal nasional terakreditasi SINTA periode 2022–2025 yang sesuai dengan topik aplikasi Jadwal dan Pengarsipan Kegiatan:
+Landasan teori pada Sub-bab 2.2.1 dan DAFTAR PUSTAKA telah diperbarui 100% menggunakan 5 jurnal nasional terakreditasi SINTA periode 2022–2025 yang sesuai dengan topik Aplikasi Log Book Kegiatan:
 
 1. **Thisara, S. K., & Putri, R. A. (2024).**  
    *Sistem Informasi Penjadwalan Kegiatan Berbasis Web pada Kantor Kecamatan.* Jurnal Sistem Informasi dan Informatika (SIMIKA), 7(1), 45–56. (Terakreditasi SINTA 4).
@@ -108,7 +108,7 @@ Landasan teori pada Sub-bab 2.2.1 dan DAFTAR PUSTAKA telah diperbarui 100% mengg
   - Daftar Lampiran (Lampiran 1 s/d 5)
 - **Bagian Pokok:**
   - **BAB I PENDAHULUAN:** Latar Belakang, Maksud & Tujuan, Metode Penelitian (Waterfall), Ruang Lingkup.
-  - **BAB II LANDASAN TEORI:** Konsep Sistem Informasi, Manajemen Penjadwalan Kegiatan Kedinasan, Pengarsipan Berkas Digital, Penelitian Terkait (5 Jurnal SINTA), Next.js 15, TypeScript, Tailwind CSS, PostgreSQL & Prisma ORM, UML & ERD.
+  - **BAB II LANDASAN TEORI:** Konsep Sistem Informasi, Manajemen Penjadwalan Kegiatan, Pencatatan Dokumen Log Book Digital, Penelitian Terkait (5 Jurnal SINTA), Next.js 15, TypeScript, Tailwind CSS, PostgreSQL & Prisma ORM, UML & ERD.
   - **BAB III PEMBAHASAN:** Tinjauan Instansi (Setjen DN KEK), Pembuatan Program, UML Diagrams, ERD & LRS, Data Dictionary, Antarmuka Pengguna, Black Box Testing (7 skenario pengujian), Spesifikasi Hardware & Software.
   - **BAB IV PENUTUP:** Kesimpulan (5 poin) dan Saran (Bagi Instansi & Pengembangan Sistem Selanjutnya).
   - **DAFTAR PUSTAKA:** 15 referensi terurut abjad A-Z (Aji, Baehaqi, Dennis, Fauziah, Hendradi, Hutahaean, Kesuma, Laudon, Prasetyo, Prisma, Rahmadani, Rifandi, Saifullah, Thisara, Widodo).
@@ -127,32 +127,32 @@ Sesuai arahan dan kesepakatan kebutuhan operasional di lingkungan Setjen DN KEK:
    - **Tidak Ada Status Terlambat (OVERDUE)** pada kategori status. Seluruh filter status, KPI cards, dan badge status dibatasi secara ketat hanya pada ketiga tahapan resmi di atas.
 2. **Kebijakan Data Peserta Kegiatan (Tanpa Presensi Kehadiran):**
    - Sistem tidak menggunakan modul absensi/presensi fisik (*Hadir/Izin/Sakit/Alpa*).
-   - Seluruh peserta kegiatan dikelola sebagai **Daftar Pihak dan Aparatur Terkait Kegiatan Kedinasan** (undangan pejabat internal dan eksternal) untuk keperluan arsip naskah dinas.
+   - Seluruh peserta kegiatan dikelola sebagai **Daftar Pihak dan Aparatur Terkait Kegiatan** (undangan pejabat internal dan eksternal) untuk keperluan log book kegiatan resmi.
    - Seluruh tabel kamus data (Tabel III.5), skenario pengujian Black Box (Tabel III.9), use case, dan uraian bab pada naskah Google Docs telah disinkronkan 100% bebas dari modul presensi kehadiran.
-
 
 ---
 
-## 6. Standar Status Kegiatan & Tindak Lanjut serta Kebijakan Data Peserta (27 Oktober 2026)
-Sesuai arahan dan kesepakatan kebutuhan operasional di lingkungan Setjen DN KEK:
-1. **Status Kegiatan & Butir Tindak Lanjut (3 Tahapan Resmi):**
-   - **Belum Dimulai** (*PENDING*): Kegiatan/tugas telah dijadwalkan dan diagendakan, persiapan materi/administrasi sedang disiapkan.
-   - **Dalam Proses** (*IN_PROGRESS*): Kegiatan sedang berlangsung atau butir tindak lanjut sedang dalam pengerjaan aktif oleh staf/tim kerja.
-   - **Selesai** (*COMPLETED*): Kegiatan rampung/risalah disahkan, atau butir tindak lanjut telah diselesaikan 100%.
-   - **Tidak Ada Status Terlambat (OVERDUE)** pada kategori status. Seluruh filter status, KPI cards, dan badge status dibatasi secara ketat hanya pada ketiga tahapan resmi di atas.
-2. **Kebijakan Data Peserta Kegiatan (Tanpa Presensi Kehadiran):**
-   - Sistem tidak menggunakan modul absensi/presensi fisik (*Hadir/Izin/Sakit/Alpa*).
-   - Seluruh peserta kegiatan dikelola sebagai **Daftar Pihak dan Aparatur Terkait Kegiatan Kedinasan** (undangan pejabat internal dan eksternal) untuk keperluan arsip naskah dinas.
-   - Seluruh tabel kamus data (Tabel III.5), skenario pengujian Black Box (Tabel III.9), use case, dan uraian bab pada naskah Google Docs telah disinkronkan 100% bebas dari modul presensi kehadiran.
+## 7. Audit Basis Data Neon PostgreSQL & Spesifikasi Kamus Data (28 Oktober 2026)
+Berdasarkan hasil audit data aktual pada basis data cloud **Neon Serverless PostgreSQL (PostgreSQL 16/18)**:
+1. **9 Tabel Aktif Berisi Record Riil (Dimodelkan dalam Data Dictionary & ERD):**
+   - `biro` (5 baris data) — Master data unit kerja biro.
+   - `tim_biro` (5 baris data) — Tim kerja teknis fungsional biro.
+   - `pengguna` (23 baris data) — Akun pengguna aparatur dan kontrol peran (*RBAC*).
+   - `kegiatan` (23 baris data) — Transaksi utama log book agenda kegiatan.
+   - `peserta_kegiatan` (38 baris data) — Daftar aparatur / pihak terkait penugasan kegiatan.
+   - `lampiran_kegiatan` (9 baris data) — Berkas digital dokumen pendukung log book kegiatan.
+   - `tindak_lanjut` (36 baris data) — Matriks butir tindak lanjut penugasan (*action items*).
+   - `riwayat_tindak_lanjut` (34 baris data) — Log jejak progres penyelesaian tugas oleh PIC.
+   - `notifikasi` (35 baris data) — Notifikasi lonceng sistem bagi aparatur.
+2. **5 Tabel Kosong (0 baris data) yang Dieliminasi dari Dokumentasi:**
+   - `notulen_kegiatan` (0 baris data) — Catatan ringkasan langsung tercatat pada tabel `kegiatan`.
+   - `komentar_notulen` (0 baris data) — Tidak ada record data aktif.
+   - `riwayat_notulen` (0 baris data) — Tidak ada record data aktif.
+   - `penomoran_kegiatan_biro` (0 baris data) — Penomoran otomatis ditangani via logika algoritmik program.
+   - `kegiatan_biro` (0 baris data) — Relasi biro pemrakarsa terhubung langsung via FK `id_biro`.
+3. **Pemisahan Halaman Daftar Riwayat Hidup:**
+   - `DAFTAR RIWAYAT HIDUP` telah dipisahkan menjadi **1 halaman tersendiri** menggunakan `pageBreakBefore: true`.
+   - Judul diformat sebagai `HEADING_1`, Font Times New Roman 14 pt Bold Rata Tengah (`alignment: CENTER`).
+   - Isi biodata, riwayat pendidikan, riwayat magang, dan blok tanda tangan kanan bawah tersusun proporsional sehingga pas dan rapi dalam 1 halaman utuh tanpa bersatu dengan DAFTAR PUSTAKA.
 
-
-- **Pemisahan Halaman Daftar Riwayat Hidup (27 Oktober 2026):**
-  - `DAFTAR RIWAYAT HIDUP` telah dipisahkan menjadi **1 halaman tersendiri** menggunakan `pageBreakBefore: true`.
-  - Judul diformat sebagai `HEADING_1`, Font Times New Roman 14 pt Bold Rata Tengah (`alignment: CENTER`).
-  - Isi biodata, riwayat pendidikan, riwayat magang, dan blok tanda tangan kanan bawah tersusun proporsional sehingga pas dan rapi dalam 1 halaman utuh tanpa bersatu dengan DAFTAR PUSTAKA.
-
-- **Pemisahan Halaman Daftar Riwayat Hidup (27 Oktober 2026):**
-  - `DAFTAR RIWAYAT HIDUP` telah dipisahkan menjadi **1 halaman tersendiri** menggunakan `pageBreakBefore: true`.
-  - Judul diformat sebagai `HEADING_1`, Font Times New Roman 14 pt Bold Rata Tengah (`alignment: CENTER`).
-  - Isi biodata, riwayat pendidikan, riwayat magang, dan blok tanda tangan kanan bawah tersusun proporsional sehingga pas dan rapi dalam 1 halaman utuh tanpa bersatu dengan DAFTAR PUSTAKA.
 

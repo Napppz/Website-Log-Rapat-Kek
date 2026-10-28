@@ -213,10 +213,10 @@ sequenceDiagram
 | 2 | `TindakLanjutPage` | `actionItemAction` | Sync Call | Meminta daftar butir tindak lanjut berdasarkan filter tim dan status penugasan. |
 | 3 | `actionItemAction` | `tindak_lanjut` | Sync Call | Mengambil data dari tabel `tindak_lanjut` di database Neon PostgreSQL. |
 | 4 | `tindak_lanjut` | `actionItemAction` | Return | Mengembalikan daftar penugasan aktif beserta tenggat waktu (*deadline*). |
-| 5 | `actionItemAction` | `TindakLanjutPage` | Return | Merender kartu Kanban tugas atau tabel daftar pekerjaan dinas. |
-| 6 | Staf PIC | `TindakLanjutPage` | User Input | Memilih tugas, mengunggah tautan laporan bukti pengerjaan, dan mengatur progres ke 100%. |
+| 5 | `actionItemAction` | `TindakLanjutPage` | Return | Merender kartu Kanban tugas atau tabel daftar pekerjaan. |
+| 6 | Staf PIC | `TindakLanjutPage` | User Input | Memilih tugas, mengunggah tautan laporan bukti pengerjaan, dan memilih status selesai. |
 | 7 | Staf PIC | `TindakLanjutPage` | User Action | Menekan tombol 'Kirim Pembaruan Status'. |
-| 8 | `TindakLanjutPage` | `actionItemAction` | Sync Call | Mengirimkan parameter ID tugas, persentase progres, dan status `COMPLETED`. |
+| 8 | `TindakLanjutPage` | `actionItemAction` | Sync Call | Mengirimkan parameter ID tugas dan status `COMPLETED`. |
 | 9 | `actionItemAction` | `tindak_lanjut` | Sync Call | Menjalankan `UPDATE` kolom `status_tindak_lanjut = 'COMPLETED'` dan `diselesaikan_pada = NOW()`. |
 | 10 | `tindak_lanjut` | `actionItemAction` | Return | Basis data mengonfirmasi pembaruan record berhasil. |
 | 11 | `actionItemAction` | `riwayat_tindak_lanjut` | Sync Call | Menyimpan catatan log progres baru untuk merekam linimasa penyelesaian tugas. |
@@ -248,7 +248,7 @@ Dengan selesainya perancangan Tahap 5 ini, seluruh rangkaian diagram rekayasa pe
 |:---|:---|:---|:---|:---|
 | 1 | **ERD (Entity Relationship Diagram)** | Notasi Chen (Tab 1) & Crow's Foot Relasional (Tab 2) | [`docs/ERD_Log_Book_Rapat.drawio`](file:///c:/Users/nappz/Documents/Project%20Website/Projek%20Log%20Rapat/docs/ERD_Log_Book_Rapat.drawio) | **0 error, 0 warning (Skor 0)** |
 | 2 | **LRS (Logical Record Structure)** | Relasional 3NF (14 Entitas + FK Mapping Lengkap) | [`docs/LRS_Log_Book_Rapat.drawio`](file:///c:/Users/nappz/Documents/Project%20Website/Projek%20Log%20Rapat/docs/LRS_Log_Book_Rapat.drawio) | **0 error, 0 warning (Skor 0)** |
-| 3 | **UML Use Case Diagram** | 3 Aktor Berjenjang, 6 Modul, 27 Use Case | [`docs/USE_CASE_Log_Book_Rapat.drawio`](file:///c:/Users/nappz/Documents/Project%20Website/Projek%20Log%20Rapat/docs/USE_CASE_Log_Book_Rapat.drawio) | **0 error, 0 warning (Skor 0)** |
+| 3 | **UML Use Case Diagram** | 3 Aktor, 12 Use Case Terstandar | [`docs/USE_CASE_Log_Book_Rapat.drawio`](file:///c:/Users/nappz/Documents/Project%20Website/Projek%20Log%20Rapat/docs/USE_CASE_Log_Book_Rapat.drawio) | **0 error, 0 warning (Skor 0)** |
 | 4 | **UML Class Diagram** | 14 Kelas 3-Kompartemen, 5 Enum, Asosiasi & Multiplisitas | [`docs/CLASS_DIAGRAM_Log_Book_Rapat.drawio`](file:///c:/Users/nappz/Documents/Project%20Website/Projek%20Log%20Rapat/docs/CLASS_DIAGRAM_Log_Book_Rapat.drawio) | **0 error, 0 warning (Skor 0)** |
 | 5 | **UML Activity Diagram** | Multi-Tab Swimlane Table: Aktor 1 \| System \| Aktor 2 | [`docs/ACTIVITY_DIAGRAM_Log_Book_Rapat.drawio`](file:///c:/Users/nappz/Documents/Project%20Website/Projek%20Log%20Rapat/docs/ACTIVITY_DIAGRAM_Log_Book_Rapat.drawio) | **0 error, 0 warning (Skor 0)** |
 | 6 | **UML Sequence Diagram** | Multi-Tab Lifeline Interaksi Kronologis (SD-01 s.d SD-03) | [`docs/SEQUENCE_DIAGRAM_Log_Book_Rapat.drawio`](file:///c:/Users/nappz/Documents/Project%20Website/Projek%20Log%20Rapat/docs/SEQUENCE_DIAGRAM_Log_Book_Rapat.drawio) | **0 error, 0 warning (Skor 0)** |

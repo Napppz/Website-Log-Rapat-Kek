@@ -1,0 +1,190 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1080 1030" width="1080" height="1030">
+  <defs>
+    <style>
+      .txt-hdr-main { font-family: 'Times New Roman', serif; font-size: 15px; font-weight: bold; fill: #FFFFFF; text-anchor: middle; dominant-baseline: central; }
+      .txt-col-hdr { font-family: 'Times New Roman', serif; font-size: 13.5px; font-weight: bold; text-anchor: middle; dominant-baseline: central; }
+      .txt-node { font-family: 'Times New Roman', serif; font-size: 11.5px; font-weight: bold; text-anchor: middle; dominant-baseline: central; }
+      .txt-label { font-family: 'Times New Roman', serif; font-size: 10px; font-weight: bold; text-anchor: middle; dominant-baseline: central; }
+      .filter-shadow { filter: drop-shadow(0px 2px 4px rgba(0,0,0,0.08)); }
+    </style>
+    
+    <!-- Marker definitions for clean arrowheads -->
+    <marker id="arr-gray" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 1.5 L 8 5 L 0 8.5 z" fill="#475569" />
+    </marker>
+    <marker id="arr-red" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 1.5 L 8 5 L 0 8.5 z" fill="#DC2626" />
+    </marker>
+    <marker id="arr-green" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 1.5 L 8 5 L 0 8.5 z" fill="#16A34A" />
+    </marker>
+    <marker id="arr-blue" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 1.5 L 8 5 L 0 8.5 z" fill="#2563EB" />
+    </marker>
+  </defs>
+
+  <!-- Outer Canvas Container -->
+  <rect x="15" y="15" width="1050" height="995" rx="10" fill="#FFFFFF" stroke="#183E47" stroke-width="2" class="filter-shadow" />
+
+  <!-- Top Main Header Bar -->
+  <path d="M 15 25 Q 15 15 25 15 L 1055 15 Q 1065 15 1065 25 L 1065 52 L 15 52 Z" fill="#215865" />
+  <text x="540" y="34" class="txt-hdr-main">Alur Pencatatan Dokumen &amp; Catatan Hasil Kegiatan (Aplikasi Log Book Kegiatan KEK RI)</text>
+
+  <!-- 3 Column Headers -->
+  <!-- Col 1 Header -->
+  <rect x="15" y="52" width="330" height="36" fill="#E0F2FE" stroke="#0284C7" stroke-width="1.2" />
+  <text x="180" y="70" class="txt-col-hdr" fill="#0369A1">Admin Biro / Staf PIC</text>
+
+  <!-- Col 2 Header -->
+  <rect x="345" y="52" width="380" height="36" fill="#F1F5F9" stroke="#475569" stroke-width="1.2" />
+  <text x="535" y="70" class="txt-col-hdr" fill="#1E293B">Aplikasi Log Book Kegiatan KEK (Sistem)</text>
+
+  <!-- Col 3 Header -->
+  <rect x="725" y="52" width="340" height="36" fill="#FEF3C7" stroke="#D97706" stroke-width="1.2" />
+  <text x="895" y="70" class="txt-col-hdr" fill="#92400E">Super Admin / Pimpinan</text>
+
+  <!-- Column Backgrounds -->
+  <rect x="15" y="88" width="330" height="922" fill="#FFFFFF" />
+  <rect x="345" y="88" width="380" height="922" fill="#F8FAFC" />
+  <rect x="725" y="88" width="340" height="922" fill="#FFFFFF" />
+
+  <!-- Vertical Divider Lines -->
+  <line x1="345" y1="52" x2="345" y2="1010" stroke="#CBD5E1" stroke-width="1.5" />
+  <line x1="725" y1="52" x2="725" y2="1010" stroke="#CBD5E1" stroke-width="1.5" />
+
+  <!-- ==================== CONNECTING ARROWS ==================== -->
+  <!-- Start -> Act 1 -->
+  <line x1="180" y1="135" x2="180" y2="163" stroke="#475569" stroke-width="1.5" marker-end="url(#arr-gray)" />
+
+  <!-- Act 1 -> Act 2 -->
+  <line x1="180" y1="219" x2="180" y2="248" stroke="#475569" stroke-width="1.5" marker-end="url(#arr-gray)" />
+
+  <!-- Act 2 -> Act 3 -->
+  <line x1="180" y1="316" x2="180" y2="348" stroke="#475569" stroke-width="1.5" marker-end="url(#arr-gray)" />
+
+  <!-- Act 3 -> Dec 1 (To System) -->
+  <line x1="300" y1="375" x2="458" y2="375" stroke="#475569" stroke-width="1.5" marker-end="url(#arr-gray)" />
+
+  <!-- Dec 1 -> Act Error (Upwards) -->
+  <line x1="535" y1="337" x2="535" y2="310" stroke="#DC2626" stroke-width="1.5" marker-end="url(#arr-red)" />
+
+  <!-- Act Error -> Act 2 (Horizontal Loopback) -->
+  <line x1="400" y1="282" x2="317" y2="282" stroke="#DC2626" stroke-width="1.5" marker-end="url(#arr-red)" />
+
+  <!-- Dec 1 -> Sys Save (Downwards) -->
+  <line x1="535" y1="413" x2="535" y2="448" stroke="#16A34A" stroke-width="1.5" marker-end="url(#arr-green)" />
+
+  <!-- Sys Save -> Sys Link -->
+  <line x1="535" y1="504" x2="535" y2="533" stroke="#475569" stroke-width="1.5" marker-end="url(#arr-gray)" />
+
+  <!-- Sys Link -> Sys Preview -->
+  <line x1="535" y1="589" x2="535" y2="618" stroke="#475569" stroke-width="1.5" marker-end="url(#arr-gray)" />
+
+  <!-- Sys Preview -> Pim Review (To Pimpinan) -->
+  <line x1="675" y1="647" x2="763" y2="647" stroke="#475569" stroke-width="1.5" marker-end="url(#arr-gray)" />
+
+  <!-- Pim Review -> Dec 2 -->
+  <line x1="895" y1="674" x2="895" y2="695" stroke="#475569" stroke-width="1.5" marker-end="url(#arr-gray)" />
+
+  <!-- Dec 2 -> Act TL (Ada Tindak Lanjut - Downwards) -->
+  <line x1="895" y1="775" x2="895" y2="828" stroke="#2563EB" stroke-width="1.5" marker-end="url(#arr-blue)" />
+
+  <!-- Dec 2 -> Sys Complete (Tidak Ada Tindak Lanjut - Left & Down) -->
+  <path d="M 820 735 L 535 735 L 535 828" fill="none" stroke="#16A34A" stroke-width="1.5" marker-end="url(#arr-green)" />
+
+  <!-- Sys Complete -> End Node -->
+  <line x1="535" y1="884" x2="535" y2="927" stroke="#475569" stroke-width="1.5" marker-end="url(#arr-gray)" />
+
+  <!-- Act TL -> End Node -->
+  <path d="M 895 884 L 895 945 L 553 945" fill="none" stroke="#475569" stroke-width="1.5" marker-end="url(#arr-gray)" />
+
+  <!-- ==================== NODES: COLUMN 1 ==================== -->
+  <!-- Initial Node -->
+  <circle cx="180" cy="122" r="13" fill="#10B981" stroke="#065F46" stroke-width="2" class="filter-shadow" />
+
+  <!-- Act 1 -->
+  <rect x="60" y="165" width="240" height="54" rx="8" fill="#ECFDF5" stroke="#059669" stroke-width="1.5" class="filter-shadow" />
+  <text x="180" y="184" class="txt-node" fill="#064E3B">Membuka Rincian Kegiatan &amp;</text>
+  <text x="180" y="200" class="txt-node" fill="#064E3B">Memilih Tab &quot;Dokumen &amp; Catatan Hasil&quot;</text>
+
+  <!-- Act 2 -->
+  <rect x="45" y="250" width="270" height="66" rx="8" fill="#ECFDF5" stroke="#059669" stroke-width="1.5" class="filter-shadow" />
+  <text x="180" y="268" class="txt-node" fill="#064E3B">Unggah Berkas (Undangan, Nota Konsumsi,</text>
+  <text x="180" y="283" class="txt-node" fill="#064E3B">Bahan Paparan, Tautan Publikasi Berita)</text>
+  <text x="180" y="299" class="txt-node" fill="#064E3B">&amp; Input Ringkasan Hasil Kegiatan</text>
+
+  <!-- Act 3 -->
+  <rect x="60" y="350" width="240" height="50" rx="8" fill="#ECFDF5" stroke="#059669" stroke-width="1.5" class="filter-shadow" />
+  <text x="180" y="367" class="txt-node" fill="#064E3B">Menekan Tombol</text>
+  <text x="180" y="383" class="txt-node" fill="#064E3B">&quot;Simpan Dokumen &amp; Catatan Hasil&quot;</text>
+
+  <!-- ==================== NODES: COLUMN 2 ==================== -->
+  <!-- Dec 1 (Validasi Format & Ukuran) -->
+  <polygon points="535,337 610,375 535,413 460,375" fill="#F8FAFC" stroke="#475569" stroke-width="1.5" class="filter-shadow" />
+  <text x="535" y="368" class="txt-node" fill="#1E293B">Validasi Format &amp;</text>
+  <text x="535" y="382" class="txt-node" fill="#1E293B">Ukuran (&lt; 10MB)?</text>
+
+  <!-- Error Node -->
+  <rect x="400" y="256" width="270" height="52" rx="8" fill="#FEF2F2" stroke="#EF4444" stroke-width="1.5" class="filter-shadow" />
+  <text x="535" y="274" class="txt-node" fill="#991B1B">Tampilkan Notifikasi Error:</text>
+  <text x="535" y="290" class="txt-node" fill="#991B1B">Format Tidak Didukung / Ukuran &gt; 10MB</text>
+
+  <!-- Sys Save -->
+  <rect x="395" y="450" width="280" height="54" rx="8" fill="#F1F5F9" stroke="#475569" stroke-width="1.5" class="filter-shadow" />
+  <text x="535" y="469" class="txt-node" fill="#1E293B">Unggah Berkas ke Cloud Storage &amp;</text>
+  <text x="535" y="485" class="txt-node" fill="#1E293B">Simpan Metadata serta Catatan Hasil ke DB</text>
+
+  <!-- Sys Link -->
+  <rect x="395" y="535" width="280" height="54" rx="8" fill="#F1F5F9" stroke="#475569" stroke-width="1.5" class="filter-shadow" />
+  <text x="535" y="554" class="txt-node" fill="#1E293B">Tautkan Dokumen ke ID Registrasi Kegiatan</text>
+  <text x="535" y="570" class="txt-node" fill="#1E293B">&amp; Rekam Stempel Waktu (Timestamp)</text>
+
+  <!-- Sys Preview & Download -->
+  <rect x="395" y="620" width="280" height="54" rx="8" fill="#F1F5F9" stroke="#475569" stroke-width="1.5" class="filter-shadow" />
+  <text x="535" y="639" class="txt-node" fill="#1E293B">Aktifkan Pratinjau Berkas &amp; Sediakan</text>
+  <text x="535" y="655" class="txt-node" fill="#1E293B">Unduh Dokumen Log Book (PDF Resmi KEK)</text>
+
+  <!-- Sys Complete -->
+  <rect x="400" y="830" width="270" height="54" rx="8" fill="#ECFDF5" stroke="#059669" stroke-width="1.5" class="filter-shadow" />
+  <text x="535" y="849" class="txt-node" fill="#064E3B">Dokumen Log Book Resmi Kegiatan</text>
+  <text x="535" y="865" class="txt-node" fill="#064E3B">Tersimpan Permanen &amp; Lengkap</text>
+
+  <!-- Final Node -->
+  <circle cx="535" cy="945" r="15" fill="#FFFFFF" stroke="#1E293B" stroke-width="2.2" class="filter-shadow" />
+  <circle cx="535" cy="945" r="8.5" fill="#1E293B" />
+
+  <!-- ==================== NODES: COLUMN 3 ==================== -->
+  <!-- Pim Review -->
+  <rect x="765" y="620" width="260" height="54" rx="8" fill="#FEF3C7" stroke="#D97706" stroke-width="1.5" class="filter-shadow" />
+  <text x="895" y="639" class="txt-node" fill="#92400E">Pimpinan Meninjau Kelengkapan</text>
+  <text x="895" y="655" class="txt-node" fill="#92400E">Dokumen Log Book &amp; Catatan Hasil</text>
+
+  <!-- Dec 2 (Terdapat Butir Tindak Lanjut?) -->
+  <polygon points="895,697 970,736 895,775 820,736" fill="#F8FAFC" stroke="#475569" stroke-width="1.5" class="filter-shadow" />
+  <text x="895" y="729" class="txt-node" fill="#1E293B">Terdapat Butir</text>
+  <text x="895" y="743" class="txt-node" fill="#1E293B">Tindak Lanjut?</text>
+
+  <!-- Act TL (Lanjutkan ke Alur c) -->
+  <rect x="770" y="830" width="250" height="54" rx="8" fill="#EFF6FF" stroke="#2563EB" stroke-width="1.5" class="filter-shadow" />
+  <text x="895" y="849" class="txt-node" fill="#1E40AF">Lanjutkan ke Alur c:</text>
+  <text x="895" y="865" class="txt-node" fill="#1E40AF">Matriks Tindak Lanjut &amp; Penugasan PIC</text>
+
+  <!-- ==================== BADGE LABELS ==================== -->
+  <!-- [Tidak Valid] badge -->
+  <rect x="548" y="318" width="68" height="18" rx="4" fill="#FFFFFF" stroke="#EF4444" stroke-width="1" />
+  <text x="582" y="327" class="txt-label" fill="#DC2626">[Tidak Valid]</text>
+
+  <!-- [Format & Ukuran Valid] badge -->
+  <rect x="548" y="420" width="128" height="18" rx="4" fill="#FFFFFF" stroke="#16A34A" stroke-width="1" />
+  <text x="612" y="429" class="txt-label" fill="#16A34A">[Format &amp; Ukuran Valid]</text>
+
+  <!-- [Ada Tindak Lanjut] badge -->
+  <rect x="905" y="788" width="98" height="18" rx="4" fill="#FFFFFF" stroke="#2563EB" stroke-width="1" />
+  <text x="954" y="797" class="txt-label" fill="#2563EB">[Ada Tindak Lanjut]</text>
+
+  <!-- [Tidak Ada Tindak Lanjut] badge -->
+  <rect x="660" y="726" width="132" height="18" rx="4" fill="#FFFFFF" stroke="#16A34A" stroke-width="1" />
+  <text x="726" y="735" class="txt-label" fill="#16A34A">[Tidak Ada Tindak Lanjut]</text>
+
+</svg>

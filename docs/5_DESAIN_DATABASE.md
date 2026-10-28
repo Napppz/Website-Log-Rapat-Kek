@@ -1,58 +1,39 @@
 # SPESIFIKASI TABEL BASIS DATA (SUB-BAB 3.2.4.c)
-## Sistem Informasi Log & Notula Rapat (Log_Book_Rapat KEK RI)
-**Sekretariat Jenderal Dewan Nasional Kawasan Ekonomi Khusus Republik Indonesia**
+## Aplikasi Log Book Kegiatan pada Sekretariat Jenderal Dewan Nasional Kawasan Ekonomi Khusus
+**Program Studi Informatika — Fakultas Teknik & Informatika Universitas Bina Sarana Informatika (UBSI) 2026**
 
-Dokumen ini memuat perancangan resmi **Desain Database (Physical Relational Data Model)** dengan format visual *Card Diagram* modern sesuai acuan penulisan Skripsi / Tugas Akhir, memodelkan tabel-tabel basis data **Neon PostgreSQL**.
+Dokumen ini memuat perancangan resmi **Spesifikasi Basis Data (Data Dictionary)** dan **Desain Database Fisik (Physical Relational Data Model)** sesuai dengan **Buku Pedoman Praktik Kerja Lapangan (PKL) UBSI Tahun 2026 (Outline 3 - Perancangan dan Pembuatan Program)**.
 
 > [!NOTE]
-> **Penempatan pada Laporan PKL (Pedoman PKL UBSI Tahun 2026 Halaman 30 – 31 No. 3):**  
-> Desain skema basis data fisik ini ditempatkan pada **BAB III PEMBAHASAN &rarr; 3.2. Pembuatan Program &rarr; 3.2.4. Database\* &rarr; c. Spesifikasi Tabel Basis Data**.
+> **Penempatan pada Laporan PKL:**  
+> Spesifikasi basis data ini ditempatkan pada **BAB III PEMBAHASAN &rarr; 3.2. Pembuatan Program &rarr; 3.2.4. Database\* &rarr; c. Spesifikasi Tabel Basis Data**.
 
 ---
 
+## 1. Audit Data Aktual Basis Data Neon PostgreSQL
 
-## 1. File Diagram & Tautan Pratinjau
+Sesuai arahan perancangan dan audit basis data aktual pada platform cloud **Neon Serverless PostgreSQL (PostgreSQL 16/18)**, spesifikasi basis data ini **hanya mencakup entitas tabel yang aktif dan memiliki data operasional riil**. Seluruh tabel kosong (0 record) yang tidak digunakan dalam alur transaksi sistem **dieliminasi dan tidak dimasukkan ke dalam dokumentasi laporan**:
 
-* **File Asli Draw.io (Multi-Tab):** [`docs/DESAIN_DATABASE_Log_Book_Rapat.drawio`](file:///c:/Users/nappz/Documents/Project%20Website/Projek%20Log%20Rapat/docs/DESAIN_DATABASE_Log_Book_Rapat.drawio)
-* **Tautan Unduh Langsung:** [http://localhost:3000/DESAIN_DATABASE_Log_Book_Rapat.drawio](http://localhost:3000/DESAIN_DATABASE_Log_Book_Rapat.drawio)
-* **Tautan Pratinjau Interaktif di Browser:** [http://localhost:3000/database-design-preview.html](http://localhost:3000/database-design-preview.html)
-
-> [!TIP]
-> **Fitur Pratinjau Interaktif di Web:**
-> Melalui browser di `http://localhost:3000/database-design-preview.html`, Anda dapat beralih secara langsung antara:
-> 1. **Skema Utama Log_Book_Rapat KEK RI (8 Tabel Inti)** — Ditata dalam grid dan relasi persis seperti contoh acuan.
-> 2. **Skema Lengkap Log_Book_Rapat KEK RI (14 Tabel 3NF)** — Menampilkan seluruh 14 tabel PostgreSQL.
-> 3. **Replika Persis Contoh Gambar (8 Tabel Permohonan Informasi)** — Replika 100% dari gambar yang Anda lampirkan (`m_units`, `r_user_unit`, `r_permohonan_informasi`, dll).
-
----
-
-## 2. Standardisasi Visual Desain Database (Sesuai Contoh Acuan)
-
-| Elemen Desain | Gaya / Palet Warna | Makna & Aturan Desain |
-|:---|:---|:---|
-| **Header Kartu Tabel** | Biru Navy `#205493`, Teks Putih Tebal | Menampilkan nama fisik tabel relasional dalam huruf kecil (*snake_case*). |
-| **Baris Kunci (PK & FK)** | Latar Biru Muda Halus `#E6F0FA` | Membedakan kolom kunci utama (*Primary Key* 🔑) dan kunci tamu (*Foreign Key* 🔗) dari kolom atribut biasa. |
-| **Kolom Atribut Biasa** | Latar Putih Bersih `#FFFFFF` | Menampilkan atribut data standar dengan batas garis halus (*border-bottom*). |
-| **Tipe Data (Kanan)** | Abu-abu Slate `#64748B`, Font Monospace | Menampilkan tipe data fisik PostgreSQL (`varchar`, `integer`, `timestamp`, `enum`, `boolean`, `text`). |
-| **Garis Relasi Ortogonal** | Biru Cerulean `#3182CE` (tebal 1.6–1.8px) | Menghubungkan kolom PK di tabel induk ke kolom FK di tabel anak dengan belokan siku halus. |
-| **Titik Kardinalitas** | Lingkaran kecil putih bergaris biru `○` | Menandai sisi **0..1 (Induk / Satu)** dan sisi **\* (Anak / Banyak)** dengan tanda panah terbuka. |
+| No | Nama Tabel Fisik | Status Record Data | Keputusan Dokumentasi | Fungsi Operasional Sistem |
+|:--:|:---|:---:|:---:|:---|
+| 1 | **`biro`** | **5 baris** | **Dimasukkan (Aktif)** | Master data unit kerja Eselon II di lingkungan Setjen DN KEK. |
+| 2 | **`tim_biro`** | **5 baris** | **Dimasukkan (Aktif)** | Kelompok kerja / tim teknis operasional di bawah biro. |
+| 3 | **`pengguna`** | **23 baris** | **Dimasukkan (Aktif)** | Data akun aparatur, hak akses, dan autentikasi multi-role. |
+| 4 | **`kegiatan`** | **23 baris** | **Dimasukkan (Aktif)** | Transaksi sentral jadwal agenda kegiatan, registrasi, dan catatan hasil. |
+| 5 | **`peserta_kegiatan`** | **38 baris** | **Dimasukkan (Aktif)** | Daftar pihak dan aparatur terkait penugasan kegiatan resmi. |
+| 6 | **`lampiran_kegiatan`** | **9 baris** | **Dimasukkan (Aktif)** | Berkas digital naskah pendukung (undangan, nota konsumsi, paparan materi, rilis). |
+| 7 | **`tindak_lanjut`** | **36 baris** | **Dimasukkan (Aktif)** | Butir komitmen arahan penugasan (*action items*), PIC, dan tenggat waktu. |
+| 8 | **`riwayat_tindak_lanjut`** | **34 baris** | **Dimasukkan (Aktif)** | Rekam jejak audit pembaruan status progres tindak lanjut oleh PIC. |
+| 9 | **`notifikasi`** | **35 baris** | **Dimasukkan (Aktif)** | Notifikasi lonceng sistem terkait agenda kegiatan dan batas waktu tugas. |
+| 10 | `notulen_kegiatan` | **0 baris** | *Dieliminasi (Kosong)* | Catatan ringkasan hasil kegiatan disimpan langsung pada tabel `kegiatan`. |
+| 11 | `komentar_notulen` | **0 baris** | *Dieliminasi (Kosong)* | Tidak ada record data operasional aktif di database. |
+| 12 | `riwayat_notulen` | **0 baris** | *Dieliminasi (Kosong)* | Tidak ada record data operasional aktif di database. |
+| 13 | `penomoran_kegiatan_biro` | **0 baris** | *Dieliminasi (Kosong)* | Penomoran urut agenda di-generate secara algoritmik di kode program. |
+| 14 | `kegiatan_biro` | **0 baris** | *Dieliminasi (Kosong)* | Relasi biro pemrakarsa dicatat langsung via foreign key `id_biro`. |
 
 ---
 
-## 3. Struktur 8 Tabel Inti Log_Book_Rapat KEK RI (Layout Contoh Acuan)
-
-## 3. Sinkronisasi Skema Langsung dari Neon PostgreSQL
-
-> [!IMPORTANT]
-> **Verifikasi Langsung dari Basis Data Neon Lakebase Postgres:**  
-> Seluruh tabel, nama atribut, tipe data, *Primary Key* (PK), dan *Foreign Key* (FK) telah diverifikasi dan disinkronkan secara langsung menggunakan **Neon MCP Server** pada basis data produksi:
-> - **Project ID:** `divine-cherry-57535219`
-> - **Project Name:** `Log Rapat KEK`
-> - **Region:** `aws-ap-southeast-1` (Singapore)
-> - **PostgreSQL Version:** PostgreSQL 18
-> - **Total Entitas Fisik:** 14 Tabel (3NF)
-
-### 3.1. Pemetaan 8 Tabel Inti Log_Book_Rapat KEK RI (Tata Letak Contoh Acuan)
+## 2. Struktur Relasi Relasional Antar-Tabel (Physical Data Model)
 
 ```
                   +-------------------+            +-------------------+
@@ -68,196 +49,182 @@ Dokumen ini memuat perancangan resmi **Desain Database (Physical Relational Data
                      │                                       │
                      ▼ N                                     ▼ N
 +--------------------+--------------+   +--------------------+--------------+   +--------------------+--------------+
-|               rapat               |   |            tindak_lanjut          |   |              pengguna              |
+|              kegiatan             |   |            tindak_lanjut          |   |              pengguna              |
 +-----------------------------------+   +-----------------------------------+   +-----------------------------------+
-| id_rapat                       PK | 1 | id_tindak_lanjut               PK |   | id_pengguna                    PK |
-| nomor_rapat                  text |──>| id_rapat                       FK |   | nama_lengkap                 text |
-| judul_rapat                  text | N | id_biro                        FK |   | email                        text |
+| id_kegiatan                    PK | 1 | id_tindak_lanjut               PK |   | id_pengguna                    PK |
+| nomor_kegiatan               text |──>| id_kegiatan                    FK |   | nama_lengkap                 text |
+| judul_kegiatan               text | N | id_biro                        FK |   | email                        text |
 | id_biro                        FK |   | id_tim                         FK |   | peran                    UserRole |
 | id_tim                         FK |   | id_pengguna                    FK |   | id_biro                        FK |
 | id_pengguna                    FK |   | judul_tindakan               text |   | id_tim                         FK |
-| id_notulis                     FK |   | status_tindak_lanjut ActionItem.. |   | status_aktif                 bool |
-| tanggal_rapat           timestamp |   | skala_prioritas    ActionItem..   |   +-----------------------------------+
-| waktu_mulai                  text |   | tenggat_waktu           timestamp |              │ 1
-| waktu_selesai                text |   | dibuat_pada             timestamp |              │
-| lokasi_rapat                 text |   +-----------------------------------+              │
-| status_rapat        MeetingStatus |                                                      │
-| pic_rapat                    text |                                                      ▼ N
-| status_progres               text |                                           +-----------------------------------+
-+-----------------------------------+                                           |             notifikasi            |
-   │ 1              │ 1                 +-----------------------------------+   +-----------------------------------+
-   │                │                   |           peserta_rapat           |   | id_notifikasi                  PK |
-   │                │                   +-----------------------------------+   | id_pengguna                    FK |
-   │                │                 1 | id_peserta                     PK |<──| judul                         text |
-   │                └──────────────────>| id_rapat                       FK | N | pesan                         text |
-   │                                  N | id_pengguna                    FK |   | tipe                          text |
-   │                                    | status_kehadiran AttendanceStatus |   | tautan                        text |
-   │                                    | dibuat_pada             timestamp |   | sudah_dibaca                 bool |
-   ▼ 1                                  +-----------------------------------+   | dibuat_pada             timestamp |
-+-----------------------------------+                                           +-----------------------------------+
-|           notulen_rapat           |
-+-----------------------------------+
-| id_notulen                     PK |
-| id_rapat                       FK |
-| agenda_pembahasan            text |
-| hasil_pembahasan             text |
-| poin_keputusan               text |
-| kesimpulan                   text |
-| dibuat_pada             timestamp |
-+-----------------------------------+
+| tanggal_kegiatan        timestamp |   | status_tindak_lanjut ActionItem.. |   | status_aktif                 bool |
+| waktu_mulai                  text |   | tenggat_waktu           timestamp |   | id_tim                         FK |
+| waktu_selesai                text |   | diselesaikan_pada       timestamp |   | status_aktif                 bool |
+| lokasi_kegiatan              text |   | dibuat_pada             timestamp |   +-----------------------------------+
+| status_kegiatan     MeetingStatus |   +-----------------------------------+      │ 1           │ 1           │ 1
+| pic_kegiatan                 text |   +-----------------------------------+      │             │             ▼ N
+| status_progres               text |              │ 1                             │             │  +-------------------+
+| catatan_hasil                text |              │                               │             │  |    notifikasi     |
++-----------------------------------+              ▼ N                             │             │  +-------------------+
+   │ 1              │ 1                 +-----------------------------------+      │             │  | id_notifikasi  PK |
+   │                │                   |       riwayat_tindak_lanjut       |      │             │  | id_pengguna    FK |
+   │                │                   +-----------------------------------+      │             │  | judul        text |
+   │                │                   | id_riwayat                     PK |      │             │  | pesan        text |
+   │                │                   | id_tindak_lanjut               FK |      │             │  | tipe         text |
+   │                │                   | id_pengguna                    FK |<─────┘             │  | tautan       text |
+   │                │                   | status_sebelumnya  ActionItem..   |                    │  | sudah_dibaca bool |
+   │                │                   | status_terbaru     ActionItem..   |                    │  | dibuat_pada  time |
+   │                │                   | catatan_progres              text |                    │  +-------------------+
+   │                │                   | dibuat_pada             timestamp |                    │
+   │                │                   +-----------------------------------+                    │
+   │                ▼ N                                                                          │
+   │    +-----------------------------------+   +-----------------------------------+            │
+   │    |         peserta_kegiatan          |   |         lampiran_kegiatan         |            │
+   │    +-----------------------------------+   +-----------------------------------+            │
+   │    | id_peserta                     PK |   | id_lampiran                    PK |            │
+   └───>| id_kegiatan                    FK |   | id_kegiatan                    FK |<───────────┘
+        | id_pengguna                    FK |<──┼───────────────────────────────────┤
+        | status_kehadiran AttendanceStatus |   | nama_berkas                  text |
+        | dibuat_pada             timestamp |   | url_berkas                   text |
+        +-----------------------------------+   | ukuran_berkas                int4 |
+                                                | tipe_berkas                  text |
+                                                | kategori                     text |
+                                                | dibuat_pada             timestamp |
+                                                +-----------------------------------+
 ```
 
 ---
 
-## 4. Spesifikasi Basis Data (Data Dictionary — 8 Tabel Inti)
+## 3. Spesifikasi Basis Data (Data Dictionary)
 
-Spesifikasi basis data (*data dictionary*) menjelaskan rincian teknis dari setiap tabel yang digunakan dalam sistem aplikasi **Log Book Notula Rapat KEK RI**. Seluruh kolom kunci utama (*Primary Key* / PK) dan kunci tamu (*Foreign Key* / FK) telah disesuaikan keterangannya secara eksplisit agar mudah dipahami oleh dosen pembimbing, mentor instansi, dan penguji:
+Spesifikasi basis data (*data dictionary*) menjelaskan rincian teknis dari setiap tabel yang digunakan dalam sistem **Aplikasi Log Book Kegiatan pada Sekretariat Jenderal Dewan Nasional Kawasan Ekonomi Khusus**:
 
 ### Tabel III.1. Spesifikasi Tabel Pengguna (`pengguna`)
 | No | Nama Field | Tipe Data | Keterangan |
 |:--:|:---|:---|:---|
-| 1 | `id_pengguna` | Varchar (UUID) | **Primary Key** |
-| 2 | `nama_lengkap` | Varchar | Nama lengkap pegawai |
-| 3 | `email` | Varchar | Email dinas resmi (Unique) |
-| 4 | `kata_sandi` | Varchar | Password terenkripsi (Bcrypt hash) |
-| 5 | `peran` | Enum | `SUPER_ADMIN`, `ADMIN`, `PIMPINAN`, `STAFF` |
-| 6 | `id_biro` | Varchar (UUID) | **Foreign Key** (Relasi ke tabel biro) |
-| 7 | `id_tim` | Varchar (UUID) | **Foreign Key** (Relasi ke tabel tim_biro, opsional) |
-| 8 | `status_aktif` | Boolean | Status aktif akun (Default: `true`) |
-| 9 | `dibuat_pada` | Timestamp | Waktu akun didaftarkan |
-| 10 | `diperbarui_pada` | Timestamp | Waktu terakhir pembaruan profil |
+| 1 | `id_pengguna` | `text` (UUID) | **Primary Key** (Kode pengenal unik akun aparatur) |
+| 2 | `nama_lengkap` | `text` | Nama lengkap aparatur pegawai |
+| 3 | `email` | `text` | Alamat email resmi (Unique) |
+| 4 | `kata_sandi` | `text` | Kata sandi akun terenkripsi (Hash) |
+| 5 | `peran` | `UserRole` (Enum) | Hak akses peran: `SUPER_ADMIN`, `ADMIN`, `PIMPINAN`, `STAFF` |
+| 6 | `id_biro` | `text` (UUID) | **Foreign Key** (Relasi ke `biro.id_biro`) |
+| 7 | `id_tim` | `text` (UUID) | **Foreign Key** (Relasi ke `tim_biro.id_tim`, opsional) |
+| 8 | `status_aktif` | `bool` | Status keaktifan akun pengguna (Default: `true`) |
+| 9 | `dibuat_pada` | `timestamp` | Waktu akun pertama kali didaftarkan |
+| 10 | `diperbarui_pada` | `timestamp` | Waktu terakhir pembaruan data profil akun |
+| 11 | `nama_pengguna` | `text` | Username unik untuk keperluan autentikasi login |
 
 ### Tabel III.2. Spesifikasi Tabel Biro (`biro`)
 | No | Nama Field | Tipe Data | Keterangan |
 |:--:|:---|:---|:---|
-| 1 | `id_biro` | Varchar (UUID) | **Primary Key** |
-| 2 | `kode_biro` | Varchar | Kode singkatan unik biro (Unique) |
-| 3 | `nama_biro` | Varchar | Nama lengkap biro pemrakarsa |
-| 4 | `nama_singkat` | Varchar | Nomenklatur singkatan biro |
-| 5 | `deskripsi` | Text | Uraian fungsi pokok biro |
-| 6 | `status_aktif` | Boolean | Status aktif operasional biro |
-| 7 | `dibuat_pada` | Timestamp | Waktu data biro dibuat |
-| 8 | `diperbarui_pada` | Timestamp | Waktu terakhir data diperbarui |
+| 1 | `id_biro` | `text` (UUID) | **Primary Key** (Kode pengenal unik unit kerja Biro) |
+| 2 | `kode_biro` | `text` | Kode unik biro kerja (misal: `BIRO-1`, `BIRO-2`) (Unique) |
+| 3 | `nama_biro` | `text` | Nama lengkap unit kerja biro pemrakarsa |
+| 4 | `nama_singkat` | `text` | Nomenklatur singkatan biro kerja |
+| 5 | `deskripsi` | `text` | Uraian tugas dan fungsi pokok biro |
+| 6 | `status_aktif` | `bool` | Status aktif operasional biro (Default: `true`) |
+| 7 | `dibuat_pada` | `timestamp` | Waktu data biro dibuat |
+| 8 | `diperbarui_pada` | `timestamp` | Waktu terakhir pembaruan data biro |
 
 ### Tabel III.3. Spesifikasi Tabel Tim Kerja Biro (`tim_biro`)
 | No | Nama Field | Tipe Data | Keterangan |
 |:--:|:---|:---|:---|
-| 1 | `id_tim` | Varchar (UUID) | **Primary Key** |
-| 2 | `id_biro` | Varchar (UUID) | **Foreign Key** (Relasi ke tabel biro) |
-| 3 | `kode_tim` | Varchar | Kode pengenal tim kerja |
-| 4 | `nama_tim` | Varchar | Nama kelompok kerja / tim |
-| 5 | `deskripsi_tim` | Text | Uraian bidang penugasan tim |
-| 6 | `status_aktif` | Boolean | Status keaktifan tim kerja |
-| 7 | `dibuat_pada` | Timestamp | Waktu tim dibentuk |
-| 8 | `diperbarui_pada` | Timestamp | Waktu pembaruan data tim |
+| 1 | `id_tim` | `text` (UUID) | **Primary Key** (Kode pengenal unik kelompok kerja tim) |
+| 2 | `id_biro` | `text` (UUID) | **Foreign Key** (Relasi ke `biro.id_biro` - Biro Induk) |
+| 3 | `kode_tim` | `text` | Kode unik tim kerja |
+| 4 | `nama_tim` | `text` | Nama kelompok kerja teknis di bawah biro |
+| 5 | `deskripsi_tim` | `text` | Uraian bidang penugasan kerja tim |
+| 6 | `status_aktif` | `bool` | Status keaktifan kelompok kerja (Default: `true`) |
+| 7 | `dibuat_pada` | `timestamp` | Waktu tim kerja dibentuk |
+| 8 | `diperbarui_pada` | `timestamp` | Waktu pembaruan data tim kerja |
 
-### Tabel III.4. Spesifikasi Tabel Rapat Dinas (`rapat`)
+### Tabel III.4. Spesifikasi Tabel Kegiatan (`kegiatan`)
 | No | Nama Field | Tipe Data | Keterangan |
 |:--:|:---|:---|:---|
-| 1 | `id_rapat` | Varchar (UUID) | **Primary Key** |
-| 2 | `nomor_rapat` | Varchar | Nomor registrasi agenda rapat (Unique) |
-| 3 | `judul_rapat` | Varchar | Pokok judul pembahasan rapat |
-| 4 | `id_biro` | Varchar (UUID) | **Foreign Key** (Relasi ke tabel biro - Biro Pemrakarsa) |
-| 5 | `id_tim` | Varchar (UUID) | **Foreign Key** (Relasi ke tabel tim_biro, opsional) |
-| 6 | `tanggal_rapat` | Timestamp | Tanggal pelaksanaan rapat dinas |
-| 7 | `waktu_mulai` | Varchar | Jam mulai sidang (Format HH:mm) |
-| 8 | `waktu_selesai` | Varchar | Jam penutupan sidang (Format HH:mm) |
-| 9 | `lokasi_rapat` | Varchar | Ruang rapat luring atau tautan daring |
-| 10 | `id_pengguna` | Varchar (UUID) | **Foreign Key** (Relasi ke tabel pengguna - Pimpinan Rapat) |
-| 11 | `id_notulis` | Varchar (UUID) | **Foreign Key** (Relasi ke tabel pengguna - Petugas Notulis) |
-| 12 | `status_rapat` | Enum | `DRAFT`, `REVIEW`, `APPROVED`, `FINAL` |
-| 13 | `jenis_rapat` | Varchar | Klasifikasi agenda rapat dinas |
-| 14 | `pic_rapat` | Varchar | Nama penanggung jawab teknis rapat |
-| 15 | `status_progres` | Varchar | Status tahapan progres rapat |
-| 16 | `dibuat_pada` | Timestamp | Waktu agenda rapat dibuat |
-| 17 | `diperbarui_pada` | Timestamp | Waktu pembaruan data rapat |
+| 1 | `id_kegiatan` | `text` (UUID) | **Primary Key** (Kode pengenal unik transaksi agenda kegiatan) |
+| 2 | `nomor_kegiatan` | `text` | Nomor registrasi agenda kegiatan (Unique) |
+| 3 | `judul_kegiatan` | `text` | Pokok judul pembahasan agenda kegiatan |
+| 4 | `id_biro` | `text` (UUID) | **Foreign Key** (Relasi ke `biro.id_biro` - Biro Pemrakarsa) |
+| 5 | `id_tim` | `text` (UUID) | **Foreign Key** (Relasi ke `tim_biro.id_tim`, opsional) |
+| 6 | `tanggal_kegiatan` | `timestamp` | Tanggal pelaksanaan agenda kegiatan |
+| 7 | `waktu_mulai` | `text` | Waktu mulai pelaksanaan kegiatan (Format HH:mm) |
+| 8 | `waktu_selesai` | `text` | Waktu penutupan pelaksanaan kegiatan (Format HH:mm) |
+| 9 | `lokasi_kegiatan` | `text` | Lokasi pelaksanaan kegiatan (luring atau tautan daring) |
+| 10 | `id_pengguna` | `text` (UUID) | **Foreign Key** (Relasi ke `pengguna.id_pengguna` - Pimpinan Kegiatan) |
+| 11 | `id_kegiatan_sebelumnya` | `text` (UUID) | **Foreign Key** (Relasi rekursif ke `kegiatan.id_kegiatan`, opsional) |
+| 12 | `status_kegiatan` | `MeetingStatus` | Status tahapan: `DRAFT`, `REVIEW`, `APPROVED`, `FINAL` |
+| 13 | `jenis_kegiatan` | `text` | Kategori naskah: Naskah Masuk, Disposisi Sekjen/Karo, Rutin |
+| 14 | `pic_kegiatan` | `text` | Nama pejabat/staf penanggung jawab teknis kegiatan |
+| 15 | `status_progres` | `text` | Tahapan progres: Belum Dimulai, Dalam Proses, Selesai |
+| 16 | `catatan_hasil` | `text` | Ringkasan pokok catatan dan kesimpulan pelaksanaan kegiatan |
+| 17 | `rencana_aksi` | `text` | Rencana tindak lanjut pelaksanaan arahan kegiatan |
+| 18 | `nomor_nd_konsum` | `text` | Nomor nota pengajuan konsumsi kegiatan |
+| 19 | `tautan_rilis` | `text` | Tautan publikasi media/berita terkait kegiatan |
+| 20 | `dibuat_pada` | `timestamp` | Waktu data agenda kegiatan didaftarkan ke sistem |
+| 21 | `diperbarui_pada` | `timestamp` | Waktu terakhir pembaruan data kegiatan |
 
-### Tabel III.5. Spesifikasi Tabel Peserta Rapat (`peserta_rapat`)
+### Tabel III.5. Spesifikasi Tabel Peserta Kegiatan (`peserta_kegiatan`)
 | No | Nama Field | Tipe Data | Keterangan |
 |:--:|:---|:---|:---|
-| 1 | `id_peserta` | Varchar (UUID) | **Primary Key** |
-| 2 | `id_rapat` | Varchar (UUID) | **Foreign Key** (Relasi ke tabel rapat) |
-| 3 | `id_pengguna` | Varchar (UUID) | **Foreign Key** (Relasi ke tabel pengguna - Peserta Rapat) |
-| 4 | `status_kehadiran` | Enum | Presensi: `INVITED`, `PRESENT`, `ABSENT`, `EXCUSED` |
-| 5 | `dibuat_pada` | Timestamp | Waktu undangan peserta ditambahkan |
+| 1 | `id_peserta` | `text` (UUID) | **Primary Key** (Kode unik data pihak terkait kegiatan) |
+| 2 | `id_kegiatan` | `text` (UUID) | **Foreign Key** (Relasi ke `kegiatan.id_kegiatan`) |
+| 3 | `id_pengguna` | `text` (UUID) | **Foreign Key** (Relasi ke `pengguna.id_pengguna` - Aparatur Terkait) |
+| 4 | `status_kehadiran` | `AttendanceStatus` | Status peran aparatur/undangan terkait kegiatan |
+| 5 | `dibuat_pada` | `timestamp` | Waktu data pihak terkait ditambahkan ke agenda |
 
-### Tabel III.6. Spesifikasi Tabel Notulen Rapat (`notulen_rapat`)
+### Tabel III.6. Spesifikasi Tabel Riwayat Tindak Lanjut (`riwayat_tindak_lanjut`)
 | No | Nama Field | Tipe Data | Keterangan |
 |:--:|:---|:---|:---|
-| 1 | `id_notulen` | Varchar (UUID) | **Primary Key** |
-| 2 | `id_rapat` | Varchar (UUID) | **Foreign Key** (Relasi ke tabel rapat, relasi 1:1) |
-| 3 | `agenda_pembahasan` | Text | Daftar butir agenda pembahasan rapat |
-| 4 | `hasil_pembahasan` | Text | Ringkasan dinamika dan jalannya sidang |
-| 5 | `poin_keputusan` | Text | Butir-butir keputusan yang disepakati |
-| 6 | `kesimpulan` | Text | Kesimpulan dan rekomendasi akhir rapat |
-| 7 | `dibuat_pada` | Timestamp | Waktu draf notula dibuat |
-| 8 | `diperbarui_pada` | Timestamp | Waktu pengesahan / revisi notula |
+| 1 | `id_riwayat` | `text` (UUID) | **Primary Key** (Kode pengenal unik riwayat progres) |
+| 2 | `id_tindak_lanjut` | `text` (UUID) | **Foreign Key** (Relasi ke `tindak_lanjut.id_tindak_lanjut`) |
+| 3 | `id_pengguna` | `text` (UUID) | **Foreign Key** (Relasi ke `pengguna.id_pengguna` - Aparatur PIC) |
+| 4 | `status_sebelumnya` | `ActionItemStatus` | Status tahapan penugasan sebelum diperbarui |
+| 5 | `status_terbaru` | `ActionItemStatus` | Status tahapan terkini: Belum Dimulai, Dalam Proses, Selesai |
+| 6 | `catatan_progres` | `text` | Uraian catatan capaian realisasi progres tindak lanjut |
+| 7 | `dibuat_pada` | `timestamp` | Waktu pencatatan log riwayat progres tugas |
 
-### Tabel III.7. Spesifikasi Tabel Tindak Lanjut Komitmen (`tindak_lanjut`)
+### Tabel III.7. Spesifikasi Tabel Tindak Lanjut Arahan (`tindak_lanjut`)
 | No | Nama Field | Tipe Data | Keterangan |
 |:--:|:---|:---|:---|
-| 1 | `id_tindak_lanjut` | Varchar (UUID) | **Primary Key** |
-| 2 | `id_rapat` | Varchar (UUID) | **Foreign Key** (Relasi ke tabel rapat) |
-| 3 | `judul_tindakan` | Varchar | Judul arahan / instruksi kerja |
-| 4 | `deskripsi_tindakan` | Text | Uraian rincian teknis penugasan |
-| 5 | `id_biro` | Varchar (UUID) | **Foreign Key** (Relasi ke tabel biro - Biro Penanggung Jawab) |
-| 6 | `id_tim` | Varchar (UUID) | **Foreign Key** (Relasi ke tabel tim_biro, opsional) |
-| 7 | `id_pengguna` | Varchar (UUID) | **Foreign Key** (Relasi ke tabel pengguna - Staf PIC) |
-| 8 | `tenggat_waktu` | Timestamp | Batas akhir penyelesaian (Due Date) |
-| 9 | `status_tindak_lanjut` | Enum | `PENDING`, `IN_PROGRESS`, `COMPLETED`, `OVERDUE` |
-| 10 | `skala_prioritas` | Enum | Tingkat prioritas: `LOW`, `MEDIUM`, `HIGH`, `URGENT` |
-| 11 | `diselesaikan_pada` | Timestamp | Waktu penuntasan tugas (Opsional) |
-| 12 | `dibuat_pada` | Timestamp | Waktu instruksi diterbitkan |
-| 13 | `diperbarui_pada` | Timestamp | Waktu pembaruan status tindak lanjut |
+| 1 | `id_tindak_lanjut` | `text` (UUID) | **Primary Key** (Kode unik butir komitmen tindak lanjut) |
+| 2 | `id_kegiatan` | `text` (UUID) | **Foreign Key** (Relasi ke `kegiatan.id_kegiatan`) |
+| 3 | `judul_tindakan` | `text` | Judul arahan / butir tugas tindak lanjut kegiatan |
+| 4 | `deskripsi_tindakan` | `text` | Uraian teknis rincian instruksi pelaksanaan penugasan |
+| 5 | `id_biro` | `text` (UUID) | **Foreign Key** (Relasi ke `biro.id_biro` - Biro Penanggung Jawab) |
+| 6 | `id_tim` | `text` (UUID) | **Foreign Key** (Relasi ke `tim_biro.id_tim`, opsional) |
+| 7 | `id_pengguna` | `text` (UUID) | **Foreign Key** (Relasi ke `pengguna.id_pengguna` - Staf Aparatur PIC) |
+| 8 | `tenggat_waktu` | `timestamp` | Batas akhir waktu penyelesaian tugas (*due date*) |
+| 9 | `status_tindak_lanjut` | `ActionItemStatus` | Status tahapan: `PENDING`, `IN_PROGRESS`, `COMPLETED` |
+| 10 | `diselesaikan_pada` | `timestamp` | Waktu resmi penuntasan butir tugas (opsional) |
+| 11 | `dibuat_pada` | `timestamp` | Waktu butir instruksi diterbitkan |
+| 12 | `diperbarui_pada` | `timestamp` | Waktu pembaruan status tindak lanjut |
 
-### Tabel III.8. Spesifikasi Tabel Berkas Lampiran Rapat (`lampiran_rapat`)
+### Tabel III.8. Spesifikasi Tabel Berkas Lampiran Kegiatan (`lampiran_kegiatan`)
 | No | Nama Field | Tipe Data | Keterangan |
 |:--:|:---|:---|:---|
-| 1 | `id_lampiran` | Varchar (UUID) | **Primary Key** |
-| 2 | `id_rapat` | Varchar (UUID) | **Foreign Key** (Relasi ke tabel rapat) |
-| 3 | `nama_berkas` | Varchar | Nama dokumen (misal: `Paparan_KEK.pdf`) |
-| 4 | `url_berkas` | Text | Alamat penyimpanan berkas digital (Storage URL) |
-| 5 | `ukuran_berkas` | Integer | Ukuran berkas dalam satuan bytes |
-| 6 | `tipe_berkas` | Varchar | Ekstensi format berkas (PDF/DOCX) |
-| 7 | `nama_pengunggah` | Varchar | Identitas aparatur yang mengunggah berkas |
-| 8 | `kategori` | Varchar | Klasifikasi berkas (`UNDANGAN` / `MATERI`) |
-| 9 | `dibuat_pada` | Timestamp | Waktu berkas diunggah ke sistem |
+| 1 | `id_lampiran` | `text` (UUID) | **Primary Key** (Kode unik berkas lampiran dokumen kegiatan) |
+| 2 | `id_kegiatan` | `text` (UUID) | **Foreign Key** (Relasi ke `kegiatan.id_kegiatan`) |
+| 3 | `nama_berkas` | `text` | Nama berkas dokumen kegiatan (misal: `Undangan_KEK.pdf`) |
+| 4 | `url_berkas` | `text` | Tautan lokasi penyimpanan berkas digital (*storage URL*) |
+| 5 | `ukuran_berkas` | `int4` | Ukuran kapasitas berkas dokumen dalam satuan bytes |
+| 6 | `tipe_berkas` | `text` | Ekstensi format berkas naskah digital (PDF, DOCX, XLSX) |
+| 7 | `nama_pengunggah` | `text` | Identitas staf aparatur yang mengunggah dokumen |
+| 8 | `kategori` | `text` | Klasifikasi dokumen (UNDANGAN / MATERI / NOTA_KONSUMSI / RILIS) |
+| 9 | `dibuat_pada` | `timestamp` | Waktu berkas diunggah ke sistem repositori |
+
+### Tabel III.9. Spesifikasi Tabel Notifikasi Sistem (`notifikasi`)
+| No | Nama Field | Tipe Data | Keterangan |
+|:--:|:---|:---|:---|
+| 1 | `id_notifikasi` | `text` (UUID) | **Primary Key** (Kode pengenal unik notifikasi pesan) |
+| 2 | `id_pengguna` | `text` (UUID) | **Foreign Key** (Relasi ke `pengguna.id_pengguna` - Penerima Notifikasi) |
+| 3 | `judul` | `text` | Judul pemberitahuan informasi sistem |
+| 4 | `pesan` | `text` | Uraian teks detail notifikasi jadwal / penugasan |
+| 5 | `tipe` | `text` | Tipe kategori pesan notifikasi (`info`, `warning`, `success`) |
+| 6 | `tautan` | `text` | Tautan navigasi cepat menuju detail kegiatan / tindak lanjut |
+| 7 | `sudah_dibaca` | `bool` | Indikator status apakah pesan telah dibaca (Default: `false`) |
+| 8 | `dibuat_pada` | `timestamp` | Waktu notifikasi diterbitkan oleh sistem |
+| 9 | `id_tim` | `text` (UUID) | **Foreign Key** (Relasi ke `tim_biro.id_tim`, opsional) |
 
 ---
 
-## 5. Daftar 14 Tabel Fisik Terverifikasi (Neon PostgreSQL)
-
-| No | Nama Tabel | Total Kolom | Kunci Utama (PK) | Kunci Asing (FK) Terkait | Fungsi Sistem |
-| :---: | :--- | :---: | :--- | :--- | :--- |
-| 1 | `biro` | 8 | `id_biro` | - | Data induk unit kerja setingkat Biro |
-| 2 | `tim_biro` | 8 | `id_tim` | `id_biro` &rarr; `biro` | Kelompok kerja / tim teknis di bawah biro |
-| 3 | `penomoran_rapat_biro` | 5 | `id_penomoran` | `id_biro` &rarr; `biro` | *Auto-sequence* counter nomor agenda per biro |
-| 4 | `rapat_biro` | 2 | `id_rapat`, `id_biro` | `id_rapat` &rarr; `rapat`, `id_biro` &rarr; `biro` | Tabel perantara (*junction*) keterlibatan lintas biro |
-| 5 | `pengguna` | 10 | `id_pengguna` | `id_biro` &rarr; `biro`, `id_tim` &rarr; `tim_biro` | Akun pengguna, hak akses, dan autentikasi |
-| 6 | `rapat` | 31 | `id_rapat` | `id_biro`, `id_tim`, `id_pengguna`, `id_notulis`, `id_rapat_sebelumnya` | Entitas transaksi utama data log rapat |
-| 7 | `notulen_rapat` | 8 | `id_notulen` | `id_rapat` &rarr; `rapat` | Isi notula resmi, agenda, arahan, dan kesimpulan |
-| 8 | `komentar_notulen` | 11 | `id_komentar` | `id_rapat`, `id_pengguna`, `id_induk` | Kolaborasi review draft notula secara berjenjang |
-| 9 | `riwayat_notulen` | 9 | `id_riwayat` | `id_rapat`, `id_pengguna` | Rekam jejak audit perbaikan dan revisi notula |
-| 10 | `peserta_rapat` | 5 | `id_peserta` | `id_rapat`, `id_pengguna` | Daftar presensi dan status kehadiran rapat |
-| 11 | `lampiran_rapat` | 9 | `id_lampiran` | `id_rapat` &rarr; `rapat` | Metadata dokumen pendukung & berkas paparan |
-| 12 | `notifikasi` | 8 | `id_notifikasi` | `id_pengguna` &rarr; `pengguna` | Pemberitahuan real-time agenda dan tindak lanjut |
-| 13 | `tindak_lanjut` | 13 | `id_tindak_lanjut` | `id_rapat`, `id_biro`, `id_tim`, `id_pengguna` | Matriks action items dan tanggung jawab penugasan |
-| 14 | `riwayat_tindak_lanjut` | 8 | `id_riwayat` | `id_tindak_lanjut`, `id_pengguna` | Log persentase progres dan histori tindak lanjut |
-
----
-
-## 6. Cara Menggunakan File di Draw.io
-
-1. Akses [https://app.diagrams.net](https://app.diagrams.net) di peramban web Anda.
-2. Pilih menu **Open Existing Diagram** &rarr; buka berkas [`docs/DESAIN_DATABASE_Log_Book_Rapat.drawio`](file:///c:/Users/nappz/Documents/Project%20Website/Projek%20Log%20Rapat/docs/DESAIN_DATABASE_Log_Book_Rapat.drawio).
-3. Anda dapat beralih antar-tab di bagian bawah layar:
-   - **Tab 1:** Contoh Acuan Foto (8 Tabel Layanan Permohonan Informasi).
-   - **Tab 2:** Log_Book_Rapat KEK RI (8 Tabel Inti Tata Letak Foto Sesuai Acuan).
-   - **Tab 3:** Log_Book_Rapat KEK RI (14 Entitas Lengkap Sesuai Neon PostgreSQL).
-4. Untuk menyematkan ke dokumen Word laporan skripsi:
-   * Pilih menu **File &rarr; Export as &rarr; PNG**.
-   * Centang **Transparent Background** (opsional) dan tentukan **Zoom: 300% (300 DPI)** agar hasil cetakan diagram tidak pecah atau buram.
-
----
-
-*Dokumen ini merupakan bagian dari rangkaian dokumentasi resmi rekayasa perangkat lunak Log_Book_Rapat KEK RI ([Tahap 1: ERD](file:///c:/Users/nappz/Documents/Project%20Website/Projek%20Log%20Rapat/docs/1_ERD_DIAGRAM.md) &bull; [Tahap 2: LRS](file:///c:/Users/nappz/Documents/Project%20Website/Projek%20Log%20Rapat/docs/2_LRS_DIAGRAM.md) &bull; [Tahap 3: Use Case](file:///c:/Users/nappz/Documents/Project%20Website/Projek%20Log%20Rapat/docs/3_USE_CASE_DIAGRAM.md) &bull; [Tahap 4: Activity Diagram](file:///c:/Users/nappz/Documents/Project%20Website/Projek%20Log%20Rapat/docs/4_ACTIVITY_DIAGRAM.md) &bull; [Tahap 5: Desain Database](file:///c:/Users/nappz/Documents/Project%20Website/Projek%20Log%20Rapat/docs/5_DESAIN_DATABASE.md)).*
+*Dokumen ini disinkronkan secara langsung dengan basis data aktif Neon Serverless PostgreSQL dan naskah Laporan PKL UBSI 2026.*
