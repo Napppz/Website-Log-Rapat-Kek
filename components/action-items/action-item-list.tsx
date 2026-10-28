@@ -110,8 +110,8 @@ export function ActionItemList({
       newProgress !== undefined
         ? newProgress
         : newStatus === 'COMPLETED'
-        ? 100
-        : item.latestProgress
+          ? 100
+          : item.latestProgress
     );
   };
 
@@ -230,8 +230,8 @@ export function ActionItemList({
           newStatus === 'COMPLETED'
             ? 'Status tindak lanjut diperbarui: Selesai.'
             : newStatus === 'IN_PROGRESS'
-            ? 'Status tindak lanjut diperbarui: Dalam Proses.'
-            : 'Status tindak lanjut diperbarui: Belum Dimulai.'
+              ? 'Status tindak lanjut diperbarui: Dalam Proses.'
+              : 'Status tindak lanjut diperbarui: Belum Dimulai.'
         );
         router.refresh();
       } else {
@@ -743,8 +743,8 @@ export function ActionItemList({
                           <span className="w-1.5 h-1.5 rounded-full bg-slate-400" />
                           {item.picTeam
                             ? (item.picTeam.name.startsWith('Tim ') || item.picTeam.name.startsWith('Pokja')
-                                ? item.picTeam.name
-                                : `Tim ${item.picTeam.name}`)
+                              ? item.picTeam.name
+                              : `Tim ${item.picTeam.name}`)
                             : item.picBiro?.shortName || 'Tim Pelaksana'}
                         </span>
                       )}
@@ -769,8 +769,8 @@ export function ActionItemList({
                               item.status === 'COMPLETED'
                                 ? 'text-slate-700'
                                 : isItemOverdue
-                                ? 'text-rose-600 font-bold'
-                                : 'text-slate-800'
+                                  ? 'text-rose-600 font-bold'
+                                  : 'text-slate-800'
                             }
                           >
                             {formatIndonesianDate(item.dueDate)}

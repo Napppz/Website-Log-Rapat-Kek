@@ -540,9 +540,9 @@ export function ActionItemFormDialog({
     if (!finalDueDate) {
       setFieldErrors((prev) => ({
         ...prev,
-        dueDate: 'Tindak lanjut wajib diisi.',
+        dueDate: 'Tanggal tindak lanjut wajib diisi.',
       }));
-      setErrorMessage('Tindak lanjut wajib diisi.');
+      setErrorMessage('Tanggal tindak lanjut wajib diisi.');
       return;
     }
 
@@ -876,14 +876,14 @@ export function ActionItemFormDialog({
               />
             </div>
 
-            {/* Mulai Tindak Lanjut & Status Tindak Lanjut */}
+            {/* Tanggal Tindak Lanjut & Status Tindak Lanjut */}
             <div className={isEditing ? "grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2 border-t border-slate-100" : "pt-2 border-t border-slate-100"}>
-              {/* Mulai Tindak Lanjut */}
+              {/* Tanggal Tindak Lanjut */}
               <div className={!isEditing ? "sm:w-1/2" : ""}>
                 <label className="block font-bold text-slate-800 mb-1.5 text-[13px] flex items-center justify-between">
                   <span className="flex items-center gap-1.5">
                     <Calendar className="w-3.5 h-3.5 text-[#31889C]" />
-                    <span>Mulai Tindak Lanjut</span>
+                    <span>Tanggal Tindak Lanjut</span>
                     <span className="text-red-500">*</span>
                   </span>
                 </label>
