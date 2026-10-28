@@ -1,0 +1,461 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1110 1010" width="1110" height="1010">
+  <defs>
+    <!-- Card elevation shadow -->
+    <filter id="card-shadow" x="-5%" y="-5%" width="110%" height="115%" filterUnits="userSpaceOnUse">
+      <feDropShadow dx="0" dy="4" stdDeviation="5" flood-color="#0F172A" flood-opacity="0.07" />
+      <feDropShadow dx="0" dy="1" stdDeviation="2" flood-color="#0F172A" flood-opacity="0.05" />
+    </filter>
+
+    <!-- Header gradient (matching the user's reference image) -->
+    <linearGradient id="header-grad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#2D6396" />
+      <stop offset="100%" stop-color="#1E4F7D" />
+    </linearGradient>
+
+    <!-- Marker Circle for 0..1 ends -->
+    <marker id="circle-end" viewBox="0 0 8 8" refX="4" refY="4" markerWidth="6" markerHeight="6">
+      <circle cx="4" cy="4" r="3" fill="#FFFFFF" stroke="#3B82F6" stroke-width="1.5" />
+    </marker>
+
+    <!-- Marker Arrow for Many (*) ends -->
+    <marker id="arrow-many" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 1.5 L 8 5 L 0 8.5" fill="none" stroke="#3B82F6" stroke-width="1.6" stroke-linecap="round" />
+    </marker>
+
+    <style>
+      .rel-line { fill: none; stroke: #3B82F6; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
+      .rel-cardinality { font-family: 'Segoe UI', Roboto, sans-serif; font-size: 10px; font-weight: 700; fill: #1E4F7D; }
+    </style>
+  </defs>
+
+  <!-- Background -->
+  <rect x="0" y="0" width="1110" height="1010" fill="#F8FAFC" />
+
+  <!-- Main Title -->
+  <text x="35" y="42" font-family="'Segoe UI', Roboto, Helvetica, sans-serif" font-size="21" font-weight="800" fill="#1E3A8A">4. Desain <tspan font-style="italic" fill="#2563EB">Database</tspan> (Logical Record Structure - LRS)</text>
+
+  <!-- ==================== RELATIONSHIP CONNECTOR PATHS ==================== -->
+  <g class="relationships">
+    <!-- 1. biro (1) -> tim_biro (0..*) -->
+    <path d="M 660 95 L 780 95" class="rel-line" marker-start="url(#circle-end)" marker-end="url(#arrow-many)" />
+    <text x="668" y="87" class="rel-cardinality">0..1</text>
+    <text x="768" y="87" class="rel-cardinality">*</text>
+
+    <!-- 2. biro (1) -> kegiatan (0..*) -->
+    <path d="M 520 230 L 520 285" class="rel-line" marker-start="url(#circle-end)" marker-end="url(#arrow-many)" />
+    <text x="528" y="242" class="rel-cardinality">0..1</text>
+    <text x="528" y="278" class="rel-cardinality">*</text>
+
+    <!-- 3. tim_biro (1) -> pengguna (0..*) -->
+    <path d="M 880 228 L 880 285" class="rel-line" marker-start="url(#circle-end)" marker-end="url(#arrow-many)" />
+    <text x="888" y="242" class="rel-cardinality">0..1</text>
+    <text x="888" y="278" class="rel-cardinality">*</text>
+
+    <!-- 4. kegiatan (1) -> lampiran_kegiatan (0..*) -->
+    <path d="M 420 340 L 375 340 Q 360 340 360 325 L 360 180 Q 360 165 345 165 L 330 165" class="rel-line" marker-start="url(#circle-end)" marker-end="url(#arrow-many)" />
+    <text x="403" y="332" class="rel-cardinality">0..1</text>
+    <text x="338" y="157" class="rel-cardinality">*</text>
+
+    <!-- 5. kegiatan (1) -> peserta_kegiatan (0..*) -->
+    <path d="M 420 440 L 330 440" class="rel-line" marker-start="url(#circle-end)" marker-end="url(#arrow-many)" />
+    <text x="403" y="432" class="rel-cardinality">0..1</text>
+    <text x="338" y="432" class="rel-cardinality">*</text>
+
+    <!-- 6. pengguna (1) -> kegiatan (0..*) [PIC Kegiatan] -->
+    <path d="M 780 370 L 680 370" class="rel-line" marker-start="url(#circle-end)" marker-end="url(#arrow-many)" />
+    <text x="760" y="362" class="rel-cardinality">0..1</text>
+    <text x="688" y="362" class="rel-cardinality">*</text>
+
+    <!-- 7. kegiatan (1) -> tindak_lanjut (0..*) -->
+    <path d="M 550 635 L 550 710" class="rel-line" marker-start="url(#circle-end)" marker-end="url(#arrow-many)" />
+    <text x="558" y="650" class="rel-cardinality">0..1</text>
+    <text x="558" y="700" class="rel-cardinality">*</text>
+
+    <!-- 8. tindak_lanjut (1) -> riwayat_tindak_lanjut (0..*) -->
+    <path d="M 680 770 L 780 770" class="rel-line" marker-start="url(#circle-end)" marker-end="url(#arrow-many)" />
+    <text x="688" y="762" class="rel-cardinality">0..1</text>
+    <text x="768" y="762" class="rel-cardinality">*</text>
+
+    <!-- 9. pengguna (1) -> tindak_lanjut (0..*) [PIC Tindak Lanjut] -->
+    <path d="M 880 535 L 880 610 Q 880 620 870 620 L 735 620 Q 725 620 725 630 L 725 785 Q 725 795 715 795 L 680 795" class="rel-line" marker-start="url(#circle-end)" marker-end="url(#arrow-many)" />
+    <text x="888" y="550" class="rel-cardinality">0..1</text>
+    <text x="688" y="787" class="rel-cardinality">*</text>
+
+    <!-- Decorative Dots -->
+    <circle cx="700" cy="95" r="2.5" fill="#3B82F6" />
+    <circle cx="740" cy="95" r="2.5" fill="#3B82F6" />
+    <circle cx="520" cy="248" r="2.5" fill="#3B82F6" />
+    <circle cx="520" cy="268" r="2.5" fill="#3B82F6" />
+    <circle cx="880" cy="248" r="2.5" fill="#3B82F6" />
+    <circle cx="880" cy="268" r="2.5" fill="#3B82F6" />
+    <circle cx="395" cy="340" r="2.5" fill="#3B82F6" />
+    <circle cx="360" cy="290" r="2.5" fill="#3B82F6" />
+    <circle cx="360" cy="220" r="2.5" fill="#3B82F6" />
+    <circle cx="345" cy="165" r="2.5" fill="#3B82F6" />
+    <circle cx="385" cy="440" r="2.5" fill="#3B82F6" />
+    <circle cx="355" cy="440" r="2.5" fill="#3B82F6" />
+    <circle cx="745" cy="370" r="2.5" fill="#3B82F6" />
+    <circle cx="715" cy="370" r="2.5" fill="#3B82F6" />
+    <circle cx="550" cy="655" r="2.5" fill="#3B82F6" />
+    <circle cx="550" cy="685" r="2.5" fill="#3B82F6" />
+    <circle cx="715" cy="770" r="2.5" fill="#3B82F6" />
+    <circle cx="745" cy="770" r="2.5" fill="#3B82F6" />
+    <circle cx="880" cy="575" r="2.5" fill="#3B82F6" />
+    <circle cx="810" cy="620" r="2.5" fill="#3B82F6" />
+    <circle cx="725" cy="670" r="2.5" fill="#3B82F6" />
+    <circle cx="725" cy="740" r="2.5" fill="#3B82F6" />
+    <circle cx="700" cy="795" r="2.5" fill="#3B82F6" />
+  </g>
+
+  <!-- ==================== TABLE CARDS ==================== -->
+  
+  <!-- Card: biro -->
+  <g class="table-card" filter="url(#card-shadow)">
+    <!-- Card Body Container -->
+    <rect x="420" y="70" width="240" height="158" rx="7" fill="#FFFFFF" stroke="#CBD5E1" stroke-width="1.2" />
+    
+    <!-- Card Header Pill -->
+    <path d="M 420 77 Q 420 70 427 70 L 653 70 Q 660 70 660 77 L 660 102 L 420 102 Z" fill="url(#header-grad)" />
+    <text x="540" y="90" font-family="'Segoe UI', Roboto, Helvetica, sans-serif" font-size="12.5" font-weight="700" fill="#FFFFFF" text-anchor="middle">biro</text>
+    
+    <!-- Rows -->
+    
+    <rect x="420" y="102" width="240" height="24" fill="#EBF2F9" />
+    <text x="430" y="118" font-size="11" fill="#D97706">🔑</text>
+    <text x="448" y="118" font-family="'Segoe UI', Roboto, Helvetica, sans-serif" font-size="11" font-weight="600" fill="#1E293B">id_biro</text>
+    <text x="648" y="118" font-family="'Segoe UI', Roboto, Helvetica, sans-serif" font-size="10.5" font-weight="400" fill="#64748B" text-anchor="end">varchar</text>
+    <rect x="420" y="126" width="240" height="24" fill="#FAFCFF" />
+    
+    <text x="432" y="142" font-family="'Segoe UI', Roboto, Helvetica, sans-serif" font-size="11" font-weight="500" fill="#1E293B">kode_biro</text>
+    <text x="648" y="142" font-family="'Segoe UI', Roboto, Helvetica, sans-serif" font-size="10.5" font-weight="400" fill="#64748B" text-anchor="end">varchar</text>
+    
+    
+    <text x="432" y="166" font-family="'Segoe UI', Roboto, Helvetica, sans-serif" font-size="11" font-weight="500" fill="#1E293B">nama_biro</text>
+    <text x="648" y="166" font-family="'Segoe UI', Roboto, Helvetica, sans-serif" font-size="10.5" font-weight="400" fill="#64748B" text-anchor="end">varchar</text>
+    <rect x="420" y="174" width="240" height="24" fill="#FAFCFF" />
+    
+    <text x="432" y="190" font-family="'Segoe UI', Roboto, Helvetica, sans-serif" font-size="11" font-weight="500" fill="#1E293B">nama_singkat</text>
+    <text x="648" y="190" font-family="'Segoe UI', Roboto, Helvetica, sans-serif" font-size="10.5" font-weight="400" fill="#64748B" text-anchor="end">varchar</text>
+    
+    <text x="430" y="214" font-size="11" fill="#3B82F6">🗹</text>
+    <text x="448" y="214" font-family="'Segoe UI', Roboto, Helvetica, sans-serif" font-size="11" font-weight="500" fill="#1E293B">status_aktif</text>
+    <text x="648" y="214" font-family="'Segoe UI', Roboto, Helvetica, sans-serif" font-size="10.5" font-weight="400" fill="#64748B" text-anchor="end">boolean</text>
+  </g>
+
+  <!-- Card: tim_biro -->
+  <g class="table-card" filter="url(#card-shadow)">
+    <!-- Card Body Container -->
+    <rect x="780" y="70" width="250" height="158" rx="7" fill="#FFFFFF" stroke="#CBD5E1" stroke-width="1.2" />
+    
+    <!-- Card Header Pill -->
+    <path d="M 780 77 Q 780 70 787 70 L 1023 70 Q 1030 70 1030 77 L 1030 102 L 780 102 Z" fill="url(#header-grad)" />
+    <text x="905" y="90" font-family="'Segoe UI', Roboto, Helvetica, sans-serif" font-size="12.5" font-weight="700" fill="#FFFFFF" text-anchor="middle">tim_biro</text>
+    
+    <!-- Rows -->
+    
+    <rect x="780" y="102" width="250" height="24" fill="#EBF2F9" />
+    <text x="790" y="118" font-size="11" fill="#D97706">🔑</text>
+    <text x="808" y="118" font-family="'Segoe UI', Roboto, Helvetica, sans-serif" font-size="11" font-weight="600" fill="#1E293B">id_tim</text>
+    <text x="1018" y="118" font-family="'Segoe UI', Roboto, Helvetica, sans-serif" font-size="10.5" font-weight="400" fill="#64748B" text-anchor="end">varchar</text>
+    <rect x="780" y="126" width="250" height="24" fill="#FAFCFF" />
+    <text x="790" y="142" font-size="11" fill="#64748B">🔗</text>
+    <text x="808" y="142" font-family="'Segoe UI', Roboto, Helvetica, sans-serif" font-size="11" font-weight="500" fill="#1E293B">id_biro</text>
+    <text x="1018" y="142" font-family="'Segoe UI', Roboto, Helvetica, sans-serif" font-size="10.5" font-weight="400" fill="#64748B" text-anchor="end">varchar</text>
+    
+    
+    <text x="792" y="166" font-family="'Segoe UI', Roboto, Helvetica, sans-serif" font-size="11" font-weight="500" fill="#1E293B">kode_tim</text>
+    <text x="1018" y="166" font-family="'Segoe UI', Roboto, Helvetica, sans-serif" font-size="10.5" font-weight="400" fill="#64748B" text-anchor="end">varchar</text>
+    <rect x="780" y="174" width="250" height="24" fill="#FAFCFF" />
+    
+    <text x="792" y="190" font-family="'Segoe UI', Roboto, Helvetica, sans-serif" font-size="11" font-weight="500" fill="#1E293B">nama_tim</text>
+    <text x="1018" y="190" font-family="'Segoe UI', Roboto, Helvetica, sans-serif" font-size="10.5" font-weight="400" fill="#64748B" text-anchor="end">varchar</text>
+    
+    <text x="790" y="214" font-size="11" fill="#3B82F6">🗹</text>
+    <text x="808" y="214" font-family="'Segoe UI', Roboto, Helvetica, sans-serif" font-size="11" font-weight="500" fill="#1E293B">status_aktif</text>
+    <text x="1018" y="214" font-family="'Segoe UI', Roboto, Helvetica, sans-serif" font-size="10.5" font-weight="400" fill="#64748B" text-anchor="end">boolean</text>
+  </g>
+
+  <!-- Card: lampiran_kegiatan -->
+  <g class="table-card" filter="url(#card-shadow)">
+    <!-- Card Body Container -->
+    <rect x="70" y="90" width="260" height="230" rx="7" fill="#FFFFFF" stroke="#CBD5E1" stroke-width="1.2" />
+    
+    <!-- Card Header Pill -->
+    <path d="M 70 97 Q 70 90 77 90 L 323 90 Q 330 90 330 97 L 330 122 L 70 122 Z" fill="url(#header-grad)" />
+    <text x="200" y="110" font-family="'Segoe UI', Roboto, Helvetica, sans-serif" font-size="12.5" font-weight="700" fill="#FFFFFF" text-anchor="middle">lampiran_kegiatan</text>
+    
+    <!-- Rows -->
+    
+    <rect x="70" y="122" width="260" height="24" fill="#EBF2F9" />
+    <text x="80" y="138" font-size="11" fill="#D97706">🔑</text>
+    <text x="98" y="138" font-family="'Segoe UI', Roboto, Helvetica, sans-serif" font-size="11" font-weight="600" fill="#1E293B">id_lampiran</text>
+    <text x="318" y="138" font-family="'Segoe UI', Roboto, Helvetica, sans-serif" font-size="10.5" font-weight="400" fill="#64748B" text-anchor="end">varchar</text>
+    <rect x="70" y="146" width="260" height="24" fill="#FAFCFF" />
+    <text x="80" y="162" font-size="11" fill="#64748B">🔗</text>
+    <text x="98" y="162" font-family="'Segoe UI', Roboto, Helvetica, sans-serif" font-size="11" font-weight="500" fill="#1E293B">id_kegiatan</text>
+    <text x="318" y="162" font-family="'Segoe UI', Roboto, Helvetica, sans-serif" font-size="10.5" font-weight="400" fill="#64748B" text-anchor="end">varchar</text>
+    
+    
+    <text x="82" y="186" font-family="'Segoe UI', Roboto, Helvetica, sans-serif" font-size="11" font-weight="500" fill="#1E293B">nama_berkas</text>
+    <text x="318" y="186" font-family="'Segoe UI', Roboto, Helvetica, sans-serif" font-size="10.5" font-weight="400" fill="#64748B" text-anchor="end">varchar</text>
+    <rect x="70" y="194" width="260" height="24" fill="#FAFCFF" />
+    
+    <text x="82" y="210" font-family="'Segoe UI', Roboto, Helvetica, sans-serif" font-size="11" font-weight="500" fill="#1E293B">url_berkas</text>
+    <text x="318" y="210" font-family="'Segoe UI', Roboto, Helvetica, sans-serif" font-size="10.5" font-weight="400" fill="#64748B" text-anchor="end">varchar</text>
+    
+    
+    <text x="82" y="234" font-family="'Segoe UI', Roboto, Helvetica, sans-serif" font-size="11" font-weight="500" fill="#1E293B">ukuran_berkas</text>
+    <text x="318" y="234" font-family="'Segoe UI', Roboto, Helvetica, sans-serif" font-size="10.5" font-weight="400" fill="#64748B" text-anchor="end">integer</text>
+    <rect x="70" y="242" width="260" height="24" fill="#FAFCFF" />
+    
+    <text x="82" y="258" font-family="'Segoe UI', Roboto, Helvetica, sans-serif" font-size="11" font-weight="500" fill="#1E293B">tipe_berkas</text>
+    <text x="318" y="258" font-family="'Segoe UI', Roboto, Helvetica, sans-serif" font-size="10.5" font-weight="400" fill="#64748B" text-anchor="end">varchar</text>
+    
+    
+    <text x="82" y="282" font-family="'Segoe UI', Roboto, Helvetica, sans-serif" font-size="11" font-weight="500" fill="#1E293B">kategori</text>
+    <text x="318" y="282" font-family="'Segoe UI', Roboto, Helvetica, sans-serif" font-size="10.5" font-weight="400" fill="#64748B" text-anchor="end">varchar</text>
+    <rect x="70" y="290" width="260" height="24" fill="#FAFCFF" />
+    
+    <text x="82" y="306" font-family="'Segoe UI', Roboto, Helvetica, sans-serif" font-size="11" font-weight="500" fill="#1E293B">dibuat_pada</text>
+    <text x="318" y="306" font-family="'Segoe UI', Roboto, Helvetica, sans-serif" font-size="10.5" font-weight="400" fill="#64748B" text-anchor="end">timestamp</text>
+  </g>
+
+  <!-- Card: kegiatan -->
+  <g class="table-card" filter="url(#card-shadow)">
+    <!-- Card Body Container -->
+    <rect x="420" y="285" width="260" height="350" rx="7" fill="#FFFFFF" stroke="#CBD5E1" stroke-width="1.2" />
+    
+    <!-- Card Header Pill -->
+    <path d="M 420 292 Q 420 285 427 285 L 673 285 Q 680 285 680 292 L 680 317 L 420 317 Z" fill="url(#header-grad)" />
+    <text x="550" y="305" font-family="'Segoe UI', Roboto, Helvetica, sans-serif" font-size="12.5" font-weight="700" fill="#FFFFFF" text-anchor="middle">kegiatan</text>
+    
+    <!-- Rows -->
+    
+    <rect x="420" y="317" width="260" height="24" fill="#EBF2F9" />
+    <text x="430" y="333" font-size="11" fill="#D97706">🔑</text>
+    <text x="448" y="333" font-family="'Segoe UI', Roboto, Helvetica, sans-serif" font-size="11" font-weight="600" fill="#1E293B">id_kegiatan</text>
+    <text x="668" y="333" font-family="'Segoe UI', Roboto, Helvetica, sans-serif" font-size="10.5" font-weight="400" fill="#64748B" text-anchor="end">varchar</text>
+    <rect x="420" y="341" width="260" height="24" fill="#FAFCFF" />
+    <text x="430" y="357" font-size="11" fill="#64748B">🔗</text>
+    <text x="448" y="357" font-family="'Segoe UI', Roboto, Helvetica, sans-serif" font-size="11" font-weight="500" fill="#1E293B">id_biro</text>
+    <text x="668" y="357" font-family="'Segoe UI', Roboto, Helvetica, sans-serif" font-size="10.5" font-weight="400" fill="#64748B" text-anchor="end">varchar</text>
+    
+    <text x="430" y="381" font-size="11" fill="#64748B">🔗</text>
+    <text x="448" y="381" font-family="'Segoe UI', Roboto, Helvetica, sans-serif" font-size="11" font-weight="500" fill="#1E293B">id_tim</text>
+    <text x="668" y="381" font-family="'Segoe UI', Roboto, Helvetica, sans-serif" font-size="10.5" font-weight="400" fill="#64748B" text-anchor="end">varchar</text>
+    <rect x="420" y="389" width="260" height="24" fill="#FAFCFF" />
+    
+    <text x="432" y="405" font-family="'Segoe UI', Roboto, Helvetica, sans-serif" font-size="11" font-weight="500" fill="#1E293B">nomor_kegiatan</text>
+    <text x="668" y="405" font-family="'Segoe UI', Roboto, Helvetica, sans-serif" font-size="10.5" font-weight="400" fill="#64748B" text-anchor="end">varchar</text>
+    
+    
+    <text x="432" y="429" font-family="'Segoe UI', Roboto, Helvetica, sans-serif" font-size="11" font-weight="500" fill="#1E293B">judul_kegiatan</text>
+    <text x="668" y="429" font-family="'Segoe UI', Roboto, Helvetica, sans-serif" font-size="10.5" font-weight="400" fill="#64748B" text-anchor="end">varchar</text>
+    <rect x="420" y="437" width="260" height="24" fill="#FAFCFF" />
+    
+    <text x="432" y="453" font-family="'Segoe UI', Roboto, Helvetica, sans-serif" font-size="11" font-weight="500" fill="#1E293B">tanggal_kegiatan</text>
+    <text x="668" y="453" font-family="'Segoe UI', Roboto, Helvetica, sans-serif" font-size="10.5" font-weight="400" fill="#64748B" text-anchor="end">timestamp</text>
+    
+    
+    <text x="432" y="477" font-family="'Segoe UI', Roboto, Helvetica, sans-serif" font-size="11" font-weight="500" fill="#1E293B">waktu_mulai</text>
+    <text x="668" y="477" font-family="'Segoe UI', Roboto, Helvetica, sans-serif" font-size="10.5" font-weight="400" fill="#64748B" text-anchor="end">varchar</text>
+    <rect x="420" y="485" width="260" height="24" fill="#FAFCFF" />
+    
+    <text x="432" y="501" font-family="'Segoe UI', Roboto, Helvetica, sans-serif" font-size="11" font-weight="500" fill="#1E293B">waktu_selesai</text>
+    <text x="668" y="501" font-family="'Segoe UI', Roboto, Helvetica, sans-serif" font-size="10.5" font-weight="400" fill="#64748B" text-anchor="end">varchar</text>
+    
+    
+    <text x="432" y="525" font-family="'Segoe UI', Roboto, Helvetica, sans-serif" font-size="11" font-weight="500" fill="#1E293B">lokasi_kegiatan</text>
+    <text x="668" y="525" font-family="'Segoe UI', Roboto, Helvetica, sans-serif" font-size="10.5" font-weight="400" fill="#64748B" text-anchor="end">varchar</text>
+    <rect x="420" y="533" width="260" height="24" fill="#FAFCFF" />
+    
+    <text x="432" y="549" font-family="'Segoe UI', Roboto, Helvetica, sans-serif" font-size="11" font-weight="500" fill="#1E293B">pic_kegiatan</text>
+    <text x="668" y="549" font-family="'Segoe UI', Roboto, Helvetica, sans-serif" font-size="10.5" font-weight="400" fill="#64748B" text-anchor="end">varchar</text>
+    
+    
+    <text x="432" y="573" font-family="'Segoe UI', Roboto, Helvetica, sans-serif" font-size="11" font-weight="500" fill="#1E293B">kategori_naskah</text>
+    <text x="668" y="573" font-family="'Segoe UI', Roboto, Helvetica, sans-serif" font-size="10.5" font-weight="400" fill="#64748B" text-anchor="end">varchar</text>
+    <rect x="420" y="581" width="260" height="24" fill="#FAFCFF" />
+    
+    <text x="432" y="597" font-family="'Segoe UI', Roboto, Helvetica, sans-serif" font-size="11" font-weight="500" fill="#1E293B">catatan_hasil</text>
+    <text x="668" y="597" font-family="'Segoe UI', Roboto, Helvetica, sans-serif" font-size="10.5" font-weight="400" fill="#64748B" text-anchor="end">text</text>
+    
+    
+    <text x="432" y="621" font-family="'Segoe UI', Roboto, Helvetica, sans-serif" font-size="11" font-weight="500" fill="#1E293B">status_kegiatan</text>
+    <text x="668" y="621" font-family="'Segoe UI', Roboto, Helvetica, sans-serif" font-size="10.5" font-weight="400" fill="#64748B" text-anchor="end">enum</text>
+  </g>
+
+  <!-- Card: peserta_kegiatan -->
+  <g class="table-card" filter="url(#card-shadow)">
+    <!-- Card Body Container -->
+    <rect x="70" y="390" width="260" height="158" rx="7" fill="#FFFFFF" stroke="#CBD5E1" stroke-width="1.2" />
+    
+    <!-- Card Header Pill -->
+    <path d="M 70 397 Q 70 390 77 390 L 323 390 Q 330 390 330 397 L 330 422 L 70 422 Z" fill="url(#header-grad)" />
+    <text x="200" y="410" font-family="'Segoe UI', Roboto, Helvetica, sans-serif" font-size="12.5" font-weight="700" fill="#FFFFFF" text-anchor="middle">peserta_kegiatan</text>
+    
+    <!-- Rows -->
+    
+    <rect x="70" y="422" width="260" height="24" fill="#EBF2F9" />
+    <text x="80" y="438" font-size="11" fill="#D97706">🔑</text>
+    <text x="98" y="438" font-family="'Segoe UI', Roboto, Helvetica, sans-serif" font-size="11" font-weight="600" fill="#1E293B">id_peserta</text>
+    <text x="318" y="438" font-family="'Segoe UI', Roboto, Helvetica, sans-serif" font-size="10.5" font-weight="400" fill="#64748B" text-anchor="end">varchar</text>
+    <rect x="70" y="446" width="260" height="24" fill="#FAFCFF" />
+    <text x="80" y="462" font-size="11" fill="#64748B">🔗</text>
+    <text x="98" y="462" font-family="'Segoe UI', Roboto, Helvetica, sans-serif" font-size="11" font-weight="500" fill="#1E293B">id_kegiatan</text>
+    <text x="318" y="462" font-family="'Segoe UI', Roboto, Helvetica, sans-serif" font-size="10.5" font-weight="400" fill="#64748B" text-anchor="end">varchar</text>
+    
+    <text x="80" y="486" font-size="11" fill="#64748B">🔗</text>
+    <text x="98" y="486" font-family="'Segoe UI', Roboto, Helvetica, sans-serif" font-size="11" font-weight="500" fill="#1E293B">id_pengguna</text>
+    <text x="318" y="486" font-family="'Segoe UI', Roboto, Helvetica, sans-serif" font-size="10.5" font-weight="400" fill="#64748B" text-anchor="end">varchar</text>
+    <rect x="70" y="494" width="260" height="24" fill="#FAFCFF" />
+    
+    <text x="82" y="510" font-family="'Segoe UI', Roboto, Helvetica, sans-serif" font-size="11" font-weight="500" fill="#1E293B">status_kehadiran</text>
+    <text x="318" y="510" font-family="'Segoe UI', Roboto, Helvetica, sans-serif" font-size="10.5" font-weight="400" fill="#64748B" text-anchor="end">enum</text>
+    
+    
+    <text x="82" y="534" font-family="'Segoe UI', Roboto, Helvetica, sans-serif" font-size="11" font-weight="500" fill="#1E293B">dibuat_pada</text>
+    <text x="318" y="534" font-family="'Segoe UI', Roboto, Helvetica, sans-serif" font-size="10.5" font-weight="400" fill="#64748B" text-anchor="end">timestamp</text>
+  </g>
+
+  <!-- Card: pengguna -->
+  <g class="table-card" filter="url(#card-shadow)">
+    <!-- Card Body Container -->
+    <rect x="780" y="285" width="250" height="254" rx="7" fill="#FFFFFF" stroke="#CBD5E1" stroke-width="1.2" />
+    
+    <!-- Card Header Pill -->
+    <path d="M 780 292 Q 780 285 787 285 L 1023 285 Q 1030 285 1030 292 L 1030 317 L 780 317 Z" fill="url(#header-grad)" />
+    <text x="905" y="305" font-family="'Segoe UI', Roboto, Helvetica, sans-serif" font-size="12.5" font-weight="700" fill="#FFFFFF" text-anchor="middle">pengguna</text>
+    
+    <!-- Rows -->
+    
+    <rect x="780" y="317" width="250" height="24" fill="#EBF2F9" />
+    <text x="790" y="333" font-size="11" fill="#D97706">🔑</text>
+    <text x="808" y="333" font-family="'Segoe UI', Roboto, Helvetica, sans-serif" font-size="11" font-weight="600" fill="#1E293B">id_pengguna</text>
+    <text x="1018" y="333" font-family="'Segoe UI', Roboto, Helvetica, sans-serif" font-size="10.5" font-weight="400" fill="#64748B" text-anchor="end">varchar</text>
+    <rect x="780" y="341" width="250" height="24" fill="#FAFCFF" />
+    <text x="790" y="357" font-size="11" fill="#64748B">🔗</text>
+    <text x="808" y="357" font-family="'Segoe UI', Roboto, Helvetica, sans-serif" font-size="11" font-weight="500" fill="#1E293B">id_biro</text>
+    <text x="1018" y="357" font-family="'Segoe UI', Roboto, Helvetica, sans-serif" font-size="10.5" font-weight="400" fill="#64748B" text-anchor="end">varchar</text>
+    
+    <text x="790" y="381" font-size="11" fill="#64748B">🔗</text>
+    <text x="808" y="381" font-family="'Segoe UI', Roboto, Helvetica, sans-serif" font-size="11" font-weight="500" fill="#1E293B">id_tim</text>
+    <text x="1018" y="381" font-family="'Segoe UI', Roboto, Helvetica, sans-serif" font-size="10.5" font-weight="400" fill="#64748B" text-anchor="end">varchar</text>
+    <rect x="780" y="389" width="250" height="24" fill="#FAFCFF" />
+    
+    <text x="792" y="405" font-family="'Segoe UI', Roboto, Helvetica, sans-serif" font-size="11" font-weight="500" fill="#1E293B">nama_lengkap</text>
+    <text x="1018" y="405" font-family="'Segoe UI', Roboto, Helvetica, sans-serif" font-size="10.5" font-weight="400" fill="#64748B" text-anchor="end">varchar</text>
+    
+    
+    <text x="792" y="429" font-family="'Segoe UI', Roboto, Helvetica, sans-serif" font-size="11" font-weight="500" fill="#1E293B">email</text>
+    <text x="1018" y="429" font-family="'Segoe UI', Roboto, Helvetica, sans-serif" font-size="10.5" font-weight="400" fill="#64748B" text-anchor="end">varchar</text>
+    <rect x="780" y="437" width="250" height="24" fill="#FAFCFF" />
+    
+    <text x="792" y="453" font-family="'Segoe UI', Roboto, Helvetica, sans-serif" font-size="11" font-weight="500" fill="#1E293B">nama_pengguna</text>
+    <text x="1018" y="453" font-family="'Segoe UI', Roboto, Helvetica, sans-serif" font-size="10.5" font-weight="400" fill="#64748B" text-anchor="end">varchar</text>
+    
+    
+    <text x="792" y="477" font-family="'Segoe UI', Roboto, Helvetica, sans-serif" font-size="11" font-weight="500" fill="#1E293B">kata_sandi</text>
+    <text x="1018" y="477" font-family="'Segoe UI', Roboto, Helvetica, sans-serif" font-size="10.5" font-weight="400" fill="#64748B" text-anchor="end">varchar</text>
+    <rect x="780" y="485" width="250" height="24" fill="#FAFCFF" />
+    
+    <text x="792" y="501" font-family="'Segoe UI', Roboto, Helvetica, sans-serif" font-size="11" font-weight="500" fill="#1E293B">peran</text>
+    <text x="1018" y="501" font-family="'Segoe UI', Roboto, Helvetica, sans-serif" font-size="10.5" font-weight="400" fill="#64748B" text-anchor="end">enum</text>
+    
+    <text x="790" y="525" font-size="11" fill="#3B82F6">🗹</text>
+    <text x="808" y="525" font-family="'Segoe UI', Roboto, Helvetica, sans-serif" font-size="11" font-weight="500" fill="#1E293B">status_aktif</text>
+    <text x="1018" y="525" font-family="'Segoe UI', Roboto, Helvetica, sans-serif" font-size="10.5" font-weight="400" fill="#64748B" text-anchor="end">boolean</text>
+  </g>
+
+  <!-- Card: tindak_lanjut -->
+  <g class="table-card" filter="url(#card-shadow)">
+    <!-- Card Body Container -->
+    <rect x="420" y="710" width="260" height="254" rx="7" fill="#FFFFFF" stroke="#CBD5E1" stroke-width="1.2" />
+    
+    <!-- Card Header Pill -->
+    <path d="M 420 717 Q 420 710 427 710 L 673 710 Q 680 710 680 717 L 680 742 L 420 742 Z" fill="url(#header-grad)" />
+    <text x="550" y="730" font-family="'Segoe UI', Roboto, Helvetica, sans-serif" font-size="12.5" font-weight="700" fill="#FFFFFF" text-anchor="middle">tindak_lanjut</text>
+    
+    <!-- Rows -->
+    
+    <rect x="420" y="742" width="260" height="24" fill="#EBF2F9" />
+    <text x="430" y="758" font-size="11" fill="#D97706">🔑</text>
+    <text x="448" y="758" font-family="'Segoe UI', Roboto, Helvetica, sans-serif" font-size="11" font-weight="600" fill="#1E293B">id_tindak_lanjut</text>
+    <text x="668" y="758" font-family="'Segoe UI', Roboto, Helvetica, sans-serif" font-size="10.5" font-weight="400" fill="#64748B" text-anchor="end">varchar</text>
+    <rect x="420" y="766" width="260" height="24" fill="#FAFCFF" />
+    <text x="430" y="782" font-size="11" fill="#64748B">🔗</text>
+    <text x="448" y="782" font-family="'Segoe UI', Roboto, Helvetica, sans-serif" font-size="11" font-weight="500" fill="#1E293B">id_kegiatan</text>
+    <text x="668" y="782" font-family="'Segoe UI', Roboto, Helvetica, sans-serif" font-size="10.5" font-weight="400" fill="#64748B" text-anchor="end">varchar</text>
+    
+    <text x="430" y="806" font-size="11" fill="#64748B">🔗</text>
+    <text x="448" y="806" font-family="'Segoe UI', Roboto, Helvetica, sans-serif" font-size="11" font-weight="500" fill="#1E293B">id_biro</text>
+    <text x="668" y="806" font-family="'Segoe UI', Roboto, Helvetica, sans-serif" font-size="10.5" font-weight="400" fill="#64748B" text-anchor="end">varchar</text>
+    <rect x="420" y="814" width="260" height="24" fill="#FAFCFF" />
+    <text x="430" y="830" font-size="11" fill="#64748B">🔗</text>
+    <text x="448" y="830" font-family="'Segoe UI', Roboto, Helvetica, sans-serif" font-size="11" font-weight="500" fill="#1E293B">id_tim</text>
+    <text x="668" y="830" font-family="'Segoe UI', Roboto, Helvetica, sans-serif" font-size="10.5" font-weight="400" fill="#64748B" text-anchor="end">varchar</text>
+    
+    <text x="430" y="854" font-size="11" fill="#64748B">🔗</text>
+    <text x="448" y="854" font-family="'Segoe UI', Roboto, Helvetica, sans-serif" font-size="11" font-weight="500" fill="#1E293B">id_pengguna</text>
+    <text x="668" y="854" font-family="'Segoe UI', Roboto, Helvetica, sans-serif" font-size="10.5" font-weight="400" fill="#64748B" text-anchor="end">varchar</text>
+    <rect x="420" y="862" width="260" height="24" fill="#FAFCFF" />
+    
+    <text x="432" y="878" font-family="'Segoe UI', Roboto, Helvetica, sans-serif" font-size="11" font-weight="500" fill="#1E293B">judul_tindakan</text>
+    <text x="668" y="878" font-family="'Segoe UI', Roboto, Helvetica, sans-serif" font-size="10.5" font-weight="400" fill="#64748B" text-anchor="end">varchar</text>
+    
+    
+    <text x="432" y="902" font-family="'Segoe UI', Roboto, Helvetica, sans-serif" font-size="11" font-weight="500" fill="#1E293B">deskripsi_tindakan</text>
+    <text x="668" y="902" font-family="'Segoe UI', Roboto, Helvetica, sans-serif" font-size="10.5" font-weight="400" fill="#64748B" text-anchor="end">text</text>
+    <rect x="420" y="910" width="260" height="24" fill="#FAFCFF" />
+    
+    <text x="432" y="926" font-family="'Segoe UI', Roboto, Helvetica, sans-serif" font-size="11" font-weight="500" fill="#1E293B">tenggat_waktu</text>
+    <text x="668" y="926" font-family="'Segoe UI', Roboto, Helvetica, sans-serif" font-size="10.5" font-weight="400" fill="#64748B" text-anchor="end">timestamp</text>
+    
+    
+    <text x="432" y="950" font-family="'Segoe UI', Roboto, Helvetica, sans-serif" font-size="11" font-weight="500" fill="#1E293B">status_tindak_lanjut</text>
+    <text x="668" y="950" font-family="'Segoe UI', Roboto, Helvetica, sans-serif" font-size="10.5" font-weight="400" fill="#64748B" text-anchor="end">enum</text>
+  </g>
+
+  <!-- Card: riwayat_tindak_lanjut -->
+  <g class="table-card" filter="url(#card-shadow)">
+    <!-- Card Body Container -->
+    <rect x="780" y="710" width="250" height="206" rx="7" fill="#FFFFFF" stroke="#CBD5E1" stroke-width="1.2" />
+    
+    <!-- Card Header Pill -->
+    <path d="M 780 717 Q 780 710 787 710 L 1023 710 Q 1030 710 1030 717 L 1030 742 L 780 742 Z" fill="url(#header-grad)" />
+    <text x="905" y="730" font-family="'Segoe UI', Roboto, Helvetica, sans-serif" font-size="12.5" font-weight="700" fill="#FFFFFF" text-anchor="middle">riwayat_tindak_lanjut</text>
+    
+    <!-- Rows -->
+    
+    <rect x="780" y="742" width="250" height="24" fill="#EBF2F9" />
+    <text x="790" y="758" font-size="11" fill="#D97706">🔑</text>
+    <text x="808" y="758" font-family="'Segoe UI', Roboto, Helvetica, sans-serif" font-size="11" font-weight="600" fill="#1E293B">id_riwayat</text>
+    <text x="1018" y="758" font-family="'Segoe UI', Roboto, Helvetica, sans-serif" font-size="10.5" font-weight="400" fill="#64748B" text-anchor="end">varchar</text>
+    <rect x="780" y="766" width="250" height="24" fill="#FAFCFF" />
+    <text x="790" y="782" font-size="11" fill="#64748B">🔗</text>
+    <text x="808" y="782" font-family="'Segoe UI', Roboto, Helvetica, sans-serif" font-size="11" font-weight="500" fill="#1E293B">id_tindak_lanjut</text>
+    <text x="1018" y="782" font-family="'Segoe UI', Roboto, Helvetica, sans-serif" font-size="10.5" font-weight="400" fill="#64748B" text-anchor="end">varchar</text>
+    
+    <text x="790" y="806" font-size="11" fill="#64748B">🔗</text>
+    <text x="808" y="806" font-family="'Segoe UI', Roboto, Helvetica, sans-serif" font-size="11" font-weight="500" fill="#1E293B">id_pengguna</text>
+    <text x="1018" y="806" font-family="'Segoe UI', Roboto, Helvetica, sans-serif" font-size="10.5" font-weight="400" fill="#64748B" text-anchor="end">varchar</text>
+    <rect x="780" y="814" width="250" height="24" fill="#FAFCFF" />
+    
+    <text x="792" y="830" font-family="'Segoe UI', Roboto, Helvetica, sans-serif" font-size="11" font-weight="500" fill="#1E293B">status_sebelumnya</text>
+    <text x="1018" y="830" font-family="'Segoe UI', Roboto, Helvetica, sans-serif" font-size="10.5" font-weight="400" fill="#64748B" text-anchor="end">enum</text>
+    
+    
+    <text x="792" y="854" font-family="'Segoe UI', Roboto, Helvetica, sans-serif" font-size="11" font-weight="500" fill="#1E293B">status_terbaru</text>
+    <text x="1018" y="854" font-family="'Segoe UI', Roboto, Helvetica, sans-serif" font-size="10.5" font-weight="400" fill="#64748B" text-anchor="end">enum</text>
+    <rect x="780" y="862" width="250" height="24" fill="#FAFCFF" />
+    
+    <text x="792" y="878" font-family="'Segoe UI', Roboto, Helvetica, sans-serif" font-size="11" font-weight="500" fill="#1E293B">catatan_progres</text>
+    <text x="1018" y="878" font-family="'Segoe UI', Roboto, Helvetica, sans-serif" font-size="10.5" font-weight="400" fill="#64748B" text-anchor="end">text</text>
+    
+    
+    <text x="792" y="902" font-family="'Segoe UI', Roboto, Helvetica, sans-serif" font-size="11" font-weight="500" fill="#1E293B">dibuat_pada</text>
+    <text x="1018" y="902" font-family="'Segoe UI', Roboto, Helvetica, sans-serif" font-size="10.5" font-weight="400" fill="#64748B" text-anchor="end">timestamp</text>
+  </g>
+
+</svg>
