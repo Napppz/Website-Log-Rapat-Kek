@@ -632,7 +632,7 @@ export default function BuatRapatPage() {
                       ? staffTeams.length > 1
                         ? 'Anda terdaftar pada beberapa tim kerja. Klik tim kerja untuk menyesuaikan penomoran registrasi otomatis.'
                         : `Nomor registrasi otomatis disesuaikan dengan tim kerja Anda (${staffTeams[0]?.name || currentTeam?.name || 'Tim Kerja'}).`
-                      : 'Pilih salah satu tim Biro 3 untuk penomoran registrasi & pengarsipan kegiatan.'}
+                      : 'Pilih salah satu tim Biro 3 untuk penomoran registrasi & pencatatan log book kegiatan.'}
                   </p>
                 </div>
 
@@ -912,7 +912,7 @@ export default function BuatRapatPage() {
                               {doc.name}
                             </p>
                             <p className="text-[11px] text-slate-500">
-                              {doc.size ? `${(doc.size / (1024 * 1024)).toFixed(2)} MB` : 'Berkas siap diarsipkan'}
+                              {doc.size ? `${(doc.size / (1024 * 1024)).toFixed(2)} MB` : 'Berkas siap dicatat dalam log book'}
                             </p>
                           </div>
                         </div>

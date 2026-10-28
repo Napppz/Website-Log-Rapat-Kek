@@ -203,7 +203,7 @@ export async function getMeetingByIdFromDb(idOrNumber: string) {
       if (meeting) {
         try {
           const rawAttachments: any[] = await prisma.$queryRawUnsafe(
-            `SELECT id_lampiran AS "id", id_rapat AS "meetingId", nama_berkas AS "fileName", url_berkas AS "fileUrl", ukuran_berkas AS "fileSize", tipe_berkas AS "fileType", nama_pengunggah AS "uploadedBy", kategori AS "category", dibuat_pada AS "createdAt" FROM lampiran_rapat WHERE id_rapat = $1 ORDER BY dibuat_pada ASC`,
+            `SELECT id_lampiran AS "id", id_kegiatan AS "meetingId", nama_berkas AS "fileName", url_berkas AS "fileUrl", ukuran_berkas AS "fileSize", tipe_berkas AS "fileType", nama_pengunggah AS "uploadedBy", kategori AS "category", dibuat_pada AS "createdAt" FROM lampiran_kegiatan WHERE id_kegiatan = $1 ORDER BY dibuat_pada ASC`,
             meeting.id
           );
           (meeting as any).attachments = rawAttachments || [];

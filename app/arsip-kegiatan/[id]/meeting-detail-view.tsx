@@ -1740,7 +1740,7 @@ export function MeetingDetailView({
                     </div>
                   </div>
                   <p className="text-[10.5px] text-slate-400">
-                    * Jika email dikosongkan, sistem otomatis membuatkan identitas peserta resmi untuk arsip kegiatan.
+                    * Jika email dikosongkan, sistem otomatis membuatkan identitas peserta resmi untuk log book kegiatan.
                   </p>
                 </div>
               )}

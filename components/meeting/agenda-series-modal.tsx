@@ -379,7 +379,7 @@ export function AgendaSeriesModal({
           <div className="text-[12px] text-slate-500 flex items-center gap-1.5">
             <Info className="w-4 h-4 text-[#31889C] shrink-0" />
             <span>
-              Setiap kegiatan dalam rangkaian ini saling terhubung untuk pelacakan arsip kegiatan dan evaluasi tindak lanjut berkelanjutan.
+              Setiap kegiatan dalam rangkaian ini saling terhubung untuk pelacakan log book kegiatan dan evaluasi tindak lanjut berkelanjutan.
             </span>
           </div>
 

@@ -121,10 +121,10 @@ export async function submitPicProgressAction(formData: FormData): Promise<{
       uploadedFileSize = file.size;
       uploadedFileType = file.type || `application/${ext}`;
 
-      // Also record into lampiran_rapat table for full tracking
+      // Also record into lampiran_kegiatan table for full tracking
       try {
         await prisma.$executeRawUnsafe(
-          `INSERT INTO lampiran_rapat (id_lampiran, id_rapat, nama_berkas, url_berkas, ukuran_berkas, tipe_berkas, nama_pengunggah, kategori, dibuat_pada)
+          `INSERT INTO lampiran_kegiatan (id_lampiran, id_kegiatan, nama_berkas, url_berkas, ukuran_berkas, tipe_berkas, nama_pengunggah, kategori, dibuat_pada)
            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, NOW())`,
           uniqueId,
           effectiveMeetingId,

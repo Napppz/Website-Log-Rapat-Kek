@@ -291,7 +291,7 @@ export async function createMeetingAction(input: CreateMeetingInput) {
           const uniqueId = `ATT-${Date.now()}-${Math.random().toString(36).substring(2, 7).toUpperCase()}`;
           const uploader = currentUser.name || currentUser.email || 'Pengunggah';
           await tx.$executeRawUnsafe(
-            `INSERT INTO lampiran_rapat (id_lampiran, id_rapat, nama_berkas, url_berkas, ukuran_berkas, tipe_berkas, nama_pengunggah, kategori, dibuat_pada)
+            `INSERT INTO lampiran_kegiatan (id_lampiran, id_kegiatan, nama_berkas, url_berkas, ukuran_berkas, tipe_berkas, nama_pengunggah, kategori, dibuat_pada)
              VALUES ($1, $2, $3, $4, $5, $6, $7, $8, NOW())`,
             uniqueId,
             meeting.id,

@@ -105,7 +105,7 @@ export function Sidebar({
   const dashboardLabel = 'Dashboard';
 
   const kegiatanSubItems = [
-    { name: 'Arsip Kegiatan', href: '/arsip-kegiatan' },
+    { name: 'Log Book Kegiatan', href: '/arsip-kegiatan' },
     ...(isSuperAdmin || isAdmin || userRole === 'STAFF'
       ? [{ name: '+ Catat Kegiatan Baru', href: '/catat-kegiatan' }]
       : []),
@@ -201,7 +201,7 @@ export function Sidebar({
                 {!collapsed && <span className="truncate">{dashboardLabel}</span>}
               </Link>
 
-              {/* Arsip Kegiatan (Collapsible) */}
+              {/* Log Book Kegiatan (Collapsible) */}
               <div>
                 <button
                   type="button"
@@ -215,7 +215,7 @@ export function Sidebar({
                       ? "text-[#31889C] font-semibold bg-[#F0F9FA]/60"
                       : ""
                   )}
-                  title="Arsip Kegiatan"
+                  title="Log Book Kegiatan"
                 >
                   <div className="flex items-center gap-3">
                     <Users className={cn(
@@ -227,7 +227,7 @@ export function Sidebar({
                         ? "text-[#31889C]"
                         : "text-slate-400"
                     )} />
-                    {!collapsed && <span>Arsip Kegiatan</span>}
+                    {!collapsed && <span>Log Book Kegiatan</span>}
                   </div>
                   {!collapsed && (
                     <ChevronDown

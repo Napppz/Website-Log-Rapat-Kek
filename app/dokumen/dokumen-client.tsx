@@ -140,7 +140,7 @@ export function DokumenClient({ initialMeetings, biros }: DokumenClientProps) {
         <div className="space-y-1.5 max-w-2xl">
           <span className="font-semibold text-[11px] text-[#215865] uppercase tracking-wider flex items-center gap-1.5">
             <FileCheck className="w-3.5 h-3.5 text-[#31889C]" />
-            <span>Arsip Resmi Dewan Nasional KEK RI</span>
+            <span>Log Book &amp; Dokumen Resmi Dewan Nasional KEK RI</span>
           </span>
           <h1 className="text-[24px] md:text-[28px] font-bold text-slate-900 tracking-tight">
             Repositori Dokumen &amp; Hasil Kegiatan

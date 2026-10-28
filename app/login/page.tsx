@@ -111,7 +111,7 @@ function LoginForm() {
             </div>
 
             <h1 className="text-[21px] font-black text-slate-900 tracking-tight">
-              AKTIVITAS BIRO 3
+              AKTIVITAS KEGIATAN BIRO 3
             </h1>
             <p className="text-[12px] text-slate-500 mt-1 max-w-xs mx-auto leading-relaxed">
               Sistem Monitoring Aktivitas, Kegiatan &amp; Status Pekerjaan Biro 3 (IKK)
@@ -163,8 +163,8 @@ function LoginForm() {
                     if (selectedDemoRole) setSelectedDemoRole(null);
                   }}
                   className={`w-full pl-9 pr-3.5 py-2.5 rounded-xl border text-[13px] font-medium transition-all shadow-xs outline-none ${errorMessage
-                      ? 'border-red-300 bg-red-50/15 focus:border-red-500 focus:ring-2 focus:ring-red-200 text-slate-900'
-                      : 'border-slate-200 bg-white hover:border-slate-300 focus:border-[#31889C] focus:ring-2 focus:ring-[#31889C]/25 text-slate-900'
+                    ? 'border-red-300 bg-red-50/15 focus:border-red-500 focus:ring-2 focus:ring-red-200 text-slate-900'
+                    : 'border-slate-200 bg-white hover:border-slate-300 focus:border-[#31889C] focus:ring-2 focus:ring-[#31889C]/25 text-slate-900'
                     }`}
                 />
                 <Mail className="w-4 h-4 text-[#31889C] absolute left-3 top-3 pointer-events-none" />
@@ -214,8 +214,8 @@ function LoginForm() {
                     if (selectedDemoRole) setSelectedDemoRole(null);
                   }}
                   className={`w-full pl-9 pr-10 py-2.5 rounded-xl border text-[13px] font-medium transition-all shadow-xs outline-none ${errorMessage
-                      ? 'border-red-300 bg-red-50/15 focus:border-red-500 focus:ring-2 focus:ring-red-200 text-slate-900'
-                      : 'border-slate-200 bg-white hover:border-slate-300 focus:border-[#31889C] focus:ring-2 focus:ring-[#31889C]/25 text-slate-900'
+                    ? 'border-red-300 bg-red-50/15 focus:border-red-500 focus:ring-2 focus:ring-red-200 text-slate-900'
+                    : 'border-slate-200 bg-white hover:border-slate-300 focus:border-[#31889C] focus:ring-2 focus:ring-[#31889C]/25 text-slate-900'
                     }`}
                 />
                 <Lock className="w-4 h-4 text-[#31889C] absolute left-3 top-3 pointer-events-none" />
@@ -304,11 +304,10 @@ function LoginForm() {
                         key={acc.email}
                         type="button"
                         onClick={() => handleFillDemo(acc.email, acc.label)}
-                        className={`p-2 text-left rounded-xl border transition-all cursor-pointer flex flex-col justify-between ${
-                          isSelected
+                        className={`p-2 text-left rounded-xl border transition-all cursor-pointer flex flex-col justify-between ${isSelected
                             ? 'bg-[#EBF6F8] border-[#31889C] text-[#266F80] font-bold shadow-xs ring-1 ring-[#31889C]'
                             : 'bg-white border-slate-200/90 hover:border-[#31889C]/60 hover:bg-[#F6FBFC] text-slate-700 font-semibold'
-                        }`}
+                          }`}
                         title={`${acc.label} (${acc.email}) - ${acc.desc}`}
                       >
                         <div className="flex items-center justify-between w-full">

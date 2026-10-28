@@ -127,9 +127,9 @@ export async function uploadMeetingAttachmentAction(formData: FormData): Promise
     const fileUrl = `/uploads/materials/${sanitizedMeetingId}/${storedFileName}`;
     const uploaderName = currentUser.name || currentUser.email || 'Staff Notulis';
 
-    // Insert into lampiran_rapat in Neon PostgreSQL safely with raw query
+    // Insert into lampiran_kegiatan in Neon PostgreSQL safely with raw query
     await prisma.$executeRawUnsafe(
-      `INSERT INTO lampiran_rapat (id_lampiran, id_rapat, nama_berkas, url_berkas, ukuran_berkas, tipe_berkas, nama_pengunggah, kategori, dibuat_pada)
+      `INSERT INTO lampiran_kegiatan (id_lampiran, id_kegiatan, nama_berkas, url_berkas, ukuran_berkas, tipe_berkas, nama_pengunggah, kategori, dibuat_pada)
        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, NOW())`,
       uniqueId,
       meetingId,
@@ -186,7 +186,7 @@ export async function getMeetingAttachmentsAction(meetingId: string): Promise<{
     const rawRows: any[] = await prisma.$queryRawUnsafe(
       `SELECT 
         id_lampiran AS "id", 
-        id_rapat AS "meetingId", 
+        id_kegiatan AS "meetingId", 
         nama_berkas AS "fileName", 
         url_berkas AS "fileUrl", 
         ukuran_berkas AS "fileSize", 
@@ -195,7 +195,7 @@ export async function getMeetingAttachmentsAction(meetingId: string): Promise<{
         kategori AS "category", 
         dibuat_pada AS "createdAt"
        FROM lampiran_kegiatan 
-       WHERE id_rapat = $1 
+       WHERE id_kegiatan = $1 
        ORDER BY dibuat_pada ASC`,
       meetingId
     );
@@ -217,7 +217,7 @@ export async function getMeetingAttachmentsAction(meetingId: string): Promise<{
     const meetingRow: any[] = await prisma.$queryRawUnsafe(
       `SELECT dokumen_undangan_url, nama_dokumen_undangan, ukuran_dokumen_undangan, dibuat_pada 
        FROM kegiatan 
-       WHERE id_rapat = $1`,
+       WHERE id_kegiatan = $1`,
       meetingId
     );
 
@@ -289,17 +289,17 @@ export async function deleteMeetingAttachmentAction(
     }
 
     if (attachmentId === 'INVITATION_DOC') {
-      // Clear invitation document from rapat table
+      // Clear invitation document from kegiatan table
       await prisma.$executeRawUnsafe(
-        `UPDATE rapat 
+        `UPDATE kegiatan 
          SET dokumen_undangan_url = NULL, nama_dokumen_undangan = NULL, ukuran_dokumen_undangan = NULL 
-         WHERE id_rapat = $1`,
+         WHERE id_kegiatan = $1`,
         meetingId
       );
     } else {
       // Find file URL to unlink
       const rows: any[] = await prisma.$queryRawUnsafe(
-        `SELECT url_berkas FROM lampiran_rapat WHERE id_lampiran = $1`,
+        `SELECT url_berkas FROM lampiran_kegiatan WHERE id_lampiran = $1`,
         attachmentId
       );
 

@@ -44,7 +44,7 @@ async function getNextFormattedId(
 }
 
 export async function getNextMeetingId(tx?: any): Promise<string> {
-  return getNextFormattedId(tx, 'kegiatan', 'id_rapat', 'MTG-');
+  return getNextFormattedId(tx, 'kegiatan', 'id_kegiatan', 'MTG-');
 }
 
 export async function getNextActionItemId(tx?: any): Promise<string> {

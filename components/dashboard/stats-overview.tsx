@@ -45,7 +45,7 @@ const METRIC_LINKS: Record<string, { href: string; actionLabel: string }> = {
   'rapat-bulan-ini': { href: '/arsip-kegiatan', actionLabel: 'Buka Jadwal' },
   'tindak-lanjut-aktif': { href: '/arsip-kegiatan?status=Dalam+Proses', actionLabel: 'Pantau Progres' },
   'perlu-atensi': { href: '/arsip-kegiatan?status=Dalam+Proses', actionLabel: 'Atasi Masalah' },
-  'tindak-lanjut-selesai': { href: '/arsip-kegiatan?status=Selesai', actionLabel: 'Cek Arsip' },
+  'tindak-lanjut-selesai': { href: '/arsip-kegiatan?status=Selesai', actionLabel: 'Cek Log Book' },
 };
 
 export function StatsOverview({

@@ -220,7 +220,7 @@ export function BureauDistribution({
               }}
               className="p-2 -mx-2 rounded-xl hover:bg-[#F0F9FA] border border-transparent hover:border-[#BCE3EB] transition-all cursor-pointer group"
               onClick={() => handleItemClick(cat.key)}
-              title={`Klik untuk memfilter arsip kegiatan berdasarkan kategori ${cat.label}`}
+              title={`Klik untuk memfilter log book kegiatan berdasarkan kategori ${cat.label}`}
             >
               {/* Row Header: Category Name + Count */}
               <div className="flex items-center justify-between text-[12px] mb-1.5 gap-2">

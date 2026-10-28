@@ -98,21 +98,21 @@ model User {
 }
 
 model Meeting {
-  id                String        @id @default(uuid()) @map("id_rapat")
-  meetingNumber     String        @unique @map("nomor_rapat")
-  title             String        @map("judul_rapat")
+  id                String        @id @default(uuid()) @map("id_kegiatan")
+  meetingNumber     String        @unique @map("nomor_kegiatan")
+  title             String        @map("judul_kegiatan")
   primaryBiroId     String        @map("id_biro")
   primaryTeamId     String?       @map("id_tim")
-  date              DateTime      @map("tanggal_rapat")
+  date              DateTime      @map("tanggal_kegiatan")
   startTime         String        @map("waktu_mulai")
   endTime           String        @map("waktu_selesai")
-  location          String        @map("lokasi_rapat")
+  location          String        @map("lokasi_kegiatan")
   chairpersonId     String?       @map("id_pengguna")
   secretaryId       String?       @map("id_notulis")
-  previousMeetingId String?       @map("id_rapat_sebelumnya")
-  status            MeetingStatus @default(DRAFT) @map("status_rapat")
-  meetingKind         String?       @map("jenis_rapat")
-  picName             String?       @map("pic_rapat")
+  previousMeetingId String?       @map("id_kegiatan_sebelumnya")
+  status            MeetingStatus @default(DRAFT) @map("status_kegiatan")
+  meetingKind         String?       @map("jenis_kegiatan")
+  picName             String?       @map("pic_kegiatan")
   progressStatus      String?       @default("Start") @map("status_progres")
   invitationDocUrl    String?       @map("dokumen_undangan_url")
   invitationDocName   String?       @map("nama_dokumen_undangan")
@@ -162,7 +162,7 @@ model Meeting {
 }
 
 model MeetingBiro {
-  meetingId String @map("id_rapat")
+  meetingId String @map("id_kegiatan")
   biroId    String @map("id_biro")
 
   meeting Meeting @relation(fields: [meetingId], references: [id], onDelete: Cascade)
@@ -176,7 +176,7 @@ model MeetingBiro {
 
 model MeetingParticipant {
   id               String           @id @default(uuid()) @map("id_peserta")
-  meetingId        String           @map("id_rapat")
+  meetingId        String           @map("id_kegiatan")
   userId           String           @map("id_pengguna")
   attendanceStatus AttendanceStatus @default(INVITED) @map("status_kehadiran")
   createdAt        DateTime         @default(now()) @map("dibuat_pada")
@@ -205,7 +205,7 @@ model BiroMeetingSequence {
 
 model MeetingMinutes {
   id         String   @id @default(uuid()) @map("id_notulen")
-  meetingId  String   @unique @map("id_rapat")
+  meetingId  String   @unique @map("id_kegiatan")
   agenda     Json?    @map("agenda_pembahasan")
   discussion Json?    @map("hasil_pembahasan")
   decisions  Json?    @map("poin_keputusan")
@@ -221,7 +221,7 @@ model MeetingMinutes {
 
 model ActionItem {
   id          String             @id @default(uuid()) @map("id_tindak_lanjut")
-  meetingId   String             @map("id_rapat")
+  meetingId   String             @map("id_kegiatan")
   title       String             @map("judul_tindakan")
   description String?            @map("deskripsi_tindakan")
   picBiroId   String             @map("id_biro")
@@ -251,7 +251,7 @@ model ActionItem {
 
 model MeetingAttachment {
   id         String   @id @default(uuid()) @map("id_lampiran")
-  meetingId  String   @map("id_rapat")
+  meetingId  String   @map("id_kegiatan")
   fileName   String   @map("nama_berkas")
   fileUrl    String   @map("url_berkas")
   fileSize   Int?     @map("ukuran_berkas")
@@ -309,7 +309,7 @@ model Notification {
 
 model MinutesComment {
   id          String              @id @default(uuid()) @map("id_komentar")
-  meetingId   String              @map("id_rapat")
+  meetingId   String              @map("id_kegiatan")
   userId      String?             @map("id_pengguna")
   parentId    String?             @map("id_induk")
   content     String              @map("isi_komentar")
@@ -334,7 +334,7 @@ model MinutesComment {
 
 model MinutesHistory {
   id          String   @id @default(uuid()) @map("id_riwayat")
-  meetingId   String   @map("id_rapat")
+  meetingId   String   @map("id_kegiatan")
   userId      String?  @map("id_pengguna")
   changeType  String   @map("tipe_perubahan") // e.g. 'CREATED', 'UPDATED', 'STATUS_CHANGED'
   fieldName   String?  @map("nama_kolom")

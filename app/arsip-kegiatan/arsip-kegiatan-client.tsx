@@ -780,16 +780,16 @@ export function SemuaRapatClient({
 
           <h1 className="text-[22px] sm:text-[24px] font-extrabold text-slate-900 mt-1.5 tracking-tight">
             {effectiveLockedTeamCode
-              ? `Arsip Kegiatan — ${effectiveLockedTeamName?.startsWith('Tim ') ? effectiveLockedTeamName : `Tim ${effectiveLockedTeamName || effectiveLockedTeamCode}`}`
+              ? `Log Book Kegiatan — ${effectiveLockedTeamName?.startsWith('Tim ') ? effectiveLockedTeamName : `Tim ${effectiveLockedTeamName || effectiveLockedTeamCode}`}`
               : lockedBiroCode
-                ? `Arsip Kegiatan — ${currentUserBiroName || `Biro ${lockedBiroCode}`}`
-                : 'Arsip Kegiatan & Aktivitas — Biro 3 (IKK)'}
+                ? `Log Book Kegiatan — ${currentUserBiroName || `Biro ${lockedBiroCode}`}`
+                : 'Log Book Kegiatan & Aktivitas — Biro 3 (IKK)'}
           </h1>
           <p className="text-[13px] text-slate-500 mt-1 max-w-2xl leading-relaxed">
             {effectiveLockedTeamCode
-              ? `Arsip lengkap kegiatan, agenda, hasil kerja, dan status pekerjaan khusus ${effectiveLockedTeamName?.startsWith('Tim ') ? effectiveLockedTeamName : `Tim ${effectiveLockedTeamName || effectiveLockedTeamCode}`}.`
+              ? `Log Book lengkap kegiatan, agenda, hasil kerja, dan status pekerjaan khusus ${effectiveLockedTeamName?.startsWith('Tim ') ? effectiveLockedTeamName : `Tim ${effectiveLockedTeamName || effectiveLockedTeamCode}`}.`
               : lockedBiroCode
-                ? `Arsip lengkap kegiatan, agenda, hasil kerja, dan status pekerjaan ${currentUserBiroName || `Biro ${lockedBiroCode}`}.`
+                ? `Log Book lengkap kegiatan, agenda, hasil kerja, dan status pekerjaan ${currentUserBiroName || `Biro ${lockedBiroCode}`}.`
                 : 'Sistem monitoring terpadu seluruh kegiatan, hasil kerja, dan status pekerjaan 5 tim kerja Biro 3 (Investasi, Kerja Sama, Komunikasi, Sistem Informasi, Hukum).'}
           </p>
         </div>

@@ -719,7 +719,7 @@ export function MeetingTable({
             </div>
             <p className="text-[12.5px] text-slate-500 mt-0.5">
               {onViewAllMeetings
-                ? 'Ringkasan aktivitas dan kegiatan terbaru 5 tim kerja Biro 3. Untuk mencari data lama atau arsip penuh, klik Buka Semua Arsip Kegiatan.'
+                ? 'Ringkasan aktivitas dan kegiatan terbaru 5 tim kerja Biro 3. Untuk mencari data lama atau riwayat lengkap, klik Buka Semua Log Book Kegiatan.'
                 : 'Daftar lengkap kegiatan, hasil kerja, dan status pekerjaan 5 tim kerja Biro 3.'}
             </p>
           </div>
@@ -943,7 +943,7 @@ export function MeetingTable({
                 onClick={onViewAllMeetings}
                 className="inline-flex items-center gap-1.5 px-3.5 sm:px-4 py-2 rounded-xl bg-[#31889C] text-white hover:bg-[#266F80] transition-all text-[12px] sm:text-[12.5px] font-semibold shadow-xs cursor-pointer shrink-0 whitespace-nowrap"
               >
-                <span>Buka Semua Arsip Kegiatan</span>
+                <span>Buka Semua Log Book Kegiatan</span>
                 <ArrowRight className="w-4 h-4" />
               </button>
             )}
