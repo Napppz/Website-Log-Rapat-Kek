@@ -25,7 +25,7 @@
 
     <style>
       .rel-line { fill: none; stroke: #3B82F6; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
-      .rel-cardinality { font-family: 'Segoe UI', Roboto, sans-serif; font-size: 10px; font-weight: 700; fill: #1E4F7D; }
+      .rel-cardinality { font-family: 'Segoe UI', Roboto, Helvetica, sans-serif; font-size: 11.5px; font-weight: 800; fill: #1E3A8A; }
     </style>
   </defs>
 
@@ -38,49 +38,49 @@
   <!-- ==================== RELATIONSHIP CONNECTOR PATHS ==================== -->
   <g class="relationships">
     <!-- 1. biro (1) -> tim_biro (0..*) -->
-    <path d="M 660 95 L 780 95" class="rel-line" marker-start="url(#circle-end)" marker-end="url(#arrow-many)" />
-    <text x="668" y="87" class="rel-cardinality">0..1</text>
-    <text x="768" y="87" class="rel-cardinality">*</text>
+    <path d="M 660 95 L 780 95" class="rel-line" marker-end="url(#arrow-many)" />
+    <text x="668" y="87" class="rel-cardinality">1</text>
+    <text x="768" y="87" class="rel-cardinality">N</text>
 
     <!-- 2. biro (1) -> kegiatan (0..*) -->
-    <path d="M 520 230 L 520 285" class="rel-line" marker-start="url(#circle-end)" marker-end="url(#arrow-many)" />
-    <text x="528" y="242" class="rel-cardinality">0..1</text>
-    <text x="528" y="278" class="rel-cardinality">*</text>
+    <path d="M 520 230 L 520 285" class="rel-line" marker-end="url(#arrow-many)" />
+    <text x="528" y="242" class="rel-cardinality">1</text>
+    <text x="528" y="278" class="rel-cardinality">N</text>
 
     <!-- 3. tim_biro (1) -> pengguna (0..*) -->
-    <path d="M 880 228 L 880 285" class="rel-line" marker-start="url(#circle-end)" marker-end="url(#arrow-many)" />
-    <text x="888" y="242" class="rel-cardinality">0..1</text>
-    <text x="888" y="278" class="rel-cardinality">*</text>
+    <path d="M 880 228 L 880 285" class="rel-line" marker-end="url(#arrow-many)" />
+    <text x="888" y="242" class="rel-cardinality">1</text>
+    <text x="888" y="278" class="rel-cardinality">N</text>
 
     <!-- 4. kegiatan (1) -> lampiran_kegiatan (0..*) -->
-    <path d="M 420 340 L 375 340 Q 360 340 360 325 L 360 180 Q 360 165 345 165 L 330 165" class="rel-line" marker-start="url(#circle-end)" marker-end="url(#arrow-many)" />
-    <text x="403" y="332" class="rel-cardinality">0..1</text>
-    <text x="338" y="157" class="rel-cardinality">*</text>
+    <path d="M 420 340 L 375 340 Q 360 340 360 325 L 360 180 Q 360 165 345 165 L 330 165" class="rel-line" marker-end="url(#arrow-many)" />
+    <text x="403" y="332" class="rel-cardinality">1</text>
+    <text x="338" y="157" class="rel-cardinality">N</text>
 
     <!-- 5. kegiatan (1) -> peserta_kegiatan (0..*) -->
-    <path d="M 420 440 L 330 440" class="rel-line" marker-start="url(#circle-end)" marker-end="url(#arrow-many)" />
-    <text x="403" y="432" class="rel-cardinality">0..1</text>
-    <text x="338" y="432" class="rel-cardinality">*</text>
+    <path d="M 420 440 L 330 440" class="rel-line" marker-end="url(#arrow-many)" />
+    <text x="403" y="432" class="rel-cardinality">1</text>
+    <text x="338" y="432" class="rel-cardinality">N</text>
 
     <!-- 6. pengguna (1) -> kegiatan (0..*) [PIC Kegiatan] -->
-    <path d="M 780 370 L 680 370" class="rel-line" marker-start="url(#circle-end)" marker-end="url(#arrow-many)" />
-    <text x="760" y="362" class="rel-cardinality">0..1</text>
-    <text x="688" y="362" class="rel-cardinality">*</text>
+    <path d="M 780 370 L 680 370" class="rel-line" marker-end="url(#arrow-many)" />
+    <text x="760" y="362" class="rel-cardinality">1</text>
+    <text x="688" y="362" class="rel-cardinality">N</text>
 
     <!-- 7. kegiatan (1) -> tindak_lanjut (0..*) -->
-    <path d="M 550 635 L 550 710" class="rel-line" marker-start="url(#circle-end)" marker-end="url(#arrow-many)" />
-    <text x="558" y="650" class="rel-cardinality">0..1</text>
-    <text x="558" y="700" class="rel-cardinality">*</text>
+    <path d="M 550 635 L 550 710" class="rel-line" marker-end="url(#arrow-many)" />
+    <text x="558" y="650" class="rel-cardinality">1</text>
+    <text x="558" y="700" class="rel-cardinality">N</text>
 
     <!-- 8. tindak_lanjut (1) -> riwayat_tindak_lanjut (0..*) -->
-    <path d="M 680 770 L 780 770" class="rel-line" marker-start="url(#circle-end)" marker-end="url(#arrow-many)" />
-    <text x="688" y="762" class="rel-cardinality">0..1</text>
-    <text x="768" y="762" class="rel-cardinality">*</text>
+    <path d="M 680 770 L 780 770" class="rel-line" marker-end="url(#arrow-many)" />
+    <text x="688" y="762" class="rel-cardinality">1</text>
+    <text x="768" y="762" class="rel-cardinality">N</text>
 
     <!-- 9. pengguna (1) -> tindak_lanjut (0..*) [PIC Tindak Lanjut] -->
-    <path d="M 880 535 L 880 610 Q 880 620 870 620 L 735 620 Q 725 620 725 630 L 725 785 Q 725 795 715 795 L 680 795" class="rel-line" marker-start="url(#circle-end)" marker-end="url(#arrow-many)" />
-    <text x="888" y="550" class="rel-cardinality">0..1</text>
-    <text x="688" y="787" class="rel-cardinality">*</text>
+    <path d="M 880 535 L 880 610 Q 880 620 870 620 L 735 620 Q 725 620 725 630 L 725 785 Q 725 795 715 795 L 680 795" class="rel-line" marker-end="url(#arrow-many)" />
+    <text x="888" y="550" class="rel-cardinality">1</text>
+    <text x="688" y="787" class="rel-cardinality">N</text>
 
     <!-- Decorative Dots -->
     <circle cx="700" cy="95" r="2.5" fill="#3B82F6" />

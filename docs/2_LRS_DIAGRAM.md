@@ -53,7 +53,7 @@ Visual diagram LRS dirancang dengan mengadopsi standar modern visual database:
    - **Tipe Data:** Ditampilkan rata kanan dengan tipografi teknis abu-abu netral (`varchar`, `integer`, `timestamp`, `boolean`, `text`, `enum`).
 3. **Garis Relasi & Kardinalitas:**
    - Menggunakan garis ortogonal biru halus (`#3B82F6`) berhiaskan titik dekoratif di sepanjang jalur koneksi.
-   - Menggunakan notasi kardinalitas standar relasional `0..1` (sisi induk / parent) dengan lingkaran kecil, dan `*` (sisi anak / child) dengan ujung panah.
+   - Menggunakan notasi kardinalitas standar akademik perguruan tinggi **`1`** (sisi induk / parent) dan **`N`** (sisi anak / child) dengan ujung panah terarah. Menghindari format `0..1` atau `*` agar tidak membingungkan dosen pembimbing dan penguji.
 
 ---
 
@@ -73,15 +73,15 @@ KLASTER 1: UNIT ORGANISASI & APARATUR (3 TABEL)
 
 2. tim_biro
    ├── 🔑 id_tim : varchar <PK>
-   ├── 🔗 id_biro : varchar <FK> ───────── (Relasi 0..1 ke * dari biro)
+   ├── 🔗 id_biro : varchar <FK> ───────── (Relasi 1 ke N dari biro)
    ├── kode_tim : varchar
    ├── nama_tim : varchar
    └── 🗹 status_aktif : boolean
 
 3. pengguna
    ├── 🔑 id_pengguna : varchar <PK>
-   ├── 🔗 id_biro : varchar <FK> ───────── (Relasi 0..1 ke * dari biro)
-   ├── 🔗 id_tim : varchar <FK> ────────── (Relasi 0..1 ke * dari tim_biro)
+   ├── 🔗 id_biro : varchar <FK> ───────── (Relasi 1 ke N dari biro)
+   ├── 🔗 id_tim : varchar <FK> ────────── (Relasi 1 ke N dari tim_biro)
    ├── nama_lengkap : varchar
    ├── email : varchar
    ├── kata_sandi : varchar
@@ -94,9 +94,9 @@ KLASTER 2: LOG BOOK KEGIATAN & BERKAS DOKUMEN (3 TABEL)
 
 4. kegiatan
    ├── 🔑 id_kegiatan : varchar <PK>
-   ├── 🔗 id_biro : varchar <FK> ───────── (Relasi 0..1 ke * dari biro)
-   ├── 🔗 id_tim : varchar <FK> ────────── (Relasi 0..1 ke * dari tim_biro)
-   ├── 🔗 id_pengguna : varchar <FK> ───── (Relasi 0..1 ke * dari pengguna - PIC)
+   ├── 🔗 id_biro : varchar <FK> ───────── (Relasi 1 ke N dari biro)
+   ├── 🔗 id_tim : varchar <FK> ────────── (Relasi 1 ke N dari tim_biro)
+   ├── 🔗 id_pengguna : varchar <FK> ───── (Relasi 1 ke N dari pengguna - PIC)
    ├── nomor_kegiatan : varchar
    ├── judul_kegiatan : varchar
    ├── tanggal_kegiatan : timestamp
@@ -110,7 +110,7 @@ KLASTER 2: LOG BOOK KEGIATAN & BERKAS DOKUMEN (3 TABEL)
 
 5. lampiran_kegiatan
    ├── 🔑 id_lampiran : varchar <PK>
-   ├── 🔗 id_kegiatan : varchar <FK> ───── (Relasi 0..1 ke * dari kegiatan)
+   ├── 🔗 id_kegiatan : varchar <FK> ───── (Relasi 1 ke N dari kegiatan)
    ├── nama_berkas : varchar
    ├── url_berkas : varchar
    ├── ukuran_berkas : integer
@@ -120,8 +120,8 @@ KLASTER 2: LOG BOOK KEGIATAN & BERKAS DOKUMEN (3 TABEL)
 
 6. peserta_kegiatan
    ├── 🔑 id_peserta : varchar <PK>
-   ├── 🔗 id_kegiatan : varchar <FK> ───── (Relasi 0..1 ke * dari kegiatan)
-   ├── 🔗 id_pengguna : varchar <FK> ───── (Relasi 0..1 ke * dari pengguna)
+   ├── 🔗 id_kegiatan : varchar <FK> ───── (Relasi 1 ke N dari kegiatan)
+   ├── 🔗 id_pengguna : varchar <FK> ───── (Relasi 1 ke N dari pengguna)
    ├── status_kehadiran : enum
    └── dibuat_pada : timestamp
 
@@ -131,10 +131,10 @@ KLASTER 3: TINDAK LANJUT / ACTION ITEMS (2 TABEL)
 
 7. tindak_lanjut
    ├── 🔑 id_tindak_lanjut : varchar <PK>
-   ├── 🔗 id_kegiatan : varchar <FK> ───── (Relasi 0..1 ke * dari kegiatan)
-   ├── 🔗 id_biro : varchar <FK> ───────── (Relasi 0..1 ke * dari biro)
-   ├── 🔗 id_tim : varchar <FK> ────────── (Relasi 0..1 ke * dari tim_biro)
-   ├── 🔗 id_pengguna : varchar <FK> ───── (Relasi 0..1 ke * dari pengguna - PIC)
+   ├── 🔗 id_kegiatan : varchar <FK> ───── (Relasi 1 ke N dari kegiatan)
+   ├── 🔗 id_biro : varchar <FK> ───────── (Relasi 1 ke N dari biro)
+   ├── 🔗 id_tim : varchar <FK> ────────── (Relasi 1 ke N dari tim_biro)
+   ├── 🔗 id_pengguna : varchar <FK> ───── (Relasi 1 ke N dari pengguna - PIC)
    ├── judul_tindakan : varchar
    ├── deskripsi_tindakan : text
    ├── tenggat_waktu : timestamp
@@ -144,8 +144,8 @@ KLASTER 3: TINDAK LANJUT / ACTION ITEMS (2 TABEL)
 
 8. riwayat_tindak_lanjut
    ├── 🔑 id_riwayat : varchar <PK>
-   ├── 🔗 id_tindak_lanjut : varchar <FK> (Relasi 0..1 ke * dari tindak_lanjut)
-   ├── 🔗 id_pengguna : varchar <FK> ───── (Relasi 0..1 ke * dari pengguna)
+   ├── 🔗 id_tindak_lanjut : varchar <FK> (Relasi 1 ke N dari tindak_lanjut)
+   ├── 🔗 id_pengguna : varchar <FK> ───── (Relasi 1 ke N dari pengguna)
    ├── status_sebelumnya : enum
    ├── status_terbaru : enum
    ├── catatan_progres : text
@@ -158,21 +158,21 @@ KLASTER 3: TINDAK LANJUT / ACTION ITEMS (2 TABEL)
 
 | No | Tabel Asal (Child) | Kolom Kunci Tamu (FK) | Tabel Rujukan (Parent) | Kolom Rujukan (PK) | Kardinalitas |
 |:---|:-------------------|:----------------------|:-----------------------|:-------------------|:-------------|
-| 1  | `tim_biro` | `id_biro` | `biro` | `id_biro` | 0..1 : * |
-| 2  | `pengguna` | `id_biro` | `biro` | `id_biro` | 0..1 : * |
-| 3  | `pengguna` | `id_tim` | `tim_biro` | `id_tim` | 0..1 : * |
-| 4  | `kegiatan` | `id_biro` | `biro` | `id_biro` | 0..1 : * |
-| 5  | `kegiatan` | `id_tim` | `tim_biro` | `id_tim` | 0..1 : * |
-| 6  | `kegiatan` | `id_pengguna` | `pengguna` | `id_pengguna` | 0..1 : * |
-| 7  | `lampiran_kegiatan`| `id_kegiatan` | `kegiatan` | `id_kegiatan` | 0..1 : * |
-| 8  | `peserta_kegiatan` | `id_kegiatan` | `kegiatan` | `id_kegiatan` | 0..1 : * |
-| 9  | `peserta_kegiatan` | `id_pengguna` | `pengguna` | `id_pengguna` | 0..1 : * |
-| 10 | `tindak_lanjut` | `id_kegiatan` | `kegiatan` | `id_kegiatan` | 0..1 : * |
-| 11 | `tindak_lanjut` | `id_biro` | `biro` | `id_biro` | 0..1 : * |
-| 12 | `tindak_lanjut` | `id_tim` | `tim_biro` | `id_tim` | 0..1 : * |
-| 13 | `tindak_lanjut` | `id_pengguna` | `pengguna` | `id_pengguna` | 0..1 : * |
-| 14 | `riwayat_tindak_lanjut` | `id_tindak_lanjut` | `tindak_lanjut` | `id_tindak_lanjut` | 0..1 : * |
-| 15 | `riwayat_tindak_lanjut` | `id_pengguna` | `pengguna` | `id_pengguna` | 0..1 : * |
+| 1  | `tim_biro` | `id_biro` | `biro` | `id_biro` | 1 : N |
+| 2  | `pengguna` | `id_biro` | `biro` | `id_biro` | 1 : N |
+| 3  | `pengguna` | `id_tim` | `tim_biro` | `id_tim` | 1 : N |
+| 4  | `kegiatan` | `id_biro` | `biro` | `id_biro` | 1 : N |
+| 5  | `kegiatan` | `id_tim` | `tim_biro` | `id_tim` | 1 : N |
+| 6  | `kegiatan` | `id_pengguna` | `pengguna` | `id_pengguna` | 1 : N |
+| 7  | `lampiran_kegiatan`| `id_kegiatan` | `kegiatan` | `id_kegiatan` | 1 : N |
+| 8  | `peserta_kegiatan` | `id_kegiatan` | `kegiatan` | `id_kegiatan` | 1 : N |
+| 9  | `peserta_kegiatan` | `id_pengguna` | `pengguna` | `id_pengguna` | 1 : N |
+| 10 | `tindak_lanjut` | `id_kegiatan` | `kegiatan` | `id_kegiatan` | 1 : N |
+| 11 | `tindak_lanjut` | `id_biro` | `biro` | `id_biro` | 1 : N |
+| 12 | `tindak_lanjut` | `id_tim` | `tim_biro` | `id_tim` | 1 : N |
+| 13 | `tindak_lanjut` | `id_pengguna` | `pengguna` | `id_pengguna` | 1 : N |
+| 14 | `riwayat_tindak_lanjut` | `id_tindak_lanjut` | `tindak_lanjut` | `id_tindak_lanjut` | 1 : N |
+| 15 | `riwayat_tindak_lanjut` | `id_pengguna` | `pengguna` | `id_pengguna` | 1 : N |
 
 ---
 
