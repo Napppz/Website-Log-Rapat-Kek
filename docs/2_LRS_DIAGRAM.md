@@ -84,6 +84,7 @@ KLASTER 1: UNIT ORGANISASI & APARATUR (3 TABEL)
    ├── 🔗 id_tim : varchar <FK> ────────── (Relasi 1 ke N dari tim_biro)
    ├── nama_lengkap : varchar
    ├── email : varchar
+   ├── nama_pengguna : varchar
    ├── kata_sandi : varchar
    ├── peran : enum
    └── 🗹 status_aktif : boolean
@@ -96,17 +97,16 @@ KLASTER 2: LOG BOOK KEGIATAN & BERKAS DOKUMEN (3 TABEL)
    ├── 🔑 id_kegiatan : varchar <PK>
    ├── 🔗 id_biro : varchar <FK> ───────── (Relasi 1 ke N dari biro)
    ├── 🔗 id_tim : varchar <FK> ────────── (Relasi 1 ke N dari tim_biro)
-   ├── 🔗 id_pengguna : varchar <FK> ───── (Relasi 1 ke N dari pengguna - PIC)
    ├── nomor_kegiatan : varchar
    ├── judul_kegiatan : varchar
    ├── tanggal_kegiatan : timestamp
    ├── waktu_mulai : varchar
    ├── waktu_selesai : varchar
    ├── lokasi_kegiatan : varchar
-   ├── status_kegiatan : enum
    ├── pic_kegiatan : varchar
-   ├── status_progres : varchar
-   └── catatan_hasil : text
+   ├── kategori_naskah : varchar
+   ├── catatan_hasil : text
+   └── status_kegiatan : enum
 
 5. lampiran_kegiatan
    ├── 🔑 id_lampiran : varchar <PK>
@@ -163,16 +163,15 @@ KLASTER 3: TINDAK LANJUT / ACTION ITEMS (2 TABEL)
 | 3  | `pengguna` | `id_tim` | `tim_biro` | `id_tim` | 1 : N |
 | 4  | `kegiatan` | `id_biro` | `biro` | `id_biro` | 1 : N |
 | 5  | `kegiatan` | `id_tim` | `tim_biro` | `id_tim` | 1 : N |
-| 6  | `kegiatan` | `id_pengguna` | `pengguna` | `id_pengguna` | 1 : N |
-| 7  | `lampiran_kegiatan`| `id_kegiatan` | `kegiatan` | `id_kegiatan` | 1 : N |
-| 8  | `peserta_kegiatan` | `id_kegiatan` | `kegiatan` | `id_kegiatan` | 1 : N |
-| 9  | `peserta_kegiatan` | `id_pengguna` | `pengguna` | `id_pengguna` | 1 : N |
-| 10 | `tindak_lanjut` | `id_kegiatan` | `kegiatan` | `id_kegiatan` | 1 : N |
-| 11 | `tindak_lanjut` | `id_biro` | `biro` | `id_biro` | 1 : N |
-| 12 | `tindak_lanjut` | `id_tim` | `tim_biro` | `id_tim` | 1 : N |
-| 13 | `tindak_lanjut` | `id_pengguna` | `pengguna` | `id_pengguna` | 1 : N |
-| 14 | `riwayat_tindak_lanjut` | `id_tindak_lanjut` | `tindak_lanjut` | `id_tindak_lanjut` | 1 : N |
-| 15 | `riwayat_tindak_lanjut` | `id_pengguna` | `pengguna` | `id_pengguna` | 1 : N |
+| 6  | `lampiran_kegiatan`| `id_kegiatan` | `kegiatan` | `id_kegiatan` | 1 : N |
+| 7  | `peserta_kegiatan` | `id_kegiatan` | `kegiatan` | `id_kegiatan` | 1 : N |
+| 8  | `peserta_kegiatan` | `id_pengguna` | `pengguna` | `id_pengguna` | 1 : N |
+| 9  | `tindak_lanjut` | `id_kegiatan` | `kegiatan` | `id_kegiatan` | 1 : N |
+| 10 | `tindak_lanjut` | `id_biro` | `biro` | `id_biro` | 1 : N |
+| 11 | `tindak_lanjut` | `id_tim` | `tim_biro` | `id_tim` | 1 : N |
+| 12 | `tindak_lanjut` | `id_pengguna` | `pengguna` | `id_pengguna` | 1 : N |
+| 13 | `riwayat_tindak_lanjut` | `id_tindak_lanjut` | `tindak_lanjut` | `id_tindak_lanjut` | 1 : N |
+| 14 | `riwayat_tindak_lanjut` | `id_pengguna` | `pengguna` | `id_pengguna` | 1 : N |
 
 ---
 

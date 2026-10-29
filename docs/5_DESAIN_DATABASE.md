@@ -153,7 +153,7 @@ Spesifikasi basis data (*data dictionary*) menjelaskan rincian teknis dari setia
 | 10 | `id_pengguna` | `text` (UUID) | **Foreign Key** (Relasi ke `pengguna.id_pengguna` - Pimpinan Kegiatan) |
 | 11 | `id_kegiatan_sebelumnya` | `text` (UUID) | **Foreign Key** (Relasi rekursif ke `kegiatan.id_kegiatan`, opsional) |
 | 12 | `status_kegiatan` | `MeetingStatus` | Status tahapan: `DRAFT`, `REVIEW`, `APPROVED`, `FINAL` |
-| 13 | `jenis_kegiatan` | `text` | Kategori naskah: Naskah Masuk, Disposisi Sekjen/Karo, Rutin |
+| 13 | `kategori_naskah` | `text` | Kategori naskah acuan kegiatan (Undangan, Disposisi, Nota Masuk) |
 | 14 | `pic_kegiatan` | `text` | Nama pejabat/staf penanggung jawab teknis kegiatan |
 | 15 | `status_progres` | `text` | Tahapan progres: Belum Dimulai, Dalam Proses, Selesai |
 | 16 | `catatan_hasil` | `text` | Ringkasan pokok catatan dan kesimpulan pelaksanaan kegiatan |
