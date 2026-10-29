@@ -1,5 +1,5 @@
 <mxfile host="app.diagrams.net" agent="Mozilla/5.0" pages="3">
-  <diagram id="ad-penjadwalan-rapat" name="a. Alur Pencatatan &amp; Penjadwalan Kegiatan Baru">
+  <diagram id="ad-penjadwalan-rapat" name="a. Alur Penjadwalan Kegiatan Dinas">
     <mxGraphModel grid="1" page="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" pageScale="1" pageWidth="1200" pageHeight="1360" background="#F8FAFC" math="0" shadow="0">
       <root>
         <mxCell id="0" />
@@ -7,13 +7,13 @@
         <mxCell id="t1_container" parent="1" style="rounded=1;arcSize=4;whiteSpace=wrap;html=1;container=1;collapsible=0;strokeColor=#183E47;strokeWidth=2;fillColor=#ffffff;shadow=1;" value="" vertex="1">
           <mxGeometry height="1220" width="1080" x="60" y="70" as="geometry" />
         </mxCell>
-        <mxCell id="t1_hdr_main" parent="t1_container" style="rounded=0;whiteSpace=wrap;html=1;strokeColor=#183E47;strokeWidth=1.5;fillColor=#215865;align=center;verticalAlign=middle;fontFamily=Helvetica;fontSize=12.5;fontColor=#ffffff;fontStyle=1;" value="&lt;b&gt;Alur Penjadwalan Kegiatan (Aplikasi Log Book Kegiatan KEK RI)&lt;/b&gt;" vertex="1">
+        <mxCell id="t1_hdr_main" parent="t1_container" style="rounded=0;whiteSpace=wrap;html=1;strokeColor=#183E47;strokeWidth=1.5;fillColor=#215865;align=center;verticalAlign=middle;fontFamily=Helvetica;fontSize=12.5;fontColor=#ffffff;fontStyle=1;" value="&lt;b&gt;Alur Penjadwalan Kegiatan Dinas (Aplikasi Jadwal &amp; Pengarsipan KEK RI)&lt;/b&gt;" vertex="1">
           <mxGeometry height="34" width="1080" as="geometry" />
         </mxCell>
         <mxCell id="t1_col1" parent="t1_container" style="rounded=0;whiteSpace=wrap;html=1;strokeColor=#0284C7;strokeWidth=1.5;fillColor=#E0F2FE;align=center;verticalAlign=middle;fontFamily=Helvetica;fontSize=11.5;fontColor=#0369A1;fontStyle=1;" value="&lt;b&gt;Admin Biro / Tim Pemrakarsa&lt;/b&gt;" vertex="1">
           <mxGeometry height="32" width="340" y="34" as="geometry" />
         </mxCell>
-        <mxCell id="t1_col2" parent="t1_container" style="rounded=0;whiteSpace=wrap;html=1;strokeColor=#475569;strokeWidth=1.5;fillColor=#F1F5F9;align=center;verticalAlign=middle;fontFamily=Helvetica;fontSize=11.5;fontColor=#1E293B;fontStyle=1;" value="&lt;b&gt;Aplikasi Log Book Kegiatan KEK&lt;/b&gt;" vertex="1">
+        <mxCell id="t1_col2" parent="t1_container" style="rounded=0;whiteSpace=wrap;html=1;strokeColor=#475569;strokeWidth=1.5;fillColor=#F1F5F9;align=center;verticalAlign=middle;fontFamily=Helvetica;fontSize=11.5;fontColor=#1E293B;fontStyle=1;" value="&lt;b&gt;Sistem Jadwal &amp; Pengarsipan KEK&lt;/b&gt;" vertex="1">
           <mxGeometry height="32" width="340" x="340" y="34" as="geometry" />
         </mxCell>
         <mxCell id="t1_col3" parent="t1_container" style="rounded=0;whiteSpace=wrap;html=1;strokeColor=#D97706;strokeWidth=1.5;fillColor=#FEF3C7;align=center;verticalAlign=middle;fontFamily=Helvetica;fontSize=11.5;fontColor=#92400E;fontStyle=1;" value="STAFF / PIC" vertex="1">
@@ -37,7 +37,7 @@
         <mxCell id="n1_notif_admin" parent="t1_bg1" style="rounded=1;arcSize=20;whiteSpace=wrap;html=1;fillColor=#ECFDF5;strokeColor=#059669;strokeWidth=1.5;fontColor=#064E3B;fontSize=11;fontStyle=1;shadow=1;fontFamily=Helvetica;align=center;verticalAlign=middle;" value="Menerima Konfirmasi Berhasil&lt;div&gt;&amp;amp; Notifikasi Kegiatan&lt;/div&gt;" vertex="1">
           <mxGeometry height="50" width="210" x="65" y="554" as="geometry" />
         </mxCell>
-        <mxCell id="n1_notif3" parent="t1_bg1" style="rounded=1;arcSize=20;whiteSpace=wrap;html=1;fillColor=#ECFDF5;strokeColor=#059669;strokeWidth=1.5;fontColor=#064E3B;fontSize=11;fontStyle=1;shadow=1;fontFamily=Helvetica;align=center;verticalAlign=middle;" value="Menerima Notifikasi Selesai&#xa;&amp;amp; Siap Unggah Dokumen Log Book" vertex="1">
+        <mxCell id="n1_notif3" parent="t1_bg1" style="rounded=1;arcSize=20;whiteSpace=wrap;html=1;fillColor=#ECFDF5;strokeColor=#059669;strokeWidth=1.5;fontColor=#064E3B;fontSize=11;fontStyle=1;shadow=1;fontFamily=Helvetica;align=center;verticalAlign=middle;" value="Menerima Notifikasi Selesai&#xa;&amp;amp; Siap Diunggah Berkas Arsip" vertex="1">
           <mxGeometry height="50" width="210" x="65" y="836" as="geometry" />
         </mxCell>
         <mxCell id="n1_end" parent="t1_bg1" style="ellipse;shape=doubleEllipse;whiteSpace=wrap;html=1;aspect=fixed;fillColor=#FFFFFF;strokeColor=#DC2626;strokeWidth=2;shadow=1;" value="" vertex="1">
@@ -79,7 +79,7 @@
         <mxCell id="n1_fork" parent="t1_bg2" style="rounded=1;arcSize=50;whiteSpace=wrap;html=1;fillColor=#1E293B;strokeColor=#0F172A;strokeWidth=1;shadow=1;" value="" vertex="1">
           <mxGeometry height="8" width="180" x="80" y="519" as="geometry" />
         </mxCell>
-        <mxCell id="n1_sys_presence" parent="t1_bg2" style="rounded=1;arcSize=20;whiteSpace=wrap;html=1;fillColor=#EFF6FF;strokeColor=#2563EB;strokeWidth=1.5;fontColor=#1E3A8A;fontSize=11;fontStyle=1;shadow=1;fontFamily=Helvetica;align=center;verticalAlign=middle;" value="Perbarui Daftar Pihak Terkait&#xa;&amp;amp; Sinkronkan ke Kalender Terpadu" vertex="1">
+        <mxCell id="n1_sys_presence" parent="t1_bg2" style="rounded=1;arcSize=20;whiteSpace=wrap;html=1;fillColor=#EFF6FF;strokeColor=#2563EB;strokeWidth=1.5;fontColor=#1E3A8A;fontSize=11;fontStyle=1;shadow=1;fontFamily=Helvetica;align=center;verticalAlign=middle;" value="Perbarui Daftar Pihak Terkait&#xa;&amp;amp; Sinkronkan ke Kalender Dinas" vertex="1">
           <mxGeometry height="48" width="220" x="55" y="657.5" as="geometry" />
         </mxCell>
         <mxCell id="n1_act_done" parent="t1_bg2" style="rounded=1;arcSize=20;whiteSpace=wrap;html=1;fillColor=#EFF6FF;strokeColor=#2563EB;strokeWidth=1.5;fontColor=#1E3A8A;fontSize=11;fontStyle=1;shadow=1;fontFamily=Helvetica;align=center;verticalAlign=middle;" value="Tutup Pelaksanaan Kegiatan&#xa;(Set Status: Selesai)" vertex="1">
@@ -182,161 +182,176 @@
       </root>
     </mxGraphModel>
   </diagram>
-  <diagram id="ad-dokumen-catatan-hasil" name="b. Alur Pencatatan Dokumen &amp; Catatan Hasil Kegiatan">
-    <mxGraphModel dx="1493" dy="871" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1200" pageHeight="1200" background="#F8FAFC" math="0" shadow="0">
+  <diagram id="ad-notulensi-risalah" name="b. Alur Pengarsipan Berkas &amp; Catatan Hasil">
+    <mxGraphModel dx="1493" dy="871" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1200" pageHeight="1360" background="#F8FAFC" math="0" shadow="0">
       <root>
         <mxCell id="0" />
         <mxCell id="1" parent="0" />
         <mxCell id="t2_container" parent="1" style="rounded=1;arcSize=4;whiteSpace=wrap;html=1;container=1;collapsible=0;strokeColor=#183E47;strokeWidth=2;fillColor=#ffffff;shadow=1;" value="" vertex="1">
-          <mxGeometry height="980" width="1080" x="60" y="70" as="geometry" />
+          <mxGeometry height="1220" width="1080" x="60" y="70" as="geometry" />
         </mxCell>
-        <mxCell id="t2_hdr_main" parent="t2_container" style="rounded=0;whiteSpace=wrap;html=1;strokeColor=#183E47;strokeWidth=1.5;fillColor=#215865;align=center;verticalAlign=middle;fontFamily=Helvetica;fontSize=12.5;fontColor=#ffffff;fontStyle=1;" value="&lt;b&gt;Alur Pencatatan Dokumen &amp;amp; Catatan Hasil Kegiatan (Aplikasi Log Book Kegiatan KEK RI)&lt;/b&gt;" vertex="1">
+        <mxCell id="t2_hdr_main" parent="t2_container" style="rounded=0;whiteSpace=wrap;html=1;strokeColor=#183E47;strokeWidth=1.5;fillColor=#215865;align=center;verticalAlign=middle;fontFamily=Helvetica;fontSize=12.5;fontColor=#ffffff;fontStyle=1;" value="&lt;b&gt;Alur Pengarsipan Berkas Dokumen &amp; Catatan Hasil Kegiatan (Aplikasi Jadwal &amp; Pengarsipan KEK RI)&lt;/b&gt;" vertex="1">
           <mxGeometry height="34" width="1080" as="geometry" />
         </mxCell>
         <mxCell id="t2_col1" parent="t2_container" style="rounded=0;whiteSpace=wrap;html=1;strokeColor=#0284C7;strokeWidth=1.5;fillColor=#E0F2FE;align=center;verticalAlign=middle;fontFamily=Helvetica;fontSize=11.5;fontColor=#0369A1;fontStyle=1;" value="&lt;b&gt;Admin Biro / Staf PIC&lt;/b&gt;" vertex="1">
           <mxGeometry height="32" width="340" y="34" as="geometry" />
         </mxCell>
-        <mxCell id="t2_col2" parent="t2_container" style="rounded=0;whiteSpace=wrap;html=1;strokeColor=#475569;strokeWidth=1.5;fillColor=#F1F5F9;align=center;verticalAlign=middle;fontFamily=Helvetica;fontSize=11.5;fontColor=#1E293B;fontStyle=1;" value="&lt;b&gt;Aplikasi Log Book Kegiatan KEK (Sistem)&lt;/b&gt;" vertex="1">
-          <mxGeometry height="32" width="380" x="340" y="34" as="geometry" />
+        <mxCell id="t2_col2" parent="t2_container" style="rounded=0;whiteSpace=wrap;html=1;strokeColor=#475569;strokeWidth=1.5;fillColor=#F1F5F9;align=center;verticalAlign=middle;fontFamily=Helvetica;fontSize=11.5;fontColor=#1E293B;fontStyle=1;" value="&lt;b&gt;Sistem Jadwal &amp; Pengarsipan KEK&lt;/b&gt;" vertex="1">
+          <mxGeometry height="32" width="340" x="340" y="34" as="geometry" />
         </mxCell>
-        <mxCell id="t2_col3" parent="t2_container" style="rounded=0;whiteSpace=wrap;html=1;strokeColor=#D97706;strokeWidth=1.5;fillColor=#FEF3C7;align=center;verticalAlign=middle;fontFamily=Helvetica;fontSize=11.5;fontColor=#92400E;fontStyle=1;" value="&lt;b&gt;Super Admin / Pimpinan&lt;/b&gt;" vertex="1">
-          <mxGeometry height="32" width="360" x="720" y="34" as="geometry" />
+        <mxCell id="t2_col3" parent="t2_container" style="rounded=0;whiteSpace=wrap;html=1;strokeColor=#D97706;strokeWidth=1.5;fillColor=#FEF3C7;align=center;verticalAlign=middle;fontFamily=Helvetica;fontSize=11.5;fontColor=#92400E;fontStyle=1;" value="Super Admin / Pimpinan" vertex="1">
+          <mxGeometry height="32" width="400" x="680" y="34" as="geometry" />
         </mxCell>
-        
-        <!-- Background Columns -->
         <mxCell id="t2_bg1" parent="t2_container" style="rounded=0;whiteSpace=wrap;html=1;container=1;collapsible=0;strokeColor=#CBD5E1;strokeWidth=1.2;fillColor=#FFFFFF;" value="" vertex="1">
-          <mxGeometry height="914" width="340" y="66" as="geometry" />
+          <mxGeometry height="1154" width="340" y="66" as="geometry" />
         </mxCell>
-        <mxCell id="t2_bg2" parent="t2_container" style="rounded=0;whiteSpace=wrap;html=1;container=1;collapsible=0;strokeColor=#CBD5E1;strokeWidth=1.2;fillColor=#F8FAFC;" value="" vertex="1">
-          <mxGeometry height="914" width="380" x="340" y="66" as="geometry" />
-        </mxCell>
-        <mxCell id="t2_bg3" parent="t2_container" style="rounded=0;whiteSpace=wrap;html=1;container=1;collapsible=0;strokeColor=#CBD5E1;strokeWidth=1.2;fillColor=#FFFFFF;" value="" vertex="1">
-          <mxGeometry height="914" width="360" x="720" y="66" as="geometry" />
-        </mxCell>
-
-        <!-- Column 1 Nodes (Admin / PIC) -->
         <mxCell id="n2_start" parent="t2_bg1" style="ellipse;whiteSpace=wrap;html=1;aspect=fixed;fillColor=#10B981;strokeColor=#065F46;strokeWidth=2.2;shadow=1;" value="" vertex="1">
-          <mxGeometry height="28" width="28" x="156" y="25" as="geometry" />
+          <mxGeometry height="28" width="28" x="156" y="19" as="geometry" />
         </mxCell>
-        <mxCell id="n2_act1" parent="t2_bg1" style="rounded=1;arcSize=20;whiteSpace=wrap;html=1;fillColor=#ECFDF5;strokeColor=#059669;strokeWidth=1.5;fontColor=#064E3B;fontSize=11;fontStyle=1;shadow=1;fontFamily=Helvetica;align=center;verticalAlign=middle;" value="Membuka Rincian Kegiatan &amp;amp;&lt;br&gt;Memilih Tab &quot;Dokumen &amp;amp; Catatan Hasil&quot;" vertex="1">
-          <mxGeometry height="54" width="240" x="50" y="85" as="geometry" />
+        <mxCell id="n2_act1" parent="t2_bg1" style="rounded=1;arcSize=20;whiteSpace=wrap;html=1;fillColor=#ECFDF5;strokeColor=#059669;strokeWidth=1.5;fontColor=#064E3B;fontSize=11;fontStyle=1;shadow=1;fontFamily=Helvetica;align=center;verticalAlign=middle;" value="Membuka Rincian Kegiatan &amp;amp;&#xa;Menginput Catatan Hasil Rapat" vertex="1">
+          <mxGeometry height="52" width="210" x="65" y="79" as="geometry" />
         </mxCell>
-        <mxCell id="n2_act2" parent="t2_bg1" style="rounded=1;arcSize=20;whiteSpace=wrap;html=1;fillColor=#ECFDF5;strokeColor=#059669;strokeWidth=1.5;fontColor=#064E3B;fontSize=11;fontStyle=1;shadow=1;fontFamily=Helvetica;align=center;verticalAlign=middle;" value="Unggah Berkas Kegiatan (Undangan, Nota&lt;br&gt;Konsumsi, Materi Paparan, Tautan Berita)&lt;br&gt;&amp;amp; Input Catatan Pokok Hasil Kegiatan" vertex="1">
-          <mxGeometry height="64" width="260" x="40" y="175" as="geometry" />
+        <mxCell id="n2_act2" parent="t2_bg1" style="rounded=1;arcSize=20;whiteSpace=wrap;html=1;fillColor=#ECFDF5;strokeColor=#059669;strokeWidth=1.5;fontColor=#064E3B;fontSize=11;fontStyle=1;shadow=1;fontFamily=Helvetica;align=center;verticalAlign=middle;" value="Memilih Kategori Berkas Acuan&#xa;&amp;amp; Mengunggah Dokumen Lampiran" vertex="1">
+          <mxGeometry height="52" width="210" x="65" y="169" as="geometry" />
         </mxCell>
-        <mxCell id="n2_act3" parent="t2_bg1" style="rounded=1;arcSize=20;whiteSpace=wrap;html=1;fillColor=#ECFDF5;strokeColor=#059669;strokeWidth=1.5;fontColor=#064E3B;fontSize=11;fontStyle=1;shadow=1;fontFamily=Helvetica;align=center;verticalAlign=middle;" value="Menekan Tombol&lt;br&gt;&quot;Simpan Dokumen &amp;amp; Catatan Hasil&quot;" vertex="1">
-          <mxGeometry height="50" width="230" x="55" y="280" as="geometry" />
+        <mxCell id="n2_notif_rev" parent="t2_bg1" style="rounded=1;arcSize=20;whiteSpace=wrap;html=1;fillColor=#ECFDF5;strokeColor=#059669;strokeWidth=1.5;fontColor=#064E3B;fontSize=11;fontStyle=1;shadow=1;fontFamily=Helvetica;align=center;verticalAlign=middle;" value="Menerima Catatan Telaah Pimpinan&#xa;&amp;amp; Melengkapi Dokumen Arsip" vertex="1">
+          <mxGeometry height="50" width="210" x="65" y="374" as="geometry" />
         </mxCell>
-
-        <!-- Column 2 Nodes (Sistem) -->
-        <mxCell id="n2_act_err" parent="t2_bg2" style="rounded=1;arcSize=20;whiteSpace=wrap;html=1;fillColor=#FEF2F2;strokeColor=#EF4444;strokeWidth=1.5;fontColor=#991B1B;fontSize=10.5;fontStyle=1;shadow=1;fontFamily=Helvetica;align=center;verticalAlign=middle;" value="Tampilkan Notifikasi Error:&lt;br&gt;Format Berkas Tidak Sesuai / Ukuran &amp;gt; 10MB" vertex="1">
-          <mxGeometry height="52" width="260" x="60" y="181" as="geometry" />
+        <mxCell id="n2_act_download" parent="t2_bg1" style="rounded=1;arcSize=20;whiteSpace=wrap;html=1;fillColor=#ECFDF5;strokeColor=#059669;strokeWidth=1.5;fontColor=#064E3B;fontSize=11;fontStyle=1;shadow=1;fontFamily=Helvetica;align=center;verticalAlign=middle;" value="Mengunduh Dokumen Rekapitulasi&#xa;PDF Resmi Ber-Kop Setjen KEK" vertex="1">
+          <mxGeometry height="50" width="210" x="65" y="679" as="geometry" />
         </mxCell>
-        <mxCell id="n2_dec1" parent="t2_bg2" style="rhombus;whiteSpace=wrap;html=1;fillColor=#F8FAFC;strokeColor=#475569;strokeWidth=1.5;fontColor=#1E293B;fontSize=10.5;fontStyle=1;shadow=1;fontFamily=Helvetica;align=center;verticalAlign=middle;" value="Validasi Format &amp;amp;&lt;br&gt;Ukuran Berkas&lt;br&gt;(&amp;lt; 10MB)?" vertex="1">
-          <mxGeometry height="75" width="140" x="120" y="267.5" as="geometry" />
+        <mxCell id="n2_end" parent="t2_bg1" style="ellipse;shape=doubleEllipse;whiteSpace=wrap;html=1;aspect=fixed;fillColor=#FFFFFF;strokeColor=#DC2626;strokeWidth=2;shadow=1;" value="" vertex="1">
+          <mxGeometry height="30" width="30" x="155" y="779" as="geometry" />
         </mxCell>
-        <mxCell id="n2_sys_save" parent="t2_bg2" style="rounded=1;arcSize=20;whiteSpace=wrap;html=1;fillColor=#F1F5F9;strokeColor=#475569;strokeWidth=1.5;fontColor=#1E293B;fontSize=11;fontStyle=1;shadow=1;fontFamily=Helvetica;align=center;verticalAlign=middle;" value="Unggah Berkas ke Cloud Storage &amp;amp;&lt;br&gt;Simpan Metadata serta Catatan Hasil ke DB" vertex="1">
-          <mxGeometry height="54" width="260" x="60" y="385" as="geometry" />
-        </mxCell>
-        <mxCell id="n2_sys_link" parent="t2_bg2" style="rounded=1;arcSize=20;whiteSpace=wrap;html=1;fillColor=#F1F5F9;strokeColor=#475569;strokeWidth=1.5;fontColor=#1E293B;fontSize=11;fontStyle=1;shadow=1;fontFamily=Helvetica;align=center;verticalAlign=middle;" value="Tautkan Dokumen ke ID Registrasi Kegiatan&lt;br&gt;&amp;amp; Rekam Stempel Waktu (Timestamp)" vertex="1">
-          <mxGeometry height="52" width="260" x="60" y="475" as="geometry" />
-        </mxCell>
-        <mxCell id="n2_sys_pdf" parent="t2_bg2" style="rounded=1;arcSize=20;whiteSpace=wrap;html=1;fillColor=#F1F5F9;strokeColor=#475569;strokeWidth=1.5;fontColor=#1E293B;fontSize=11;fontStyle=1;shadow=1;fontFamily=Helvetica;align=center;verticalAlign=middle;" value="Aktifkan Pratinjau Berkas &amp;amp; Sediakan&lt;br&gt;Unduh Dokumen Log Book (PDF Resmi KEK)" vertex="1">
-          <mxGeometry height="52" width="260" x="60" y="565" as="geometry" />
-        </mxCell>
-        <mxCell id="n2_sys_final" parent="t2_bg2" style="rounded=1;arcSize=20;whiteSpace=wrap;html=1;fillColor=#ECFDF5;strokeColor=#059669;strokeWidth=1.5;fontColor=#064E3B;fontSize=11;fontStyle=1;shadow=1;fontFamily=Helvetica;align=center;verticalAlign=middle;" value="Dokumen Log Book Resmi Kegiatan&lt;br&gt;Tersimpan Permanen &amp;amp; Lengkap" vertex="1">
-          <mxGeometry height="52" width="250" x="65" y="750" as="geometry" />
-        </mxCell>
-        <mxCell id="n2_end" parent="t2_bg2" style="ellipse;whiteSpace=wrap;html=1;aspect=fixed;fillColor=#FFFFFF;strokeColor=#1E293B;strokeWidth=2.2;shadow=1;" value="" vertex="1">
-          <mxGeometry height="30" width="30" x="175" y="845" as="geometry" />
-        </mxCell>
-        <mxCell id="n2_end_inner" parent="n2_end" style="ellipse;whiteSpace=wrap;html=1;aspect=fixed;fillColor=#1E293B;strokeColor=none;" value="" vertex="1">
+        <mxCell id="n2_end_inner" parent="n2_end" style="ellipse;whiteSpace=wrap;html=1;aspect=fixed;fillColor=#DC2626;strokeColor=none;" value="" vertex="1">
           <mxGeometry height="18" width="18" x="6" y="6" as="geometry" />
         </mxCell>
-
-        <!-- Column 3 Nodes (Pimpinan) -->
-        <mxCell id="n2_pim_rev" parent="t2_bg3" style="rounded=1;arcSize=20;whiteSpace=wrap;html=1;fillColor=#FEF3C7;strokeColor=#D97706;strokeWidth=1.5;fontColor=#92400E;fontSize=11;fontStyle=1;shadow=1;fontFamily=Helvetica;align=center;verticalAlign=middle;" value="Pimpinan Meninjau Kelengkapan&lt;br&gt;Dokumen Log Book &amp;amp; Catatan Hasil" vertex="1">
-          <mxGeometry height="52" width="240" x="60" y="565" as="geometry" />
+        <mxCell id="t2_bg2" parent="t2_container" style="rounded=0;whiteSpace=wrap;html=1;container=1;collapsible=0;strokeColor=#CBD5E1;strokeWidth=1.2;fillColor=#F8FAFC;" value="" vertex="1">
+          <mxGeometry height="1154" width="340" x="340" y="66" as="geometry" />
         </mxCell>
-        <mxCell id="n2_dec2" parent="t2_bg3" style="rhombus;whiteSpace=wrap;html=1;fillColor=#F8FAFC;strokeColor=#475569;strokeWidth=1.5;fontColor=#1E293B;fontSize=10.5;fontStyle=1;shadow=1;fontFamily=Helvetica;align=center;verticalAlign=middle;" value="Terdapat Butir&lt;br&gt;Tindak Lanjut&lt;br&gt;(Action Items)?" vertex="1">
-          <mxGeometry height="75" width="140" x="110" y="655" as="geometry" />
+        <mxCell id="n2_sys1" parent="t2_bg2" style="rounded=1;arcSize=20;whiteSpace=wrap;html=1;fillColor=#EFF6FF;strokeColor=#2563EB;strokeWidth=1.5;fontColor=#1E3A8A;fontSize=11;fontStyle=1;shadow=1;fontFamily=Helvetica;align=center;verticalAlign=middle;" value="Menyimpan Berkas ke Cloud Storage&#xa;&amp;amp; Merekam Catatan Hasil ke DB" vertex="1">
+          <mxGeometry height="52" width="220" x="60" y="79" as="geometry" />
         </mxCell>
-        <mxCell id="n2_act_tl" parent="t2_bg3" style="rounded=1;arcSize=20;whiteSpace=wrap;html=1;fillColor=#EFF6FF;strokeColor=#2563EB;strokeWidth=1.5;fontColor=#1E40AF;fontSize=11;fontStyle=1;shadow=1;fontFamily=Helvetica;align=center;verticalAlign=middle;" value="Lanjutkan ke Alur c:&lt;br&gt;Matriks Tindak Lanjut &amp;amp; Penugasan PIC" vertex="1">
-          <mxGeometry height="52" width="240" x="60" y="750" as="geometry" />
+        <mxCell id="n2_sys_rev" parent="t2_bg2" style="rounded=1;arcSize=20;whiteSpace=wrap;html=1;fillColor=#EFF6FF;strokeColor=#2563EB;strokeWidth=1.5;fontColor=#1E3A8A;fontSize=11;fontStyle=1;shadow=1;fontFamily=Helvetica;align=center;verticalAlign=middle;" value="Simpan Catatan &amp;amp; Berkas:&#xa;Status Dalam Proses" vertex="1">
+          <mxGeometry height="52" width="220" x="60" y="169" as="geometry" />
         </mxCell>
-
-        <!-- Edges -->
+        <mxCell id="n2_sys_revisi" parent="t2_bg2" style="rounded=1;arcSize=20;whiteSpace=wrap;html=1;fillColor=#EFF6FF;strokeColor=#2563EB;strokeWidth=1.5;fontColor=#1E3A8A;fontSize=11;fontStyle=1;shadow=1;fontFamily=Helvetica;align=center;verticalAlign=middle;" value="Tindak Lanjut Perbaikan:&#xa;Status Dalam Proses" vertex="1">
+          <mxGeometry height="50" width="220" x="60" y="374" as="geometry" />
+        </mxCell>
+        <mxCell id="n2_sys_pdf" parent="t2_bg2" style="rounded=1;arcSize=20;whiteSpace=wrap;html=1;fillColor=#EFF6FF;strokeColor=#2563EB;strokeWidth=1.5;fontColor=#1E3A8A;fontSize=11;fontStyle=1;shadow=1;fontFamily=Helvetica;align=center;verticalAlign=middle;" value="Generate Laporan Rekapitulasi Resmi&#xa;Ber-Kop Dinas &amp;amp; Status: Selesai" vertex="1">
+          <mxGeometry height="52" width="220" x="60" y="479" as="geometry" />
+        </mxCell>
+        <mxCell id="n2_sys_broadcast" parent="t2_bg2" style="rounded=1;arcSize=20;whiteSpace=wrap;html=1;fillColor=#EFF6FF;strokeColor=#2563EB;strokeWidth=1.5;fontColor=#1E3A8A;fontSize=11;fontStyle=1;shadow=1;fontFamily=Helvetica;align=center;verticalAlign=middle;" value="Kirim Notifikasi Berkas Arsip&#xa;Telah Rampung ke Seluruh Tim" vertex="1">
+          <mxGeometry height="50" width="220" x="60" y="574" as="geometry" />
+        </mxCell>
+        <mxCell id="n2_sys_archive" parent="t2_bg2" style="rounded=1;arcSize=20;whiteSpace=wrap;html=1;fillColor=#EFF6FF;strokeColor=#2563EB;strokeWidth=1.5;fontColor=#1E3A8A;fontSize=11;fontStyle=1;shadow=1;fontFamily=Helvetica;align=center;verticalAlign=middle;" value="Kunci Dokumen Berkas Arsip&#xa;&amp;amp; Simpan ke Repositori Permanen" vertex="1">
+          <mxGeometry height="50" width="220" x="60" y="679" as="geometry" />
+        </mxCell>
+        <mxCell id="t2_bg3" parent="t2_container" style="rounded=0;whiteSpace=wrap;html=1;container=1;collapsible=0;strokeColor=#CBD5E1;strokeWidth=1.2;fillColor=#FFFFFF;" value="" vertex="1">
+          <mxGeometry height="1154" width="400" x="680" y="66" as="geometry" />
+        </mxCell>
+        <mxCell id="n2_pim_rev" parent="t2_bg3" style="rounded=1;arcSize=20;whiteSpace=wrap;html=1;fillColor=#ECFDF5;strokeColor=#059669;strokeWidth=1.5;fontColor=#064E3B;fontSize=11;fontStyle=1;shadow=1;fontFamily=Helvetica;align=center;verticalAlign=middle;" value="Pimpinan Meninjau Kelengkapan&#xa;Berkas Arsip &amp;amp; Catatan Hasil" vertex="1">
+          <mxGeometry height="52" width="210" x="95" y="169" as="geometry" />
+        </mxCell>
+        <mxCell id="n2_dec1" parent="t2_bg3" style="rhombus;whiteSpace=wrap;html=1;fillColor=#FFFBEB;strokeColor=#D97706;strokeWidth=1.8;fontColor=#78350F;fontSize=10.5;fontStyle=1;shadow=1;fontFamily=Helvetica;align=center;verticalAlign=middle;" value="Kelengkapan&#xa;Berkas Terpenuhi?" vertex="1">
+          <mxGeometry height="75" width="130" x="135" y="264" as="geometry" />
+        </mxCell>
+        <mxCell id="n2_pim_catatan" parent="t2_bg3" style="rounded=1;arcSize=20;whiteSpace=wrap;html=1;fillColor=#ECFDF5;strokeColor=#059669;strokeWidth=1.5;fontColor=#064E3B;fontSize=11;fontStyle=1;shadow=1;fontFamily=Helvetica;align=center;verticalAlign=middle;" value="Memberikan Catatan Kelengkapan&#xa;&amp;amp; Mengembalikan ke Admin/PIC" vertex="1">
+          <mxGeometry height="50" width="210" x="95" y="374" as="geometry" />
+        </mxCell>
+        <mxCell id="n2_pim_sah" parent="t2_bg3" style="rounded=1;arcSize=20;whiteSpace=wrap;html=1;fillColor=#ECFDF5;strokeColor=#059669;strokeWidth=1.5;fontColor=#064E3B;fontSize=11;fontStyle=1;shadow=1;fontFamily=Helvetica;align=center;verticalAlign=middle;" value="Memvalidasi Kelengkapan Berkas&#xa;&amp;amp; Mengesahkan Catatan Hasil" vertex="1">
+          <mxGeometry height="50" width="210" x="95" y="479" as="geometry" />
+        </mxCell>
+        <mxCell id="n2_dec2" parent="t2_bg3" style="rhombus;whiteSpace=wrap;html=1;fillColor=#FFFBEB;strokeColor=#D97706;strokeWidth=1.8;fontColor=#78350F;fontSize=10.5;fontStyle=1;shadow=1;fontFamily=Helvetica;align=center;verticalAlign=middle;" value="Perlu Penugasan&#xa;Tindak Lanjut&#xa;(Action Items)?" vertex="1">
+          <mxGeometry height="75" width="130" x="135" y="564" as="geometry" />
+        </mxCell>
+        <mxCell id="n2_act_actitem" parent="t2_bg3" style="rounded=1;arcSize=20;whiteSpace=wrap;html=1;fillColor=#ECFDF5;strokeColor=#059669;strokeWidth=1.5;fontColor=#064E3B;fontSize=11;fontStyle=1;shadow=1;fontFamily=Helvetica;align=center;verticalAlign=middle;" value="Rumuskan Butir Tindak Lanjut&#xa;&amp;amp; Alokasikan ke Tim Kerja PIC" vertex="1">
+          <mxGeometry height="50" width="180" x="10" y="679" as="geometry" />
+        </mxCell>
+        <mxCell id="n2_act_arsip" parent="t2_bg3" style="rounded=1;arcSize=20;whiteSpace=wrap;html=1;fillColor=#ECFDF5;strokeColor=#059669;strokeWidth=1.5;fontColor=#064E3B;fontSize=11;fontStyle=1;shadow=1;fontFamily=Helvetica;align=center;verticalAlign=middle;" value="Arsip Berkas Kegiatan Final&#xa;(Tanpa Butir Tindak Lanjut)" vertex="1">
+          <mxGeometry height="50" width="180" x="210" y="679" as="geometry" />
+        </mxCell>
         <mxCell id="e2_s_a1" edge="1" parent="1" source="n2_start" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#475569;strokeWidth=1.5;endArrow=classic;endFill=1;" target="n2_act1" value="">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-        <mxCell id="e2_a1_a2" edge="1" parent="1" source="n2_act1" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#475569;strokeWidth=1.5;endArrow=classic;endFill=1;" target="n2_act2" value="">
+        <mxCell id="e2_a1_s1" edge="1" parent="1" source="n2_act1" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#475569;strokeWidth=1.5;endArrow=classic;endFill=1;" target="n2_sys1" value="">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-        <mxCell id="e2_a2_a3" edge="1" parent="1" source="n2_act2" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#475569;strokeWidth=1.5;endArrow=classic;endFill=1;" target="n2_act3" value="">
+        <mxCell id="e2_s1_a2" edge="1" parent="1" source="n2_sys1" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#475569;strokeWidth=1.5;endArrow=classic;endFill=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;" target="n2_act2" value="">
+          <mxGeometry relative="1" x="-0.0052" as="geometry">
+            <Array as="points">
+              <mxPoint x="570" y="285" />
+              <mxPoint x="230" y="285" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e2_a2_rev" edge="1" parent="1" source="n2_act2" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#475569;strokeWidth=1.5;endArrow=classic;endFill=1;" target="n2_sys_rev" value="">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-        <mxCell id="e2_a3_dec1" edge="1" parent="1" source="n2_act3" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#475569;strokeWidth=1.5;endArrow=classic;endFill=1;" target="n2_dec1" value="">
+        <mxCell id="e2_rev_pim" edge="1" parent="1" source="n2_sys_rev" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#475569;strokeWidth=1.5;endArrow=classic;endFill=1;" target="n2_pim_rev" value="">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-        
-        <!-- Validation Failure branch (up to err, then back to act2) -->
-        <mxCell id="e2_dec1_err" edge="1" parent="1" source="n2_dec1" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#DC2626;strokeWidth=1.5;endArrow=classic;endFill=1;" target="n2_act_err" value="">
+        <mxCell id="e2_pim_dec1" edge="1" parent="1" source="n2_pim_rev" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#475569;strokeWidth=1.5;endArrow=classic;endFill=1;" target="n2_dec1" value="">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-        <mxCell id="e2_dec1_err_lbl" connectable="0" parent="e2_dec1_err" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];backgroundColor=#FFFFFF;border=1px solid #CBD5E1;rounded=1;fontColor=#DC2626;fontFamily=Helvetica;fontStyle=1;fontSize=10;labelPadding=2;" value="[Tidak Valid]" vertex="1">
+        <mxCell id="e2_dec1_revisi" edge="1" parent="1" source="n2_dec1" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#475569;strokeWidth=1.5;endArrow=classic;endFill=1;" target="n2_pim_catatan" value="">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-        <mxCell id="e2_err_act2" edge="1" parent="1" source="n2_act_err" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#DC2626;strokeWidth=1.5;endArrow=classic;endFill=1;" target="n2_act2" value="">
+        <mxCell id="e2_dec1_revisi_lbl" connectable="0" parent="e2_dec1_revisi" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];backgroundColor=#FFFFFF;border=1px solid #CBD5E1;rounded=1;fontColor=#1E293B;fontFamily=Helvetica;fontStyle=1;fontSize=10;labelPadding=2;" value="[Perlu Perbaikan]" vertex="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="-50" y="-2" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e2_cat_sys" edge="1" parent="1" source="n2_pim_catatan" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#475569;strokeWidth=1.5;endArrow=classic;endFill=1;" target="n2_sys_revisi" value="">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-
-        <!-- Validation Success branch (down to save) -->
-        <mxCell id="e2_dec1_save" edge="1" parent="1" source="n2_dec1" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#16A34A;strokeWidth=1.5;endArrow=classic;endFill=1;" target="n2_sys_save" value="">
+        <mxCell id="e2_sys_notifrev" edge="1" parent="1" source="n2_sys_revisi" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#475569;strokeWidth=1.5;endArrow=classic;endFill=1;" target="n2_notif_rev" value="">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-        <mxCell id="e2_dec1_save_lbl" connectable="0" parent="e2_dec1_save" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];backgroundColor=#FFFFFF;border=1px solid #CBD5E1;rounded=1;fontColor=#16A34A;fontFamily=Helvetica;fontStyle=1;fontSize=10;labelPadding=2;" value="[Format &amp;amp; Ukuran Valid]" vertex="1">
+        <mxCell id="e2_notif_back" edge="1" parent="1" source="n2_notif_rev" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#475569;strokeWidth=1.5;endArrow=classic;endFill=1;" target="n2_act2" value="">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-
-        <!-- System internal flow -->
-        <mxCell id="e2_save_link" edge="1" parent="1" source="n2_sys_save" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#475569;strokeWidth=1.5;endArrow=classic;endFill=1;" target="n2_sys_link" value="">
+        <mxCell id="e2_dec1_appr" edge="1" parent="1" source="n2_dec1" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#475569;strokeWidth=1.5;endArrow=classic;endFill=1;" target="n2_pim_sah" value="">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-        <mxCell id="e2_link_pdf" edge="1" parent="1" source="n2_sys_link" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#475569;strokeWidth=1.5;endArrow=classic;endFill=1;" target="n2_sys_pdf" value="">
+        <mxCell id="e2_dec1_appr_lbl" connectable="0" parent="e2_dec1_appr" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];backgroundColor=#FFFFFF;border=1px solid #CBD5E1;rounded=1;fontColor=#1E293B;fontFamily=Helvetica;fontStyle=1;fontSize=10;labelPadding=2;" value="[Disetujui]" vertex="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="-30" y="35" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e2_sah_syspdf" edge="1" parent="1" source="n2_pim_sah" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#475569;strokeWidth=1.5;endArrow=classic;endFill=1;" target="n2_sys_pdf" value="">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-
-        <!-- Transition to Pimpinan Review -->
-        <mxCell id="e2_pdf_pim" edge="1" parent="1" source="n2_sys_pdf" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#475569;strokeWidth=1.5;endArrow=classic;endFill=1;" target="n2_pim_rev" value="">
+        <mxCell id="e2_pdf_broad" edge="1" parent="1" source="n2_sys_pdf" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#475569;strokeWidth=1.5;endArrow=classic;endFill=1;" target="n2_sys_broadcast" value="">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-        <mxCell id="e2_pim_dec2" edge="1" parent="1" source="n2_pim_rev" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#475569;strokeWidth=1.5;endArrow=classic;endFill=1;" target="n2_dec2" value="">
+        <mxCell id="e2_broad_dec2" edge="1" parent="1" source="n2_sys_broadcast" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#475569;strokeWidth=1.5;endArrow=classic;endFill=1;" target="n2_dec2" value="">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-
-        <!-- Decision 2 branches: Ada Tindak Lanjut vs Tidak Ada -->
-        <mxCell id="e2_dec2_tl" edge="1" parent="1" source="n2_dec2" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#2563EB;strokeWidth=1.5;endArrow=classic;endFill=1;" target="n2_act_tl" value="">
+        <mxCell id="e2_dec2_act" edge="1" parent="1" source="n2_dec2" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#475569;strokeWidth=1.5;endArrow=classic;endFill=1;" target="n2_act_actitem" value="">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-        <mxCell id="e2_dec2_tl_lbl" connectable="0" parent="e2_dec2_tl" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];backgroundColor=#FFFFFF;border=1px solid #CBD5E1;rounded=1;fontColor=#2563EB;fontFamily=Helvetica;fontStyle=1;fontSize=10;labelPadding=2;" value="[Ada Tindak Lanjut]" vertex="1">
+        <mxCell id="e2_dec2_act_lbl" connectable="0" parent="e2_dec2_act" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];backgroundColor=#FFFFFF;border=1px solid #CBD5E1;rounded=1;fontColor=#1E293B;fontFamily=Helvetica;fontStyle=1;fontSize=10;labelPadding=2;" value="[Ada Tindak Lanjut]" vertex="1">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-
-        <mxCell id="e2_dec2_final" edge="1" parent="1" source="n2_dec2" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#16A34A;strokeWidth=1.5;endArrow=classic;endFill=1;" target="n2_sys_final" value="">
+        <mxCell id="e2_dec2_arsip" edge="1" parent="1" source="n2_dec2" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#475569;strokeWidth=1.5;endArrow=classic;endFill=1;" target="n2_act_arsip" value="">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-        <mxCell id="e2_dec2_final_lbl" connectable="0" parent="e2_dec2_final" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];backgroundColor=#FFFFFF;border=1px solid #CBD5E1;rounded=1;fontColor=#16A34A;fontFamily=Helvetica;fontStyle=1;fontSize=10;labelPadding=2;" value="[Tidak Ada Tindak Lanjut]" vertex="1">
+        <mxCell id="e2_dec2_arsip_lbl" connectable="0" parent="e2_dec2_arsip" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];backgroundColor=#FFFFFF;border=1px solid #CBD5E1;rounded=1;fontColor=#1E293B;fontFamily=Helvetica;fontStyle=1;fontSize=10;labelPadding=2;" value="[Arsip Saja]" vertex="1">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-
-        <!-- Both connect to final node -->
-        <mxCell id="e2_final_end" edge="1" parent="1" source="n2_sys_final" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#475569;strokeWidth=1.5;endArrow=classic;endFill=1;" target="n2_end" value="">
+        <mxCell id="e2_act_sysarch" edge="1" parent="1" source="n2_act_actitem" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#475569;strokeWidth=1.5;endArrow=classic;endFill=1;" target="n2_sys_archive" value="">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-        <mxCell id="e2_tl_end" edge="1" parent="1" source="n2_act_tl" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#475569;strokeWidth=1.5;endArrow=classic;endFill=1;" target="n2_end" value="">
+        <mxCell id="e2_arsip_sysarch" edge="1" parent="1" source="n2_act_arsip" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#475569;strokeWidth=1.5;endArrow=classic;endFill=1;" target="n2_sys_archive" value="">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-
+        <mxCell id="e2_arch_down" edge="1" parent="1" source="n2_sys_archive" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#475569;strokeWidth=1.5;endArrow=classic;endFill=1;" target="n2_act_download" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e2_down_end" edge="1" parent="1" source="n2_act_download" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#475569;strokeWidth=1.5;endArrow=classic;endFill=1;" target="n2_end" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
       </root>
     </mxGraphModel>
   </diagram>
@@ -348,7 +363,7 @@
         <mxCell id="t3_container" parent="1" style="rounded=1;arcSize=4;whiteSpace=wrap;html=1;container=1;collapsible=0;strokeColor=#183E47;strokeWidth=2;fillColor=#ffffff;shadow=1;" value="" vertex="1">
           <mxGeometry height="880" width="1160" x="40" y="70" as="geometry" />
         </mxCell>
-        <mxCell id="t3_hdr_main" parent="t3_container" style="rounded=0;whiteSpace=wrap;html=1;strokeColor=#183E47;strokeWidth=1.5;fillColor=#215865;align=center;verticalAlign=middle;fontFamily=Helvetica;fontSize=12.5;fontColor=#ffffff;fontStyle=1;" value="&lt;b&gt;Alur Monitoring &amp;amp; Pembaruan Tindak Lanjut / Action Items (Aplikasi Log Book Kegiatan KEK RI)&lt;/b&gt;" vertex="1">
+        <mxCell id="t3_hdr_main" parent="t3_container" style="rounded=0;whiteSpace=wrap;html=1;strokeColor=#183E47;strokeWidth=1.5;fillColor=#215865;align=center;verticalAlign=middle;fontFamily=Helvetica;fontSize=12.5;fontColor=#ffffff;fontStyle=1;" value="&lt;b&gt;Alur Monitoring &amp;amp; Pembaruan Tindak Lanjut / Action Items (Aplikasi Jadwal &amp;amp; Pengarsipan KEK RI)&lt;/b&gt;" vertex="1">
           <mxGeometry height="34" width="1160" as="geometry" />
         </mxCell>
         <mxCell id="t3_col1" parent="t3_container" style="rounded=0;whiteSpace=wrap;html=1;strokeColor=#D97706;strokeWidth=1.5;fillColor=#FEF3C7;align=center;verticalAlign=middle;fontFamily=Helvetica;fontSize=11.5;fontColor=#92400E;fontStyle=1;" value="&lt;b&gt;Kepala Biro&lt;/b&gt;" vertex="1">
@@ -360,7 +375,7 @@
         <mxCell id="t3_col3" parent="t3_container" style="rounded=0;whiteSpace=wrap;html=1;strokeColor=#0284C7;strokeWidth=1.5;fillColor=#E0F2FE;align=center;verticalAlign=middle;fontFamily=Helvetica;fontSize=11.5;fontColor=#0369A1;fontStyle=1;" value="&lt;b&gt;PIC (Staf Pelaksana)&lt;/b&gt;" vertex="1">
           <mxGeometry height="32" width="290" x="580" y="34" as="geometry" />
         </mxCell>
-        <mxCell id="t3_col4" parent="t3_container" style="rounded=0;whiteSpace=wrap;html=1;strokeColor=#475569;strokeWidth=1.5;fillColor=#F1F5F9;align=center;verticalAlign=middle;fontFamily=Helvetica;fontSize=11.5;fontColor=#1E293B;fontStyle=1;" value="&lt;b&gt;Aplikasi Log Book Kegiatan KEK&lt;/b&gt;" vertex="1">
+        <mxCell id="t3_col4" parent="t3_container" style="rounded=0;whiteSpace=wrap;html=1;strokeColor=#475569;strokeWidth=1.5;fillColor=#F1F5F9;align=center;verticalAlign=middle;fontFamily=Helvetica;fontSize=11.5;fontColor=#1E293B;fontStyle=1;" value="&lt;b&gt;Sistem Jadwal &amp; Pengarsipan KEK&lt;/b&gt;" vertex="1">
           <mxGeometry height="32" width="290" x="870" y="34" as="geometry" />
         </mxCell>
         <mxCell id="t3_bg1" parent="t3_container" style="rounded=0;whiteSpace=wrap;html=1;container=1;collapsible=0;strokeColor=#CBD5E1;strokeWidth=1.2;fillColor=#FFFFFF;" value="" vertex="1">

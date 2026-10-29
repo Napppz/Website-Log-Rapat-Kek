@@ -148,7 +148,7 @@ e. **Perancangan Antarmuka Pengguna (*User Interface Design*):**
 #### 3.2.3. Database* (Perancangan Basis Data Relasional)
 Perancangan basis data relasional disusun untuk memenuhi Bentuk Normal Ketiga (3NF) guna mencegah anomali:
 a. **Entity Relationship Diagram (ERD) ([`docs/ERD_Log_Book_Kegiatan.drawio`](file:///c:/Users/nappz/Documents/Magang/Projek%20Web%20Pencatatan%20Kegiatan/docs/ERD_Log_Book_Kegiatan.drawio)):**
-   1) **ERD Notasi Chen Resmi:** Menampilkan 9 Entitas Persegi Panjang aktif, relasi Belah Ketupat, atribut elips dengan garis bawah untuk Primary Key (`PK`), dan kardinalitas berpanah (`1:N`, `1:1`).
+   1) **ERD Notasi Chen Resmi:** Menampilkan 8 Entitas Persegi Panjang aktif (`biro`, `tim_biro`, `pengguna`, `notifikasi`, `kegiatan`, `lampiran_kegiatan`, `peserta_kegiatan`, `tindak_lanjut`), relasi Belah Ketupat, atribut elips dengan garis bawah untuk Primary Key (`PK`), dan kardinalitas berpanah (`1:N`, `1:1`).
    2) **Eliminasi Entitas Kosong:** Tabel-tabel yang tidak memiliki data riil (0 rows seperti `notulen_kegiatan`, `komentar_notulen`, `riwayat_notulen`, `penomoran_kegiatan_biro`, dan `kegiatan_biro`) dieliminasi.
 b. **Logical Record Structure (LRS) ([`docs/LRS_Log_Book_Rapat.drawio`](file:///c:/Users/nappz/Documents/Magang/Projek%20Web%20Pencatatan%20Kegiatan/docs/LRS_Log_Book_Rapat.drawio)):**
    Memetakan struktur rekaman logis tabel dengan penempatan Foreign Key yang konsisten dan kardinalitas tepat (1..N).
