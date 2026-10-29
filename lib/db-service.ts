@@ -158,7 +158,6 @@ export async function getMeetingByIdFromDb(idOrNumber: string) {
           secretary: {
             include: { biro: true },
           },
-          minutes: true,
           actionItems: {
             include: {
               picBiro: true,
@@ -186,7 +185,6 @@ export async function getMeetingByIdFromDb(idOrNumber: string) {
               primaryTeam: true,
               chairperson: true,
               secretary: true,
-              minutes: true,
               actionItems: {
                 include: {
                   picBiro: true,

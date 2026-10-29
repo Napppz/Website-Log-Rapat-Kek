@@ -1233,7 +1233,6 @@ export async function deleteMeetingAction(meetingId: string) {
 
     // 1. Explicitly delete child relations for maximum reliability across database drivers
     await prisma.actionItem.deleteMany({ where: { meetingId } });
-    await prisma.meetingMinutes.deleteMany({ where: { meetingId } });
     await prisma.meetingParticipant.deleteMany({ where: { meetingId } });
     await prisma.meetingBiro.deleteMany({ where: { meetingId } });
 
@@ -1277,7 +1276,6 @@ export async function deleteAllMeetingsAction() {
 
     // 1. Explicitly delete child relations for maximum reliability across database drivers
     await prisma.actionItem.deleteMany({});
-    await prisma.meetingMinutes.deleteMany({});
     await prisma.meetingParticipant.deleteMany({});
     await prisma.meetingBiro.deleteMany({});
 
@@ -1328,7 +1326,6 @@ export async function linkPreviousMeetingAction(
             primaryBiro: true,
             chairperson: true,
             secretary: true,
-            minutes: true,
             actionItems: {
               include: { picBiro: true, picUser: true },
               orderBy: [{ dueDate: 'asc' }],
@@ -1513,7 +1510,6 @@ export async function getAgendaSeriesAction(meetingId: string) {
         primaryTeam: true,
         chairperson: true,
         secretary: true,
-        minutes: true,
         actionItems: true,
       },
       orderBy: [{ date: 'asc' }, { startTime: 'asc' }, { createdAt: 'asc' }],
@@ -1597,15 +1593,8 @@ export async function getAgendaSeriesAction(meetingId: string) {
 
       let minutesSummary: string | null = null;
       let conclusionSnippet: string | null = null;
-      if (m.minutes) {
-        try {
-          const rawAgenda = extractPlainText(m.minutes.agenda);
-          const rawConclusion = extractPlainText(m.minutes.conclusion);
-          conclusionSnippet = rawConclusion ? rawConclusion.replace(/\s+/g, ' ').trim().slice(0, 160) : null;
-          minutesSummary = rawAgenda ? rawAgenda.replace(/\s+/g, ' ').trim().slice(0, 160) : null;
-        } catch {
-          // ignore parsing error
-        }
+      if (m.notes) {
+        minutesSummary = m.notes.replace(/\s+/g, ' ').trim().slice(0, 160);
       }
 
       return {
@@ -1641,7 +1630,7 @@ export async function getAgendaSeriesAction(meetingId: string) {
         },
         minutesSummary,
         conclusionSnippet,
-        hasMinutes: !!m.minutes,
+        hasMinutes: Boolean(m.notes),
       };
     });
 

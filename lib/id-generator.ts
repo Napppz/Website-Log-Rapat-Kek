@@ -51,10 +51,6 @@ export async function getNextActionItemId(tx?: any): Promise<string> {
   return getNextFormattedId(tx, 'tindak_lanjut', 'id_tindak_lanjut', 'ACT-');
 }
 
-export async function getNextMinutesId(tx?: any): Promise<string> {
-  return getNextFormattedId(tx, 'notulen_kegiatan', 'id_notulen', 'NOT-');
-}
-
 export async function getNextParticipantId(tx?: any): Promise<string> {
   return getNextFormattedId(tx, 'peserta_kegiatan', 'id_peserta', 'PRT-');
 }
@@ -73,12 +69,4 @@ export async function getNextNotificationId(tx?: any): Promise<string> {
 
 export async function getNextActionItemLogId(tx?: any): Promise<string> {
   return getNextFormattedId(tx, 'riwayat_tindak_lanjut', 'id_riwayat', 'LOG-');
-}
-
-export async function getNextMinutesHistoryId(tx?: any): Promise<string> {
-  return getNextFormattedId(tx, 'riwayat_notulen', 'id_riwayat', 'HST-');
-}
-
-export async function getNextCommentId(tx?: any): Promise<string> {
-  return getNextFormattedId(tx, 'komentar_notulen', 'id_komentar', 'CMT-');
 }

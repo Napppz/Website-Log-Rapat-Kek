@@ -16,7 +16,6 @@ import { revalidatePath } from 'next/cache';
 import {
   getNextMeetingId,
   getNextParticipantId,
-  getNextMinutesId,
   getNextActionItemId,
 } from '@/lib/id-generator';
 
@@ -216,40 +215,15 @@ export async function directSaveUploadedMeetingAction(
         }
       }
 
-      // 5. Create Meeting Minutes (Notula)
-      const minutesPayload = {
-        meetingId: meeting.id,
-        agenda: extracted.agendaJson as any,
-        discussion: extracted.discussionJson as any,
-        decisions: {
-          ...(extracted.decisionsJson as any),
-          signerName: extracted.secretaryName || 'Sri Aurelia Rosyana Hari Habyby',
-          signerRole: 'Pranata Hubungan Masyarakat Terampil',
-          chairpersonName:
-            extracted.chairpersonName ||
-            'Wakil Ketua II, Tim Pelaksana Dewan Nasional KEK',
-          documentNumber: meeting.meetingNumber,
-          invitationNumber: extracted.meetingNumber || '-',
-        },
-        conclusion: {
-          ...(extracted.conclusionJson as any),
-          signerName: extracted.secretaryName || 'Sri Aurelia Rosyana Hari Habyby',
-          signerRole: 'Pranata Hubungan Masyarakat Terampil',
-          chairpersonName:
-            extracted.chairpersonName ||
-            'Wakil Ketua II, Tim Pelaksana Dewan Nasional KEK',
-          documentNumber: meeting.meetingNumber,
-          invitationNumber: extracted.meetingNumber || '-',
-        },
-      };
-
-      const nextMinutesId = await getNextMinutesId(tx);
-      await tx.meetingMinutes.create({
-        data: {
-          id: nextMinutesId,
-          ...minutesPayload,
-        },
-      });
+      // 5. Update Meeting Notes from extracted content if available
+      if (!meeting.notes && (extracted.agendaJson || extracted.discussionJson)) {
+        await tx.meeting.update({
+          where: { id: meeting.id },
+          data: {
+            notes: typeof extracted.agendaJson === 'string' ? extracted.agendaJson : JSON.stringify(extracted.agendaJson),
+          },
+        });
+      }
 
       // 6. Create Action Items
       if (extracted.actionItems && extracted.actionItems.length > 0) {
@@ -336,44 +310,15 @@ export async function saveMinutesAndActionsToMeetingAction(
       };
     }
 
-    // 1. Upsert Meeting Minutes
-    const minutesPayload = {
-      agenda: extracted.agendaJson as any,
-      discussion: extracted.discussionJson as any,
-      decisions: {
-        ...(extracted.decisionsJson as any),
-        signerName: extracted.secretaryName || 'Sri Aurelia Rosyana Hari Habyby',
-        signerRole: 'Pranata Hubungan Masyarakat Terampil',
-        chairpersonName:
-          extracted.chairpersonName ||
-          'Wakil Ketua II, Tim Pelaksana Dewan Nasional KEK',
-        documentNumber: meeting.meetingNumber,
-        invitationNumber: extracted.meetingNumber || '-',
-      },
-      conclusion: {
-        ...(extracted.conclusionJson as any),
-        signerName: extracted.secretaryName || 'Sri Aurelia Rosyana Hari Habyby',
-        signerRole: 'Pranata Hubungan Masyarakat Terampil',
-        chairpersonName:
-          extracted.chairpersonName ||
-          'Wakil Ketua II, Tim Pelaksana Dewan Nasional KEK',
-        documentNumber: meeting.meetingNumber,
-        invitationNumber: extracted.meetingNumber || '-',
-      },
-    };
-
-    const nextUpsertMinId = await getNextMinutesId();
-    await prisma.meetingMinutes.upsert({
-      where: { meetingId },
-      create: {
-        id: nextUpsertMinId,
-        meetingId,
-        ...minutesPayload,
-      },
-      update: {
-        ...minutesPayload,
-      },
-    });
+    // 1. Update Meeting Notes
+    if (extracted.agendaJson || extracted.discussionJson) {
+      await prisma.meeting.update({
+        where: { id: meetingId },
+        data: {
+          notes: typeof extracted.agendaJson === 'string' ? extracted.agendaJson : JSON.stringify(extracted.agendaJson),
+        },
+      });
+    }
 
     // 2. Create Action Items if any
     if (extracted.actionItems && extracted.actionItems.length > 0) {

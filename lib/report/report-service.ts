@@ -673,7 +673,6 @@ export async function getReportSummary(
     where: meetingWhere,
     include: {
       primaryBiro: true,
-      minutes: true,
       actionItems: {
         include: {
           picBiro: true,
@@ -686,7 +685,7 @@ export async function getReportSummary(
 
   // Augment action items with computeActionItemStatus
   const augmentedMeetings = rawMeetings.map((m) => {
-    const augmentedActionItems = m.actionItems.map((a) => {
+    const augmentedActionItems = m.actionItems.map((a: any) => {
       const computed = computeActionItemStatus(a);
       return {
         ...a,
@@ -727,10 +726,10 @@ export async function getReportSummary(
       : 0;
 
   const meetingsWithMinutes = augmentedMeetings.filter(
-    (m) => m.minutes !== null
+    (m) => Boolean(m.notes)
   ).length;
   const meetingsWithoutMinutes = augmentedMeetings.filter(
-    (m) => m.minutes === null
+    (m) => !m.notes
   ).length;
 
   const minutesCompletionRate =
@@ -837,8 +836,8 @@ export async function getReportSummary(
       formattedDate: formatWibDateIndo(m.date),
       biroCode: m.primaryBiro.code,
       biroName: m.primaryBiro.shortName,
-      hasMinutes: m.minutes !== null,
-      statusNotulen: m.minutes !== null ? 'Tersedia' : 'Belum tersedia',
+      hasMinutes: Boolean(m.notes),
+      statusNotulen: m.notes ? 'Tersedia' : 'Belum tersedia',
       totalActionItems: m.actionItems.length,
       completedActionItems: completedCount,
     };

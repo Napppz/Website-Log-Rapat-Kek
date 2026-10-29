@@ -51,7 +51,6 @@ export async function GET(
             user: { name: 'asc' },
           },
         },
-        minutes: true,
         actionItems: {
           include: {
             picBiro: true,
@@ -65,14 +64,14 @@ export async function GET(
     });
 
     if (!meeting) {
-      return NextResponse.json({ error: 'Data rapat tidak ditemukan.' }, { status: 404 });
+      return NextResponse.json({ error: 'Data kegiatan tidak ditemukan.' }, { status: 404 });
     }
 
     // 4. Determine document type (Notula vs Nota Dinas)
     const typeParam = request.nextUrl.searchParams.get('type')?.toLowerCase();
     const storedDocType =
-      (meeting.minutes?.conclusion as any)?.docType ||
-      (meeting.minutes?.decisions as any)?.docType;
+      ((meeting as any).minutes?.conclusion as any)?.docType ||
+      ((meeting as any).minutes?.decisions as any)?.docType;
 
     const isNotaDinas =
       typeParam === 'nota-dinas' ||
