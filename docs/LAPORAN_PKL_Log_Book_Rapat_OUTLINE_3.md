@@ -145,24 +145,13 @@ e. **Perancangan Antarmuka Pengguna (*User Interface Design*):**
    3) **Halaman Editor Notulensi Rapat Dinamis:** Antarmuka pencatatan poin dinamika sidang, arahan pimpinan, serta audit riwayat perubahan.
    4) **Halaman Matriks Tindak Lanjut:** Antarmuka Kanban dan tabel interaktif bagi staf PIC untuk memantau batas waktu (*due date*) dan melaporkan progres 100%.
 
-#### 3.2.3. Kode Program
-Struktur arsitektur kode program pada Log_Book_Rapat KEK disusun menggunakan pola *Next.js 15 App Router*:
-a. **Struktur Direktori Proyek:**
-   1) `app/`: Menangani rute antarmuka pengguna (`dashboard/`, `semua-rapat/`, `buat-rapat/`, `notulensi/`, `tindak-lanjut/`).
-   2) `app/actions/`: Lapisan *Server Actions* untuk penanganan logika bisnis mutasi data (`meetingActions.ts`, `minutesActions.ts`, `actionItemActions.ts`).
-   3) `components/`: Komponen UI modular (*Dialog, Toast, Button, Badge, Card, Table*).
-   4) `lib/`: Modul inisialisasi koneksi `prisma.ts` dan utilitas format tanggal/angka.
-   5) `prisma/schema.prisma`: Deklarasi model skema 14 tabel basis data PostgreSQL.
-b. **Koneksi Basis Data:** Menggunakan Prisma Client yang terhubung dengan *connection pooling* PgBouncer pada Neon Serverless PostgreSQL.
-c. **Middleware Otorisasi:** Menggunakan NextAuth.js v5 pada `middleware.ts` untuk membatasi hak akses rute halaman berdasarkan peran akun pengguna (*Role-Based Access Control*).
-
-#### 3.2.4. Database* (Perancangan Basis Data Relasional)
+#### 3.2.3. Database* (Perancangan Basis Data Relasional)
 Perancangan basis data relasional disusun untuk memenuhi Bentuk Normal Ketiga (3NF) guna mencegah anomali:
 a. **Entity Relationship Diagram (ERD) ([`docs/ERD_Log_Book_Kegiatan.drawio`](file:///c:/Users/nappz/Documents/Magang/Projek%20Web%20Pencatatan%20Kegiatan/docs/ERD_Log_Book_Kegiatan.drawio)):**
    1) **ERD Notasi Chen Resmi:** Menampilkan 9 Entitas Persegi Panjang aktif, relasi Belah Ketupat, atribut elips dengan garis bawah untuk Primary Key (`PK`), dan kardinalitas berpanah (`1:N`, `1:1`).
    2) **Eliminasi Entitas Kosong:** Tabel-tabel yang tidak memiliki data riil (0 rows seperti `notulen_kegiatan`, `komentar_notulen`, `riwayat_notulen`, `penomoran_kegiatan_biro`, dan `kegiatan_biro`) dieliminasi.
 b. **Logical Record Structure (LRS) ([`docs/LRS_Log_Book_Rapat.drawio`](file:///c:/Users/nappz/Documents/Magang/Projek%20Web%20Pencatatan%20Kegiatan/docs/LRS_Log_Book_Rapat.drawio)):**
-   Memetakan struktur rekaman logis tabel dengan penempatan Foreign Key yang konsisten dan kardinalitas tepat.
+   Memetakan struktur rekaman logis tabel dengan penempatan Foreign Key yang konsisten dan kardinalitas tepat (1..N).
 c. **Spesifikasi Basis Data (Data Dictionary):**
    Memuat rincian struktur field, tipe data, dan keterangan eksplisit untuk setiap *Primary Key* (PK) dan *Foreign Key* (FK) pada tabel aktif skema aplikasi (Tabel III.1 s/d III.8):
    1) `pengguna` (Tabel III.1: `id_pengguna` [PK], `id_biro` [FK Biro], `id_tim` [FK Tim])
@@ -174,6 +163,17 @@ c. **Spesifikasi Basis Data (Data Dictionary):**
    7) `tindak_lanjut` (Tabel III.7: `id_tindak_lanjut` [PK], `id_rapat` [FK Kegiatan], `id_biro` [FK Biro PJ], `id_tim` [FK Tim PJ], `id_pengguna` [FK Staf Aparatur PIC])
    8) `lampiran_kegiatan` (Tabel III.8: `id_lampiran` [PK], `id_rapat` [FK Kegiatan Pemilik Berkas])
    *Serta entitas pendukung aktif `notifikasi` (Tabel III.9: notifikasi pesan sistem).*
+
+#### 3.2.4. Kode Program
+Struktur arsitektur kode program pada Log_Book_Rapat KEK disusun menggunakan pola *Next.js 15 App Router*:
+a. **Struktur Direktori Proyek:**
+   1) `app/`: Menangani rute antarmuka pengguna (`dashboard/`, `semua-rapat/`, `buat-rapat/`, `notulensi/`, `tindak-lanjut/`).
+   2) `app/actions/`: Lapisan *Server Actions* untuk penanganan logika bisnis mutasi data (`meetingActions.ts`, `minutesActions.ts`, `actionItemActions.ts`).
+   3) `components/`: Komponen UI modular (*Dialog, Toast, Button, Badge, Card, Table*).
+   4) `lib/`: Modul inisialisasi koneksi `prisma.ts` dan utilitas format tanggal/angka.
+   5) `prisma/schema.prisma`: Deklarasi model skema 14 tabel basis data PostgreSQL.
+b. **Koneksi Basis Data:** Menggunakan Prisma Client yang terhubung dengan *connection pooling* PgBouncer pada Neon Serverless PostgreSQL.
+c. **Middleware Otorisasi:** Menggunakan NextAuth.js v5 pada `middleware.ts` untuk membatasi hak akses rute halaman berdasarkan peran akun pengguna (*Role-Based Access Control*).
 
 ### 3.3. Evaluasi Program (Black Box Testing)
 Pengujian sistem dilakukan menggunakan metode **Black Box Testing** untuk memverifikasi fungsionalitas tombol, validasi formulir, dan integritas transaksi basis data:

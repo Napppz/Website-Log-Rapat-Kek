@@ -77,6 +77,9 @@ Seluruh naskah pada Google Docs telah distandarisasi secara otomatis sesuai **Bu
    - Seluruh loncatan baris kosong berlebihan (34 enter kosong antara Daftar Lampiran dan Bab I, 11 enter di Daftar Gambar, 7 enter di Daftar Tabel) telah dipangkas dan digantikan oleh `pageBreakBefore: true` bawaan Google Docs API.
    - Gambar III.14 telah dikembalikan ke tingkatan caption yang benar (*Heading 4*).
    - Sub-bab 2.1.1, 2.1.2, 2.1.3, dan 2.2.1 telah dikoreksi menjadi *Heading 3* tebal.
+   - Sub-bab 3.2 disinkronkan urutannya: `3.2.1. Software Editor`, `3.2.2. Design Program`, `3.2.3. Database* (Perancangan Basis Data)`, dan `3.2.4. Kode Program` (semuanya berformat *Heading 3* tebal).
+   - Judul `BAB II` diselaraskan menjadi rata tengah (*Center*) konsisten dengan Bab I, III, dan IV.
+   - Seluruh caption gambar (Gambar III.1 s/d Gambar III.14) diseragamkan formatnya: typo `Gambar III12` diperbaiki menjadi `Gambar III.12`, serta titik berlebih pada `Gambar III.9.` dan `Gambar III.14.` telah dirapikan.
 
 ---
 
