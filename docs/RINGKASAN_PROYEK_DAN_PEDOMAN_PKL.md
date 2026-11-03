@@ -105,7 +105,7 @@ Landasan teori pada Sub-bab 2.2.1 dan DAFTAR PUSTAKA telah diperbarui 100% mengg
   - Lembar Persetujuan Laporan PKL
   - Kata Pengantar
   - Daftar Isi
-  - Daftar Simbol (18 simbol UML & ERD)
+  - Daftar Simbol (18 simbol UML & ERD: 4 Use Case [tanpa include/extend], 9 Activity Diagram [termasuk Data Store & Object Flow], 5 ERD Chen)
   - Daftar Gambar (Gambar III.1 s/d III.14)
   - Daftar Tabel (Tabel III.1 s/d III.11)
   - Daftar Lampiran (Lampiran 1 s/d 5)
