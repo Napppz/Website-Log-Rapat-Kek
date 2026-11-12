@@ -139,6 +139,9 @@ export async function getBiroTeamsFromDb(biroCodeOrId: string) {
 export async function getMeetingByIdFromDb(idOrNumber: string) {
   try {
     return await withDbRetry(async () => {
+      await syncAutoStartedMeetings().catch(() => {});
+      await syncAutoCompletedMeetings().catch(() => {});
+
       const meeting = await prisma.meeting.findFirst({
         where: {
           OR: [{ id: idOrNumber }, { meetingNumber: idOrNumber.toUpperCase() }],
@@ -179,6 +182,15 @@ export async function getMeetingByIdFromDb(idOrNumber: string) {
             },
             orderBy: [{ dueDate: 'asc' }, { createdAt: 'desc' }],
           },
+          followUpMeetings: {
+            select: {
+              id: true,
+              meetingNumber: true,
+              title: true,
+              status: true,
+              progressStatus: true,
+            },
+          },
           previousMeeting: {
             include: {
               primaryBiro: true,
@@ -208,40 +220,6 @@ export async function getMeetingByIdFromDb(idOrNumber: string) {
         } catch (attErr) {
           console.error('Error fetching meeting attachments:', attErr);
           (meeting as any).attachments = [];
-        }
-
-        // Auto-start check: Jika tanggal kegiatan telah tiba dan masih 'Belum Dimulai'
-        const todayWibStr = getWibTodayDateString();
-        const meetingDateStr = meeting.date.toISOString().slice(0, 10);
-        const isDateArrived = meetingDateStr <= todayWibStr;
-        const rawProg = (meeting as any).progressStatus || 'Start';
-        const isBelumDimulai =
-          rawProg === 'Belum Dimulai' ||
-          rawProg === 'Start' ||
-          rawProg === 'draft' ||
-          (meeting.status === 'DRAFT' && rawProg !== 'Selesai' && rawProg !== 'Dalam Proses');
-
-        // Auto-complete check: Jika salah satu PIC sudah menyelesaikan tindak lanjut
-        const hasCompletedActionItem =
-          Array.isArray(meeting.actionItems) &&
-          meeting.actionItems.some((ai: any) => ai.status === 'COMPLETED');
-
-        if (hasCompletedActionItem) {
-          (meeting as any).progressStatus = 'Selesai';
-          meeting.status = 'FINAL';
-          if (meeting.status !== 'FINAL' || (meeting as any).progressStatus !== 'Selesai') {
-            prisma.meeting.update({
-              where: { id: meeting.id },
-              data: { progressStatus: 'Selesai', status: 'FINAL' },
-            }).catch(() => {});
-          }
-        } else if (isDateArrived && isBelumDimulai) {
-          (meeting as any).progressStatus = 'Dalam Proses';
-          meeting.status = 'REVIEW';
-          prisma.meeting.update({
-            where: { id: meeting.id },
-            data: { progressStatus: 'Dalam Proses', status: 'REVIEW' },
-          }).catch(() => {});
         }
       }
 
@@ -421,39 +399,150 @@ export async function syncAutoStartedMeetings(): Promise<number> {
 }
 
 /**
- * Sinkronisasi otomatis status kegiatan menjadi 'Selesai' (FINAL)
- * ketika setidaknya salah satu PIC sudah menyelesaikan hasil tindak lanjut (status === 'COMPLETED').
+ * Sinkronisasi otomatis status kegiatan & rangkaian kegiatan berkesinambungan (Chain Completion):
+ * 1. Jika suatu kegiatan memiliki kegiatan lanjutan (previousMeetingId -> Kegiatan 2, 3, ..., 7) yang belum selesai,
+ *    maka kegiatan pendahulunya (Kegiatan 1 s/d 6) tetap berstatus 'Dalam Proses' (REVIEW) dan tidak dibuat Selesai dulu.
+ * 2. Ketika kegiatan terakhir pada rangkaian tersebut (misal Kegiatan ke-7) tindak lanjutnya diselesaikan (atau statusnya Selesai),
+ *    maka seluruh rangkaian kegiatan dari Kegiatan 1 sampai Kegiatan 7 otomatis berubah menjadi 'Selesai' (FINAL) secara bersamaan.
  */
 export async function syncAutoCompletedMeetings(): Promise<number> {
   try {
-    const meetingsToComplete = await prisma.meeting.findMany({
-      where: {
+    const allMeetings = await prisma.meeting.findMany({
+      select: {
+        id: true,
+        date: true,
+        status: true,
+        progressStatus: true,
+        previousMeetingId: true,
         actionItems: {
-          some: { status: 'COMPLETED' },
+          select: { id: true, status: true },
         },
-        OR: [
-          { status: { not: 'FINAL' } },
-          { progressStatus: { not: 'Selesai' } },
-          { progressStatus: null },
-        ],
-      },
-      select: { id: true },
-    });
-
-    if (meetingsToComplete.length === 0) return 0;
-
-    const ids = meetingsToComplete.map((m) => m.id);
-    const result = await prisma.meeting.updateMany({
-      where: { id: { in: ids } },
-      data: {
-        progressStatus: 'Selesai',
-        status: 'FINAL',
       },
     });
 
-    return result.count;
+    if (allMeetings.length === 0) return 0;
+
+    const meetingMap = new Map(allMeetings.map((m) => [m.id, m]));
+    const childrenMap = new Map<string, string[]>();
+
+    for (const m of allMeetings) {
+      if (m.previousMeetingId && meetingMap.has(m.previousMeetingId)) {
+        const list = childrenMap.get(m.previousMeetingId) || [];
+        list.push(m.id);
+        childrenMap.set(m.previousMeetingId, list);
+      }
+    }
+
+    const getDescendants = (startId: string): string[] => {
+      const result: string[] = [];
+      const visited = new Set<string>([startId]);
+      const queue = [...(childrenMap.get(startId) || [])];
+      while (queue.length > 0) {
+        const curr = queue.shift()!;
+        if (visited.has(curr)) continue;
+        visited.add(curr);
+        result.push(curr);
+        const nextChildren = childrenMap.get(curr) || [];
+        queue.push(...nextChildren);
+      }
+      return result;
+    };
+
+    const isLeafFinished = (m: (typeof allMeetings)[number]): boolean => {
+      if (m.actionItems.length > 0) {
+        return m.actionItems.every((ai) => ai.status === 'COMPLETED');
+      }
+      return m.status === 'FINAL' || m.status === 'APPROVED' || m.progressStatus === 'Selesai';
+    };
+
+    const idsToComplete = new Set<string>();
+    const idsToKeepInProgress = new Set<string>();
+    const ancestorActionItemIdsToComplete = new Set<string>();
+
+    for (const m of allMeetings) {
+      const descendants = getDescendants(m.id);
+
+      if (descendants.length > 0) {
+        // Kegiatan ini memiliki kegiatan lanjutan di depannya (misal Kegiatan 1..6 dari rangkaian 7 kegiatan)
+        const leafIds = descendants.filter((dId) => (childrenMap.get(dId) || []).length === 0);
+        const allLeavesFinished =
+          leafIds.length > 0 &&
+          leafIds.every((lId) => {
+            const leaf = meetingMap.get(lId);
+            return leaf ? isLeafFinished(leaf) : false;
+          });
+
+        if (allLeavesFinished) {
+          // Kegiatan terakhir (misal Kegiatan ke-7) sudah selesai -> seluruh kegiatan sebelumnya ikut Selesai
+          if (m.status !== 'FINAL' || m.progressStatus !== 'Selesai') {
+            idsToComplete.add(m.id);
+          }
+          for (const ai of m.actionItems) {
+            if (ai.status !== 'COMPLETED') {
+              ancestorActionItemIdsToComplete.add(ai.id);
+            }
+          }
+        } else {
+          // Masih ada kegiatan berikutnya yang belum selesai -> jangan buat Selesai dulu (tetap Dalam Proses)
+          if (m.status === 'FINAL' || m.status === 'APPROVED' || m.progressStatus === 'Selesai') {
+            idsToKeepInProgress.add(m.id);
+          }
+        }
+      } else {
+        // Kegiatan mandiri atau kegiatan paling akhir (misal Kegiatan ke-7)
+        if (m.actionItems.length > 0) {
+          const allCompleted = m.actionItems.every((ai) => ai.status === 'COMPLETED');
+          if (allCompleted) {
+            if (m.status !== 'FINAL' || m.progressStatus !== 'Selesai') {
+              idsToComplete.add(m.id);
+            }
+          } else {
+            // Masih ada tindak lanjut di kegiatan ini yang belum selesai
+            if (m.status === 'FINAL' || m.progressStatus === 'Selesai') {
+              idsToKeepInProgress.add(m.id);
+            }
+          }
+        }
+      }
+    }
+
+    let updatedCount = 0;
+
+    if (idsToKeepInProgress.size > 0) {
+      const res = await prisma.meeting.updateMany({
+        where: { id: { in: Array.from(idsToKeepInProgress) } },
+        data: {
+          progressStatus: 'Dalam Proses',
+          status: 'REVIEW',
+        },
+      });
+      updatedCount += res.count;
+    }
+
+    if (idsToComplete.size > 0) {
+      const res = await prisma.meeting.updateMany({
+        where: { id: { in: Array.from(idsToComplete) } },
+        data: {
+          progressStatus: 'Selesai',
+          status: 'FINAL',
+        },
+      });
+      updatedCount += res.count;
+    }
+
+    if (ancestorActionItemIdsToComplete.size > 0) {
+      await prisma.actionItem.updateMany({
+        where: { id: { in: Array.from(ancestorActionItemIdsToComplete) } },
+        data: {
+          status: 'COMPLETED',
+          completedAt: new Date(),
+        },
+      });
+    }
+
+    return updatedCount;
   } catch (error) {
-    console.error('Error auto-completing meetings with completed action items:', error);
+    console.error('Error syncing auto-completed and chained meetings:', error);
     return 0;
   }
 }
@@ -573,21 +662,34 @@ export async function getMeetingsFromDb(filters?: {
           rawProg === 'draft' ||
           (m.status === 'DRAFT' && rawProg !== 'Selesai' && rawProg !== 'Dalam Proses');
 
-        // Otomatis Selesai jika salah satu PIC sudah menyelesaikan tindak lanjut
-        const hasCompletedActionItem = completedItems > 0;
-        const isSelesai = hasCompletedActionItem || m.status === 'FINAL' || rawProg === 'Selesai';
+        // Cek apakah kegiatan ini memiliki kegiatan lanjutan yang belum selesai
+        const hasUnfinishedFollowUp = meetings.some(
+          (other) =>
+            other.previousMeetingId === m.id &&
+            other.status !== 'FINAL' &&
+            (other as any).progressStatus !== 'Selesai'
+        );
+
+        const allActionItemsCompleted = totalItems > 0 && completedItems === totalItems;
+        const isSelesai =
+          !hasUnfinishedFollowUp &&
+          (allActionItemsCompleted || m.status === 'FINAL' || rawProg === 'Selesai');
 
         const effectiveStatus = isSelesai
           ? ('FINAL' as MeetingStatus)
-          : (isDateArrived && isBelumDimulai)
+          : hasUnfinishedFollowUp
             ? ('REVIEW' as MeetingStatus)
-            : (m.status as MeetingStatus);
+            : (isDateArrived && isBelumDimulai)
+              ? ('REVIEW' as MeetingStatus)
+              : (m.status as MeetingStatus);
 
         const effectiveProgress = isSelesai
           ? 'Selesai'
-          : (isDateArrived && isBelumDimulai)
+          : hasUnfinishedFollowUp
             ? 'Dalam Proses'
-            : rawProg;
+            : (isDateArrived && isBelumDimulai)
+              ? 'Dalam Proses'
+              : rawProg;
 
         return {
           id: m.id,

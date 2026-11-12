@@ -20,6 +20,7 @@ import {
   getNextNotificationId,
 } from '@/lib/id-generator';
 import { createNotificationRecord } from '@/app/actions/notification-actions';
+import { syncAutoCompletedMeetings } from '@/lib/db-service';
 
 /**
  * Helper to safely revalidate paths without crashing in standalone tests
@@ -496,6 +497,9 @@ export async function createActionItemAction(input: ActionItemInput) {
       }
     }
 
+    // 6c. Sinkronkan status kegiatan & rangkaian kegiatan berkesinambungan
+    await syncAutoCompletedMeetings().catch(() => {});
+
     // 7. Revalidate relevant routes
     safeRevalidate([
       '/',
@@ -724,16 +728,10 @@ export async function updateActionItemAction(input: UpdateActionItemInput) {
       }
     }
 
-    // 8. Auto-complete meeting if action item is marked COMPLETED
-    if (status === 'COMPLETED' && meetingId) {
-      await prisma.meeting.update({
-        where: { id: meetingId },
-        data: {
-          progressStatus: 'Selesai',
-          status: 'FINAL',
-        },
-      }).catch((err) => console.error('Error auto-completing meeting on action item update:', err));
-    }
+    // 8. Sinkronkan status kegiatan & rangkaian kegiatan berkesinambungan
+    await syncAutoCompletedMeetings().catch((err) =>
+      console.error('Error syncing meeting chain on action item update:', err)
+    );
 
     // 9. Revalidate
     safeRevalidate([
@@ -819,15 +817,9 @@ export async function updateActionItemStatusAction(input: UpdateActionItemStatus
       },
     });
 
-    if (status === 'COMPLETED' && existing.meetingId) {
-      await prisma.meeting.update({
-        where: { id: existing.meetingId },
-        data: {
-          progressStatus: 'Selesai',
-          status: 'FINAL',
-        },
-      }).catch((err) => console.error('Error auto-completing meeting on action item status update:', err));
-    }
+    await syncAutoCompletedMeetings().catch((err) =>
+      console.error('Error syncing meeting chain on action item status update:', err)
+    );
 
     safeRevalidate([
       '/',
@@ -1076,15 +1068,9 @@ export async function addActionItemLogAction(input: AddActionItemLogInput) {
       },
     });
 
-    if (targetStatus === 'COMPLETED' && existing.meetingId) {
-      await prisma.meeting.update({
-        where: { id: existing.meetingId },
-        data: {
-          progressStatus: 'Selesai',
-          status: 'FINAL',
-        },
-      }).catch((err) => console.error('Error auto-completing meeting on action item log:', err));
-    }
+    await syncAutoCompletedMeetings().catch((err) =>
+      console.error('Error syncing meeting chain on action item log:', err)
+    );
 
     // Resolve valid user ID for ActionItemLog to prevent foreign key violation
     let validLogUserId: string | null = null;

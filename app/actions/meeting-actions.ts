@@ -2,7 +2,7 @@
 
 import { prisma } from '@/lib/prisma';
 import { getNextMeetingNumber, previewNextMeetingNumber } from '@/lib/sequence';
-import { getMeetingByIdFromDb } from '@/lib/db-service';
+import { getMeetingByIdFromDb, syncAutoCompletedMeetings } from '@/lib/db-service';
 import { MeetingStatus, AttendanceStatus, UserRole } from '@prisma/client';
 import { revalidatePath } from 'next/cache';
 import { requirePermission, requireAuth, getCurrentUser } from '@/lib/auth/authorization';
@@ -459,6 +459,11 @@ export async function createMeetingAction(input: CreateMeetingInput) {
       };
     });
 
+    // Jika kegiatan baru merupakan lanjutan dari kegiatan sebelumnya, pastikan kegiatan sebelumnya tetap Dalam Proses
+    if (input.previousMeetingId) {
+      await syncAutoCompletedMeetings().catch(() => {});
+    }
+
     safeRevalidate([
       '/',
       '/arsip-kegiatan',
@@ -601,6 +606,8 @@ export async function updateMeetingStatusAction(
       include: { primaryBiro: true },
     });
 
+    await syncAutoCompletedMeetings().catch(() => {});
+
     safeRevalidate([
       '/',
       '/arsip-kegiatan',
@@ -647,6 +654,8 @@ export async function approveMeetingAction(meetingId: string) {
       },
       include: { primaryBiro: true },
     });
+
+    await syncAutoCompletedMeetings().catch(() => {});
 
     // Notify participants & organizers about the approval
     try {
@@ -770,6 +779,8 @@ export async function updateMeetingOutputAction(input: UpdateMeetingOutputInput)
       data: updateData,
       include: { primaryBiro: true, primaryTeam: true },
     });
+
+    await syncAutoCompletedMeetings().catch(() => {});
 
     safeRevalidate([
       '/',
@@ -1334,6 +1345,8 @@ export async function linkPreviousMeetingAction(
         },
       },
     });
+
+    await syncAutoCompletedMeetings().catch(() => {});
 
     safeRevalidate([
       `/arsip-kegiatan/${meetingId}`,
