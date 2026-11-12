@@ -1,64 +1,227 @@
 const fs = require('fs');
 
-async function main() {
-  const tokenData = JSON.parse(fs.readFileSync('C:/Users/nappz/.config/google-drive-mcp/tokens.json', 'utf8'));
-  const account = tokenData.accounts[tokenData.defaultAccount];
-  const docId = '1BiRl5kqt1odLjdrFOS7pA6NkNOKt-sK_H0bX9AQ1qdg';
+async function getValidAccessToken() {
+  const keys = JSON.parse(fs.readFileSync('C:/Users/nappz/.config/google-drive-mcp/gcp-oauth.keys.json', 'utf8'));
+  const tokens = JSON.parse(fs.readFileSync('C:/Users/nappz/.config/google-drive-mcp/tokens.json', 'utf8'));
+  const account = tokens.accounts[tokens.defaultAccount];
 
-  console.log('1. Mempersiapkan naskah Dokumen Teknis Website Log Book Notula Rapat KEK...');
+  const clientId = keys.installed?.client_id || keys.web?.client_id;
+  const clientSecret = keys.installed?.client_secret || keys.web?.client_secret;
+
+  const params = new URLSearchParams();
+  params.append('client_id', clientId);
+  params.append('client_secret', clientSecret);
+  params.append('refresh_token', account.refreshToken);
+  params.append('grant_type', 'refresh_token');
+
+  const res = await fetch('https://oauth2.googleapis.com/token', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    body: params
+  });
+
+  const data = await res.json();
+  if (data.access_token) {
+    account.accessToken = data.access_token;
+    account.expiryDate = Date.now() + (data.expires_in * 1000);
+    account.lastRefreshedAt = Date.now();
+    fs.writeFileSync('C:/Users/nappz/.config/google-drive-mcp/tokens.json', JSON.stringify(tokens, null, 2));
+    return data.access_token;
+  }
+  return account.accessToken;
+}
+
+const IMAGE_PLACEHOLDERS = [
+  {
+    token: '[[IMAGE_LOGO_KEK]]',
+    uri: 'https://drive.google.com/uc?id=1AKT1iBrvuP-BNA7K_4hYfptOuGY0OGns&export=download',
+    width: 90,
+    height: 90
+  },
+  {
+    token: '[[IMAGE_USE_CASE]]',
+    uri: 'https://drive.google.com/uc?id=1UhBx0itPWdDI6qze2R3BeFmXWeq1nvUt&export=download',
+    width: 420,
+    height: 405
+  },
+  {
+    token: '[[IMAGE_ACTIVITY_1]]',
+    uri: 'https://drive.google.com/uc?id=1TXIowJidE0XQ4Cp3v_DAzHWQzgQ_4OtA&export=download',
+    width: 400,
+    height: 451
+  },
+  {
+    token: '[[IMAGE_ACTIVITY_2]]',
+    uri: 'https://drive.google.com/uc?id=1bDeIE8O58v-S5gXEMy3GtOkVZLaE1NqV&export=download',
+    width: 425,
+    height: 386
+  },
+  {
+    token: '[[IMAGE_ACTIVITY_3]]',
+    uri: 'https://drive.google.com/uc?id=1q_S5PGMZNXiTqfLIchFxpPKrvQZOoGEB&export=download',
+    width: 435,
+    height: 331
+  },
+  {
+    token: '[[IMAGE_ERD]]',
+    uri: 'https://drive.google.com/uc?id=1z9adGxKYry7qTjenm4-5SFWYpYAuHu-z&export=download',
+    width: 440,
+    height: 295
+  },
+  {
+    token: '[[IMAGE_LRS]]',
+    uri: 'https://drive.google.com/uc?id=1ozG8cPsuXSXRSo-g506oGG558TV6WhK1&export=download',
+    width: 430,
+    height: 391
+  }
+];
+
+async function replacePlaceholderWithImage(docId, accessToken, placeholder) {
+  const res = await fetch(`https://docs.googleapis.com/v1/documents/${docId}`, {
+    headers: { 'Authorization': `Bearer ${accessToken}` }
+  });
+  const doc = await res.json();
+
+  let targetStart = null;
+  let targetEnd = null;
+  let pStart = null;
+  let pEnd = null;
+
+  for (const el of doc.body.content) {
+    if (el.paragraph) {
+      const fullText = el.paragraph.elements?.map(e => e.textRun?.content || '').join('') || '';
+      const idx = fullText.indexOf(placeholder.token);
+      if (idx !== -1) {
+        pStart = el.startIndex;
+        pEnd = el.endIndex;
+        targetStart = el.startIndex + idx;
+        targetEnd = targetStart + placeholder.token.length;
+        break;
+      }
+    }
+  }
+
+  if (targetStart === null) {
+    console.warn(`Placeholder ${placeholder.token} not found!`);
+    return;
+  }
+
+  console.log(`Inserting image for ${placeholder.token} at index ${targetStart}...`);
+
+  const requests = [
+    {
+      deleteContentRange: {
+        range: { startIndex: targetStart, endIndex: targetEnd }
+      }
+    },
+    {
+      insertInlineImage: {
+        uri: placeholder.uri,
+        location: { index: targetStart },
+        objectSize: {
+          width: { magnitude: placeholder.width, unit: 'PT' },
+          height: { magnitude: placeholder.height, unit: 'PT' }
+        }
+      }
+    },
+    {
+      updateParagraphStyle: {
+        range: { startIndex: pStart, endIndex: pStart + 2 },
+        paragraphStyle: { alignment: 'CENTER' },
+        fields: 'alignment'
+      }
+    }
+  ];
+
+  const updateRes = await fetch(`https://docs.googleapis.com/v1/documents/${docId}:batchUpdate`, {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${accessToken}`,
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({ requests })
+  });
+
+  if (!updateRes.ok) {
+    const errText = await updateRes.text();
+    throw new Error(`Failed to insert image ${placeholder.token}: ${errText}`);
+  }
+  console.log(`Successfully inserted image for ${placeholder.token}!`);
+}
+
+async function main() {
+  const accessToken = await getValidAccessToken();
+
+  console.log('1. Menyusun naskah Dokumen Teknis Pengembangan Website Aplikasi Log Book Kegiatan KEK...');
 
   const htmlContent = `<!DOCTYPE html>
 <html>
 <head>
   <meta charset="utf-8">
-  <title>Dokumen Teknis Website Log Book Notula Rapat KEK</title>
+  <title>Dokumen Teknis Pengembangan Website Aplikasi Log Book Kegiatan KEK</title>
   <style>
     body {
-      font-family: Arial, Calibri, sans-serif;
+      font-family: Cambria, Calibri, Arial, sans-serif;
       font-size: 11pt;
-      line-height: 1.5;
+      line-height: 1.4;
       color: #1a1a1a;
     }
     h1 {
+      font-family: Calibri, Arial, sans-serif;
       font-size: 16pt;
       font-weight: bold;
       text-align: center;
-      margin-bottom: 24pt;
-      color: #0f3741;
+      margin-top: 12pt;
+      margin-bottom: 18pt;
+      color: #1f3864;
       text-transform: uppercase;
     }
     h2 {
-      font-size: 13pt;
+      font-family: Calibri, Arial, sans-serif;
+      font-size: 14pt;
       font-weight: bold;
       margin-top: 18pt;
       margin-bottom: 6pt;
-      color: #1b4955;
-      border-bottom: 1.5px solid #31889C;
-      padding-bottom: 3pt;
+      color: #2f5496;
     }
     h3 {
-      font-size: 11.5pt;
+      font-family: Calibri, Arial, sans-serif;
+      font-size: 12.5pt;
       font-weight: bold;
       margin-top: 12pt;
       margin-bottom: 4pt;
-      color: #215865;
+      color: #2f5496;
     }
     h4 {
-      font-size: 11pt;
+      font-family: Calibri, Arial, sans-serif;
+      font-size: 11.5pt;
       font-weight: bold;
-      margin-top: 8pt;
-      margin-bottom: 3pt;
-      color: #333333;
+      margin-top: 10pt;
+      margin-bottom: 4pt;
+      color: #1f3864;
     }
     p {
       margin-top: 0;
-      margin-bottom: 6pt;
+      margin-bottom: 8pt;
       text-align: justify;
+    }
+    .center-p {
+      text-align: center;
+      margin-top: 8pt;
+      margin-bottom: 8pt;
+    }
+    .caption {
+      text-align: center;
+      font-weight: bold;
+      font-size: 10pt;
+      color: #333333;
+      margin-top: 2pt;
+      margin-bottom: 12pt;
     }
     ul, ol {
       margin-top: 2pt;
       margin-bottom: 8pt;
-      padding-left: 20pt;
+      padding-left: 22pt;
     }
     li {
       margin-bottom: 3pt;
@@ -67,16 +230,16 @@ async function main() {
     table {
       width: 100%;
       border-collapse: collapse;
-      margin-top: 8pt;
+      margin-top: 6pt;
       margin-bottom: 14pt;
-      font-size: 9.5pt;
+      font-size: 10pt;
     }
     table, th, td {
-      border: 1px solid #cbd5e1;
+      border: 1px solid #9ca3af;
     }
     th {
-      background-color: #f1f8f9;
-      color: #134e5e;
+      background-color: #d9e1f2;
+      color: #1f3864;
       font-weight: bold;
       text-align: left;
       padding: 6pt 8pt;
@@ -85,16 +248,6 @@ async function main() {
       padding: 5pt 8pt;
       vertical-align: top;
     }
-    tr:nth-child(even) {
-      background-color: #fafbfc;
-    }
-    .table-title {
-      font-weight: bold;
-      margin-top: 10pt;
-      margin-bottom: 3pt;
-      color: #134e5e;
-      font-size: 10pt;
-    }
     .center {
       text-align: center;
     }
@@ -102,683 +255,724 @@ async function main() {
 </head>
 <body>
 
-  <h1>DOKUMEN TEKNIS PENGEMBANGAN WEBSITE SISTEM INFORMASI LOG BOOK NOTULA RAPAT DEWAN NASIONAL KAWASAN EKONOMI KHUSUS</h1>
+  <p class="center-p">[[IMAGE_LOGO_KEK]]</p>
+  <h1>DOKUMEN TEKNIS PENGEMBANGAN WEBSITE APLIKASI LOG BOOK KEGIATAN KEK</h1>
 
   <h2>1. Pendahuluan</h2>
 
   <h3>1.1. Latar Belakang</h3>
-  <p>Sekretariat Jenderal Dewan Nasional Kawasan Ekonomi Khusus (Setjen DN KEK RI) memegang peranan krusial dalam mengoordinasikan perumusan kebijakan, pengawasan operasional, serta fasilitasi investasi di seluruh kawasan ekonomi khusus di Indonesia. Pelaksanaan tugas kedinasan tersebut melibatkan koordinasi intensif antar 5 (lima) Biro utama, yaitu: Biro Perencanaan dan Pembentukan KEK (BPPK), Biro Pengendalian KEK (PKKEK), Biro Investasi, Kerja Sama, dan Komunikasi (IKK), Biro Hukum, Sumber Daya Manusia, dan Organisasi (HSDMO), serta Biro Umum dan Keuangan (UK), bersama kelompok tim kerja fungsional terkait (seperti Tim Investasi, Tim Kerja Sama, dan Tim Komunikasi).</p>
-  
-  <p>Dalam tata kelola pemerintahan kedinasan, rapat merupakan instrumen formal utama untuk pengambilan keputusan strategis dan penentuan arah kebijakan. Setiap rapat dinas menghasilkan dokumen penting berupa agenda, daftar presensi kehadiran, risalah notulensi, dan komitmen butir tindak lanjut (<em>action items</em>). Sebelum diterapkannya sistem digital terpadu, pengelolaan rapat menghadapi sejumlah kendala operasional:</p>
-  <ol>
-    <li>Pencatatan agenda dan buku log book rapat dinas masih dilakukan secara terpisah di masing-masing unit kerja atau menggunakan lembar spreadsheet lokal yang rentan inkonsistensi penomoran.</li>
-    <li>Penyusunan risalah notulensi membutuhkan waktu lama dan seringkali terpisah dari berkas dokumen pendukung resmi (seperti surat undangan dinas dan materi paparan narasumber).</li>
-    <li>Pemantauan komitmen tindak lanjut (<em>action items</em>) pasca-rapat dinas sulit dimonitor secara transparan dan akuntabel, sehingga berisiko terjadinya keterlambatan atas keputusan yang telah disepakati bersama.</li>
-    <li>Distribusi notulensi dan penugasan tindak lanjut kepada Person in Charge (PIC) belum terotomasi dengan pembagian hak akses berjenjang.</li>
-  </ol>
-  
-  <p>Untuk menyelesaikan permasalahan tersebut, dikembangkanlah Sistem Informasi Log Book Notula Rapat berbasis website terintegrasi. Sistem ini mendigitalkan seluruh siklus hidup rapat (<em>meeting lifecycle</em>), menyediakan penomoran rapat otomatis terstandar, memfasilitasi pencatatan notulensi interaktif, menyediakan matriks pemantauan tindak lanjut secara realtime, serta mendukung prinsip tata kelola pemerintahan yang efektif, efisien, transparan, dan akuntabel.</p>
+  <p>Sekretariat Jenderal Dewan Nasional Kawasan Ekonomi Khusus (Setjen DN KEK) memiliki peran strategis dalam memberikan dukungan teknis dan administratif kepada Dewan Nasional KEK guna merumuskan kebijakan, menyelesaikan hambatan investasi, serta mengawasi perkembangan Kawasan Ekonomi Khusus (KEK) di seluruh Indonesia. Dalam menjalankan mandat tersebut, koordinasi intensif dilaksanakan melalui berbagai agenda kegiatan, baik naskah resmi masuk, disposisi pimpinan (Sekjen dan Karo), rapat koordinasi lintas biro (seperti Biro Investasi, Kerja Sama, dan Komunikasi), kegiatan internal, hingga laporan rutin bersama kementerian, lembaga, dan badan usaha pengelola KEK.</p>
+
+  <p>Namun demikian, proses tata kelola penjadwalan dan pencatatan log book kegiatan pada Setjen KEK sebelumnya masih menghadapi berbagai tantangan operasional. Pencatatan agenda kegiatan, penataan jadwal kalender, serta pengarsipan dokumen log book pendukung (surat undangan, nota konsumsi, bahan tayang materi paparan, tautan rilis publikasi, hingga catatan hasil kegiatan) sebagian besar masih dilakukan secara konvensional atau tersebar di berbagai media terpisah (spreadsheet, grup perpesanan, dan folder penyimpanan lokal). Kondisi ini menyebabkan informasi jadwal rawan bentrok, dokumen berkas rentan tercecer, serta pencarian kembali (<em>information retrieval</em>) riwayat kegiatan memerlukan waktu yang relatif lama.</p>
+
+  <p>Permasalahan krusial lainnya terletak pada pemantauan status progres pelaksanaan kegiatan dan butir tindak lanjut berdasarkan klasifikasi naskah. Tingginya intensitas disposisi pimpinan (Disposisi Sekjen dan Disposisi Karo) serta naskah masuk membutuhkan klasifikasi kategori yang terstruktur dan penunjukan <em>Person in Charge</em> (PIC) yang jelas. Ketiadaan sistem terpusat yang mengintegrasikan kalender jadwal dengan repositori berkas dokumen menyebabkan pimpinan kesulitan memantau realisasi pelaksanaan kegiatan secara komprehensif.</p>
+
+  <p>Oleh karena itu, dikembangkanlah sistem berbasis website <strong>Aplikasi Log Book Kegiatan KEK</strong> yang mampu mengelola seluruh siklus penjadwalan kegiatan, sentralisasi pencatatan dokumen log book pendukung, serta pemantauan status progres tindak lanjut secara terintegrasi. Pengembangan website ini diharapkan dapat meningkatkan tertib administrasi, mempercepat akses informasi kegiatan lintas biro dan tim kerja, serta mendukung prinsip transparansi dan akuntabilitas di lingkungan Sekretariat Jenderal Dewan Nasional KEK.</p>
 
   <h3>1.2. Tujuan Dokumen</h3>
-  <p>Dokumen teknis ini disusun dengan tujuan sebagai berikut:</p>
+  <p>Dokumen teknis ini disusun dengan tujuan untuk:</p>
   <ol>
-    <li>Menjadi acuan teknis utama dalam pengembangan, pengujian, implementasi, dan pemeliharaan Website Log Book Notula Rapat Dewan Nasional KEK.</li>
-    <li>Memberikan gambaran komprehensif mengenai arsitektur sistem, alur proses bisnis persidangan dinas, serta spesifikasi teknologi yang diterapkan.</li>
-    <li>Mendokumentasikan struktur basis data relasional, kamus data tabel, integritas foreign key, dan tata kelola hak akses berbasis peran (RBAC).</li>
-    <li>Memudahkan tim teknis dan pengembang dalam melakukan pemeliharaan rutin maupun pengembangan fitur lanjutan di masa mendatang.</li>
-    <li>Menjadi dokumen referensi resmi bagi mentor instansi, pimpinan unit kerja, serta akademisi dalam pertanggungjawaban karya teknologi kedinasan.</li>
+    <li>Menjadi acuan teknis dalam pengembangan, pengujian, dan pengelolaan website Aplikasi Log Book Kegiatan KEK.</li>
+    <li>Memberikan gambaran menyeluruh terkait arsitektur sistem, pemodelan diagram UML, dan desain antarmuka sistem.</li>
+    <li>Mendokumentasikan struktur sistem, desain database (ERD, LRS, dan spesifikasi kamus data), serta alur proses bisnis utama.</li>
+    <li>Memudahkan proses pengembangan lanjutan dan pemeliharaan sistem secara berkelanjutan.</li>
+    <li>Menjadi referensi resmi bagi tim teknis, pengembang, dan pemangku kepentingan terkait di lingkungan Sekretariat Jenderal Dewan Nasional KEK.</li>
   </ol>
 
   <h3>1.3. Ruang Lingkup Sistem</h3>
-  <p>Ruang lingkup fungsional dan teknis dari Website Log Book Notula Rapat Dewan Nasional KEK mencakup:</p>
+  <p>Ruang lingkup pengembangan website Aplikasi Log Book Kegiatan KEK mencakup seluruh proses pengelolaan jadwal agenda dan pencatatan dokumen log book berbasis elektronik, antara lain:</p>
   <ol>
-    <li><strong>Manajemen Penjadwalan Rapat Dinas:</strong> Pencatatan metadata rapat (judul, biro/tim penyelenggara, waktu mulai/selesai, lokasi fisik/virtual, pimpinan rapat, dan notulis).</li>
-    <li><strong>Penomoran Rapat Otomatis:</strong> Pembangkitan kode nomor surat/rapat dinas unik secara berurutan per biro dan tahun berjalan (Format: <code>NOMOR/KODE_BIRO/BULAN/TAHUN</code>).</li>
-    <li><strong>Presensi dan Kehadiran Peserta:</strong> Pencatatan daftar undangan peserta internal pejabat/staf KEK serta tamu eksternal lintas kementerian/lembaga/swasta, dilengkapi status presensi dan tanda tangan kehadiran.</li>
-    <li><strong>Pencatatan Notulensi Digital Interaktif:</strong> Editor risalah rapat terstruktur meliputi agenda pembahasan, dinamika diskusi sidang, butir keputusan resmi, dan kesimpulan rapat.</li>
-    <li><strong>Alur Pengesahan Notulensi Berjenjang:</strong> Mekanisme review notulis dan pengesahan resmi oleh Pimpinan Rapat (Status: <code>DRAFT</code> &rarr; <code>REVIEW</code> &rarr; <code>APPROVED</code> &rarr; <code>FINAL</code>).</li>
-    <li><strong>Matriks Pemantauan Tindak Lanjut (Action Items):</strong> Distribusi butir komitmen rapat kepada PIC penanggung jawab dan tim pelaksana dengan atribut tenggat waktu (<em>due date</em>) serta skala prioritas.</li>
-    <li><strong>Pelacakan Progres Komitmen Rapat:</strong> Pembaruan status tindak lanjut (<strong>Belum Dimulai</strong>, <strong>Dalam Proses</strong>, <strong>Selesai</strong>, <strong>Terlambat</strong>) dan status progres keseluruhan rapat (<code>Start</code>, <code>On Progress</code>, <code>Done</code>).</li>
-    <li><strong>Manajemen Pengarsipan Dokumen Rapat:</strong> Pengunggahan dan penyimpanan terpusat untuk surat undangan dinas, kategori dokumen, serta materi paparan rapat.</li>
-    <li><strong>Manajemen Pengguna Berbasis Peran & Tim (Team-Scoped RBAC):</strong> Otorisasi 4 peran (Super Admin, Administrator Tim, Pimpinan, Staf) dengan pemisahan wewenang pengelolaan anggota per tim kerja.</li>
-    <li><strong>Dashboard Eksekutif & Ekspor Laporan Resmi:</strong> Visualisasi statistik rapat, persentase penyelesaian komitmen, serta fitur cetak/ekspor risalah notulen ke format PDF standar dinas.</li>
+    <li>Pencatatan dan penjadwalan kegiatan baru berdasarkan klasifikasi kategori naskah (Naskah Masuk, Disposisi Sekjen, Disposisi Karo, Kegiatan Internal, dan Laporan Rutin).</li>
+    <li>Penerbitan nomor registrasi kegiatan secara otomatis dan sinkronisasi jadwal pada kalender kegiatan terpadu.</li>
+    <li>Pengelolaan daftar pihak dan aparatur terkait kegiatan (undangan internal maupun eksternal) sebagai rujukan log book kegiatan.</li>
+    <li>Pencatatan dan pengarsipan berkas dokumen log book kegiatan (surat undangan, nota konsumsi, materi paparan, dan tautan rilis publikasi).</li>
+    <li>Pencatatan ringkasan pokok catatan hasil kegiatan dan rencana aksi.</li>
+    <li>Pengelolaan matriks tindak lanjut (<em>action items</em>), penunjukan staf PIC penanggung jawab, serta penetapan tenggat waktu (<em>deadline</em>).</li>
+    <li>Monitoring dan pembaruan status progres kegiatan serta tindak lanjut dalam 3 tahapan resmi (<strong>Belum Dimulai</strong>, <strong>Dalam Proses</strong>, dan <strong>Selesai</strong>).</li>
+    <li>Manajemen pengguna berbasis peran (Staf Pelaksana, Admin Biro/Tim, dan Super Admin/Pimpinan) serta pengelolaan data master biro dan tim kerja KEK.</li>
+    <li>Fitur filter pencarian log book kegiatan, visualisasi dashboard eksekutif, serta ekspor laporan rekapitulasi (PDF/Excel/Word).</li>
   </ol>
 
   <h3>1.4. Definisi Istilah</h3>
-  <p>Istilah-istilah teknis dan kedinasan yang digunakan dalam dokumen ini antara lain:</p>
+  <p>Berikut beberapa istilah yang digunakan dalam dokumen ini:</p>
   <ol>
-    <li><strong>Sistem Log Book Notula Rapat:</strong> Sistem Informasi Pengelolaan Log Book dan Risalah Notula Rapat pada Sekretariat Jenderal Dewan Nasional Kawasan Ekonomi Khusus.</li>
-    <li><strong>Notula / Risalah Rapat:</strong> Catatan resmi autentik mengenai jalannya rapat dinas, pokok-pokok pembahasan, kesepakatan, dan keputusan yang mengikat.</li>
-    <li><strong>Tindak Lanjut (<em>Action Item</em>):</strong> Butir penugasan operasional konkret hasil kesepakatan rapat yang wajib diselesaikan oleh unit kerja atau PIC dalam batas waktu tertentu.</li>
-    <li><strong>PIC (<em>Person in Charge</em>):</strong> Aparatur pejabat atau staf yang ditunjuk sebagai penanggung jawab utama atas penyelesaian butir komitmen tindak lanjut.</li>
-    <li><strong>Nomor Rapat Dinas:</strong> Kode unik penomoran rapat dinas yang digenerate otomatis oleh sistem secara sistematis per biro dan tahun.</li>
-    <li><strong>Biro:</strong> Unit kerja eselon II di lingkungan Sekretariat Jenderal Dewan Nasional KEK (BPPK, PKKEK, IKK, HSDMO, UK).</li>
-    <li><strong>Tim Kerja:</strong> Unit kelompok kerja fungsional di bawah biro (misalnya: Tim Investasi, Tim Kerja Sama, dan Tim Komunikasi pada Biro IKK).</li>
-    <li><strong>RBAC (<em>Role-Based Access Control</em>):</strong> Mekanisme pembatasan hak akses fitur dan mutasi data berdasarkan peran pengguna kedinasan.</li>
-    <li><strong>Frontend:</strong> Antarmuka web modern yang berinteraksi langsung dengan pengguna (dibangun dengan Next.js & React).</li>
-    <li><strong>Server Actions & Backend:</strong> Lapisan server pada Next.js yang memproses logika bisnis, validasi keamanan Zod, dan interaksi basis data PostgreSQL.</li>
+    <li><strong>Aplikasi Log Book Kegiatan:</strong> Sistem informasi berbasis web untuk pengelolaan jadwal agenda kegiatan, pencatatan dokumen log book pendukung, dan pemantauan tindak lanjut pada Sekretariat Jenderal Dewan Nasional KEK.</li>
+    <li><strong>Nomor Registrasi Kegiatan:</strong> Kode pengenal unik yang diterbitkan secara otomatis oleh sistem untuk mengidentifikasi setiap rekaman agenda kegiatan.</li>
+    <li><strong>Kategori Naskah:</strong> Klasifikasi sumber penugasan kegiatan yang meliputi Naskah Masuk, Disposisi Sekjen, Disposisi Karo, Kegiatan Internal, dan Laporan Rutin.</li>
+    <li><strong>Dokumen Log Book:</strong> Berkas digital pendukung pelaksanaan kegiatan yang diarsipkan ke dalam sistem, mencakup surat undangan, nota konsumsi, materi paparan, catatan hasil, dan tautan rilis berita.</li>
+    <li><strong>Tindak Lanjut (<em>Action Item</em>):</strong> Butir arahan komitmen penugasan hasil pembahasan kegiatan yang wajib diselesaikan oleh tim kerja dan staf PIC dalam tenggat waktu tertentu.</li>
+    <li><strong>PIC (<em>Person in Charge</em>):</strong> Pegawai atau staf pelaksana yang ditunjuk sebagai penanggung jawab pelaksanaan agenda kegiatan maupun penyelesaian butir tindak lanjut.</li>
+    <li><strong>Staf Pelaksana:</strong> Pengguna operasional yang bertugas melaksanakan penugasan kegiatan, mengunggah berkas eviden, dan memperbarui status progres kegiatan.</li>
+    <li><strong>Admin Biro / Tim:</strong> Pengguna pengelola administrasi pada biro atau tim kerja KEK yang bertugas mencatat jadwal kegiatan, mengelola dokumen log book, dan mengelola tindak lanjut.</li>
+    <li><strong>Super Admin / Pimpinan:</strong> Pengguna dengan hak akses penuh terhadap seluruh data sistem, monitoring kinerja lintas tim kerja, serta manajemen data master pengguna dan unit kerja.</li>
+    <li><strong>Biro &amp; Tim Kerja:</strong> Struktur unit organisasi Eselon II dan kelompok kerja teknis di lingkungan Setjen DN KEK (seperti Biro IKK yang menaungi Tim Investasi, Tim Kerja Sama, dan Tim Komunikasi).</li>
+    <li><strong>Frontend:</strong> Bagian sistem yang berinteraksi langsung dengan pengguna melalui tampilan antarmuka website.</li>
+    <li><strong>Backend:</strong> Bagian sistem yang mengelola logika aplikasi, otorisasi keamanan, validasi data, dan interaksi database.</li>
   </ol>
 
   <h2>2. Gambaran Umum Sistem</h2>
 
   <h3>2.1. Deskripsi Sistem</h3>
-  <p>Website Log Book Notula Rapat merupakan sistem manajemen siklus hidup rapat kedinasan (<em>meeting lifecycle management</em>) yang mengintegrasikan seluruh tahapan persidangan kedinasan dalam satu platform terpadu:</p>
-  <ul>
-    <li><strong>Tahap Pra-Rapat:</strong> Inisiasi penjadwalan rapat dinas, alokasi nomor surat otomatis, penentuan pimpinan dan notulis, pendaftaran peserta undangan internal/eksternal, serta pengunggahan surat undangan resmi.</li>
-    <li><strong>Tahap Pelaksanaan Rapat:</strong> Verifikasi presensi kehadiran peserta secara realtime serta pencatatan draf risalah notulensi secara langsung melalui antarmuka web.</li>
-    <li><strong>Tahap Pasca-Rapat:</strong> Penyempurnaan naskah risalah rapat, pengajuan review dan pengesahan oleh pimpinan, pencatatan butir komitmen tindak lanjut, distribusi tugas kepada PIC terkait, pemantauan status penyelesaian tugas, serta pelaporan statistik eksekutif.</li>
-  </ul>
-  <p>Sistem dirancang terpadu antara sisi antarmuka pengguna responsif dan lapisan server actions yang aman, menjamin keakuratan dokumentasi persidangan dinas serta keterbukaan informasi bagi seluruh pimpinan dan staf.</p>
+  <p>Website Aplikasi Log Book Kegiatan merupakan sistem informasi berbasis web yang dikembangkan untuk mendukung digitalisasi tata kelola penjadwalan agenda dan pengarsipan dokumen log book kegiatan secara terpusat di lingkungan Sekretariat Jenderal Dewan Nasional Kawasan Ekonomi Khusus. Sistem ini memungkinkan unit kerja untuk mencatat jadwal kegiatan berdasarkan klasifikasi naskah, mendokumentasikan catatan hasil kegiatan, serta menyimpan berkas pendukung dalam satu repositori terpadu.</p>
+
+  <p>Sistem juga digunakan oleh Admin Biro/Tim, Staf Pelaksana (PIC), dan Pimpinan untuk memantau perkembangan status pelaksanaan kegiatan serta matriks tindak lanjut pasca-kegiatan secara transparan dalam tiga tahapan status resmi, yaitu <em>Belum Dimulai</em>, <em>Dalam Proses</em>, dan <em>Selesai</em>.</p>
+
+  <p>Aplikasi Log Book Kegiatan dirancang terintegrasi antara sisi antarmuka pengguna (<em>frontend</em>) dan sisi pengelola logika bisnis serta basis data (<em>backend</em>), sehingga seluruh siklus pencatatan kegiatan kedinasan dapat dilakukan secara efektif, transparan, dan terdokumentasi dengan baik.</p>
 
   <h3>2.2. Aktor / Pengguna</h3>
-  <p>Sistem Log Book Notula Rapat melibatkan 4 (empat) jenis peran pengguna kedinasan:</p>
+  <p>Berdasarkan analisis kebutuhan fungsional, sistem melibatkan 3 (tiga) tingkatan peran pengguna berbasis <em>Role-Based Access Control</em> (RBAC) sebagaimana divisualisasikan pada Use Case Diagram berikut:</p>
+
+  <p class="center-p">[[IMAGE_USE_CASE]]</p>
+  <p class="caption">Gambar 2.1. Use Case Diagram Aplikasi Log Book Kegiatan KEK</p>
+
+  <p>Adapun pembagian peran dan hak akses masing-masing pengguna adalah sebagai berikut:</p>
   <ol>
-    <li><strong>Super Admin (Super Administrator):</strong>
+    <li><strong>Staf Pelaksana (Pegawai / PIC):</strong>
       <ul>
-        <li>Memiliki hak akses penuh (<em>global scope</em>) ke seluruh data rapat, notulensi, dan tindak lanjut di seluruh biro.</li>
-        <li>Mengelola master data pengguna sistem, master data biro, dan kelompok tim kerja.</li>
-        <li>Menetapkan peran (role) pengguna dan mengelola pengaturan sistem global.</li>
-        <li>Memantau audit trail dan rekapitulasi data lintas biro.</li>
+        <li>Melakukan autentikasi login ke dalam sistem.</li>
+        <li>Melihat dashboard ringkasan dan kalender jadwal agenda kegiatan.</li>
+        <li>Melakukan filter dan pencarian data pada log book kegiatan.</li>
+        <li>Mengunduh berkas dokumen lampiran serta laporan rekapitulasi kegiatan.</li>
+        <li>Memperbarui status progres kegiatan dan tindak lanjut ke dalam 3 tahapan (<em>Belum Dimulai</em>, <em>Dalam Proses</em>, dan <em>Selesai</em>).</li>
       </ul>
     </li>
-    <li><strong>Admin Tim Kerja (Administrator Tim / Biro):</strong>
+    <li><strong>Admin Biro / Tim (Pengelola Log Book Kegiatan):</strong>
       <ul>
-        <li>Mengelola agenda penjadwalan rapat dinas pada biro dan tim kerjanya.</li>
-        <li>Mengakses menu manajemen anggota tim untuk menambah personel staf baru atau mengelola akun tim kerjanya (<em>team-scoped</em>).</li>
-        <li>Memantau jalannya penyusunan notulensi dan progres butir tindak lanjut pada tim kerjanya.</li>
-        <li>Mengunggah dokumen pendukung dan surat undangan rapat.</li>
+        <li>Memiliki seluruh hak akses Staf Pelaksana pada lingkup biro/tim kerjanya.</li>
+        <li>Melakukan pencatatan dan penjadwalan kegiatan baru (Naskah Masuk, Disposisi Sekjen, Disposisi Karo, Kegiatan Internal, dan Laporan Rutin).</li>
+        <li>Mengelola daftar pihak terkait / undangan kegiatan resmi.</li>
+        <li>Mengunggah berkas dokumen log book kegiatan (undangan, nota konsumsi, materi paparan, dan tautan rilis) serta mencatat ringkasan hasil kegiatan.</li>
+        <li>Mengelola matriks tindak lanjut (<em>action items</em>) beserta penunjukan staf PIC dan batas waktu penyelesaian.</li>
       </ul>
     </li>
-    <li><strong>Pimpinan (Pimpinan Biro / Pimpinan Sidang):</strong>
+    <li><strong>Super Admin / Pimpinan:</strong>
       <ul>
-        <li>Meninjau (<em>review</em>) seluruh agenda rapat dinas dan draf notulensi yang diajukan.</li>
-        <li>Memberikan persetujuan dan pengesahan resmi atas risalah notulensi rapat dinas.</li>
-        <li>Mengakses dashboard analitik eksekutif untuk memantau matriks komitmen tindak lanjut dan performa penyelesaian tugas lintas biro.</li>
-      </ul>
-    </li>
-    <li><strong>Staf (Notulis & Staf Pelaksana):</strong>
-      <ul>
-        <li>Bertindak sebagai notulis: mencatat draf risalah notulensi, dinamika diskusi, butir keputusan, dan kesimpulan rapat.</li>
-        <li>Mencatat dan mengonfirmasi presensi kehadiran peserta rapat (internal dan eksternal).</li>
-        <li>Mengakses butir tindak lanjut yang ditugaskan kepadanya (sebagai PIC) dan memperbarui catatan progres serta status penyelesaian tugas.</li>
+        <li>Memiliki hak akses penuh terhadap seluruh fitur dan data kegiatan lintas biro dan tim kerja.</li>
+        <li>Memantau ringkasan eksekutif pada dashboard serta melakukan monitoring kinerja tim kerja KEK secara berkala.</li>
+        <li>Meninjau kelengkapan dokumen log book, catatan hasil kegiatan, dan capaian penyelesaian tindak lanjut.</li>
+        <li>Mengelola data master pengguna, biro, tim kerja, serta pengaturan hak akses sistem.</li>
       </ul>
     </li>
   </ol>
 
   <h3>2.3. Alur Proses Utama</h3>
 
-  <h4>a. Alur Penjadwalan Rapat Dinas</h4>
-  <ol>
-    <li>Pengguna (Admin atau Staf) membuka formulir pembuatan rapat baru pada menu <strong>Buat Rapat</strong>.</li>
-    <li>Mengisi formulir metadata: Judul Rapat, Biro Penyelenggara, Tim Kerja, Tanggal Rapat, Waktu Mulai & Selesai, Lokasi Rapat (ruang rapat fisik atau tautan virtual/Zoom), Pimpinan Rapat, Notulis, dan PIC Rapat.</li>
-    <li>Sistem secara otomatis memeriksa urutan rapat biro terkait pada tahun berjalan dan menerbitkan Kode Nomor Rapat resmi (misal: <code>001/IKK/X/2026</code>).</li>
-    <li>Pengguna mengunggah berkas surat undangan dinas dan materi paparan (opsional).</li>
-    <li>Sistem memvalidasi tanggal (tidak boleh tanggal masa lampau) dan menyimpan data dengan status awal <code>DRAFT</code>. Rapat kini tercatat di kalender dan log book dinas.</li>
-  </ol>
+  <h4>1. Alur Penjadwalan Kegiatan</h4>
+  <p class="center-p">[[IMAGE_ACTIVITY_1]]</p>
+  <p class="caption">Gambar 2.2. Activity Diagram Alur Penjadwalan Kegiatan</p>
 
-  <h4>b. Alur Presensi Kehadiran Peserta</h4>
+  <p>Berikut merupakan alur pencatatan dan penjadwalan kegiatan baru:</p>
   <ol>
-    <li>Notulis atau admin mendaftarkan peserta rapat ke dalam daftar kehadiran (memilih pejabat/pegawai KEK dari basis data pengguna atau menginput tamu eksternal kementerian/swasta).</li>
-    <li>Peserta mengonfirmasi kehadiran melalui modul presensi.</li>
-    <li>Status kehadiran dicatat: <code>PRESENT</code> (Hadir), <code>ABSENT</code> (Tidak Hadir), atau <code>EXCUSED</code> (Izin/Disposisi).</li>
-    <li>Waktu presensi dan URL tanda tangan digital (jika ada) terekam otomatis sebagai bukti otentik persidangan.</li>
-  </ol>
-
-  <h4>c. Alur Pencatatan dan Pengesahan Notulensi</h4>
-  <ol>
-    <li>Notulis membuka detail rapat dan mengakses editor risalah notulensi.</li>
-    <li>Notulis mencatat rincian rapat ke dalam 4 (empat) bagian terstruktur:
+    <li>Admin Biro atau Tim Pemrakarsa memilih menu <strong>Catat Kegiatan Baru</strong> dan memilih klasifikasi kategori naskah kegiatan.</li>
+    <li>Sistem menampilkan formulir input jadwal dan menerbitkan nomor registrasi kegiatan secara otomatis.</li>
+    <li>Admin mengisi rincian formulir meliputi judul agenda, tanggal dan waktu pelaksanaan, lokasi/ruang kegiatan, penunjukan staf PIC, serta daftar pihak terkait.</li>
+    <li>Sistem melakukan verifikasi kelengkapan data masukan wajib:
       <ul>
-        <li>Agenda Rapat</li>
-        <li>Hasil Pembahasan & Dinamika Diskusi Sidang</li>
-        <li>Poin Keputusan Resmi</li>
-        <li>Kesimpulan & Rekomendasi Rapat</li>
+        <li>Jika data belum lengkap, sistem menampilkan notifikasi validasi dan menyorot kolom isian yang kurang.</li>
+        <li>Jika data telah lengkap, sistem menyimpan agenda ke dalam database dengan status awal <strong>Belum Dimulai</strong>.</li>
       </ul>
     </li>
-    <li>Notulis menyimpan draf notulen dan mengajukan permohonan review kepada Pimpinan Rapat (Status berubah menjadi <code>REVIEW</code>).</li>
-    <li>Pimpinan meninjau draf risalah rapat melalui antarmuka sistem.</li>
-    <li>Apabila naskah telah disetujui, Pimpinan mengesahkan notulensi sehingga status berubah menjadi <code>APPROVED</code> dan siap difinalisasi ke status <code>FINAL</code>.</li>
-    <li>Notulensi berstatus <code>FINAL</code> terkunci (<em>read-only</em>) untuk mencegah perubahan ilegal, serta siap diekspor menjadi dokumen PDF resmi.</li>
+    <li>Sistem mengirimkan konfirmasi pencatatan kepada Admin Biro serta notifikasi penugasan agenda kepada Staf/PIC terkait, sekaligus menyinkronkan jadwal ke Kalender Dinas.</li>
+    <li>Staf/PIC melaksanakan kegiatan (status diperbarui menjadi <strong>Dalam Proses</strong>) hingga kegiatan selesai dilaksanakan dan status ditetapkan menjadi <strong>Selesai</strong>.</li>
   </ol>
 
-  <h4>d. Alur Monitoring dan Distribusi Tindak Lanjut (Action Items)</h4>
+  <h4>2. Alur Pencatatan Dokumen dan Catatan Hasil Kegiatan</h4>
+  <p class="center-p">[[IMAGE_ACTIVITY_2]]</p>
+  <p class="caption">Gambar 2.3. Activity Diagram Alur Pencatatan Dokumen &amp; Catatan Hasil Kegiatan</p>
+
+  <p>Berikut merupakan alur pencatatan dokumen log book dan catatan hasil kegiatan:</p>
   <ol>
-    <li>Berdasarkan butir keputusan rapat, notulis atau admin menambahkan butir-butir tindak lanjut pada matriks Action Items.</li>
-    <li>Setiap butir dilengkapi: Uraian Komitmen, Biro & Tim Pelaksana, Akun Aparatur/Nama PIC, Batas Waktu Penyelesaian (<em>Due Date</em>), dan Skala Prioritas (<em>Low, Medium, High, Urgent</em>).</li>
-    <li>Status awal butir tindak lanjut tercatat sebagai <strong>Belum Dimulai</strong>.</li>
-    <li>PIC yang bersangkutan menerima notifikasi penugasan dan memperbarui progres pengerjaan menjadi <strong>Dalam Proses</strong> disertai catatan realisasi.</li>
-    <li>Jika tugas telah tuntas, status diubah menjadi <strong>Selesai</strong>.</li>
-    <li>Apabila batas waktu terlampaui dan tugas belum selesai, sistem secara otomatis melabeli status sebagai <strong>Terlambat</strong> sebagai bahan evaluasi pimpinan.</li>
+    <li>Admin Biro atau Staf PIC membuka rincian kegiatan dan memilih tab <strong>Dokumen &amp; Catatan Hasil</strong>.</li>
+    <li>Pengguna mengunggah berkas digital pendukung kegiatan (surat undangan, nota konsumsi, materi paparan, tautan rilis publikasi) serta menginput catatan pokok hasil kegiatan.</li>
+    <li>Pengguna menekan tombol <strong>Simpan Dokumen &amp; Catatan Hasil</strong>.</li>
+    <li>Sistem memvalidasi format ekstensi berkas dan ukuran berkas (maksimal 10 MB):
+      <ul>
+        <li>Jika tidak valid, sistem menampilkan pesan peringatan error format atau ukuran berkas melebihi batas.</li>
+        <li>Jika valid, sistem mengunggah berkas ke penyimpanan dan menyimpan metadata serta catatan hasil ke dalam database.</li>
+      </ul>
+    </li>
+    <li>Sistem menautkan dokumen ke ID registrasi kegiatan, merekam stempel waktu (<em>timestamp</em>), serta mengaktifkan fitur pratinjau dan unduh dokumen log book.</li>
+    <li>Super Admin / Pimpinan meninjau kelengkapan dokumen log book dan catatan hasil kegiatan. Apabila terdapat arahan penugasan lanjutan, alur dilanjutkan ke proses pemantauan tindak lanjut.</li>
+  </ol>
+
+  <h4>3. Alur Monitoring dan Pembaruan Tindak Lanjut</h4>
+  <p class="center-p">[[IMAGE_ACTIVITY_3]]</p>
+  <p class="caption">Gambar 2.4. Activity Diagram Alur Monitoring &amp; Pembaruan Tindak Lanjut</p>
+
+  <p>Berikut merupakan alur monitoring dan pembaruan status tindak lanjut kegiatan:</p>
+  <ol>
+    <li>Kepala Biro memberikan disposisi penugasan naskah masuk kepada Koordinator Tim terkait.</li>
+    <li>Koordinator Tim menerima disposisi, mencatat butir tindak lanjut beserta batas waktu (<em>deadline</em>) ke dalam sistem dengan status awal <strong>Belum Dimulai</strong>, dan menentukan staf PIC pelaksana.</li>
+    <li>Staf PIC menerima penugasan (<em>task</em>) dan melaksanakan pekerjaan tindak lanjut.</li>
+    <li>Staf PIC memperbarui status progres pengerjaan dari <strong>Belum Dimulai</strong> menjadi <strong>Dalam Proses</strong> (sistem menyimpan log riwayat status tindak lanjut ke database).</li>
+    <li>Setelah pekerjaan tuntas, Staf PIC mengunggah bukti hasil kegiatan dan memperbarui status menjadi <strong>Selesai</strong> (sistem merekam log audit status ke database).</li>
+    <li>Sistem mengakumulasikan seluruh capaian ke dalam Dashboard Pimpinan, sehingga Kepala Biro dan Pimpinan dapat meninjau rekapitulasi capaian kerja tim serta mengekspor laporan dalam format PDF atau Excel.</li>
   </ol>
 
   <h3>2.4. Fitur Utama Sistem</h3>
+  <p>Adapun fitur utama dalam website Aplikasi Log Book Kegiatan KEK meliputi:</p>
   <ol>
-    <li><strong>Form Penjadwalan Rapat Terintegrasi:</strong> Input metadata rapat dinas lengkap dengan generator nomor urut rapat otomatis.</li>
-    <li><strong>Editor Notulensi Digital Interaktif:</strong> Pencatatan risalah rapat dinas terstruktur (agenda, pembahasan, keputusan, kesimpulan).</li>
-    <li><strong>Matriks Pemantauan Tindak Lanjut (Action Items):</strong> Pelacakan komitmen kerja pasca-rapat secara realtime berbasis PIC dan deadline.</li>
-    <li><strong>Modul Presensi Kehadiran Peserta:</strong> Pencatatan status hadir/izin peserta internal KEK dan tamu eksternal.</li>
-    <li><strong>Pengarsipan Berkas Digital Rapat:</strong> Pengunggahan surat undangan, kategori dokumen pendukung, dan materi paparan rapat.</li>
-    <li><strong>Dashboard Analitik Eksekutif:</strong> Visualisasi grafik tren rapat, distribusi per biro, dan rasio penyelesaian tindak lanjut.</li>
-    <li><strong>Manajemen Pengguna Berbasis Tim (Team-Scoped RBAC):</strong> Pengelolaan akun staf dinas yang terisolasi aman per kelompok tim kerja.</li>
-    <li><strong>Ekspor Dokumen Resmi:</strong> Pembangkitan dokumen cetak risalah notulen ke format PDF standar kedinasan dan log book rekapitulasi.</li>
-    <li><strong>Sistem Notifikasi In-App:</strong> Pemberitahuan lonceng notifikasi otomatis untuk penugasan rapat dan peringatan tenggat waktu tugas.</li>
-    <li><strong>Riwayat Perubahan & Audit Trail:</strong> Pencatatan riwayat revisi naskah notulensi untuk menjamin akuntabilitas data persidangan.</li>
+    <li>Formulir pencatatan dan penjadwalan kegiatan baru berbasis kategori naskah.</li>
+    <li>Pembangkitan nomor registrasi kegiatan secara otomatis.</li>
+    <li>Kalender kegiatan terpadu (visualisasi jadwal bulanan dan mingguan).</li>
+    <li>Repositori pencatatan dokumen log book kegiatan (undangan, nota konsumsi, materi paparan, dan tautan rilis).</li>
+    <li>Pencatatan ringkasan pokok catatan hasil kegiatan dan daftar pihak terkait.</li>
+    <li>Matriks pengelolaan dan pemantauan tindak lanjut (<em>action items</em>) berbasis PIC dan tenggat waktu.</li>
+    <li>Pembaruan status progres 3 tahapan resmi (<em>Belum Dimulai</em>, <em>Dalam Proses</em>, <em>Selesai</em>) beserta log riwayat progres.</li>
+    <li>Dashboard eksekutif dan monitoring kinerja tim kerja KEK.</li>
+    <li>Fitur filter pencarian multi-kriteria dan ekspor laporan rekapitulasi (PDF/Excel/DOCX).</li>
+    <li>Manajemen data master (pengguna, unit kerja biro, dan tim kerja) serta sistem notifikasi <em>in-app</em>.</li>
   </ol>
 
   <h3>2.5. Batasan Sistem</h3>
+  <p>Dalam pengembangannya, sistem Aplikasi Log Book Kegiatan memiliki beberapa batasan, antara lain:</p>
   <ol>
-    <li>Sistem diakses melalui jaringan internet/intranet menggunakan web browser modern (Google Chrome, Microsoft Edge, Mozilla Firefox, Safari).</li>
-    <li>Validasi tanggal pelaksanaan rapat terikat aturan integritas bisnis (tidak dapat memilih tanggal sebelum hari ini / tidak bisa mundur).</li>
-    <li>Hak akses data dan operasi mutasi dibatasi secara ketat oleh peran RBAC (Super Admin, Admin, Pimpinan, Staf).</li>
-    <li>Administrator Tim hanya berwenang menambah dan mengelola anggota staf dalam lingkup tim kerjanya sendiri, serta dilarang memanipulasi akun Super Admin.</li>
-    <li>Kapasitas berkas dokumen lampiran yang diunggah dibatasi maksimal 10 MB per berkas dengan format PDF, DOCX, atau PPTX.</li>
+    <li>Sistem diakses melalui jaringan internet/intranet menggunakan peramban web (<em>web browser</em>) modern.</li>
+    <li>Sistem berfokus pada pencatatan log book kegiatan dan dokumen pendukung, sehingga tidak menerapkan modul presensi atau absensi kehadiran fisik peserta; daftar peserta dikelola sebagai daftar pihak dan aparatur terkait kegiatan.</li>
+    <li>Status progres kegiatan dan butir tindak lanjut dibatasi secara terstandar pada 3 (tiga) tahapan resmi: <strong>Belum Dimulai</strong>, <strong>Dalam Proses</strong>, dan <strong>Selesai</strong>.</li>
+    <li>Pengelolaan hak akses fitur dan manipulasi data bergantung sepenuhnya pada <em>role</em> pengguna (Staf Pelaksana, Admin Biro/Tim, dan Super Admin/Pimpinan).</li>
+    <li>Ukuran berkas lampiran dokumen yang diunggah dibatasi maksimal 10 MB per berkas dengan format yang didukung (PDF, DOCX, PPTX, XLSX).</li>
   </ol>
 
   <h2>3. Arsitektur Sistem</h2>
 
   <h3>3.1. Gambaran Arsitektur Sistem</h3>
-  <p>Website Log Book Notula Rapat dibangun menggunakan arsitektur modern berbasis framework <strong>Next.js 14+ (App Router)</strong> dengan bahasa pemrograman <strong>TypeScript</strong>. Sistem mengadopsi pola <em>Modern Fullstack Component-Based Architecture</em> yang menyatukan rendering antarmuka pengguna dan eksekusi server actions dalam satu arsitektur terpadu.</p>
-  
-  <p>Seluruh interaksi client-server diamankan menggunakan enkripsi <strong>HTTPS/TLS</strong>. Permintaan mutasi data dari browser pengguna diproses langsung oleh Next.js Server Actions yang menjalankan validasi skema data Zod dan otorisasi sesi NextAuth.js. Lapisan akses basis data dikelola secara deklaratif dan type-safe oleh <strong>Prisma ORM</strong>, yang berkomunikasi langsung dengan basis data relasional <strong>PostgreSQL (Neon Serverless Database)</strong>.</p>
+  <p>Website Aplikasi Log Book Kegiatan KEK dibangun menggunakan pendekatan arsitektur <em>fullstack</em> terintegrasi berbasis <em>framework</em> <strong>Next.js (App Router)</strong> dengan bahasa pemrograman <strong>TypeScript</strong>. Seluruh proses, mulai dari penyajian antarmuka pengguna (<em>frontend</em>) hingga pengolahan logika bisnis dan akses basis data (<em>backend</em>), dijalankan dalam satu kesatuan aplikasi terpadu.</p>
+
+  <p>Interaksi pengguna dilakukan melalui peramban web menggunakan protokol aman HTTPS, yang kemudian diproses oleh sistem melalui mekanisme Next.js <em>Server Components</em>, <em>Server Actions</em>, dan <em>Route Handlers</em>. Sistem memverifikasi sesi otorisasi pengguna menggunakan <strong>NextAuth.js (Auth.js v5)</strong>, memvalidasi masukan data dengan <strong>Zod</strong>, mengakses basis data melalui <strong>Prisma ORM</strong>, dan mengembalikan hasilnya dalam bentuk tampilan antarmuka yang responsif.</p>
+
+  <p>Basis data yang digunakan adalah <strong>PostgreSQL (Neon Serverless Database)</strong>, yang berfungsi sebagai media penyimpanan utama seluruh entitas data sistem, termasuk data biro, tim kerja, pengguna, agenda kegiatan, peserta terkait, lampiran dokumen, tindak lanjut, riwayat progres, dan notifikasi.</p>
 
   <h3>3.2. Pola Arsitektur Sistem</h3>
-  <p>Sistem menerapkan pemisahan lapisan tanggung jawab (<em>Separation of Concerns</em>) yang terbagi menjadi 5 (lima) lapisan utama:</p>
+  <p>Sistem ini menerapkan pemisahan tanggung jawab berlapis yang setara dengan konsep <em>Model-View-Controller</em> (MVC) pada arsitektur modern Next.js, yang terdiri dari tiga komponen utama:</p>
+
   <ol>
-    <li><strong>Presentation Layer (View / UI Components):</strong>
-      <p>Dibangun menggunakan React Server Components (RSC) untuk efisiensi rendering di sisi server, serta Client Components untuk interaksi form dinamis, modal dialog, dan filter. Penataan gaya visual menggunakan utilitas <strong>Tailwind CSS</strong> dan ikon vektor dari <strong>Lucide React</strong>.</p>
+    <li><strong>Data &amp; Model Layer (Prisma ORM &amp; PostgreSQL)</strong>
+      <p>Komponen ini berfungsi sebagai representasi skema struktur data dan pengelola interaksi langsung dengan basis data PostgreSQL melalui <code>prisma/schema.prisma</code>. Dalam sistem ini, lapisan model digunakan untuk:</p>
+      <ul>
+        <li>Mengelola struktur tabel master organisasi (<code>biro</code>, <code>tim_biro</code>, <code>pengguna</code>).</li>
+        <li>Mengelola transaksi jadwal dan dokumen log book kegiatan (<code>kegiatan</code>, <code>peserta_kegiatan</code>, <code>lampiran_kegiatan</code>).</li>
+        <li>Mengelola matriks penugasan dan jejak audit progres (<code>tindak_lanjut</code>, <code>riwayat_tindak_lanjut</code>, <code>notifikasi</code>).</li>
+        <li>Menjaga integritas relasi antar-tabel (<em>foreign key</em>) serta menyediakan <em>query</em> basis data yang <em>type-safe</em>.</li>
+      </ul>
     </li>
-    <li><strong>Application & Controller Layer (Server Actions):</strong>
-      <p>Next.js Server Actions bertindak sebagai controller yang menerima input pengguna, memeriksa izin otorisasi peran (RBAC), memvalidasi struktur data dengan skema Zod, dan memicu revalidasi cache halaman (<code>revalidatePath</code>).</p>
+    <li><strong>Presentation / View Layer (React Components &amp; Tailwind CSS)</strong>
+      <p>Bagian yang bertanggung jawab menampilkan antarmuka pengguna secara interaktif dan responsif. Pada sistem ini, lapisan tampilan dibangun menggunakan React (<em>Server Components</em> dan <em>Client Components</em>) serta <em>framework</em> CSS <strong>Tailwind CSS</strong>. Fungsi utama lapisan ini meliputi:</p>
+      <ul>
+        <li>Menampilkan dashboard eksekutif, statistik kartu KPI, dan grafik kinerja tim kerja.</li>
+        <li>Menampilkan formulir pencatatan kegiatan baru dan unggah dokumen log book.</li>
+        <li>Menampilkan kalender kegiatan terpadu serta tabel daftar log book kegiatan.</li>
+        <li>Menampilkan matriks pemantauan status tindak lanjut dan antarmuka manajemen pengguna.</li>
+      </ul>
     </li>
-    <li><strong>Business Logic & Service Layer (<code>lib/</code>):</strong>
-      <p>Mengelola aturan bisnis khusus seperti generator penomoran rapat otomatis (<code>id-generator.ts</code>), kalkulator status keterlambatan tindak lanjut (<code>status-calculator.ts</code>), dan aturan otorisasi keamanan (<code>authorization.ts</code>).</p>
-    </li>
-    <li><strong>Data Access Layer (Prisma ORM):</strong>
-      <p>Prisma Client bertindak sebagai Object-Relational Mapper yang menyediakan query basis data bertipe ketat (<em>type-safe</em>), menjamin integritas relasi foreign key, dan menangani transaksi data atomik (<code>prisma.$transaction</code>).</p>
-    </li>
-    <li><strong>Database Layer (PostgreSQL):</strong>
-      <p>Basis data relasional ACID-compliant pada infrastruktur Neon Serverless yang menyimpan seluruh entitas master dan transaksi rapat secara persisten.</p>
+    <li><strong>Application / Controller Layer (Next.js Server Actions &amp; Services)</strong>
+      <p>Berfungsi sebagai penghubung antara antarmuka pengguna (<em>View</em>) dan lapisan data (<em>Model</em>). Komponen ini menerima <em>request</em> dari pengguna, memproses logika bisnis aplikasi, dan menentukan <em>response</em> yang dikembalikan. Peran utamanya meliputi:</p>
+      <ul>
+        <li>Memproses penyimpanan jadwal kegiatan baru dan penerbitan nomor registrasi otomatis (<code>lib/id-generator.ts</code>).</li>
+        <li>Melakukan validasi skema input pengguna menggunakan pustaka Zod (<code>lib/validations/</code>).</li>
+        <li>Memeriksa autentikasi sesi dan otorisasi hak akses peran pengguna (<code>lib/auth/authorization.ts</code>).</li>
+        <li>Mengatur alur perubahan status 3 tahapan (<em>Belum Dimulai</em>, <em>Dalam Proses</em>, <em>Selesai</em>) serta pencatatan log riwayat tindak lanjut.</li>
+        <li>Mengelola proses pengunggahan berkas lampiran dan pembangkitan laporan PDF/Excel/Word.</li>
+      </ul>
     </li>
   </ol>
 
-  <h3>3.3. Alur Kerja Sistem (Request-Response Lifecycle)</h3>
+  <h3>3.3. Alur Kerja Sistem</h3>
+  <p>Alur kerja sistem secara umum adalah sebagai berikut:</p>
   <ol>
-    <li>Pengguna berinteraksi dengan antarmuka web melalui browser (misalnya menginput jadwal rapat, mengisi risalah notulensi, atau memperbarui status tindak lanjut).</li>
-    <li>Browser mengirimkan permintaan ke server melalui Next.js Server Action menggunakan koneksi aman HTTPS.</li>
-    <li>Server Action memverifikasi sesi login aktif pengguna (<code>requireAuth()</code>) dan memvalidasi hak akses peran pengguna (<code>requireRole()</code>).</li>
-    <li>Data masukan divalidasi terhadap skema Zod. Jika data tidak valid, proses dihentikan dan sistem mengembalikan pesan kesalahan yang informatif.</li>
-    <li>Server Action mengeksekusi logika bisnis dan memanggil Prisma Client untuk memanipulasi data di basis data PostgreSQL.</li>
-    <li>Setelah transaksi basis data selesai, Next.js melakukan revalidasi cache rute halaman terkait.</li>
-    <li>Respon sukses dikembalikan ke client dan tampilan antarmuka web diperbarui secara instan (<em>realtime UI update</em>).</li>
+    <li>Pengguna mengakses website Aplikasi Log Book Kegiatan melalui <em>browser</em> dan melakukan autentikasi login.</li>
+    <li>Pengguna melakukan aksi pada antarmuka (misalnya menyimpan jadwal kegiatan baru, mengunggah dokumen log book, atau memperbarui status tindak lanjut).</li>
+    <li><em>Request</em> dikirim ke server dan diterima oleh sistem <em>routing</em> Next.js / <em>Server Actions</em>.</li>
+    <li>Sistem memeriksa sesi autentikasi dan hak akses peran (RBAC) serta memvalidasi data masukan menggunakan skema Zod.</li>
+    <li><em>Server Action</em> menjalankan logika bisnis dan memanggil <strong>Prisma ORM</strong> untuk berinteraksi dengan database PostgreSQL.</li>
+    <li>Data hasil transaksi dari database PostgreSQL dikembalikan ke lapisan aplikasi.</li>
+    <li>Sistem melakukan revalidasi halaman (<code>revalidatePath</code>) dan meneruskan data terbaru ke komponen tampilan (<em>View</em>).</li>
+    <li>Tampilan halaman web yang telah diperbarui disajikan kembali kepada pengguna secara instan.</li>
   </ol>
 
   <h3>3.4. Technology Stack</h3>
-  <p>Tabel berikut menyajikan rincian teknologi yang digunakan dalam pengembangan Website Log Book Notula Rapat Dewan Nasional KEK:</p>
+  <p>Berikut adalah teknologi yang digunakan dalam pengembangan website Aplikasi Log Book Kegiatan KEK:</p>
 
-  <p class="table-title">Tabel 3.1. Daftar Teknologi Pengembangan Website Log Book Notula Rapat Dewan Nasional KEK</p>
   <table>
     <thead>
       <tr>
         <th style="width: 8%;" class="center">No</th>
-        <th style="width: 32%;">Komponen Sistem</th>
-        <th style="width: 35%;">Teknologi yang Digunakan</th>
-        <th style="width: 25%;">Keterangan</th>
+        <th style="width: 32%;">Komponen</th>
+        <th style="width: 60%;">Teknologi yang Digunakan</th>
       </tr>
     </thead>
     <tbody>
       <tr>
         <td class="center">1</td>
-        <td>Framework Aplikasi Utama</td>
-        <td>Next.js 14+ (App Router)</td>
-        <td>Fullstack framework React dengan SSR & Server Actions</td>
+        <td>Framework Aplikasi</td>
+        <td>Next.js 15 (App Router) &amp; React 19</td>
       </tr>
       <tr>
         <td class="center">2</td>
         <td>Bahasa Pemrograman</td>
-        <td>TypeScript / JavaScript (ES2022)</td>
-        <td>Pemrograman bertipe statis (<em>type-safe</em>)</td>
+        <td>TypeScript 5</td>
       </tr>
       <tr>
         <td class="center">3</td>
-        <td>Basis Data (Database)</td>
-        <td>PostgreSQL (Neon Serverless)</td>
-        <td>Basis data relasional ACID-compliant berkinerja tinggi</td>
+        <td>Database</td>
+        <td>PostgreSQL (Neon Serverless Database)</td>
       </tr>
       <tr>
         <td class="center">4</td>
-        <td>Object-Relational Mapping (ORM)</td>
-        <td>Prisma ORM v5</td>
-        <td>Pemodelan skema deklaratif & query type-safe</td>
+        <td>Object Relational Mapping (ORM)</td>
+        <td>Prisma ORM</td>
       </tr>
       <tr>
         <td class="center">5</td>
-        <td>Frontend & UI Library</td>
-        <td>React 18 & Tailwind CSS</td>
-        <td>Komponen antarmuka modular dan styling utilitas modern</td>
+        <td>Frontend &amp; Styling Framework</td>
+        <td>Tailwind CSS 4 &amp; Lucide React Icons</td>
       </tr>
       <tr>
         <td class="center">6</td>
-        <td>Pustaka Ikon (Iconography)</td>
-        <td>Lucide React</td>
-        <td>Pustaka ikon vektor modern yang bersih dan konsisten</td>
+        <td>Autentikasi &amp; Keamanan Sesi</td>
+        <td>NextAuth.js (Auth.js v5) &amp; BcryptJS</td>
       </tr>
       <tr>
         <td class="center">7</td>
-        <td>Autentikasi & Manajemen Sesi</td>
-        <td>NextAuth.js (Auth.js v5)</td>
-        <td>Manajemen sesi berbasis token JWT dan cookie aman</td>
+        <td>Validasi Skema Data</td>
+        <td>Zod Schema Validation</td>
       </tr>
       <tr>
         <td class="center">8</td>
-        <td>Enkripsi Kata Sandi</td>
-        <td>BcryptJS</td>
-        <td>Algoritma hashing kata sandi dengan salt acak</td>
+        <td>Generator Laporan Dokumen</td>
+        <td>jsPDF, SheetJS (XLSX), dan Docx</td>
       </tr>
       <tr>
         <td class="center">9</td>
-        <td>Skema Validasi Data</td>
-        <td>Zod Schema Validation</td>
-        <td>Validasi ketat skema masukan data di sisi server</td>
+        <td>Runtime Environment</td>
+        <td>Node.js</td>
       </tr>
       <tr>
         <td class="center">10</td>
-        <td>Pembangkit Laporan PDF</td>
-        <td>jsPDF & html2canvas</td>
-        <td>Pustaka ekspor dokumen risalah rapat dinas ke PDF</td>
-      </tr>
-      <tr>
-        <td class="center">11</td>
-        <td>Runtime & Web Server</td>
-        <td>Node.js (v18+) / Vercel Serverless</td>
-        <td>Lingkungan runtime serverless berkinerja tinggi</td>
-      </tr>
-      <tr>
-        <td class="center">12</td>
-        <td>Version Control System</td>
-        <td>Git & GitHub</td>
-        <td>Manajemen repositori kode sumber dan pelacakan versi</td>
+        <td>Version Control</td>
+        <td>Git &amp; GitHub</td>
       </tr>
     </tbody>
   </table>
 
-  <h3>3.5. Keamanan Sistem</h3>
+  <h3>3.5. Keamanan Sistem (Arsitektur)</h3>
+  <p>Dalam arsitektur ini, aspek keamanan diterapkan secara berlapis melalui mekanisme berikut:</p>
   <ol>
-    <li><strong>Server-Side RBAC Enforcement:</strong> Seluruh otorisasi fungsi mutasi data divalidasi langsung di lingkungan server (Server Actions), sehingga tidak dapat dimanipulasi atau dibypass melalui manipulasi client-side DOM.</li>
-    <li><strong>Proteksi Otomatis CSRF:</strong> Next.js Server Actions secara inheren mengamankan transaksi formulir dari serangan pemalsuan permintaan lintas situs (Cross-Site Request Forgery).</li>
-    <li><strong>Type-Safety & Sanitasi Masukan:</strong> Kombinasi TypeScript dan validasi skema Zod menjamin setiap parameter masukan diverifikasi tipe data dan batas panjangnya sebelum dieksekusi.</li>
-    <li><strong>Pencegahan SQL Injection:</strong> Prisma ORM menggunakan mekanisme parameterized queries dalam setiap operasi basis data, mengeliminasi kerentanan injeksi SQL.</li>
-    <li><strong>Enkripsi Kredensial Pengguna:</strong> Seluruh kata sandi akun kedinasan disimpan dalam bentuk hash terenkripsi menggunakan algoritma Bcrypt dengan salt acak (bukan plaintext).</li>
-    <li><strong>Komunikasi Terenkripsi HTTPS/TLS:</strong> Pertukaran data antara browser pengguna dan server terlindungi oleh enkripsi sertifikat SSL/TLS.</li>
+    <li>Proteksi CSRF (<em>Cross-Site Request Forgery</em>) bawaan pada setiap transaksi formulir dan <em>Server Actions</em>.</li>
+    <li>Validasi input berlapis di sisi klien dan server menggunakan skema Zod untuk mencegah masuknya data tidak valid atau berbahaya.</li>
+    <li>Penerapan <em>authentication</em> (NextAuth.js) dan <em>authorization</em> berbasis <em>role</em> (RBAC: Staf Pelaksana, Admin Biro/Tim, Super Admin/Pimpinan) yang diverifikasi langsung di sisi server.</li>
+    <li>Pencegahan serangan <em>SQL Injection</em> melalui penggunaan <em>parameterized queries</em> otomatis pada Prisma ORM.</li>
+    <li>Enkripsi data kredensial sensitif (kata sandi pengguna di-<em>hash</em> menggunakan algoritma <em>bcrypt</em>).</li>
+    <li>Penggunaan protokol HTTPS untuk mengamankan komunikasi data antara <em>browser</em> dan server.</li>
   </ol>
 
   <h3>3.6. Kelebihan Pendekatan Arsitektur</h3>
-  <p>Penerapan arsitektur Next.js fullstack dengan Prisma dan PostgreSQL memberikan keunggulan teknis nyata:</p>
-  <ul>
-    <li><strong>End-to-End Type Safety:</strong> Konsistensi tipe data terjaga mulai dari skema basis data, lapisan logika server actions, hingga komponen antarmuka pengguna.</li>
-    <li><strong>Efisiensi dan Kecepatan Akses:</strong> Pemanfaatan Server Components dan caching rute menghasilkan pemuatan halaman yang sangat cepat serta mengurangi beban komputasi di sisi perangkat pengguna.</li>
-    <li><strong>Kemudahan Pemeliharaan:</strong> Struktur modular memudahkan penambahan modul baru di masa depan secara independen tanpa memengaruhi stabilitas fitur yang sudah berjalan.</li>
-  </ul>
+  <p>Pendekatan arsitektur <em>fullstack</em> terintegrasi berbasis Next.js App Router yang digunakan dalam pengembangan website Aplikasi Log Book Kegiatan KEK memberikan sejumlah keunggulan nyata bagi tata kelola aplikasi internal instansi. Dengan menyatukan komponen antarmuka (<em>frontend</em>) dan logika pemrosesan server (<em>backend</em>) dalam satu repositori terpadu, proses pengembangan menjadi lebih terstruktur, konsisten, dan mudah dikelola oleh tim pengembang.</p>
+
+  <p>Selain itu, dukungan pengetikan statis (<em>type-safety</em>) secara menyeluruh dari skema basis data Prisma hingga ke komponen React mampu meminimalisasi kesalahan pemrograman (<em>runtime error</em>) serta menjamin keakuratan data log book kegiatan. Proses <em>deployment</em> dan pemeliharaan sistem juga menjadi jauh lebih efisien karena tidak memerlukan pengelolaan infrastruktur layanan terpisah yang kompleks.</p>
+
+  <p>Dengan demikian, pemilihan arsitektur ini sangat sesuai untuk mendukung operasional Sekretariat Jenderal Dewan Nasional KEK yang mengutamakan kecepatan akses, stabilitas sistem, kemudahan pemeliharaan, serta keamanan data kedinasan.</p>
 
   <h2>4. Desain Database</h2>
 
-  <h3>4.1. Konsep Relasional Basis Data</h3>
-  <p>Desain basis data Sistem Log Book Notula Rapat dirancang untuk mendukung siklus bisnis rapat dinas secara terstruktur dan ternormalisasi. Struktur organisasi Sekretariat Jenderal Dewan Nasional KEK dipetakan melalui entitas <code>biro</code> dan entitas turunan <code>tim_biro</code>. Entitas <code>pengguna</code> menampung data aparatur dan hak akses peran (<code>SUPER_ADMIN</code>, <code>ADMIN</code>, <code>PIMPINAN</code>, <code>STAFF</code>) yang terikat pada biro dan tim kerja tertentu.</p>
-  
-  <p>Setiap transaksi rapat disimpan dalam entitas utama <code>rapat</code>. Penomoran rapat dikelola melalui entitas <code>penomoran_rapat_biro</code> untuk memastikan nomor rapat berurutan tanpa duplikasi. Entitas <code>rapat</code> memiliki relasi satu-ke-banyak (1:N) dengan entitas <code>peserta_rapat</code> untuk mencatat presensi kehadiran dan tanda tangan digital peserta.</p>
-  
-  <p>Hasil persidangan dicatat dalam entitas <code>notulen_rapat</code> yang berelasi satu-ke-satu (1:1) dengan entitas <code>rapat</code>, memuat agenda, hasil pembahasan, dan butir keputusan resmi. Dari notulensi tersebut, butir-butir komitmen kerja diturunkan ke dalam entitas <code>tindak_lanjut</code> (Action Items) yang berelasi langsung dengan akun aparatur penanggung jawab (PIC), biro, dan tim pelaksana dengan tenggat waktu penyelesaian (<em>due date</em>). Entitas <code>lampiran_rapat</code> mengarsipkan dokumen surat undangan dan materi paparan, sedangkan entitas <code>notifikasi</code> mengelola pengiriman pesan in-app bagi pengguna.</p>
+  <h3>4.1. Entity Relationship Diagram (ERD)</h3>
+  <p>Entity Relationship Diagram (ERD) memodelkan hubungan logis antar-entitas data dalam sistem menggunakan notasi Peter Chen. Berikut merupakan diagram ERD pada Aplikasi Log Book Kegiatan KEK:</p>
 
-  <h3>4.2. Spesifikasi Tabel Basis Data</h3>
-  <p>Berikut adalah 10 (sepuluh) tabel spesifikasi basis data yang menyusun sistem Log Book Notula Rapat:</p>
+  <p class="center-p">[[IMAGE_ERD]]</p>
+  <p class="caption">Gambar 4.1. Entity Relationship Diagram (ERD) Aplikasi Log Book Kegiatan KEK</p>
 
-  <p class="table-title">Tabel 4.1. Spesifikasi Tabel Pengguna (pengguna)</p>
+  <p>Dalam proses bisnis pencatatan kegiatan kedinasan, struktur organisasi Sekretariat Jenderal Dewan Nasional KEK dipetakan melalui entitas <strong>biro</strong> yang menaungi entitas <strong>tim_biro</strong> dengan relasi satu-ke-banyak (1:N). Setiap aparatur pengguna sistem dicatat dalam entitas <strong>pengguna</strong> yang berelasi dengan tim kerja dan biro terkait, serta menerima pesan pemberitahuan sistem melalui entitas <strong>notifikasi</strong>.</p>
+
+  <p>Ketika suatu agenda kegiatan dijadwalkan, data transaksi utama disimpan pada entitas sentral <strong>kegiatan</strong> yang diselenggarakan oleh biro pemrakarsa dan dipimpin oleh pengguna terkait. Untuk mendukung tertib pengarsipan log book, entitas <strong>kegiatan</strong> berelasi 1:N dengan entitas <strong>lampiran_kegiatan</strong> guna menyimpan berkas dokumen digital (undangan, nota konsumsi, materi paparan, tautan rilis), serta berelasi 1:N dengan entitas <strong>peserta_kegiatan</strong> untuk mendokumentasikan daftar pihak dan aparatur yang diundang dalam kegiatan.</p>
+
+  <p>Selanjutnya, setiap butir komitmen atau arahan hasil pembahasan kegiatan dicatat ke dalam entitas <strong>tindak_lanjut</strong> yang terhubung langsung dengan entitas <strong>kegiatan</strong> dan staf penanggung jawab (PIC) pada entitas <strong>pengguna</strong>. Seluruh riwayat pembaruan status progres tindak lanjut (<em>Belum Dimulai</em>, <em>Dalam Proses</em>, <em>Selesai</em>) direkam secara historis pada entitas <strong>riwayat_tindak_lanjut</strong> guna menjamin akuntabilitas dan kemudahan pengawasan pimpinan.</p>
+
+  <h3>4.2. Logical Record Structure (LRS)</h3>
+  <p>Logical Record Structure (LRS) menggambarkan transformasi skema ERD ke dalam bentuk tabel-tabel relasional beserta pertautan <em>Primary Key</em> (PK) dan <em>Foreign Key</em> (FK) dengan derajat kardinalitas 1 ke N (<em>One-to-Many</em>):</p>
+
+  <p class="center-p">[[IMAGE_LRS]]</p>
+  <p class="caption">Gambar 4.2. Logical Record Structure (LRS) Aplikasi Log Book Kegiatan KEK</p>
+
+  <h3>4.3. Spesifikasi Tabel Database (Data Dictionary)</h3>
+  <p>Berikut merupakan daftar tabel basis data aktif beserta spesifikasi struktur kolom yang digunakan dalam sistem Aplikasi Log Book Kegiatan KEK:</p>
+
+  <h4>1. Tabel: pengguna (Spesifikasi Tabel Pengguna)</h4>
   <table>
     <thead>
       <tr>
         <th style="width: 8%;" class="center">No</th>
         <th style="width: 27%;">Nama Field</th>
-        <th style="width: 25%;">Tipe Data</th>
-        <th style="width: 40%;">Keterangan</th>
+        <th style="width: 23%;">Tipe Data</th>
+        <th style="width: 42%;">Keterangan</th>
       </tr>
     </thead>
     <tbody>
-      <tr><td class="center">1</td><td>id_pengguna</td><td>Varchar(36) / String</td><td>Primary Key (Kode pengenal unik akun pengguna)</td></tr>
-      <tr><td class="center">2</td><td>nama_lengkap</td><td>Varchar(255) / String</td><td>Nama lengkap aparatur beserta gelar kedinasan</td></tr>
-      <tr><td class="center">3</td><td>email</td><td>Varchar(255) / String</td><td>Alamat surel dinas resmi (Unique)</td></tr>
-      <tr><td class="center">4</td><td>kata_sandi</td><td>Varchar(255) / String</td><td>Hash kata sandi terenkripsi (Bcrypt)</td></tr>
-      <tr><td class="center">5</td><td>peran</td><td>Enum</td><td>SUPER_ADMIN, ADMIN, PIMPINAN, STAFF</td></tr>
-      <tr><td class="center">6</td><td>id_biro</td><td>Varchar(36) / String</td><td>Foreign Key (Relasi ke tabel biro)</td></tr>
-      <tr><td class="center">7</td><td>id_tim</td><td>Varchar(36) / String</td><td>Foreign Key (Relasi ke tabel tim_biro, opsional)</td></tr>
-      <tr><td class="center">8</td><td>status_aktif</td><td>Boolean</td><td>Status keaktifan akun pengguna (default: true)</td></tr>
-      <tr><td class="center">9</td><td>dibuat_pada</td><td>Timestamp</td><td>Waktu pendaftaran akun pengguna</td></tr>
-      <tr><td class="center">10</td><td>diperbarui_pada</td><td>Timestamp</td><td>Waktu pembaruan profil pengguna terakhir</td></tr>
+      <tr><td class="center">1</td><td>id_pengguna</td><td>Varchar (UUID)</td><td>Primary Key (Kode pengenal unik akun aparatur)</td></tr>
+      <tr><td class="center">2</td><td>nama_lengkap</td><td>Varchar</td><td>Nama lengkap aparatur pegawai</td></tr>
+      <tr><td class="center">3</td><td>email</td><td>Varchar</td><td>Alamat email resmi (Unique)</td></tr>
+      <tr><td class="center">4</td><td>nama_pengguna</td><td>Varchar</td><td>Username unik untuk autentikasi login</td></tr>
+      <tr><td class="center">5</td><td>kata_sandi</td><td>Varchar</td><td>Password akun terenkripsi (Bcrypt hash)</td></tr>
+      <tr><td class="center">6</td><td>peran</td><td>Enum</td><td>Hak akses peran: SUPER_ADMIN, ADMIN, PIMPINAN, STAFF</td></tr>
+      <tr><td class="center">7</td><td>id_biro</td><td>Varchar (UUID)</td><td>Foreign Key &rarr; biro.id_biro</td></tr>
+      <tr><td class="center">8</td><td>id_tim</td><td>Varchar (UUID)</td><td>Foreign Key &rarr; tim_biro.id_tim (opsional)</td></tr>
+      <tr><td class="center">9</td><td>status_aktif</td><td>Boolean</td><td>Status keaktifan akun pengguna (Default: true)</td></tr>
+      <tr><td class="center">10</td><td>dibuat_pada</td><td>Timestamp</td><td>Waktu akun pertama kali didaftarkan</td></tr>
+      <tr><td class="center">11</td><td>diperbarui_pada</td><td>Timestamp</td><td>Waktu terakhir pembaruan data profil akun</td></tr>
     </tbody>
   </table>
 
-  <p class="table-title">Tabel 4.2. Spesifikasi Tabel Biro (biro)</p>
+  <h4>2. Tabel: biro (Spesifikasi Tabel Biro)</h4>
   <table>
     <thead>
       <tr>
         <th style="width: 8%;" class="center">No</th>
         <th style="width: 27%;">Nama Field</th>
-        <th style="width: 25%;">Tipe Data</th>
-        <th style="width: 40%;">Keterangan</th>
+        <th style="width: 23%;">Tipe Data</th>
+        <th style="width: 42%;">Keterangan</th>
       </tr>
     </thead>
     <tbody>
-      <tr><td class="center">1</td><td>id_biro</td><td>Varchar(36) / String</td><td>Primary Key (Kode pengenal unik unit Biro)</td></tr>
-      <tr><td class="center">2</td><td>kode_biro</td><td>Varchar(50) / String</td><td>Kode resmi unit biro (Unique: BPPK, PKKEK, IKK, HSDMO, UK)</td></tr>
-      <tr><td class="center">3</td><td>nama_biro</td><td>Varchar(255) / String</td><td>Nama lengkap unit kerja Eselon II Biro</td></tr>
-      <tr><td class="center">4</td><td>nama_singkat</td><td>Varchar(100) / String</td><td>Nama sebutan singkat unit biro</td></tr>
-      <tr><td class="center">5</td><td>deskripsi</td><td>Text</td><td>Tupoksi dan deskripsi kewenangan biro</td></tr>
-      <tr><td class="center">6</td><td>status_aktif</td><td>Boolean</td><td>Status keaktifan biro dalam sistem (default: true)</td></tr>
-      <tr><td class="center">7</td><td>dibuat_pada</td><td>Timestamp</td><td>Waktu pencatatan data biro</td></tr>
-      <tr><td class="center">8</td><td>diperbarui_pada</td><td>Timestamp</td><td>Waktu pembaruan data biro</td></tr>
+      <tr><td class="center">1</td><td>id_biro</td><td>Varchar (UUID)</td><td>Primary Key (Kode pengenal unik unit kerja Biro)</td></tr>
+      <tr><td class="center">2</td><td>kode_biro</td><td>Varchar</td><td>Kode singkatan unik biro (Unique)</td></tr>
+      <tr><td class="center">3</td><td>nama_biro</td><td>Varchar</td><td>Nama lengkap unit kerja biro pemrakarsa</td></tr>
+      <tr><td class="center">4</td><td>nama_singkat</td><td>Varchar</td><td>Nomenklatur singkatan biro kerja</td></tr>
+      <tr><td class="center">5</td><td>deskripsi</td><td>Text</td><td>Uraian tugas dan fungsi pokok biro</td></tr>
+      <tr><td class="center">6</td><td>status_aktif</td><td>Boolean</td><td>Status aktif operasional biro (Default: true)</td></tr>
+      <tr><td class="center">7</td><td>dibuat_pada</td><td>Timestamp</td><td>Waktu data biro dibuat</td></tr>
+      <tr><td class="center">8</td><td>diperbarui_pada</td><td>Timestamp</td><td>Waktu terakhir pembaruan data biro</td></tr>
     </tbody>
   </table>
 
-  <p class="table-title">Tabel 4.3. Spesifikasi Tabel Tim Kerja Biro (tim_biro)</p>
+  <h4>3. Tabel: tim_biro (Spesifikasi Tabel Tim Kerja Biro)</h4>
   <table>
     <thead>
       <tr>
         <th style="width: 8%;" class="center">No</th>
         <th style="width: 27%;">Nama Field</th>
-        <th style="width: 25%;">Tipe Data</th>
-        <th style="width: 40%;">Keterangan</th>
+        <th style="width: 23%;">Tipe Data</th>
+        <th style="width: 42%;">Keterangan</th>
       </tr>
     </thead>
     <tbody>
-      <tr><td class="center">1</td><td>id_tim</td><td>Varchar(36) / String</td><td>Primary Key (Kode pengenal unik kelompok tim kerja)</td></tr>
-      <tr><td class="center">2</td><td>id_biro</td><td>Varchar(36) / String</td><td>Foreign Key (Relasi ke tabel biro)</td></tr>
-      <tr><td class="center">3</td><td>kode_tim</td><td>Varchar(50) / String</td><td>Kode identifikasi tim kerja (misal: INV, KS, KOM)</td></tr>
-      <tr><td class="center">4</td><td>nama_tim</td><td>Varchar(255) / String</td><td>Nama kelompok tim kerja teknis</td></tr>
-      <tr><td class="center">5</td><td>deskripsi_tim</td><td>Text</td><td>Deskripsi fungsi kelompok tim kerja</td></tr>
-      <tr><td class="center">6</td><td>status_aktif</td><td>Boolean</td><td>Status keaktifan tim kerja (default: true)</td></tr>
-      <tr><td class="center">7</td><td>dibuat_pada</td><td>Timestamp</td><td>Waktu pencatatan kelompok tim kerja</td></tr>
-      <tr><td class="center">8</td><td>diperbarui_pada</td><td>Timestamp</td><td>Waktu pembaruan kelompok tim kerja</td></tr>
+      <tr><td class="center">1</td><td>id_tim</td><td>Varchar (UUID)</td><td>Primary Key (Kode pengenal unik kelompok kerja tim)</td></tr>
+      <tr><td class="center">2</td><td>id_biro</td><td>Varchar (UUID)</td><td>Foreign Key &rarr; biro.id_biro (Biro Induk)</td></tr>
+      <tr><td class="center">3</td><td>kode_tim</td><td>Varchar</td><td>Kode unik pengenal tim kerja</td></tr>
+      <tr><td class="center">4</td><td>nama_tim</td><td>Varchar</td><td>Nama kelompok kerja teknis di bawah biro</td></tr>
+      <tr><td class="center">5</td><td>deskripsi_tim</td><td>Text</td><td>Uraian bidang penugasan kerja tim</td></tr>
+      <tr><td class="center">6</td><td>status_aktif</td><td>Boolean</td><td>Status keaktifan kelompok kerja (Default: true)</td></tr>
+      <tr><td class="center">7</td><td>dibuat_pada</td><td>Timestamp</td><td>Waktu tim kerja dibentuk</td></tr>
+      <tr><td class="center">8</td><td>diperbarui_pada</td><td>Timestamp</td><td>Waktu pembaruan data tim kerja</td></tr>
     </tbody>
   </table>
 
-  <p class="table-title">Tabel 4.4. Spesifikasi Tabel Rapat Dinas (rapat)</p>
+  <h4>4. Tabel: kegiatan (Spesifikasi Tabel Kegiatan)</h4>
   <table>
     <thead>
       <tr>
         <th style="width: 8%;" class="center">No</th>
         <th style="width: 27%;">Nama Field</th>
-        <th style="width: 25%;">Tipe Data</th>
-        <th style="width: 40%;">Keterangan</th>
+        <th style="width: 23%;">Tipe Data</th>
+        <th style="width: 42%;">Keterangan</th>
       </tr>
     </thead>
     <tbody>
-      <tr><td class="center">1</td><td>id_rapat</td><td>Varchar(36) / String</td><td>Primary Key (Kode pengenal unik agenda rapat dinas)</td></tr>
-      <tr><td class="center">2</td><td>nomor_rapat</td><td>Varchar(100) / String</td><td>Nomor surat rapat dinas resmi (Unique)</td></tr>
-      <tr><td class="center">3</td><td>judul_rapat</td><td>Varchar(255) / String</td><td>Tema atau pokok agenda rapat kedinasan</td></tr>
-      <tr><td class="center">4</td><td>id_biro</td><td>Varchar(36) / String</td><td>Foreign Key (Relasi ke tabel biro)</td></tr>
-      <tr><td class="center">5</td><td>id_tim</td><td>Varchar(36) / String</td><td>Foreign Key (Relasi ke tabel tim_biro, opsional)</td></tr>
-      <tr><td class="center">6</td><td>tanggal_rapat</td><td>Timestamp / Date</td><td>Hari dan tanggal penyelenggaraan rapat</td></tr>
-      <tr><td class="center">7</td><td>waktu_mulai</td><td>Varchar(10) / String</td><td>Waktu mulai rapat (format HH:mm WIB)</td></tr>
-      <tr><td class="center">8</td><td>waktu_selesai</td><td>Varchar(10) / String</td><td>Waktu selesai rapat (format HH:mm WIB)</td></tr>
-      <tr><td class="center">9</td><td>lokasi_rapat</td><td>Varchar(255) / String</td><td>Ruang rapat fisik atau tautan pertemuan virtual</td></tr>
-      <tr><td class="center">10</td><td>id_pengguna</td><td>Varchar(36) / String</td><td>Foreign Key (Relasi ke tabel pengguna: Pimpinan Rapat)</td></tr>
-      <tr><td class="center">11</td><td>id_notulis</td><td>Varchar(36) / String</td><td>Foreign Key (Relasi ke tabel pengguna: Petugas Notulis)</td></tr>
-      <tr><td class="center">12</td><td>status_rapat</td><td>Enum</td><td>DRAFT, REVIEW, APPROVED, FINAL</td></tr>
-      <tr><td class="center">13</td><td>status_progres</td><td>Varchar(50) / String</td><td>Status tahapan rapat: Start, On Progress, Done</td></tr>
-      <tr><td class="center">14</td><td>jenis_rapat</td><td>Varchar(100) / String</td><td>Kategori rapat (Pleno, Koordinasi, Teknis)</td></tr>
-      <tr><td class="center">15</td><td>pic_rapat</td><td>Varchar(255) / String</td><td>Nama PIC pelaksana kegiatan rapat</td></tr>
-      <tr><td class="center">16</td><td>dokumen_undangan_url</td><td>Text</td><td>URL penyimpanan berkas surat undangan dinas</td></tr>
-      <tr><td class="center">17</td><td>nama_dokumen_undangan</td><td>Varchar(255) / String</td><td>Nama asli berkas surat undangan dinas</td></tr>
-      <tr><td class="center">18</td><td>materi_dokumen_url</td><td>Text</td><td>URL berkas paparan / materi rapat dinas</td></tr>
-      <tr><td class="center">19</td><td>dibuat_pada</td><td>Timestamp</td><td>Waktu inisiasi agenda rapat dibuat</td></tr>
-      <tr><td class="center">20</td><td>diperbarui_pada</td><td>Timestamp</td><td>Waktu pembaruan agenda rapat terakhir</td></tr>
+      <tr><td class="center">1</td><td>id_kegiatan</td><td>Varchar (UUID)</td><td>Primary Key (Kode pengenal unik transaksi agenda kegiatan)</td></tr>
+      <tr><td class="center">2</td><td>nomor_kegiatan</td><td>Varchar</td><td>Nomor registrasi agenda kegiatan (Unique)</td></tr>
+      <tr><td class="center">3</td><td>judul_kegiatan</td><td>Varchar</td><td>Pokok judul pembahasan agenda kegiatan</td></tr>
+      <tr><td class="center">4</td><td>id_biro</td><td>Varchar (UUID)</td><td>Foreign Key &rarr; biro.id_biro (Biro Pemrakarsa)</td></tr>
+      <tr><td class="center">5</td><td>id_tim</td><td>Varchar (UUID)</td><td>Foreign Key &rarr; tim_biro.id_tim (opsional)</td></tr>
+      <tr><td class="center">6</td><td>tanggal_kegiatan</td><td>Timestamp</td><td>Tanggal pelaksanaan agenda kegiatan</td></tr>
+      <tr><td class="center">7</td><td>waktu_mulai</td><td>Varchar</td><td>Waktu mulai pelaksanaan kegiatan (Format HH:mm)</td></tr>
+      <tr><td class="center">8</td><td>waktu_selesai</td><td>Varchar</td><td>Waktu penutupan pelaksanaan kegiatan (Format HH:mm)</td></tr>
+      <tr><td class="center">9</td><td>lokasi_kegiatan</td><td>Varchar</td><td>Lokasi pelaksanaan kegiatan (ruang fisik atau tautan daring)</td></tr>
+      <tr><td class="center">10</td><td>id_pengguna</td><td>Varchar (UUID)</td><td>Foreign Key &rarr; pengguna.id_pengguna (Pimpinan Kegiatan)</td></tr>
+      <tr><td class="center">11</td><td>status_kegiatan</td><td>Enum</td><td>Status tahapan kegiatan: Belum Dimulai, Dalam Proses, Selesai</td></tr>
+      <tr><td class="center">12</td><td>kategori_naskah</td><td>Varchar</td><td>Kategori naskah acuan (Naskah Masuk, Disposisi Sekjen/Karo, Internal, Rutin)</td></tr>
+      <tr><td class="center">13</td><td>pic_kegiatan</td><td>Varchar</td><td>Nama pejabat/staf penanggung jawab teknis kegiatan</td></tr>
+      <tr><td class="center">14</td><td>catatan_hasil</td><td>Text</td><td>Ringkasan pokok catatan dan kesimpulan pelaksanaan kegiatan</td></tr>
+      <tr><td class="center">15</td><td>rencana_aksi</td><td>Text</td><td>Rencana tindak lanjut pelaksanaan arahan kegiatan</td></tr>
+      <tr><td class="center">16</td><td>nomor_nd_konsum</td><td>Varchar</td><td>Nomor nota dinas pengajuan konsumsi kegiatan</td></tr>
+      <tr><td class="center">17</td><td>tautan_rilis</td><td>Varchar</td><td>Tautan publikasi media/berita terkait kegiatan</td></tr>
+      <tr><td class="center">18</td><td>dibuat_pada</td><td>Timestamp</td><td>Waktu data agenda kegiatan didaftarkan ke sistem</td></tr>
+      <tr><td class="center">19</td><td>diperbarui_pada</td><td>Timestamp</td><td>Waktu terakhir pembaruan data kegiatan</td></tr>
     </tbody>
   </table>
 
-  <p class="table-title">Tabel 4.5. Spesifikasi Tabel Peserta Rapat (peserta_rapat)</p>
+  <h4>5. Tabel: peserta_kegiatan (Spesifikasi Tabel Peserta Kegiatan)</h4>
   <table>
     <thead>
       <tr>
         <th style="width: 8%;" class="center">No</th>
         <th style="width: 27%;">Nama Field</th>
-        <th style="width: 25%;">Tipe Data</th>
-        <th style="width: 40%;">Keterangan</th>
+        <th style="width: 23%;">Tipe Data</th>
+        <th style="width: 42%;">Keterangan</th>
       </tr>
     </thead>
     <tbody>
-      <tr><td class="center">1</td><td>id_peserta</td><td>Varchar(36) / String</td><td>Primary Key (Kode pengenal unik presensi peserta)</td></tr>
-      <tr><td class="center">2</td><td>id_rapat</td><td>Varchar(36) / String</td><td>Foreign Key (Relasi ke tabel rapat)</td></tr>
-      <tr><td class="center">3</td><td>id_pengguna</td><td>Varchar(36) / String</td><td>Foreign Key (Relasi ke tabel pengguna, jika staf internal)</td></tr>
-      <tr><td class="center">4</td><td>nama_peserta</td><td>Varchar(255) / String</td><td>Nama lengkap peserta rapat dinas</td></tr>
-      <tr><td class="center">5</td><td>instansi_peserta</td><td>Varchar(255) / String</td><td>Instansi asal peserta (Kementerian/Lembaga/Swasta)</td></tr>
-      <tr><td class="center">6</td><td>jabatan_peserta</td><td>Varchar(255) / String</td><td>Jabatan dinas peserta yang diundang</td></tr>
-      <tr><td class="center">7</td><td>status_kehadiran</td><td>Enum</td><td>INVITED, PRESENT, ABSENT, EXCUSED</td></tr>
-      <tr><td class="center">8</td><td>waktu_presensi</td><td>Timestamp</td><td>Waktu konfirmasi kehadiran presensi rapat</td></tr>
-      <tr><td class="center">9</td><td>url_tanda_tangan</td><td>Text</td><td>URL gambar tanda tangan digital presensi</td></tr>
+      <tr><td class="center">1</td><td>id_peserta</td><td>Varchar (UUID)</td><td>Primary Key (Kode unik data pihak terkait kegiatan)</td></tr>
+      <tr><td class="center">2</td><td>id_kegiatan</td><td>Varchar (UUID)</td><td>Foreign Key &rarr; kegiatan.id_kegiatan</td></tr>
+      <tr><td class="center">3</td><td>id_pengguna</td><td>Varchar (UUID)</td><td>Foreign Key &rarr; pengguna.id_pengguna (Aparatur Terkait)</td></tr>
+      <tr><td class="center">4</td><td>status_kehadiran</td><td>Enum</td><td>Status peran aparatur/undangan terkait kegiatan</td></tr>
+      <tr><td class="center">5</td><td>dibuat_pada</td><td>Timestamp</td><td>Waktu data pihak terkait ditambahkan ke agenda</td></tr>
     </tbody>
   </table>
 
-  <p class="table-title">Tabel 4.6. Spesifikasi Tabel Notulen Rapat (notulen_rapat)</p>
+  <h4>6. Tabel: lampiran_kegiatan (Spesifikasi Tabel Berkas Lampiran Kegiatan)</h4>
   <table>
     <thead>
       <tr>
         <th style="width: 8%;" class="center">No</th>
         <th style="width: 27%;">Nama Field</th>
-        <th style="width: 25%;">Tipe Data</th>
-        <th style="width: 40%;">Keterangan</th>
+        <th style="width: 23%;">Tipe Data</th>
+        <th style="width: 42%;">Keterangan</th>
       </tr>
     </thead>
     <tbody>
-      <tr><td class="center">1</td><td>id_notulen</td><td>Varchar(36) / String</td><td>Primary Key (Kode pengenal unik naskah risalah notulen)</td></tr>
-      <tr><td class="center">2</td><td>id_rapat</td><td>Varchar(36) / String</td><td>Foreign Key (Relasi ke tabel rapat, relasi 1:1)</td></tr>
-      <tr><td class="center">3</td><td>agenda</td><td>Text</td><td>Rincian susunan pokok agenda rapat dinas</td></tr>
-      <tr><td class="center">4</td><td>pembahasan</td><td>Text</td><td>Uraian dinamika diskusi, masukan, dan jalannya sidang</td></tr>
-      <tr><td class="center">5</td><td>kesimpulan</td><td>Text</td><td>Butir-butir keputusan resmi dan kesimpulan rapat</td></tr>
-      <tr><td class="center">6</td><td>dibuat_pada</td><td>Timestamp</td><td>Waktu penulisan draf notulensi dibuat</td></tr>
-      <tr><td class="center">7</td><td>diperbarui_pada</td><td>Timestamp</td><td>Waktu pembaruan naskah notulensi terakhir</td></tr>
+      <tr><td class="center">1</td><td>id_lampiran</td><td>Varchar (UUID)</td><td>Primary Key (Kode unik berkas lampiran dokumen kegiatan)</td></tr>
+      <tr><td class="center">2</td><td>id_kegiatan</td><td>Varchar (UUID)</td><td>Foreign Key &rarr; kegiatan.id_kegiatan</td></tr>
+      <tr><td class="center">3</td><td>nama_berkas</td><td>Varchar</td><td>Nama berkas dokumen kegiatan (misal: Undangan_KEK.pdf)</td></tr>
+      <tr><td class="center">4</td><td>url_berkas</td><td>Text</td><td>Tautan lokasi penyimpanan berkas digital (Storage URL)</td></tr>
+      <tr><td class="center">5</td><td>ukuran_berkas</td><td>Integer</td><td>Ukuran kapasitas berkas dokumen dalam satuan bytes</td></tr>
+      <tr><td class="center">6</td><td>tipe_berkas</td><td>Varchar</td><td>Ekstensi format berkas naskah digital (PDF, DOCX, XLSX)</td></tr>
+      <tr><td class="center">7</td><td>nama_pengunggah</td><td>Varchar</td><td>Identitas staf aparatur yang mengunggah dokumen</td></tr>
+      <tr><td class="center">8</td><td>kategori</td><td>Varchar</td><td>Klasifikasi dokumen (UNDANGAN / MATERI / NOTA_KONSUMSI / RILIS)</td></tr>
+      <tr><td class="center">9</td><td>dibuat_pada</td><td>Timestamp</td><td>Waktu berkas diunggah ke sistem repositori</td></tr>
     </tbody>
   </table>
 
-  <p class="table-title">Tabel 4.7. Spesifikasi Tabel Tindak Lanjut Komitmen (tindak_lanjut)</p>
+  <h4>7. Tabel: tindak_lanjut (Spesifikasi Tabel Tindak Lanjut Arahan)</h4>
   <table>
     <thead>
       <tr>
         <th style="width: 8%;" class="center">No</th>
         <th style="width: 27%;">Nama Field</th>
-        <th style="width: 25%;">Tipe Data</th>
-        <th style="width: 40%;">Keterangan</th>
+        <th style="width: 23%;">Tipe Data</th>
+        <th style="width: 42%;">Keterangan</th>
       </tr>
     </thead>
     <tbody>
-      <tr><td class="center">1</td><td>id_tindak_lanjut</td><td>Varchar(36) / String</td><td>Primary Key (Kode pengenal unik butir tindak lanjut)</td></tr>
-      <tr><td class="center">2</td><td>id_rapat</td><td>Varchar(36) / String</td><td>Foreign Key (Relasi ke tabel rapat)</td></tr>
-      <tr><td class="center">3</td><td>id_notulen</td><td>Varchar(36) / String</td><td>Foreign Key (Relasi ke tabel notulen_rapat, opsional)</td></tr>
-      <tr><td class="center">4</td><td>butir_tindak_lanjut</td><td>Text</td><td>Deskripsi komitmen penugasan konkret pasca-rapat</td></tr>
-      <tr><td class="center">5</td><td>pic_nama</td><td>Varchar(255) / String</td><td>Nama penanggung jawab operasional penugasan</td></tr>
-      <tr><td class="center">6</td><td>id_pic_pengguna</td><td>Varchar(36) / String</td><td>Foreign Key (Relasi ke tabel pengguna: Akun PIC)</td></tr>
-      <tr><td class="center">7</td><td>id_pic_tim</td><td>Varchar(36) / String</td><td>Foreign Key (Relasi ke tabel tim_biro: Tim Pelaksana)</td></tr>
-      <tr><td class="center">8</td><td>tenggat_waktu</td><td>Timestamp / Date</td><td>Batas waktu penyelesaian tugas (due date)</td></tr>
-      <tr><td class="center">9</td><td>status</td><td>Enum / Varchar</td><td>Belum Dimulai, Dalam Proses, Selesai, Terlambat</td></tr>
-      <tr><td class="center">10</td><td>prioritas</td><td>Enum</td><td>LOW, MEDIUM, HIGH, URGENT</td></tr>
-      <tr><td class="center">11</td><td>catatan_progres</td><td>Text</td><td>Catatan perkembangan realisasi pelaksanaan komitmen</td></tr>
-      <tr><td class="center">12</td><td>dibuat_pada</td><td>Timestamp</td><td>Waktu butir tindak lanjut diterbitkan</td></tr>
-      <tr><td class="center">13</td><td>diperbarui_pada</td><td>Timestamp</td><td>Waktu pembaruan status tindak lanjut</td></tr>
+      <tr><td class="center">1</td><td>id_tindak_lanjut</td><td>Varchar (UUID)</td><td>Primary Key (Kode unik butir komitmen tindak lanjut)</td></tr>
+      <tr><td class="center">2</td><td>id_kegiatan</td><td>Varchar (UUID)</td><td>Foreign Key &rarr; kegiatan.id_kegiatan</td></tr>
+      <tr><td class="center">3</td><td>judul_tindakan</td><td>Varchar</td><td>Judul arahan / butir tugas tindak lanjut kegiatan</td></tr>
+      <tr><td class="center">4</td><td>deskripsi_tindakan</td><td>Text</td><td>Uraian teknis rincian instruksi pelaksanaan penugasan</td></tr>
+      <tr><td class="center">5</td><td>id_biro</td><td>Varchar (UUID)</td><td>Foreign Key &rarr; biro.id_biro (Biro Penanggung Jawab)</td></tr>
+      <tr><td class="center">6</td><td>id_tim</td><td>Varchar (UUID)</td><td>Foreign Key &rarr; tim_biro.id_tim (opsional)</td></tr>
+      <tr><td class="center">7</td><td>id_pengguna</td><td>Varchar (UUID)</td><td>Foreign Key &rarr; pengguna.id_pengguna (Staf Aparatur PIC)</td></tr>
+      <tr><td class="center">8</td><td>tenggat_waktu</td><td>Timestamp</td><td>Batas akhir waktu penyelesaian tugas (Due Date)</td></tr>
+      <tr><td class="center">9</td><td>status_tindak_lanjut</td><td>Enum</td><td>Status tahapan: Belum Dimulai, Dalam Proses, Selesai</td></tr>
+      <tr><td class="center">10</td><td>diselesaikan_pada</td><td>Timestamp</td><td>Waktu resmi penuntasan butir tugas (opsional)</td></tr>
+      <tr><td class="center">11</td><td>dibuat_pada</td><td>Timestamp</td><td>Waktu butir instruksi diterbitkan</td></tr>
+      <tr><td class="center">12</td><td>diperbarui_pada</td><td>Timestamp</td><td>Waktu pembaruan status tindak lanjut</td></tr>
     </tbody>
   </table>
 
-  <p class="table-title">Tabel 4.8. Spesifikasi Tabel Berkas Lampiran Rapat (lampiran_rapat)</p>
+  <h4>8. Tabel: riwayat_tindak_lanjut (Spesifikasi Tabel Riwayat Tindak Lanjut)</h4>
   <table>
     <thead>
       <tr>
         <th style="width: 8%;" class="center">No</th>
         <th style="width: 27%;">Nama Field</th>
-        <th style="width: 25%;">Tipe Data</th>
-        <th style="width: 40%;">Keterangan</th>
+        <th style="width: 23%;">Tipe Data</th>
+        <th style="width: 42%;">Keterangan</th>
       </tr>
     </thead>
     <tbody>
-      <tr><td class="center">1</td><td>id_lampiran</td><td>Varchar(36) / String</td><td>Primary Key (Kode pengenal unik berkas lampiran)</td></tr>
-      <tr><td class="center">2</td><td>id_rapat</td><td>Varchar(36) / String</td><td>Foreign Key (Relasi ke tabel rapat)</td></tr>
-      <tr><td class="center">3</td><td>nama_berkas</td><td>Varchar(255) / String</td><td>Nama asli berkas dokumen yang diunggah</td></tr>
-      <tr><td class="center">4</td><td>url_berkas</td><td>Text</td><td>Lokasi URL berkas pada cloud storage / server</td></tr>
-      <tr><td class="center">5</td><td>tipe_berkas</td><td>Varchar(100) / String</td><td>Tipe MIME dokumen (application/pdf, docx, pptx)</td></tr>
-      <tr><td class="center">6</td><td>ukuran_berkas</td><td>Integer</td><td>Besaran ukuran file dalam satuan bytes</td></tr>
-      <tr><td class="center">7</td><td>diunggah_pada</td><td>Timestamp</td><td>Waktu dokumen lampiran diunggah ke sistem</td></tr>
+      <tr><td class="center">1</td><td>id_riwayat</td><td>Varchar (UUID)</td><td>Primary Key (Kode pengenal unik riwayat progres)</td></tr>
+      <tr><td class="center">2</td><td>id_tindak_lanjut</td><td>Varchar (UUID)</td><td>Foreign Key &rarr; tindak_lanjut.id_tindak_lanjut</td></tr>
+      <tr><td class="center">3</td><td>id_pengguna</td><td>Varchar (UUID)</td><td>Foreign Key &rarr; pengguna.id_pengguna (Aparatur PIC)</td></tr>
+      <tr><td class="center">4</td><td>status_sebelumnya</td><td>Enum</td><td>Status tahapan penugasan sebelum diperbarui</td></tr>
+      <tr><td class="center">5</td><td>status_terbaru</td><td>Enum</td><td>Status tahapan terkini: Belum Dimulai, Dalam Proses, Selesai</td></tr>
+      <tr><td class="center">6</td><td>catatan_progres</td><td>Text</td><td>Uraian catatan capaian realisasi progres tindak lanjut</td></tr>
+      <tr><td class="center">7</td><td>dibuat_pada</td><td>Timestamp</td><td>Waktu pencatatan log riwayat progres tugas</td></tr>
     </tbody>
   </table>
 
-  <p class="table-title">Tabel 4.9. Spesifikasi Tabel Penomoran Rapat Biro (penomoran_rapat_biro)</p>
+  <h4>9. Tabel: notifikasi (Spesifikasi Tabel Notifikasi Sistem)</h4>
   <table>
     <thead>
       <tr>
         <th style="width: 8%;" class="center">No</th>
         <th style="width: 27%;">Nama Field</th>
-        <th style="width: 25%;">Tipe Data</th>
-        <th style="width: 40%;">Keterangan</th>
+        <th style="width: 23%;">Tipe Data</th>
+        <th style="width: 42%;">Keterangan</th>
       </tr>
     </thead>
     <tbody>
-      <tr><td class="center">1</td><td>id</td><td>Varchar(36) / String</td><td>Primary Key (Kode pengenal unik pencatatan nomor)</td></tr>
-      <tr><td class="center">2</td><td>id_biro</td><td>Varchar(36) / String</td><td>Foreign Key (Relasi ke tabel biro)</td></tr>
-      <tr><td class="center">3</td><td>tahun</td><td>Integer</td><td>Tahun kalender penomoran rapat (misal: 2026)</td></tr>
-      <tr><td class="center">4</td><td>nomor_terakhir</td><td>Integer</td><td>Nomor urut rapat terakhir yang diterbitkan pada tahun berjalan</td></tr>
-    </tbody>
-  </table>
-
-  <p class="table-title">Tabel 4.10. Spesifikasi Tabel Notifikasi Sistem (notifikasi)</p>
-  <table>
-    <thead>
-      <tr>
-        <th style="width: 8%;" class="center">No</th>
-        <th style="width: 27%;">Nama Field</th>
-        <th style="width: 25%;">Tipe Data</th>
-        <th style="width: 40%;">Keterangan</th>
-      </tr>
-    </thead>
-    <tbody>
-      <tr><td class="center">1</td><td>id</td><td>Varchar(36) / String</td><td>Primary Key (Kode pengenal unik notifikasi)</td></tr>
-      <tr><td class="center">2</td><td>id_pengguna</td><td>Varchar(36) / String</td><td>Foreign Key (Relasi ke tabel pengguna: Penerima pesan)</td></tr>
-      <tr><td class="center">3</td><td>judul</td><td>Varchar(255) / String</td><td>Judul singkat pengingat / notifikasi kedinasan</td></tr>
-      <tr><td class="center">4</td><td>pesan</td><td>Text</td><td>Isi detail notifikasi (jadwal baru / deadline tugas)</td></tr>
-      <tr><td class="center">5</td><td>tautan</td><td>Varchar(255) / String</td><td>URL rute aplikasi terkait notifikasi</td></tr>
-      <tr><td class="center">6</td><td>sudah_dibaca</td><td>Boolean</td><td>Status konfirmasi pembacaan pesan (default: false)</td></tr>
-      <tr><td class="center">7</td><td>dibuat_pada</td><td>Timestamp</td><td>Waktu notifikasi diterbitkan oleh sistem</td></tr>
+      <tr><td class="center">1</td><td>id_notifikasi</td><td>Varchar (UUID)</td><td>Primary Key (Kode pengenal unik notifikasi pesan)</td></tr>
+      <tr><td class="center">2</td><td>id_pengguna</td><td>Varchar (UUID)</td><td>Foreign Key &rarr; pengguna.id_pengguna (Penerima Notifikasi)</td></tr>
+      <tr><td class="center">3</td><td>id_tim</td><td>Varchar (UUID)</td><td>Foreign Key &rarr; tim_biro.id_tim (opsional)</td></tr>
+      <tr><td class="center">4</td><td>judul</td><td>Varchar</td><td>Judul pemberitahuan informasi sistem</td></tr>
+      <tr><td class="center">5</td><td>pesan</td><td>Text</td><td>Uraian teks detail notifikasi jadwal / penugasan</td></tr>
+      <tr><td class="center">6</td><td>tipe</td><td>Varchar</td><td>Tipe kategori pesan notifikasi (info, warning, success)</td></tr>
+      <tr><td class="center">7</td><td>tautan</td><td>Varchar</td><td>Tautan navigasi cepat menuju detail kegiatan / tindak lanjut</td></tr>
+      <tr><td class="center">8</td><td>sudah_dibaca</td><td>Boolean</td><td>Indikator status apakah pesan telah dibaca (Default: false)</td></tr>
+      <tr><td class="center">9</td><td>dibuat_pada</td><td>Timestamp</td><td>Waktu notifikasi diterbitkan oleh sistem</td></tr>
     </tbody>
   </table>
 
   <h2>5. Struktur Folder Sistem</h2>
-  <p>Proyek aplikasi Website Log Book Notula Rapat diorganisasikan dengan struktur direktori modular berbasis standar Next.js App Router:</p>
+  <p>Berikut merupakan struktur direktori dan berkas utama yang digunakan dalam pengembangan sistem Aplikasi Log Book Kegiatan KEK:</p>
 
-  <p class="table-title">Tabel 5.1. Struktur Direktori Proyek Website Log Book Notula Rapat</p>
   <table>
     <thead>
       <tr>
         <th style="width: 8%;" class="center">No</th>
         <th style="width: 32%;">Folder / File</th>
-        <th style="width: 60%;">Keterangan & Fungsi</th>
+        <th style="width: 60%;">Keterangan</th>
       </tr>
     </thead>
     <tbody>
       <tr>
         <td class="center">1</td>
-        <td><code>app/</code></td>
-        <td>Direktori utama App Router yang berisi tata letak (layout), halaman aplikasi (page), dan rute server.</td>
+        <td>app/</td>
+        <td>Direktori utama Next.js App Router yang memuat halaman antarmuka, tata letak (layout), dan routing aplikasi.</td>
       </tr>
       <tr>
         <td class="center">2</td>
-        <td><code>app/actions/</code></td>
-        <td>Kumpulan berkas Next.js Server Actions untuk mutasi data (meeting-actions, minute-actions, action-item-actions, user-actions).</td>
+        <td>app/actions/</td>
+        <td>Berisi Next.js Server Actions untuk menangani request mutasi data, proses bisnis, dan interaksi database.</td>
       </tr>
       <tr>
         <td class="center">3</td>
-        <td><code>app/semua-rapat/</code> & <code>app/buat-rapat/</code></td>
-        <td>Halaman antarmuka daftar tabel seluruh rapat dinas dan formulir penjadwalan rapat dinas baru.</td>
+        <td>app/api/</td>
+        <td>Berisi endpoint Route Handlers untuk layanan unggah dokumen, unduh berkas, dan integrasi autentikasi.</td>
       </tr>
       <tr>
         <td class="center">4</td>
-        <td><code>app/rapat/[id]/</code></td>
-        <td>Halaman detail rapat dinas terintegrasi modul notulensi, daftar presensi peserta, dan berkas lampiran.</td>
+        <td>app/catat-kegiatan/</td>
+        <td>Halaman formulir pencatatan dan penjadwalan agenda kegiatan baru.</td>
       </tr>
       <tr>
         <td class="center">5</td>
-        <td><code>app/tindak-lanjut/</code></td>
-        <td>Halaman matriks monitoring komitmen tindak lanjut (Action Items) dilengkapi filter biro, status, dan prioritas.</td>
+        <td>app/arsip-kegiatan/</td>
+        <td>Halaman daftar log book kegiatan beserta halaman rincian kegiatan, dokumen pendukung, dan catatan hasil.</td>
       </tr>
       <tr>
         <td class="center">6</td>
-        <td><code>app/laporan/</code></td>
-        <td>Halaman pelaporan statistik dan ekspor dokumen risalah rapat serta rekapitulasi data persidangan.</td>
+        <td>app/kalender/</td>
+        <td>Halaman visualisasi kalender kegiatan terpadu lintas biro dan tim kerja.</td>
       </tr>
       <tr>
         <td class="center">7</td>
-        <td><code>app/pengguna/</code></td>
-        <td>Halaman administrasi pengguna dan penugasan peran kedinasan dengan pemisahan wewenang per tim kerja (team-scoped).</td>
+        <td>app/tindak-lanjut/</td>
+        <td>Halaman matriks pemantauan status progres tindak lanjut (Action Items) dan penugasan PIC.</td>
       </tr>
       <tr>
         <td class="center">8</td>
-        <td><code>components/</code></td>
-        <td>Komponen antarmuka modular (meetings, minutes, action-items, users, layout/sidebar, dan providers).</td>
+        <td>app/dokumen/ &amp; app/laporan/</td>
+        <td>Halaman repositori berkas dokumen log book serta fitur rekapitulasi dan ekspor laporan (PDF/Excel/Word).</td>
       </tr>
       <tr>
         <td class="center">9</td>
-        <td><code>lib/</code></td>
-        <td>Pustaka pembantu logika bisnis: koneksi Prisma Client (<code>prisma.ts</code>), otorisasi RBAC (<code>authorization.ts</code>), generator nomor rapat (<code>id-generator.ts</code>), dan validasi Zod.</td>
+        <td>app/biro/ &amp; app/pengguna/</td>
+        <td>Halaman pengelolaan data master biro, tim kerja teknis, serta manajemen akun pengguna berbasis role (RBAC).</td>
       </tr>
       <tr>
         <td class="center">10</td>
-        <td><code>prisma/</code></td>
-        <td>Skema basis data relasional (<code>schema.prisma</code>) dan berkas seeder master data resmi (<code>seed.ts</code>).</td>
+        <td>components/</td>
+        <td>Berisi komponen antarmuka pengguna modular (dashboard, meeting, action-items, report, teams, users, layout, dan ui).</td>
       </tr>
       <tr>
         <td class="center">11</td>
-        <td><code>public/</code></td>
-        <td>Aset statis aplikasi web seperti logo branding Kawasan Ekonomi Khusus, favicon, serta pratinjau diagram.</td>
+        <td>lib/</td>
+        <td>Berisi service dan pustaka utilitas logika bisnis seperti koneksi Prisma, otorisasi RBAC, generator nomor kegiatan, validasi Zod, serta pembangkit laporan PDF/Excel/Docx.</td>
       </tr>
       <tr>
         <td class="center">12</td>
-        <td><code>scripts/</code></td>
-        <td>Kumpulan skrip otomatisasi pengujian sistem (test suites), migrasi data, dan sinkronisasi laporan PKL.</td>
+        <td>prisma/schema.prisma</td>
+        <td>Definisi skema model database relasional PostgreSQL beserta relasi antar-tabel.</td>
+      </tr>
+      <tr>
+        <td class="center">13</td>
+        <td>prisma/migrations/</td>
+        <td>Berisi riwayat file migrasi untuk pembuatan dan pembaruan struktur tabel database.</td>
+      </tr>
+      <tr>
+        <td class="center">14</td>
+        <td>public/</td>
+        <td>Berisi aset statis yang dapat diakses publik seperti logo resmi KEK, ikon, diagram, dan direktori unggahan berkas.</td>
+      </tr>
+      <tr>
+        <td class="center">15</td>
+        <td>auth.ts &amp; middleware.ts</td>
+        <td>Konfigurasi autentikasi NextAuth.js dan middleware untuk proteksi rute halaman serta filtering akses pengguna.</td>
+      </tr>
+      <tr>
+        <td class="center">16</td>
+        <td>.env</td>
+        <td>File konfigurasi variabel lingkungan (koneksi database PostgreSQL, secret key autentikasi, dan konfigurasi server).</td>
       </tr>
     </tbody>
   </table>
 
   <h2>6. Penutup</h2>
-  <p>Dokumen Teknis Pengembangan Website Sistem Informasi Log Book Notula Rapat ini disusun sebagai pedoman baku dalam pelaksanaan pembangunan, implementasi operasional, serta pemeliharaan sistem informasi pada Sekretariat Jenderal Dewan Nasional Kawasan Ekonomi Khusus. Seluruh dokumentasi arsitektur, siklus proses bisnis persidangan kedinasan, desain basis data relasional, dan struktur direktori yang disajikan diharapkan menjadi rujukan komprehensif bagi pengembang dan pemangku kepentingan.</p>
-  
-  <p>Dengan berjalannya sistem Website Log Book Notula Rapat, tata kelola rapat dinas dan pengawasan komitmen tindak lanjut dapat terlaksana secara efektif, cepat, terukur, dan akuntabel guna mendukung akselerasi pembangunan Kawasan Ekonomi Khusus di seluruh Indonesia. Pemutakhiran terhadap dokumen teknis ini dapat dilakukan secara berkala sejalan dengan evolusi kebutuhan organisasi dan kemajuan teknologi informasi.</p>
+  <p>Dokumen teknis website Aplikasi Log Book Kegiatan KEK ini disusun sebagai pedoman dalam pelaksanaan pengelolaan, pengembangan, serta pemeliharaan sistem secara terstruktur dan berkelanjutan di lingkungan Sekretariat Jenderal Dewan Nasional Kawasan Ekonomi Khusus. Seluruh informasi yang tercantum di dalam dokumen ini diharapkan dapat membantu tim teknis, pengembang, maupun pemangku kepentingan terkait untuk memahami arsitektur, alur proses bisnis, serta komponen basis data yang digunakan dalam sistem.</p>
+
+  <p>Dalam rangka menjaga relevansi dan akurasi informasi, dokumentasi ini perlu dilakukan pemutakhiran secara berkala seiring dengan perkembangan kebutuhan organisasi, kebijakan instansi, serta teknologi yang digunakan. Demikian dokumentasi teknis ini disusun untuk dapat digunakan sebagaimana mestinya serta mendukung efektivitas pengelolaan dan pengembangan website Aplikasi Log Book Kegiatan KEK ke depan.</p>
 
 </body>
 </html>`;
 
-  console.log('2. Mengunggah dan mengonversi naskah HTML ke Google Doc...');
-  console.log('   Doc ID:', docId);
+  console.log('2. Membuat file Google Docs baru di Google Drive...');
 
-  const uploadRes = await fetch('https://www.googleapis.com/upload/drive/v3/files/' + docId + '?uploadType=media', {
-    method: 'PATCH',
+  const metadata = {
+    name: 'Dokumen Teknis Website Aplikasi Log Book Kegiatan KEK',
+    mimeType: 'application/vnd.google-apps.document'
+  };
+
+  const boundary = '-------314159265358979323846';
+  const delimiter = `\r\n--${boundary}\r\n`;
+  const closeDelimiter = `\r\n--${boundary}--`;
+
+  const multipartBody =
+    delimiter +
+    'Content-Type: application/json; charset=UTF-8\r\n\r\n' +
+    JSON.stringify(metadata) +
+    delimiter +
+    'Content-Type: text/html; charset=UTF-8\r\n\r\n' +
+    htmlContent +
+    closeDelimiter;
+
+  const createRes = await fetch('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart', {
+    method: 'POST',
     headers: {
-      'Authorization': 'Bearer ' + account.accessToken,
-      'Content-Type': 'text/html'
+      'Authorization': `Bearer ${accessToken}`,
+      'Content-Type': `multipart/related; boundary=${boundary}`
     },
-    body: htmlContent
+    body: multipartBody
   });
 
-  if (!uploadRes.ok) {
-    throw new Error('Upload failed: ' + uploadRes.status + ' ' + (await uploadRes.text()));
+  if (!createRes.ok) {
+    throw new Error('Failed to create Google Doc: ' + createRes.status + ' ' + (await createRes.text()));
   }
 
-  const uploadData = await uploadRes.json();
-  console.log('3. Berhasil memperbarui dokumen Google Drive!');
-  console.log('   File ID:', uploadData.id);
-  console.log('   File Name:', uploadData.name);
+  const createdFile = await createRes.json();
+  const newDocId = createdFile.id;
+  console.log('3. File Google Docs baru berhasil dibuat!');
+  console.log('   New Doc ID:', newDocId);
+  console.log('   URL: https://docs.google.com/document/d/' + newDocId + '/edit');
 
-  // Verifikasi dokumen via Google Docs API
-  const docRes = await fetch('https://docs.googleapis.com/v1/documents/' + docId, {
-    headers: { 'Authorization': 'Bearer ' + account.accessToken }
+  console.log('4. Menyisipkan seluruh gambar diagram asli dari folder proyek...');
+  // Process from bottom to top or sequentially with re-fetch
+  for (const item of IMAGE_PLACEHOLDERS) {
+    await replacePlaceholderWithImage(newDocId, accessToken, item);
+  }
+
+  // Set sharing permission so anyone with link can view/edit easily
+  await fetch(`https://www.googleapis.com/drive/v3/files/${newDocId}/permissions`, {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${accessToken}`,
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({
+      role: 'writer',
+      type: 'anyone'
+    })
   });
-  const doc = await docRes.json();
-  console.log('4. Verifikasi isi Google Doc berhasil:');
-  console.log('   Judul:', doc.title);
-  console.log('   Jumlah elemen konten:', doc.body.content.length);
-  console.log('   Revision ID:', doc.revisionId);
-  console.log('\n=== SUKSES BESAR! DOKUMEN TEKNIS LOG BOOK RAPAT TELAH TERBIT DI GOOGLE DOCS ===');
+
+  console.log('\n=== SELESAI! DOKUMEN TEKNIS BARU DENGAN SELURUH GAMBAR DIAGRAM ASLI TELAH TERBIT ===');
+  console.log('Link Google Docs:', `https://docs.google.com/document/d/${newDocId}/edit`);
 }
 
 main().catch(console.error);
