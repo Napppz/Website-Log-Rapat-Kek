@@ -33,7 +33,7 @@ import {
   User,
 } from 'lucide-react';
 import { ActionItem, ActionItemStatus } from '@/lib/types';
-import { ActionItemStatusBadge, ActionItemPriorityBadge } from './action-item-status-badge';
+import { ActionItemStatusBadge } from './action-item-status-badge';
 import { ActionItemFormDialog } from './action-item-form-dialog';
 import { ActionItemDeleteDialog } from './action-item-delete-dialog';
 import { ActionItemUpdateProgressDialog } from './action-item-update-progress-dialog';
@@ -120,15 +120,13 @@ export function ActionItemMatrixView({
     return s;
   }, [rawStatus]);
   const teamParam = searchParams.get('tim') || 'ALL';
-  const priorityParam = searchParams.get('prioritas') || 'ALL';
 
   const effectiveLockedTeamCode = lockedTeamCode;
 
   const [items, setItems] = useState<any[]>(initialItems);
   const [search, setSearch] = useState('');
   const [selectedTeam, setSelectedTeam] = useState<string>(teamParam || 'ALL');
-  const [selectedPriority, setSelectedPriority] = useState<string>(priorityParam);
-  const [openDropdown, setOpenDropdown] = useState<'TIM' | 'STATUS' | 'PRIORITAS' | null>(null);
+  const [openDropdown, setOpenDropdown] = useState<'TIM' | 'STATUS' | null>(null);
   const filterToolbarRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -339,14 +337,6 @@ export function ActionItemMatrixView({
     { label: 'Selesai', value: 'COMPLETED', count: completedCount, dotColor: 'bg-emerald-500' },
   ];
 
-  const priorityOptions = [
-    { label: 'Semua Prioritas', value: 'ALL', count: totalCount },
-    { label: 'Sangat Mendesak', value: 'URGENT', count: items.filter((i) => i.priority === 'URGENT').length },
-    { label: 'Tinggi', value: 'HIGH', count: items.filter((i) => i.priority === 'HIGH').length },
-    { label: 'Sedang', value: 'MEDIUM', count: items.filter((i) => i.priority === 'MEDIUM').length },
-    { label: 'Rendah', value: 'LOW', count: items.filter((i) => i.priority === 'LOW').length },
-  ];
-
   const handleSelectStatus = (val: string) => {
     const params = new URLSearchParams(searchParams.toString());
     if (val === 'ALL') {
@@ -369,21 +359,9 @@ export function ActionItemMatrixView({
     router.push(`/tindak-lanjut?${params.toString()}`);
   };
 
-  const handleSelectPriority = (val: string) => {
-    setSelectedPriority(val);
-    const params = new URLSearchParams(searchParams.toString());
-    if (val === 'ALL') {
-      params.delete('prioritas');
-    } else {
-      params.set('prioritas', val);
-    }
-    router.push(`/tindak-lanjut?${params.toString()}`);
-  };
-
   const handleResetAllFilters = () => {
     setSearch('');
     setSelectedTeam(effectiveLockedTeamCode || 'ALL');
-    setSelectedPriority('ALL');
     router.push(effectiveLockedTeamCode ? `/tindak-lanjut?tim=${effectiveLockedTeamCode}` : '/tindak-lanjut');
   };
 
@@ -437,13 +415,6 @@ export function ActionItemMatrixView({
         }
       }
 
-      // Priority filter
-      if (selectedPriority !== 'ALL') {
-        if (task.priority !== selectedPriority) {
-          return false;
-        }
-      }
-
       // Search filter
       if (!search.trim()) return true;
       const q = search.toLowerCase();
@@ -458,7 +429,7 @@ export function ActionItemMatrixView({
 
       return titleMatch || descMatch || meetingMatch || teamMatch || userMatch;
     });
-  }, [items, statusParam, selectedTeam, selectedPriority, search]);
+  }, [items, statusParam, selectedTeam, search]);
 
   const selectedTeamLabel = selectedTeam === 'ALL'
     ? 'Semua Tim Kerja'
@@ -469,14 +440,10 @@ export function ActionItemMatrixView({
   const selectedStatusDot = selectedStatusObj.dotColor;
   const selectedStatusCount = selectedStatusObj.count;
 
-  const selectedPriorityObj = priorityOptions.find((p) => p.value === selectedPriority) || priorityOptions[0];
-  const selectedPriorityLabel = selectedPriorityObj.label;
-
   const hasAnyActiveFilter = Boolean(
     search.trim() ||
     (statusParam && statusParam !== 'ALL') ||
-    (!effectiveLockedTeamCode && selectedTeam !== 'ALL') ||
-    selectedPriority !== 'ALL'
+    (!effectiveLockedTeamCode && selectedTeam !== 'ALL')
   );
 
   const formatIndonesianDate = (dateVal: Date | string) => {
@@ -826,62 +793,6 @@ export function ActionItemMatrixView({
               )}
             </div>
 
-            {/* Dropdown: Prioritas */}
-            <div className="relative">
-              <button
-                type="button"
-                onClick={() => setOpenDropdown(openDropdown === 'PRIORITAS' ? null : 'PRIORITAS')}
-                className={cn(
-                  "inline-flex items-center gap-1.5 px-3 py-2 rounded-xl text-[12px] font-semibold transition-all cursor-pointer border select-none",
-                  selectedPriority !== 'ALL'
-                    ? "bg-[#F0F9FA] border-[#31889C] text-[#164E59] shadow-2xs font-bold"
-                    : openDropdown === 'PRIORITAS'
-                      ? "bg-slate-100 border-slate-300 text-slate-900"
-                      : "bg-white border-slate-200 text-slate-700 hover:bg-slate-50 hover:border-slate-300"
-                )}
-                title="Filter berdasarkan Skala Prioritas"
-              >
-                <TrendingUp className={cn("w-3.5 h-3.5 shrink-0", selectedPriority !== 'ALL' ? "text-[#31889C]" : "text-slate-500")} />
-                <span className="truncate max-w-[120px]">{selectedPriorityLabel}</span>
-                <ChevronDown
-                  className={cn(
-                    "w-3 h-3 transition-transform text-slate-400",
-                    openDropdown === 'PRIORITAS' && "rotate-180 text-[#31889C]"
-                  )}
-                />
-              </button>
-
-              {openDropdown === 'PRIORITAS' && (
-                <div className="absolute right-0 sm:left-0 sm:right-auto mt-1.5 w-56 bg-white rounded-xl shadow-xl border border-slate-200/90 p-1.5 z-50 animate-in fade-in zoom-in-95 duration-100">
-                  <div className="px-2.5 py-1.5 text-[10px] font-bold tracking-wider text-slate-400 uppercase">
-                    Skala Prioritas
-                  </div>
-                  {priorityOptions.map((pr) => {
-                    const isActive = selectedPriority === pr.value;
-                    return (
-                      <button
-                        key={pr.value}
-                        type="button"
-                        onClick={() => { handleSelectPriority(pr.value); setOpenDropdown(null); }}
-                        className={cn(
-                          "flex items-center justify-between w-full px-2.5 py-2 rounded-lg text-[12px] text-left transition-colors cursor-pointer",
-                          isActive ? "bg-[#F0F9FA] text-[#164E59] font-bold" : "hover:bg-slate-50 text-slate-700 font-medium"
-                        )}
-                      >
-                        <span>{pr.label}</span>
-                        <div className="flex items-center gap-1.5">
-                          <span className="text-[10.5px] px-1.5 py-0.2 rounded-full bg-slate-100 text-slate-600 font-semibold">
-                            {pr.count}
-                          </span>
-                          {isActive && <Check className="w-3.5 h-3.5 text-[#31889C]" />}
-                        </div>
-                      </button>
-                    );
-                  })}
-                </div>
-              )}
-            </div>
-
             {/* Export Buttons (Excel & Word) */}
             <div className="flex items-center rounded-xl border border-slate-200 bg-white p-0.5 shadow-2xs">
               <button
@@ -950,7 +861,6 @@ export function ActionItemMatrixView({
                 <th className="py-3.5 px-4 min-w-[280px]">Butir Tindak Lanjut &amp; Output</th>
                 <th className="py-3.5 px-4 w-[190px] whitespace-nowrap">Tim Kerja &amp; PIC</th>
                 <th className="py-3.5 px-4 w-[140px] whitespace-nowrap">Tenggat Waktu</th>
-                <th className="py-3.5 px-4 w-[155px] whitespace-nowrap">Prioritas</th>
                 <th className="py-3.5 px-4 w-[140px] whitespace-nowrap">Status</th>
                 <th className="py-3.5 px-4 w-[165px] text-right whitespace-nowrap">Aksi</th>
               </tr>
@@ -958,7 +868,7 @@ export function ActionItemMatrixView({
             <tbody className="divide-y divide-slate-100">
               {filteredTasks.length === 0 ? (
                 <tr>
-                  <td colSpan={7} className="py-12 text-center text-slate-500">
+                  <td colSpan={6} className="py-12 text-center text-slate-500">
                     <div className="flex flex-col items-center justify-center space-y-2">
                       <p className="font-semibold text-slate-700">
                         Tidak ada butir tindak lanjut yang cocok dengan filter.
@@ -1217,11 +1127,6 @@ export function ActionItemMatrixView({
                             </span>
                           )}
                         </div>
-                      </td>
-
-                      {/* Prioritas */}
-                      <td className="py-3.5 px-4 align-top whitespace-nowrap">
-                        <ActionItemPriorityBadge priority={task.priority} />
                       </td>
 
                       {/* Status (Start / On Progress / Finish) */}

@@ -19,7 +19,7 @@ import {
 } from 'lucide-react';
 import Link from 'next/link';
 import { toast } from '@/components/providers/toast-provider';
-import { ActionItemStatusBadge, ActionItemPriorityBadge } from '../action-items/action-item-status-badge';
+import { ActionItemStatusBadge } from '../action-items/action-item-status-badge';
 
 interface PreviousMeetingModalProps {
   isOpen: boolean;
@@ -406,7 +406,6 @@ export function PreviousMeetingModal({
 
                           <div className="shrink-0 flex flex-col items-end gap-1.5">
                             <ActionItemStatusBadge status={item.status} />
-                            <ActionItemPriorityBadge priority={item.priority} />
                           </div>
                         </div>
                       </div>

@@ -271,20 +271,6 @@ export function PicDeliverablesTracker({
                                 {item.picTeam.name || item.picTeam.code}
                               </span>
                             )}
-                            {item.priority && (
-                              <span
-                                className={cn(
-                                  "px-2 py-0.5 rounded-full text-[10px] font-bold",
-                                  item.priority === 'URGENT'
-                                    ? "bg-rose-100 text-rose-800"
-                                    : item.priority === 'HIGH'
-                                      ? "bg-orange-100 text-orange-800"
-                                      : "bg-slate-100 text-slate-600"
-                                )}
-                              >
-                                Prioritas {item.priority}
-                              </span>
-                            )}
                           </div>
                           <p className="text-[11.5px] text-slate-500 mt-0.5 truncate">
                             {item.picUser?.email || 'Staf Pelaksana Teknis'}

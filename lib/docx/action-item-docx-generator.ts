@@ -198,7 +198,6 @@ export async function generateActionItemDocx(
   const filterParts: string[] = [];
   if (filters.biro && filters.biro !== 'ALL') filterParts.push(`Biro: ${filters.biro}`);
   if (filters.status && filters.status !== 'ALL') filterParts.push(`Status: ${filters.status}`);
-  if (filters.priority && filters.priority !== 'ALL') filterParts.push(`Prioritas: ${filters.priority}`);
   if (filters.startDate) filterParts.push(`Dari: ${filters.startDate}`);
   if (filters.endDate) filterParts.push(`Sampai: ${filters.endDate}`);
   if (filters.search) filterParts.push(`Pencarian: "${filters.search}"`);
@@ -209,13 +208,12 @@ export async function generateActionItemDocx(
     tableHeader: true,
     height: { value: convertInchesToTwip(0.35), rule: 'atLeast' },
     children: [
-      headerCell('No.', 4),
-      headerCell('Ref. Kegiatan', 10),
-      headerCell('Butir Tindak Lanjut', 26),
-      headerCell('Biro & PIC', 14),
-      headerCell('Tenggat', 10),
-      headerCell('Prioritas', 9),
-      headerCell('Status', 11),
+      headerCell('No.', 5),
+      headerCell('Ref. Kegiatan', 11),
+      headerCell('Butir Tindak Lanjut', 30),
+      headerCell('Biro & PIC', 15),
+      headerCell('Tenggat', 11),
+      headerCell('Status', 12),
       headerCell('Catatan Terakhir', 16),
     ],
   });
@@ -241,7 +239,7 @@ export async function generateActionItemDocx(
         // No.
         dataCell(
           [para(`${idx + 1}`, { bold: true, size: 18, align: AlignmentType.CENTER, color: TEAL_DARK })],
-          4, rowBg,
+          5, rowBg,
         ),
         // Ref. Kegiatan
         dataCell(
@@ -251,7 +249,7 @@ export async function generateActionItemDocx(
               ? [para(formatDateId(item.meeting.date), { size: 16, color: '64748B', italic: true })]
               : []),
           ],
-          10, rowBg,
+          11, rowBg,
         ),
         // Butir Tindak Lanjut
         dataCell(
@@ -261,7 +259,7 @@ export async function generateActionItemDocx(
               ? [para(item.description, { size: 16, color: '64748B', italic: true })]
               : []),
           ],
-          26, rowBg,
+          30, rowBg,
         ),
         // Biro & PIC
         dataCell(
@@ -272,7 +270,7 @@ export async function generateActionItemDocx(
               ? [para(item.picUser.name, { size: 16, italic: true })]
               : []),
           ],
-          14, rowBg,
+          15, rowBg,
         ),
         // Tenggat
         dataCell(
@@ -286,12 +284,7 @@ export async function generateActionItemDocx(
               ? [para(`✓ Selesai ${formatDateId(item.completedAt)}`, { size: 16, color: GREEN })]
               : []),
           ],
-          10, rowBg,
-        ),
-        // Prioritas
-        dataCell(
-          [para(priorityLabel(item.priority), { size: 18, bold: item.priority === 'URGENT' })],
-          9, rowBg,
+          11, rowBg,
         ),
         // Status
         dataCell(
@@ -305,7 +298,7 @@ export async function generateActionItemDocx(
               ? [para(`Capaian: ${item.progress}%`, { size: 16, color: '64748B' })]
               : []),
           ],
-          11, rowBg,
+          12, rowBg,
         ),
         // Catatan Terakhir
         dataCell(

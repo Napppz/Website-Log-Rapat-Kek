@@ -159,7 +159,7 @@ export async function generateActionItemExcel(
 
   const exportedAt = new Date();
   const titleRow2 = matrixSheet.addRow([
-    `Tanggal Export: ${toIndonesianDate(exportedAt)} | Biro: ${biroLabel(params.biro ?? 'ALL')} | Status: ${statusLabel(params.status ?? 'ALL')} | Prioritas: ${priorityLabel(params.priority ?? 'ALL')} | Periode: ${periodLabel(params.startDate, params.endDate)}`,
+    `Tanggal Export: ${toIndonesianDate(exportedAt)} | Biro: ${biroLabel(params.biro ?? 'ALL')} | Status: ${statusLabel(params.status ?? 'ALL')} | Periode: ${periodLabel(params.startDate, params.endDate)}`,
   ]);
   titleRow2.height = 16;
   titleRow2.getCell(1).font = { size: 9, color: { argb: 'FF64748B' } };
@@ -179,7 +179,6 @@ export async function generateActionItemExcel(
     { header: 'PIC Biro', key: 'picBiro', width: 25 },
     { header: 'PIC', key: 'picUser', width: 30 },
     { header: 'Deadline', key: 'deadline', width: 15 },
-    { header: 'Prioritas', key: 'priority', width: 15 },
     { header: 'Status', key: 'status', width: 18 },
     { header: 'Selesai Pada', key: 'completedAt', width: 15 },
   ];
@@ -233,7 +232,6 @@ export async function generateActionItemExcel(
         item.picBiro?.code ?? 'Biro KEK',
         item.picUser?.name ?? 'Belum ditentukan',
         deadlineVal instanceof Date ? deadlineVal : toIndonesianDate(item.dueDate),
-        PRIORITY_MAP[item.priority] ?? item.priority,
         STATUS_MAP[item.computedStatus] ?? item.computedStatus,
         completedAtVal instanceof Date
           ? completedAtVal
@@ -274,18 +272,6 @@ export async function generateActionItemExcel(
           // PIC Biro
           cell.font = { bold: true, size: 9, color: { argb: 'FF1E3A8A' } };
         } else if (colNumber === 10) {
-          // Prioritas color coding
-          const priority = item.priority;
-          const priorityColor =
-            priority === 'URGENT'
-              ? 'FFDC2626'
-              : priority === 'HIGH'
-                ? 'FFD97706'
-                : priority === 'MEDIUM'
-                  ? 'FF2563EB'
-                  : 'FF64748B';
-          cell.font = { bold: true, size: 9, color: { argb: priorityColor } };
-        } else if (colNumber === 11) {
           // Status color coding
           const status = item.computedStatus;
           const statusColor =
@@ -302,14 +288,14 @@ export async function generateActionItemExcel(
         }
 
         // Format date cells
-        if ([4, 9, 12].includes(colNumber) && cell.value instanceof Date) {
+        if ([4, 9, 11].includes(colNumber) && cell.value instanceof Date) {
           cell.numFmt = 'dd/mm/yyyy';
         }
       });
 
       // Overdue row highlight: faint red background for status column
       if (item.isOverdue && item.computedStatus === 'OVERDUE') {
-        dataRow.getCell(11).fill = {
+        dataRow.getCell(10).fill = {
           type: 'pattern',
           pattern: 'solid',
           fgColor: { argb: 'FFFFF1F1' },
@@ -321,14 +307,14 @@ export async function generateActionItemExcel(
     const lastDataRow = 3 + 1 + enriched.length; // 3 title rows + 1 header + data
     matrixSheet.autoFilter = {
       from: { row: 4, column: 1 },
-      to: { row: lastDataRow, column: 12 },
+      to: { row: lastDataRow, column: 11 },
     };
   }
 
-  // Merge title row across all 12 columns
-  matrixSheet.mergeCells('A1:L1');
-  matrixSheet.mergeCells('A2:L2');
-  matrixSheet.mergeCells('A3:L3');
+  // Merge title row across all 11 columns
+  matrixSheet.mergeCells('A1:K1');
+  matrixSheet.mergeCells('A2:K2');
+  matrixSheet.mergeCells('A3:K3');
 
   // ─── Sheet 2: Ringkasan ─────────────────────────────────────────────────────
 
@@ -429,7 +415,6 @@ export async function generateActionItemExcel(
     ['Tanggal Export', toIndonesianDate(exportedAt)],
     ['Filter Biro', biroLabel(params.biro ?? 'ALL')],
     ['Filter Status', statusLabel(params.status ?? 'ALL')],
-    ['Filter Prioritas', priorityLabel(params.priority ?? 'ALL')],
     ['Periode (Deadline)', periodLabel(params.startDate, params.endDate)],
     ['Kata Kunci Pencarian', params.search?.trim() || '(Tidak ada)'],
     ['Total Data', String(enriched.length)],
@@ -490,47 +475,7 @@ export async function generateActionItemExcel(
   summarySheet.getRow(rowIdx).height = 10; // spacer
   rowIdx++;
 
-  // ── Section C: Summary by Priority ────────────────────────────────────────
-  addSectionHeader('REKAPITULASI PER PRIORITAS', rowIdx);
-  rowIdx++;
-
-  addTableHeader(rowIdx, ['Prioritas', 'Jumlah'], 2);
-  rowIdx++;
-
-  const priorityGroups = [
-    { label: 'Rendah', key: 'LOW' },
-    { label: 'Sedang', key: 'MEDIUM' },
-    { label: 'Tinggi', key: 'HIGH' },
-    { label: 'Mendesak', key: 'URGENT' },
-  ];
-
-  let priorityTotal = 0;
-  priorityGroups.forEach(({ label, key }, i) => {
-    const count = enriched.filter((item) => item.priority === key).length;
-    priorityTotal += count;
-    addTableDataRow(rowIdx, [label, count], i % 2 === 0);
-    rowIdx++;
-  });
-
-  // Total row
-  const priorityTotalRow = summarySheet.getRow(rowIdx);
-  priorityTotalRow.getCell(1).value = 'TOTAL';
-  priorityTotalRow.getCell(1).font = { bold: true, size: 9 };
-  priorityTotalRow.getCell(2).value = priorityTotal;
-  priorityTotalRow.getCell(2).font = { bold: true, size: 9 };
-  [1, 2].forEach((c) => {
-    priorityTotalRow.getCell(c).fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFDBEAFE' } };
-    priorityTotalRow.getCell(c).border = { top: { style: 'medium' }, bottom: { style: 'thin' }, left: { style: 'thin' }, right: { style: 'thin' } };
-    priorityTotalRow.getCell(c).alignment = { horizontal: 'center', vertical: 'middle' };
-  });
-  priorityTotalRow.getCell(1).alignment = { horizontal: 'left', vertical: 'middle' };
-  summarySheet.getRow(rowIdx).height = 18;
-  rowIdx++;
-
-  summarySheet.getRow(rowIdx).height = 10; // spacer
-  rowIdx++;
-
-  // ── Section D: Summary by Biro ─────────────────────────────────────────────
+  // ── Section C: Summary by Biro ─────────────────────────────────────────────
   addSectionHeader('REKAPITULASI PER BIRO', rowIdx);
   rowIdx++;
 

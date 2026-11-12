@@ -1469,45 +1469,41 @@ export function MeetingDetailView({
 
       {/* Kegiatan Lanjutan / Rujukan Section */}
       {previousMeeting ? (
-        <div className="bg-[#F0F9FA] rounded-2xl border border-[#BCE3EB] p-5 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-4">
-          <div className="flex items-start gap-3.5">
-            <div className="p-2.5 rounded-xl bg-[#31889C] text-white shadow-xs shrink-0 mt-0.5">
-              <Link2 className="w-5 h-5" />
+        <div className="bg-[#F0F9FA] rounded-xl border border-[#BCE3EB] p-4 shadow-2xs flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <div className="flex items-start gap-3">
+            <div className="p-2 rounded-lg bg-[#31889C] text-white shrink-0 mt-0.5">
+              <Link2 className="w-4 h-4" />
             </div>
             <div>
               <div className="flex items-center gap-2 flex-wrap">
-                <span className="text-[11px] font-extrabold uppercase tracking-wider text-[#215865] bg-[#E8F5F7] px-2 py-0.5 rounded-md border border-[#BCE3EB]">
-                  Kegiatan Lanjutan
+                <span className="text-[11px] font-bold text-[#215865] bg-[#E8F5F7] px-2 py-0.5 rounded-md border border-[#BCE3EB]">
+                  Lanjutan dari Kegiatan
                 </span>
-                <span className="text-[12px] font-bold text-slate-700">
-                  Merujuk ke Kegiatan Sebelumnya:
-                </span>
-                <span className="font-bold text-[12px] text-[#215865] bg-white px-2 py-0.5 rounded-md border border-[#BCE3EB] shadow-2xs">
+                <span className="font-mono font-bold text-[12px] text-[#215865] bg-white px-2 py-0.5 rounded-md border border-[#BCE3EB]">
                   {previousMeeting.meetingNumber}
                 </span>
               </div>
-              <h4 className="font-bold text-[15px] text-slate-900 mt-1">
+              <h4 className="font-bold text-[14px] text-slate-900 mt-1">
                 {previousMeeting.title}
               </h4>
-              <div className="flex items-center gap-4 text-[12px] text-slate-600 mt-1.5 flex-wrap">
+              <div className="flex items-center gap-3 text-[12px] text-slate-600 mt-1 flex-wrap">
                 <span className="flex items-center gap-1">
                   <Calendar className="w-3.5 h-3.5 text-[#31889C]" />
                   {new Date(previousMeeting.date).toLocaleDateString('id-ID', {
-                    weekday: 'short',
                     day: 'numeric',
                     month: 'short',
                     year: 'numeric',
                   })}
                 </span>
-                <span className="flex items-center gap-1">
-                  <Building2 className="w-3.5 h-3.5 text-[#31889C]" />
-                  {previousMeeting.primaryBiro?.code || 'Biro KEK'}
-                </span>
-                <span className="flex items-center gap-1">
-                  <FileText className="w-3.5 h-3.5 text-[#31889C]" />
-                  {previousMeeting.minutes ? 'Laporan Hasil Tersedia' : 'Belum Ada Laporan Hasil'}
-                </span>
-                {previousMeeting.actionItems && (
+                {previousMeeting.primaryTeam?.name && (
+                  <span className="flex items-center gap-1">
+                    <Building2 className="w-3.5 h-3.5 text-[#31889C]" />
+                    {previousMeeting.primaryTeam.name.startsWith('Tim ')
+                      ? previousMeeting.primaryTeam.name
+                      : `Tim ${previousMeeting.primaryTeam.name}`}
+                  </span>
+                )}
+                {previousMeeting.actionItems && previousMeeting.actionItems.length > 0 && (
                   <span className="flex items-center gap-1">
                     <CheckCircle2 className="w-3.5 h-3.5 text-[#7CC563]" />
                     {previousMeeting.actionItems.filter((a: any) => a.status === 'COMPLETED').length}/
@@ -1522,61 +1518,59 @@ export function MeetingDetailView({
             <button
               type="button"
               onClick={() => setShowSeriesModal(true)}
-              className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-white border border-[#BCE3EB] hover:bg-[#E8F5F7] text-[#215865] font-semibold text-[12px] transition-colors cursor-pointer shadow-2xs"
-              title="Lihat seluruh sesi kegiatan terkait dalam agenda ini"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white border border-[#BCE3EB] hover:bg-[#E8F5F7] text-[#215865] font-semibold text-[12px] transition-colors cursor-pointer"
+              title="Lihat urutan rangkaian kegiatan dari awal hingga saat ini"
             >
-              <Layers className="w-4 h-4 text-[#31889C]" />
-              <span>Rangkaian Kegiatan Terkait</span>
+              <Layers className="w-3.5 h-3.5 text-[#31889C]" />
+              <span>Lihat Urutan Rangkaian</span>
             </button>
 
             <button
               type="button"
               onClick={() => setShowPreviousMeetingModal(true)}
-              className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-[#31889C] hover:bg-[#266F80] text-white font-semibold text-[12px] transition-all shadow-xs cursor-pointer"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#31889C] hover:bg-[#266F80] text-white font-semibold text-[12px] transition-all cursor-pointer"
             >
-              <FileText className="w-4 h-4" />
-              <span>Lihat Hasil Kegiatan {previousMeeting.meetingNumber}</span>
+              <FileText className="w-3.5 h-3.5" />
+              <span>Detail {previousMeeting.meetingNumber}</span>
             </button>
 
             {canEditMeeting && (
               <button
                 type="button"
                 onClick={() => setShowLinkMeetingModal(true)}
-                className="inline-flex items-center gap-1 px-3 py-2 rounded-xl bg-white border border-[#BCE3EB] hover:bg-[#E8F5F7] text-[#215865] font-semibold text-[12px] transition-colors cursor-pointer"
-                title="Ubah Rujukan Kegiatan Sebelumnya"
+                className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-white border border-[#BCE3EB] hover:bg-[#E8F5F7] text-[#215865] font-semibold text-[12px] transition-colors cursor-pointer"
+                title="Ubah atau lepaskan tautan kegiatan sebelumnya"
               >
-                <Link2 className="w-3.5 h-3.5" />
                 <span>Ubah</span>
               </button>
             )}
           </div>
         </div>
       ) : (
-        <div className="bg-[#F0F9FA] rounded-xl border border-dashed border-[#BCE3EB] p-3.5 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-[12px]">
-          <div className="flex items-center gap-2.5 text-slate-700">
-            <Link2 className="w-4 h-4 text-[#31889C] shrink-0" />
+        <div className="bg-slate-50 rounded-xl border border-slate-200 px-4 py-3 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-[12px]">
+          <div className="flex items-center gap-2 text-slate-600">
+            <Link2 className="w-4 h-4 text-slate-400 shrink-0" />
             <span>
-              Pantau seluruh rangkaian sesi atau hubungkan sebagai tindak lanjut kegiatan terdahulu.
+              Kegiatan mandiri (bukan lanjutan dari kegiatan sebelumnya).
             </span>
           </div>
           <div className="flex items-center gap-2 flex-wrap">
             <button
               type="button"
               onClick={() => setShowSeriesModal(true)}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white border border-[#BCE3EB] hover:bg-[#E8F5F7] text-[#215865] font-semibold text-[12px] transition-all shadow-2xs cursor-pointer"
-              title="Periksa apakah ada kegiatan lain dengan topik agenda serupa"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white border border-slate-200 hover:bg-slate-100 text-slate-700 font-semibold text-[12px] transition-all cursor-pointer"
             >
-              <Layers className="w-3.5 h-3.5 text-[#31889C]" />
-              <span>Cek Rangkaian Kegiatan Terkait</span>
+              <Layers className="w-3.5 h-3.5 text-slate-500" />
+              <span>Cek Rangkaian</span>
             </button>
             {canEditMeeting && (
               <button
                 type="button"
                 onClick={() => setShowLinkMeetingModal(true)}
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#31889C] hover:bg-[#266F80] text-white font-semibold text-[12px] transition-all shadow-2xs cursor-pointer"
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#31889C] hover:bg-[#266F80] text-white font-semibold text-[12px] transition-all cursor-pointer"
               >
                 <Link2 className="w-3.5 h-3.5" />
-                <span>+ Tautkan Kegiatan Sebelumnya</span>
+                <span>Tautkan Kegiatan Sebelumnya</span>
               </button>
             )}
           </div>
@@ -1797,6 +1791,8 @@ export function MeetingDetailView({
         onClose={() => setShowLinkMeetingModal(false)}
         currentMeetingId={meeting.id}
         currentMeetingNumber={meeting.meetingNumber}
+        currentMeetingTitle={meeting.title}
+        currentTeamCode={meeting.primaryTeam?.code}
         currentLinkedMeetingId={previousMeeting?.id || null}
         onLinkedSuccess={(updated) => {
           setPreviousMeeting(updated.previousMeeting || null);

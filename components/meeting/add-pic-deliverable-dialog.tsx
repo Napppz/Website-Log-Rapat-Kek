@@ -222,36 +222,18 @@ export function AddPicDeliverableDialog({
             />
           </div>
 
-          {/* Due Date & Priority */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <div className="space-y-1.5">
-              <label className="text-xs font-bold text-slate-700 flex items-center gap-1.5">
-                <Calendar className="w-3.5 h-3.5 text-slate-500" />
-                <span>Tenggat Waktu</span>
-              </label>
-              <input
-                type="date"
-                value={dueDate}
-                onChange={(e) => setDueDate(e.target.value)}
-                className="w-full text-xs rounded-xl border border-slate-300 p-2.5 text-slate-900 bg-white focus:outline-none focus:ring-2 focus:ring-[#1E6B7B]/20 focus:border-[#1E6B7B]"
-              />
-            </div>
-
-            <div className="space-y-1.5">
-              <label className="text-xs font-bold text-slate-700">
-                Skala Prioritas
-              </label>
-              <select
-                value={priority}
-                onChange={(e) => setPriority(e.target.value as ActionItemPriority)}
-                className="w-full text-xs rounded-xl border border-slate-300 p-2.5 text-slate-900 bg-white focus:outline-none focus:ring-2 focus:ring-[#1E6B7B]/20 focus:border-[#1E6B7B]"
-              >
-                <option value={ActionItemPriority.LOW}>Rendah (Low)</option>
-                <option value={ActionItemPriority.MEDIUM}>Sedang (Medium)</option>
-                <option value={ActionItemPriority.HIGH}>Tinggi (High)</option>
-                <option value={ActionItemPriority.URGENT}>Mendesak (Urgent)</option>
-              </select>
-            </div>
+          {/* Due Date */}
+          <div className="space-y-1.5">
+            <label className="text-xs font-bold text-slate-700 flex items-center gap-1.5">
+              <Calendar className="w-3.5 h-3.5 text-slate-500" />
+              <span>Tenggat Waktu</span>
+            </label>
+            <input
+              type="date"
+              value={dueDate}
+              onChange={(e) => setDueDate(e.target.value)}
+              className="w-full text-xs rounded-xl border border-slate-300 p-2.5 text-slate-900 bg-white focus:outline-none focus:ring-2 focus:ring-[#1E6B7B]/20 focus:border-[#1E6B7B]"
+            />
           </div>
 
           {/* Instruksi / Catatan Penugasan */}

@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { CheckCircle2, Clock, PlayCircle } from 'lucide-react';
-import { ActionItemStatus, ActionItemPriority } from '@/lib/types';
+import { ActionItemStatus } from '@/lib/types';
 
 interface ActionItemStatusBadgeProps {
   status: ActionItemStatus | string;
@@ -37,44 +37,4 @@ export function ActionItemStatusBadge({ status }: ActionItemStatusBadgeProps) {
       <span>Belum Dimulai</span>
     </span>
   );
-}
-
-interface ActionItemPriorityBadgeProps {
-  priority: ActionItemPriority | string;
-}
-
-export function ActionItemPriorityBadge({ priority }: ActionItemPriorityBadgeProps) {
-  const p = String(priority || '').toUpperCase();
-
-  switch (p) {
-    case 'URGENT':
-      return (
-        <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-rose-50 text-rose-700 text-[11px] font-semibold border border-rose-200">
-          <span className="w-1.5 h-1.5 rounded-full bg-rose-500" />
-          <span>Sangat Mendesak</span>
-        </span>
-      );
-    case 'HIGH':
-      return (
-        <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-amber-50 text-amber-800 text-[11px] font-semibold border border-amber-200">
-          <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />
-          <span>Tinggi</span>
-        </span>
-      );
-    case 'MEDIUM':
-      return (
-        <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-sky-50 text-sky-700 text-[11px] font-semibold border border-sky-200">
-          <span className="w-1.5 h-1.5 rounded-full bg-sky-500" />
-          <span>Sedang</span>
-        </span>
-      );
-    case 'LOW':
-    default:
-      return (
-        <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-slate-100 text-slate-600 text-[11px] font-medium border border-slate-200">
-          <span className="w-1.5 h-1.5 rounded-full bg-slate-400" />
-          <span>Rendah</span>
-        </span>
-      );
-  }
 }

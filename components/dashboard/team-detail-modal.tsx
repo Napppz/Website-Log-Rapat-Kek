@@ -715,12 +715,6 @@ export function TeamDetailModal({ isOpen, onClose, team }: TeamDetailModalProps)
                                 Kegiatan {job.meetingNumber}
                               </span>
                             ) : null}
-
-                            {job.priority && (
-                              <span className="text-[10px] font-bold uppercase text-slate-500 bg-slate-100 px-1.5 py-0.5 rounded">
-                                Prioritas: {job.priority}
-                              </span>
-                            )}
                           </div>
 
                           <h4 className="font-bold text-[13.5px] text-slate-900 leading-snug">
