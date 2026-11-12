@@ -324,10 +324,10 @@ export function ActionItemUpdateProgressDialog({
                         target="_blank"
                         rel="noopener noreferrer"
                         className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-200 text-[11.5px] font-bold transition-colors shadow-2xs"
-                        title="Buka folder/tautan Google Drive bahan acuan atasan"
+                        title="Buka tautan bahan acuan atasan"
                       >
-                        <GoogleDriveIcon className="w-3.5 h-3.5" />
-                        <span>Google Drive Acuan Atasan</span>
+                        <GoogleDriveIcon className="w-3.5 h-3.5 text-amber-700" />
+                        <span>Link Terkait Acuan Atasan</span>
                         <ExternalLink className="w-3 h-3 text-amber-600" />
                       </a>
                     )}
@@ -429,10 +429,10 @@ export function ActionItemUpdateProgressDialog({
 
             {/* Completion Banner */}
             {isCompleted && (
-              <div className="p-3 rounded-xl bg-emerald-50/80 border border-emerald-200 text-emerald-900 flex items-start gap-2 text-[12px] animate-in fade-in">
-                <Sparkles className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
+              <div className="p-3 rounded-xl bg-emerald-50/80 border border-emerald-200 text-emerald-900 flex items-start gap-2 text-[12px]">
+                <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
                 <span className="leading-relaxed">
-                  <strong>Pekerjaan Selesai:</strong> Sertakan ringkasan hasil penyelesaian dan lampirkan bukti dukung (dokumen atau link Google Drive) agar akuntabilitas tercatat jelas.
+                  <strong>Pekerjaan Selesai:</strong> Sertakan ringkasan hasil penyelesaian dan lampirkan berkas atau tautan bukti kegiatan.
                 </span>
               </div>
             )}

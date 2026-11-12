@@ -730,12 +730,12 @@ export function TeamDetailModal({ isOpen, onClose, team }: TeamDetailModalProps)
                           <div className="flex items-center gap-4 text-[11.5px] text-slate-500 mt-2 flex-wrap">
                             {job.picName && (
                               <span className="flex items-center gap-1 font-medium">
-                                👤 PIC: <strong>{job.picName}</strong>
+                                PIC: <strong className="text-slate-700">{job.picName}</strong>
                               </span>
                             )}
                             {job.dueDate && (
                               <span className="flex items-center gap-1 font-medium">
-                                📅 Tenggat: <strong>{job.dueDate}</strong>
+                                Tenggat: <strong className="text-slate-700">{job.dueDate}</strong>
                               </span>
                             )}
                           </div>
@@ -904,7 +904,7 @@ export function TeamDetailModal({ isOpen, onClose, team }: TeamDetailModalProps)
                             <ExternalLink className="w-2.5 h-2.5" />
                           </Link>
                           <MeetingProgressBadge progressStatus={(m as any).progressStatus} status={m.status} showSubtitle />
-                          <span className="text-[11.5px] text-slate-400">📅 {m.date}</span>
+                          <span className="text-[11.5px] text-slate-400">{m.date}</span>
                         </div>
 
                         <Link

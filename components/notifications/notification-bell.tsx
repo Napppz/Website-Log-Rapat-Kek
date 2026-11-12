@@ -287,7 +287,7 @@ export function NotificationBell() {
             ) : filteredNotifications.length === 0 ? (
               <div className="p-8 text-center">
                 <div className="w-12 h-12 rounded-full bg-slate-50 border border-slate-200/60 flex items-center justify-center mx-auto mb-2 text-slate-400">
-                  <Sparkles className="w-5 h-5 text-slate-400" />
+                  <Bell className="w-5 h-5 text-slate-400" />
                 </div>
                 <p className="font-semibold text-slate-700 text-[13px]">
                   {activeTab === 'UNREAD' ? 'Tidak ada notifikasi belum dibaca' : 'Belum ada notifikasi'}

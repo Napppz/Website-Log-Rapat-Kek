@@ -24,9 +24,10 @@ import {
   ExternalLink,
   FileCheck,
   FileText,
+  Link2,
 } from 'lucide-react';
 import { ActionItem, ActionItemStatus } from '@/lib/types';
-import { ActionItemStatusBadge, ActionItemPriorityBadge } from './action-item-status-badge';
+import { ActionItemStatusBadge } from './action-item-status-badge';
 import { ActionItemFormDialog } from './action-item-form-dialog';
 import { ActionItemDeleteDialog } from './action-item-delete-dialog';
 import { ActionItemUpdateProgressDialog } from './action-item-update-progress-dialog';
@@ -86,8 +87,7 @@ export function ActionItemList({
   const canDeleteItem = !readOnly && (userRole === 'SUPER_ADMIN' || userRole === 'ADMIN');
 
   const canEditThisItem = (item: ActionItem) => {
-    if (readOnly) return false;
-    if (userRole === 'SUPER_ADMIN' || userRole === 'ADMIN') return true;
+    if (userRole === 'SUPER_ADMIN' || userRole === 'ADMIN') return !readOnly;
     if (userRole === 'STAFF') {
       return Boolean(item.picUserId && currentUserId && item.picUserId === currentUserId);
     }
@@ -134,7 +134,6 @@ export function ActionItemList({
   const [filterSearch, setFilterSearch] = useState('');
   const [filterPic, setFilterPic] = useState('ALL');
   const [filterStatus, setFilterStatus] = useState('ALL');
-  const [filterTeam, setFilterTeam] = useState(userStaffTeamCode || 'ALL');
 
   // Unique PICs from items
   const uniquePics = useMemo(() => {
@@ -147,29 +146,15 @@ export function ActionItemList({
     return Array.from(map.entries()).map(([id, name]) => ({ id, name }));
   }, [visibleItems]);
 
-  // Available Teams for filter
-  const availableTeamFilters = useMemo(() => {
-    const canonical = [
-      { code: 'INV', name: 'Tim Investasi' },
-      { code: 'KS', name: 'Tim Kerja Sama' },
-      { code: 'KOM', name: 'Tim Komunikasi' },
-    ];
-    if (userStaffTeamCode) {
-      return canonical.filter((t) => t.code === userStaffTeamCode);
-    }
-    return canonical;
-  }, [userStaffTeamCode]);
-
   // Has active filters
   const hasActiveFilters = Boolean(
-    filterSearch.trim() || filterPic !== 'ALL' || filterStatus !== 'ALL' || (!userStaffTeamCode && filterTeam !== 'ALL')
+    filterSearch.trim() || filterPic !== 'ALL' || filterStatus !== 'ALL'
   );
 
   const resetFilters = () => {
     setFilterSearch('');
     setFilterPic('ALL');
     setFilterStatus('ALL');
-    setFilterTeam(userStaffTeamCode || 'ALL');
   };
 
   // Filtered items
@@ -195,12 +180,6 @@ export function ActionItemList({
         }
       }
 
-      // Team filter
-      if (filterTeam !== 'ALL') {
-        const itemTeamCode = item.picTeam?.code || (item.picBiro?.code === 'IKK' ? 'INV' : '');
-        if (itemTeamCode !== filterTeam) return false;
-      }
-
       // Status filter
       if (filterStatus !== 'ALL') {
         if (item.status !== filterStatus) return false;
@@ -208,7 +187,7 @@ export function ActionItemList({
 
       return true;
     });
-  }, [items, filterSearch, filterPic, filterTeam, filterStatus]);
+  }, [visibleItems, filterSearch, filterPic, filterStatus]);
 
   const handleStatusChange = async (itemId: string, newStatus: ActionItemStatus) => {
     try {
@@ -288,40 +267,46 @@ export function ActionItemList({
   return (
     <div className="space-y-6">
       {/* Top Summary Banner */}
-      <div className="p-5 bg-white rounded-xl border border-slate-200 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-4">
+      <div className="p-5 bg-white rounded-xl border border-slate-200 shadow-2xs flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <span className="text-[11px] font-bold text-[#31889C] uppercase tracking-wider block">
-            Matriks &amp; Komitmen Tindak Lanjut
-          </span>
-          <h3 className="text-[17px] font-bold text-slate-900 mt-0.5">
+          <h3 className="text-[17px] font-bold text-slate-900">
             Daftar Butir Tindak Lanjut Kegiatan
           </h3>
-          <p className="text-[12px] text-slate-500 mt-0.5">
-            Tindak lanjut resmi hasil arahan kegiatan dewan dan biro pelaksana KEK RI.
+          <p className="text-[12.5px] text-slate-500 mt-0.5">
+            Daftar penugasan dan progres penyelesaian tindak lanjut kegiatan.
           </p>
         </div>
 
         <div className="flex flex-wrap items-center gap-3">
           {/* Quick Metrics */}
           <div className="flex items-center gap-2">
-            <div className="px-3 py-1.5 rounded-lg border bg-slate-50 border-slate-200 text-center">
+            <div className="px-3 py-1.5 rounded-lg border bg-slate-50 border-slate-200 text-center min-w-[64px]">
               <span className="text-[10px] text-slate-500 font-semibold uppercase block">Total</span>
-              <span className="text-[14px] font-bold text-slate-900">{total}</span>
+              <span className="text-[14px] font-bold text-slate-900 tabular-nums">{total}</span>
             </div>
 
-            <div className="px-3 py-1.5 rounded-lg border bg-[#FFF8CC] border-[#FFEE99] text-center">
-              <span className="text-[10px] text-[#8A7200] font-semibold uppercase block">Belum Dimulai</span>
-              <span className="text-[14px] font-bold text-[#8A7200]">{pending}</span>
+            <div className="px-3 py-1.5 rounded-lg border bg-white border-slate-200 text-center min-w-[96px]">
+              <span className="text-[10px] text-slate-500 font-semibold uppercase flex items-center justify-center gap-1">
+                <span className="w-1.5 h-1.5 rounded-full bg-amber-400" />
+                Belum Dimulai
+              </span>
+              <span className="text-[14px] font-bold text-slate-900 tabular-nums">{pending}</span>
             </div>
 
-            <div className="px-3 py-1.5 rounded-lg border bg-[#E8F5F7] border-[#BCE3EB] text-center">
-              <span className="text-[10px] text-[#31889C] font-semibold uppercase block">Dalam Proses</span>
-              <span className="text-[14px] font-bold text-[#31889C]">{inProgress}</span>
+            <div className="px-3 py-1.5 rounded-lg border bg-white border-slate-200 text-center min-w-[96px]">
+              <span className="text-[10px] text-slate-500 font-semibold uppercase flex items-center justify-center gap-1">
+                <span className="w-1.5 h-1.5 rounded-full bg-[#31889C]" />
+                Dalam Proses
+              </span>
+              <span className="text-[14px] font-bold text-slate-900 tabular-nums">{inProgress}</span>
             </div>
 
-            <div className="px-3 py-1.5 rounded-lg border bg-[#ECF8E9] border-[#D2EFCA] text-center">
-              <span className="text-[10px] text-[#4D8F3D] font-semibold uppercase block">Selesai</span>
-              <span className="text-[14px] font-bold text-[#4D8F3D]">{completed}</span>
+            <div className="px-3 py-1.5 rounded-lg border bg-white border-slate-200 text-center min-w-[72px]">
+              <span className="text-[10px] text-slate-500 font-semibold uppercase flex items-center justify-center gap-1">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                Selesai
+              </span>
+              <span className="text-[14px] font-bold text-slate-900 tabular-nums">{completed}</span>
             </div>
           </div>
 
@@ -332,7 +317,7 @@ export function ActionItemList({
                 setEditingItem(null);
                 setIsFormOpen(true);
               }}
-              className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg bg-[#31889C] hover:bg-[#266F80] text-white font-semibold text-[13px] shadow-sm transition-all shrink-0 cursor-pointer"
+              className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg bg-[#31889C] hover:bg-[#266F80] text-white font-semibold text-[13px] shadow-2xs transition-colors shrink-0 cursor-pointer"
             >
               <Plus className="w-4 h-4" />
               <span>Tambah Tindak Lanjut</span>
@@ -381,23 +366,6 @@ export function ActionItemList({
                   {uniquePics.map((p) => (
                     <option key={p.id} value={p.id}>
                       {p.name}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              {/* Tim Kerja Filter Dropdown */}
-              <div className="flex items-center gap-1.5 bg-slate-50 border border-slate-200 rounded-lg px-2.5 py-1.5">
-                <Layers className="w-3.5 h-3.5 text-[#31889C] shrink-0" />
-                <select
-                  value={filterTeam}
-                  onChange={(e) => setFilterTeam(e.target.value)}
-                  className="bg-transparent text-slate-700 font-semibold focus:outline-none cursor-pointer text-xs"
-                >
-                  <option value="ALL">Semua Tim Kerja</option>
-                  {availableTeamFilters.map((t) => (
-                    <option key={t.code} value={t.code}>
-                      {t.name}
                     </option>
                   ))}
                 </select>
@@ -511,8 +479,8 @@ export function ActionItemList({
                 <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3">
                   <div className="space-y-1 flex-1">
                     <div className="flex flex-wrap items-center gap-2">
-                      <span className="text-[11px] font-bold text-[#215865] bg-[#E8F5F7] px-2 py-0.5 rounded border border-[#BCE3EB]">
-                        Item #{idx + 1}
+                      <span className="text-[11px] font-semibold text-slate-400 tabular-nums">
+                        #{idx + 1}
                       </span>
                       {canEditThisItem(item) ? (
                         <button
@@ -526,7 +494,6 @@ export function ActionItemList({
                       ) : (
                         <ActionItemStatusBadge status={item.status} />
                       )}
-                      <ActionItemPriorityBadge priority={item.priority} />
                     </div>
                     <h4 className="text-[15px] font-bold text-slate-900 pt-1 leading-snug">
                       {/^https?:\/\//i.test(item.title.trim())
@@ -572,13 +539,10 @@ export function ActionItemList({
                             {/* 1. KOTAK BAHAN & ACUAN DARI ATASAN */}
                             {(refDocMatch || refDriveUrl) && (
                               <div className="p-2.5 rounded-xl bg-slate-50/90 border border-slate-200/90 space-y-1.5">
-                                <div className="flex items-center justify-between">
-                                  <span className="text-[10px] font-bold uppercase tracking-wider text-slate-600 flex items-center gap-1.5">
+                                <div className="flex items-center">
+                                  <span className="text-[11px] font-semibold text-slate-600 flex items-center gap-1.5">
                                     <Paperclip className="w-3.5 h-3.5 text-slate-400" />
-                                    <span>Bahan &amp; Acuan dari Atasan (Input)</span>
-                                  </span>
-                                  <span className="text-[9.5px] font-semibold text-slate-400">
-                                    Dokumen Penugasan
+                                    <span>Bahan Acuan dari Atasan</span>
                                   </span>
                                 </div>
                                 <div className="flex flex-wrap items-center gap-2">
@@ -601,9 +565,9 @@ export function ActionItemList({
                                       target="_blank"
                                       rel="noopener noreferrer"
                                       className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11.5px] font-bold bg-white hover:bg-amber-50 text-amber-800 border border-amber-200 transition-colors shadow-2xs"
-                                      title="Buka Folder Google Drive Bahan Acuan Atasan"
+                                      title="Buka Link Terkait Bahan Acuan Atasan"
                                     >
-                                      <GoogleDriveIcon className="w-3.5 h-3.5" />
+                                      <Link2 className="w-3.5 h-3.5 text-amber-700" />
                                       <span>Link Terkait</span>
                                       <ExternalLink className="w-2.5 h-2.5 text-amber-600" />
                                     </a>
@@ -615,13 +579,10 @@ export function ActionItemList({
                             {/* 2. KOTAK BUKTI HASIL PELAKSANAAN DARI PIC */}
                             {(evidenceDocMatch || evidenceDriveUrl || allUrls.length > 0) ? (
                               <div className="p-2.5 rounded-xl bg-[#ECF8E9]/80 border border-[#BDE7B5] space-y-1.5">
-                                <div className="flex items-center justify-between">
-                                  <span className="text-[10px] font-bold uppercase tracking-wider text-[#2C6E20] flex items-center gap-1.5">
+                                <div className="flex items-center">
+                                  <span className="text-[11px] font-semibold text-[#2C6E20] flex items-center gap-1.5">
                                     <CheckCircle2 className="w-3.5 h-3.5 text-[#4D8F3D]" />
-                                    <span>Bukti Hasil Pelaksanaan PIC (Output)</span>
-                                  </span>
-                                  <span className="text-[9.5px] font-bold text-[#2C6E20] bg-white px-2 py-0.5 rounded-full border border-[#BDE7B5]">
-                                    Bukti Selesai
+                                    <span>Bukti Hasil PIC</span>
                                   </span>
                                 </div>
                                 <div className="flex flex-wrap items-center gap-2">
@@ -644,10 +605,10 @@ export function ActionItemList({
                                       target="_blank"
                                       rel="noopener noreferrer"
                                       className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11.5px] font-bold bg-white hover:bg-emerald-50 text-emerald-800 border border-emerald-300 transition-colors shadow-2xs"
-                                      title="Buka Folder Google Drive Bukti Hasil PIC"
+                                      title="Buka Link Hasil Kegiatan PIC"
                                     >
-                                      <GoogleDriveIcon className="w-3.5 h-3.5" />
-                                      <span>Google Drive Bukti Hasil</span>
+                                      <Link2 className="w-3.5 h-3.5 text-emerald-700" />
+                                      <span>Link Hasil Kegiatan</span>
                                       <ExternalLink className="w-2.5 h-2.5 text-emerald-600" />
                                     </a>
                                   )}
@@ -747,12 +708,12 @@ export function ActionItemList({
                       </div>
                     )}
 
-                    {/* Mulai Tindak Lanjut */}
+                    {/* Tenggat */}
                     {item.dueDate && (
                       <div className="flex items-center gap-1.5">
                         <Calendar className="w-3.5 h-3.5 text-[#31889C]" />
                         <span className="text-slate-600">
-                          Mulai Tindak Lanjut:{' '}
+                          Tenggat:{' '}
                           <strong
                             className={
                               item.status === 'COMPLETED'
@@ -824,21 +785,15 @@ export function ActionItemList({
                       {/* Tombol Utama: Update Status & Bukti (Jika Selesai, tampilkan status Selesai) */}
                       {canEditThisItem(item) && (
                         item.status === 'COMPLETED' ? (
-                          <div className="flex items-center gap-1.5">
-                            <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-emerald-50 text-[#2C6E20] border border-emerald-200 text-[11px] font-bold">
-                              <CheckCircle2 className="w-3.5 h-3.5 text-[#4D8F3D]" />
-                              <span>Selesai</span>
-                            </span>
-                            <button
-                              type="button"
-                              onClick={() => openUpdateDialog(item)}
-                              className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-slate-50 hover:bg-slate-100 text-slate-600 border border-slate-200 text-[11px] font-medium transition-all cursor-pointer"
-                              title="Perbarui catatan atau link bukti penyelesaian"
-                            >
-                              <TrendingUp className="w-3 h-3 text-slate-500" />
-                              <span>Ubah Bukti</span>
-                            </button>
-                          </div>
+                          <button
+                            type="button"
+                            onClick={() => openUpdateDialog(item)}
+                            className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 text-[11px] font-semibold transition-colors cursor-pointer"
+                            title="Perbarui catatan atau link bukti penyelesaian"
+                          >
+                            <Edit2 className="w-3 h-3 text-slate-500" />
+                            <span>Ubah Bukti</span>
+                          </button>
                         ) : (
                           <button
                             type="button"
@@ -846,8 +801,8 @@ export function ActionItemList({
                             className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#31889C] hover:bg-[#266F80] text-white text-[11.5px] font-bold transition-all cursor-pointer shadow-2xs"
                             title="Perbarui progres pekerjaan, unggah link output, atau tandai selesai"
                           >
-                            <TrendingUp className="w-3.5 h-3.5" />
-                            <span>Update Progres &amp; Bukti</span>
+                            <Edit2 className="w-3.5 h-3.5" />
+                            <span>Perbarui Progres &amp; Bukti</span>
                           </button>
                         )
                       )}

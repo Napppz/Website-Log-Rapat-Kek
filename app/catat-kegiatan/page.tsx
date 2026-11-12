@@ -481,20 +481,15 @@ export default function BuatRapatPage() {
         </div>
       </div>
 
-      {/* Hero Title & Description */}
-      <div className="bg-gradient-to-br from-[#175360] via-[#1E6B7B] to-[#266F80] rounded-2xl p-6 sm:p-7 text-white shadow-md border border-white/10 relative overflow-hidden">
-        <div className="absolute right-0 top-0 translate-x-10 -translate-y-10 w-64 h-64 bg-white/5 rounded-full blur-2xl pointer-events-none" />
-        <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-5">
+      {/* Header Title & Description */}
+      <div className="bg-white rounded-xl p-5 sm:p-6 text-slate-800 shadow-2xs border border-slate-200 border-l-4 border-l-[#31889C]">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div className="max-w-2xl">
-            <span className="px-3 py-1 rounded-full bg-white/20 backdrop-blur-md text-amber-300 text-xs font-bold uppercase tracking-wider inline-flex items-center gap-1.5 mb-2.5">
-              <Sparkles className="w-3.5 h-3.5" />
-              Sistem Logbook &amp; Pencatatan Kegiatan Biro 3 (IKK)
-            </span>
-            <h1 className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight leading-snug">
+            <h1 className="text-xl sm:text-2xl font-bold text-slate-900 tracking-tight leading-snug">
               Catat Kegiatan Baru — Biro 3
             </h1>
-            <p className="text-white/80 text-sm mt-1.5 leading-relaxed">
-              Catat agenda kerja, koordinasi, audiensi, atau penugasan resmi Biro 3. Tentukan PIC pelaksana (bisa lebih dari satu orang). Hasil capaian kerja, tautan Google Drive, dan rilis berita akan dilengkapi setelah kegiatan terlaksana.
+            <p className="text-slate-500 text-[13px] mt-1 leading-relaxed">
+              Isi formulir jadwal kegiatan, kategori naskah, dan penunjukan staf PIC pelaksana. Dokumen log book dan catatan hasil dapat dilengkapi setelah kegiatan berlangsung.
             </p>
           </div>
         </div>
@@ -735,9 +730,8 @@ export default function BuatRapatPage() {
                   className="w-full px-4 h-[44px] rounded-xl border border-slate-300 bg-white text-slate-800 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-[#1E6B7B]/20 focus:border-[#1E6B7B] shadow-2xs"
                 />
               </div>
-              <p className="text-xs text-slate-500 mt-1.5 flex items-center gap-1.5">
-                <span className="text-[#1E6B7B] font-bold">💡</span>
-                <span>Kegiatan otomatis dimulai (status Dalam Proses) sesuai tanggal pelaksanaan yang ditentukan tanpa perlu aktivasi manual.</span>
+              <p className="text-xs text-slate-500 mt-1.5">
+                Kegiatan otomatis berstatus Dalam Proses sesuai tanggal pelaksanaan yang ditentukan.
               </p>
             </div>
           </div>

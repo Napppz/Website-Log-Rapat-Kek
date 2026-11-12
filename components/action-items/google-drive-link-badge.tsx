@@ -1,21 +1,12 @@
 'use client';
 
 import React, { useState } from 'react';
-import { ExternalLink, Copy, Check, FileText } from 'lucide-react';
+import { ExternalLink, Copy, Check, FileText, Link2 } from 'lucide-react';
 import { toast } from '@/components/providers/toast-provider';
 
-// Standard Google Drive SVG logo
+// Generic link icon (replaces Google Drive logo)
 export function GoogleDriveIcon({ className = 'w-4 h-4' }: { className?: string }) {
-  return (
-    <svg className={className} viewBox="0 0 87.3 78" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <path d="m6.6 66.85 3.85 6.65c.8 1.4 1.95 2.5 3.3 3.3l13.75-23.8H0c0 1.55.4 3.1 1.2 4.5l5.4 9.35z" fill="#0066DA" />
-      <path d="M43.65 25 29.9 1.2c-1.35.8-2.5 1.9-3.3 3.3L1.2 52.4c-.8 1.4-1.2 2.95-1.2 4.5h27.5L43.65 25z" fill="#00AC47" />
-      <path d="M73.55 76.8c1.35-.8 2.5-1.9 3.3-3.3l1.6-2.75 7.65-13.25c.8-1.4 1.2-2.95 1.2-4.5H59.8l5.95 10.3 7.8 13.5z" fill="#EA4335" />
-      <path d="M43.65 25 57.4 1.2C56.05.4 54.5 0 52.9 0H34.4c-1.6 0-3.15.4-4.5 1.2L43.65 25z" fill="#00832D" />
-      <path d="M59.8 53H87.3c0-1.55-.4-3.1-1.2-4.5L72.35 24.7c-.8-1.4-1.95-2.5-3.3-3.3L43.65 25 59.8 53z" fill="#FFBA00" />
-      <path d="m73.55 76.8-13.75-23.8H27.5L13.75 76.8c1.35.8 2.9 1.2 4.5 1.2h50.8c1.6 0 3.15-.4 4.5-1.2z" fill="#2684FC" />
-    </svg>
-  );
+  return <Link2 className={`${className} text-[#31889C]`} />;
 }
 
 /**
@@ -104,7 +95,7 @@ export function GoogleDriveLinkCard({
     e.stopPropagation();
     navigator.clipboard.writeText(targetUrl);
     setCopied(true);
-    toast.success('Tautan Google Drive berhasil disalin ke clipboard.');
+    toast.success('Tautan berhasil disalin ke clipboard.');
     setTimeout(() => setCopied(false), 2000);
   };
 
@@ -120,15 +111,15 @@ export function GoogleDriveLinkCard({
           rel="noopener noreferrer"
           onClick={(e) => e.stopPropagation()}
           className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#E8F5F7] hover:bg-[#D5EEF2] active:bg-[#BFE5EC] border border-[#A6DCE6] hover:border-[#31889C] text-[#1E5C6B] hover:text-[#133F49] text-[11.5px] font-bold transition-all shadow-2xs hover:shadow-xs group cursor-pointer"
-          title={`Klik untuk langsung membuka di Google Drive (tab baru):\n${targetUrl}`}
+          title={`Klik untuk langsung membuka tautan (tab baru):\n${targetUrl}`}
         >
           {isDrive ? (
-            <GoogleDriveIcon className="w-3.5 h-3.5 shrink-0 transition-transform group-hover:scale-110" />
+            <Link2 className="w-3.5 h-3.5 text-[#31889C] shrink-0" />
           ) : (
             <FileText className="w-3.5 h-3.5 text-[#31889C] shrink-0" />
           )}
           <span className="underline decoration-dotted underline-offset-2">
-            {label ? label : isDrive ? 'Buka Google Drive' : 'Buka Dokumen'}
+            {label ? label : 'Link Hasil Kegiatan'}
           </span>
           <ExternalLink className="w-3 h-3 text-[#31889C] group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform shrink-0" />
         </a>
@@ -156,11 +147,11 @@ export function GoogleDriveLinkCard({
         rel="noopener noreferrer"
         onClick={(e) => e.stopPropagation()}
         className="flex items-center gap-3 min-w-0 flex-1 group cursor-pointer"
-        title={`Klik untuk langsung membuka di Google Drive (tab baru):\n${targetUrl}`}
+        title={`Klik untuk langsung membuka tautan (tab baru):\n${targetUrl}`}
       >
         <div className="w-9 h-9 rounded-lg bg-white border border-[#BCE3EB] group-hover:border-[#31889C] group-hover:bg-[#F0F9FA] flex items-center justify-center shrink-0 shadow-2xs transition-all">
           {isDrive ? (
-            <GoogleDriveIcon className="w-4.5 h-4.5 transition-transform group-hover:scale-110" />
+            <Link2 className="w-4.5 h-4.5 text-[#31889C]" />
           ) : (
             <FileText className="w-4.5 h-4.5 text-[#31889C]" />
           )}
@@ -171,7 +162,7 @@ export function GoogleDriveLinkCard({
               {label}
             </span>
             <span className="text-[10px] font-bold uppercase px-1.5 py-0.2 rounded bg-[#E8F5F7] text-[#215865] border border-[#BCE3EB]">
-              {isDrive ? 'Google Drive' : 'Tautan Luar'}
+              Tautan Hasil
             </span>
           </div>
           <p className="text-[11px] text-slate-500 group-hover:text-slate-700 truncate font-mono mt-0.5 max-w-md">
@@ -201,16 +192,16 @@ export function GoogleDriveLinkCard({
           )}
         </button>
 
-        {/* Primary CTA button to open Google Drive in new tab */}
+        {/* Primary CTA button to open link in new tab */}
         <a
           href={targetUrl}
           target="_blank"
           rel="noopener noreferrer"
           onClick={(e) => e.stopPropagation()}
           className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg bg-[#31889C] hover:bg-[#266F80] text-white text-[11.5px] font-bold shadow-xs hover:shadow-sm transition-all cursor-pointer"
-          title="Buka berkas di Google Drive langsung pada tab baru"
+          title="Buka tautan langsung pada tab baru"
         >
-          <span>Buka di Google Drive</span>
+          <span>Buka Tautan</span>
           <ExternalLink className="w-3.5 h-3.5" />
         </a>
       </div>
@@ -246,7 +237,7 @@ export function RenderTextWithLinks({
               title={`Klik untuk langsung buka: ${part}`}
               onClick={(e) => e.stopPropagation()}
             >
-              <span>{isDrive ? '📎 Buka Google Drive' : part}</span>
+              <span>{isDrive ? 'Buka Tautan Hasil' : part}</span>
               <ExternalLink className="w-3 h-3 inline-block shrink-0" />
             </a>
           );

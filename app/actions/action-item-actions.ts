@@ -54,14 +54,20 @@ export async function getActionItemsAction(meetingId?: string) {
       where.picBiroId = currentUser.biroId;
     }
 
-    // Team Scoping: Staff users are strictly restricted to action items of their own work team
-    if (currentUser?.role === 'STAFF' && (currentUser.teamId || currentUser.teamCode)) {
+    // Jika tidak difilter berdasarkan meetingId tertentu, ambil tindak lanjut yang relevan dengan tim/PIC staf
+    if (!meetingId && currentUser?.role === 'STAFF' && (currentUser.teamId || currentUser.teamCode)) {
       const teamOrs: any[] = [];
       if (currentUser.teamId) {
         teamOrs.push({ picTeamId: currentUser.teamId });
       }
       if (currentUser.teamCode) {
         teamOrs.push({ picTeam: { code: currentUser.teamCode.toUpperCase() } });
+      }
+      if (Array.isArray(currentUser.assignedTeams)) {
+        for (const t of currentUser.assignedTeams) {
+          if (t.id) teamOrs.push({ picTeamId: t.id });
+          if (t.code) teamOrs.push({ picTeam: { code: t.code.toUpperCase() } });
+        }
       }
       if (currentUser.id) {
         teamOrs.push({ picUserId: currentUser.id });

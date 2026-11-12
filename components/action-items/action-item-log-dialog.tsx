@@ -66,11 +66,11 @@ const STATUS_BULLET: Record<string, string> = {
 };
 
 const QUICK_NOTE_TEMPLATES = [
-  '🎯 Tindak lanjut telah selesai dilaksanakan sesuai arahan kegiatan.',
-  '📄 Draf regulasi/dokumen telah disusun dan siap difinalisasi.',
-  '🤝 Sedang berkoordinasi dengan kementerian/biro terkait.',
-  '📊 Masih dalam proses penyusunan dan pengumpulan data.',
-  '⚠️ Mengalami kendala teknis dalam kelengkapan data dukung.',
+  'Tindak lanjut telah selesai dilaksanakan sesuai arahan kegiatan.',
+  'Draf regulasi/dokumen telah disusun dan siap difinalisasi.',
+  'Sedang berkoordinasi dengan kementerian/biro terkait.',
+  'Masih dalam proses penyusunan dan pengumpulan data.',
+  'Mengalami kendala teknis dalam kelengkapan data dukung.',
 ];
 
 function StatusPill({ status }: { status: string }) {
@@ -471,8 +471,8 @@ export function ActionItemLogDialog({
                                 </span>
                               )}
                               {isStatusChange && (
-                                <span className="px-1.5 py-0.5 rounded text-[9px] font-bold bg-amber-100 text-amber-700 border border-amber-200 uppercase tracking-wide">
-                                  ⚡ Status Berubah
+                                <span className="px-1.5 py-0.5 rounded text-[9px] font-bold bg-amber-50 text-amber-700 border border-amber-200 uppercase tracking-wide">
+                                  Status Berubah
                                 </span>
                               )}
                               <StatusTransitionBadge
@@ -595,12 +595,12 @@ export function ActionItemLogDialog({
 
                 {/* Completion Guidance Banner */}
                 {selectedStatus === 'COMPLETED' && (
-                  <div className="flex items-start gap-2.5 p-3 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-[12px] animate-in fade-in duration-200">
+                  <div className="flex items-start gap-2.5 p-3 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-[12px]">
                     <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
                     <div>
                       <span className="font-bold">Menandai Tindak Lanjut Selesai:</span>
                       <p className="text-[11.5px] text-emerald-700 mt-0.5 leading-relaxed">
-                        Mohon sertakan ringkasan hasil penyelesaian dan tautan bukti Google Drive agar akuntabilitas pelaksanaan tercatat dengan jelas dalam arsip resmi KEK RI.
+                        Sertakan ringkasan hasil penyelesaian dan tautan bukti kegiatan.
                       </p>
                     </div>
                   </div>
@@ -644,7 +644,7 @@ export function ActionItemLogDialog({
                   <div className="flex items-center justify-between mb-1.5">
                     <label className="text-[12px] font-semibold text-slate-700 flex items-center gap-1.5">
                       <GoogleDriveIcon className="w-3.5 h-3.5" />
-                      <span>Tautan Bukti Google Drive (Opsional):</span>
+                      <span>Link Hasil Kegiatan (Opsional):</span>
                     </label>
                     <span className="text-[10.5px] text-slate-400">Folder, Dokumen, Spreadsheet</span>
                   </div>

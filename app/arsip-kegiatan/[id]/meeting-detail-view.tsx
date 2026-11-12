@@ -1279,7 +1279,7 @@ export function MeetingDetailView({
                 <span className="italic">{categoryData.postponeReason || 'Alasan penundaan belum dicantumkan.'}</span>
               </div>
               <p className="text-[11.5px] text-amber-800 mt-2">
-                📌 Catatan: Seluruh agenda tindak lanjut &amp; risalah ditangguhkan hingga tanggal penjadwalan ulang disahkan oleh pimpinan.
+                Catatan: Seluruh agenda tindak lanjut &amp; risalah ditangguhkan hingga tanggal penjadwalan ulang disahkan oleh pimpinan.
               </p>
             </div>
           </div>
@@ -1851,7 +1851,7 @@ export function MeetingDetailView({
             <div className="flex items-center justify-between pb-3 border-b border-slate-100">
               <div className="flex items-center gap-2.5">
                 <div className="w-8 h-8 rounded-lg bg-[#E8F5F7] text-[#31889C] flex items-center justify-center font-bold text-base">
-                  🏷️
+                  <FileText className="w-4 h-4" />
                 </div>
                 <div>
                   <h3 className="font-bold text-slate-900 text-[15px]">Ubah Kategori Naskah / Status Penundaan</h3>

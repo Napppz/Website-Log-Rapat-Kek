@@ -405,7 +405,6 @@ export function CreateMeetingDialog({ isOpen, onClose, onSuccess }: CreateMeetin
               className="w-full sm:w-1/2 px-3.5 h-[40px] rounded-xl border border-slate-300 bg-white text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-[#1E6B7B]/20 focus:border-[#1E6B7B]"
             />
             <p className="text-[11px] text-slate-500 mt-1.5 flex items-center gap-1.5">
-              <span className="text-[#31889C] font-bold">💡</span>
               <span>Kegiatan otomatis mulai (Dalam Proses) sesuai tanggal yang ditentukan tanpa perlu aktivasi manual.</span>
             </p>
           </div>
@@ -423,7 +422,7 @@ export function CreateMeetingDialog({ isOpen, onClose, onSuccess }: CreateMeetin
               >
                 <option value="PEKERJAAN_RUTIN">Pekerjaan Rutin</option>
                 <option value="DISPOSISI">Disposisi</option>
-                <option value="LAINNYA">Lainnya / Other</option>
+                <option value="LAINNYA">Lainnya</option>
               </select>
               <ChevronDown className="w-3.5 h-3.5 text-slate-400 absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
             </div>

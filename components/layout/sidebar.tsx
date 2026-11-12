@@ -138,7 +138,7 @@ export function Sidebar({
       >
         <div className="flex flex-col flex-1 min-h-0">
           {/* Header Branding */}
-          <div className="min-h-[72px] py-2 px-3.5 flex items-center justify-between bg-gradient-to-r from-[#31889C] to-[#266F80] border-b border-[#215865] shadow-xs shrink-0">
+          <div className="h-[72px] px-3.5 flex items-center justify-between bg-gradient-to-r from-[#31889C] to-[#266F80] border-b border-[#215865] shadow-xs shrink-0">
             <Link
               href="/"
               onClick={handleLinkClick}

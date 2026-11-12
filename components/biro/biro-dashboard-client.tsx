@@ -419,8 +419,8 @@ export function BiroDashboardClient({
           </Link>
         ) : (
           <div className="inline-flex items-center gap-2 text-[13px] font-bold text-[#31889C]">
-            <Sparkles className="w-4 h-4 text-[#F99D1C]" />
-            <span>Dashboard Eksekutif Unit Kerja Biro {biro.code}</span>
+            <Building2 className="w-4 h-4 text-[#31889C]" />
+            <span>Dashboard Unit Kerja Biro {biro.code}</span>
           </div>
         )}
 
@@ -451,43 +451,38 @@ export function BiroDashboardClient({
       </div>
 
       {/* 3. Bureau Welcome & Executive Profile Banner */}
-      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-teal-50/70 via-white to-slate-50 text-slate-800 shadow-xs border border-slate-200 p-6 md:p-8">
-        {/* Decorative blur backgrounds */}
-        <div className="absolute -right-16 -top-16 w-80 h-80 rounded-full bg-[#31889C]/5 blur-3xl pointer-events-none" />
-        <div className="absolute right-48 -bottom-20 w-64 h-64 rounded-full bg-[#7CC563]/10 blur-2xl pointer-events-none" />
-
-        <div className="relative z-10 flex flex-col lg:flex-row lg:items-center justify-between gap-6">
-          <div className="space-y-2.5 max-w-3xl">
+      <div className="rounded-xl bg-white text-slate-800 shadow-2xs border border-slate-200 border-l-4 border-l-[#31889C] p-5 md:p-6">
+        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
+          <div className="space-y-2 max-w-3xl">
             {/* Metadata Badges */}
-            <div className="flex flex-wrap items-center gap-2">
-              <span className={`inline-flex items-center gap-1.5 px-3 py-0.5 rounded-full border font-bold text-[11px] uppercase tracking-wider ${roleConfig.badgeClass}`}>
-                <span className="w-2 h-2 rounded-full bg-current" />
+            <div className="flex flex-wrap items-center gap-2 text-[12px]">
+              <span className={`inline-flex items-center px-2 py-0.5 rounded-md border font-semibold text-[11px] ${roleConfig.badgeClass}`}>
                 {roleConfig.label}
               </span>
 
-              <span className="text-slate-300 font-semibold">•</span>
+              <span className="text-slate-300">•</span>
 
-              <span className="inline-flex items-center gap-1.5 text-[#31889C] font-semibold text-[12.5px]">
+              <span className="inline-flex items-center gap-1.5 text-slate-600 font-medium">
                 <CalendarDays className="w-3.5 h-3.5 text-[#31889C]" />
                 {todayFormatted}
               </span>
 
-              <span className="text-slate-300 font-semibold">•</span>
+              <span className="text-slate-300">•</span>
 
-              <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-[#E8F5F7] border border-[#BCE3EB] text-[#215865] font-bold text-[11px] uppercase tracking-wider">
-                <Building2 className="w-3.5 h-3.5 text-[#31889C]" />
+              <span className="inline-flex items-center gap-1.5 text-slate-600 font-medium">
+                <Building2 className="w-3.5 h-3.5 text-slate-400" />
                 Unit: Biro {biro.code}
               </span>
             </div>
 
             {/* Personalized Welcome Heading */}
-            <h1 className="text-[24px] md:text-[28px] text-slate-900 font-bold tracking-tight">
-              Selamat Datang di Dashboard {biro.name}, {userName}!
+            <h1 className="text-[20px] md:text-[22px] text-slate-900 font-bold tracking-tight">
+              Dashboard {biro.name}
             </h1>
 
             {/* Subtitle / Description */}
-            <p className="text-[13.5px] text-slate-600 max-w-3xl leading-relaxed">
-              {biro.description || 'Pusat pemantauan agenda kegiatan koordinasi resmi, risalah hasil kegiatan, serta realisasi tindak lanjut komitmen penugasan unit kerja Sekretariat Dewan Nasional Kawasan Ekonomi Khusus.'}
+            <p className="text-[13px] text-slate-500 max-w-3xl leading-relaxed">
+              {biro.description || 'Pemantauan agenda kegiatan, kelengkapan dokumen log book, dan progres tindak lanjut unit kerja.'}
             </p>
 
             {/* Quick stats strip */}

@@ -664,9 +664,8 @@ export function MeetingFilePreviewPanel({
 
               {/* Informational callout */}
               <div className="p-3 bg-blue-50/80 rounded-xl border border-blue-200/80 flex items-start gap-2.5 text-[11.5px] text-blue-900 leading-relaxed">
-                <Sparkles className="w-4 h-4 text-blue-600 shrink-0 mt-0.5" />
                 <span>
-                  Berkas yang diunggah dapat dilihat langsung oleh <strong>Staff</strong> dan{' '}
+                  Berkas yang diunggah dapat dilihat langsung oleh <strong>Staf</strong> dan{' '}
                   <strong>Admin</strong> untuk mempermudah penelaahan dan tindak lanjut butir keputusan.
                 </span>
               </div>

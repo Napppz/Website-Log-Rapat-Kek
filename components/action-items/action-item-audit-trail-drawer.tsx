@@ -252,7 +252,7 @@ export function ActionItemAuditTrailDrawer({
                     className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[#31889C] hover:bg-[#266F80] text-white text-xs font-bold transition-all shadow-2xs cursor-pointer mt-2"
                   >
                     <TrendingUp className="w-3.5 h-3.5" />
-                    <span>Update Progres Sekarang</span>
+                    <span>Perbarui Progres Sekarang</span>
                   </button>
                 )}
               </div>
@@ -335,12 +335,12 @@ export function ActionItemAuditTrailDrawer({
                           </div>
                         )}
 
-                        {/* Attached Google Drive link */}
+                        {/* Attached external link */}
                         {driveUrl && (
                           <div className="pt-0.5">
                             <GoogleDriveLinkCard
                               url={driveUrl}
-                              label="Tautan Bukti Google Drive"
+                              label="Link Hasil Kegiatan"
                               variant="card"
                             />
                           </div>
@@ -376,7 +376,7 @@ export function ActionItemAuditTrailDrawer({
                 className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-[#31889C] hover:bg-[#266F80] text-white text-xs font-bold transition-all shadow-sm cursor-pointer"
               >
                 <TrendingUp className="w-3.5 h-3.5" />
-                <span>+ Update Progres &amp; Bukti</span>
+                <span>+ Perbarui Progres &amp; Bukti</span>
               </button>
             )}
           </div>

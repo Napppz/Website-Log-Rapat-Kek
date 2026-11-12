@@ -65,7 +65,7 @@ export function DashboardShell({ children }: DashboardShellProps) {
         />
 
         {/* Dynamic Route Content */}
-        <main className="w-full pt-20 pb-12 max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 flex-1">
+        <main className="w-full pt-[92px] pb-12 max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 flex-1">
           {children}
         </main>
       </div>

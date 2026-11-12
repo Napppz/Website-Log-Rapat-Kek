@@ -489,19 +489,13 @@ export function TeamManagementPanel({
   return (
     <div className="space-y-6">
       {/* Top Banner & Action */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-5 rounded-2xl bg-gradient-to-r from-[#175360] via-[#1E6B7B] to-[#266F80] text-white shadow-sm border border-white/10">
-        <div className="space-y-1">
-          <div className="flex items-center gap-2">
-            <span className="px-2.5 py-0.5 rounded-full bg-white/20 text-teal-200 text-xs font-bold uppercase tracking-wider inline-flex items-center gap-1">
-              <Sparkles className="w-3.5 h-3.5" />
-              Struktur Organisasi Biro 3
-            </span>
-          </div>
-          <h2 className="text-xl font-bold text-white tracking-tight">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-5 rounded-xl bg-white text-slate-800 shadow-2xs border border-slate-200 border-l-4 border-l-[#31889C]">
+        <div className="space-y-0.5">
+          <h2 className="text-lg font-bold text-slate-900 tracking-tight">
             Kelola Tim Kerja &amp; Kelompok Tugas
           </h2>
-          <p className="text-xs text-white/80 max-w-xl">
-            Super Admin dapat menambahkan tim baru, menyunting rincian tim, dan menonaktifkan tim yang sudah purna-tugas atau selesai fungsinya.
+          <p className="text-xs text-slate-500 max-w-xl">
+            Pengelolaan daftar tim kerja Biro 3 beserta rincian anggota staf pelaksana.
           </p>
         </div>
 
@@ -509,9 +503,9 @@ export function TeamManagementPanel({
           <button
             type="button"
             onClick={handleOpenAdd}
-            className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-white text-[#1E6B7B] hover:bg-slate-50 font-bold text-xs shadow-md transition-all cursor-pointer shrink-0"
+            className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-[#31889C] text-white hover:bg-[#266F80] font-semibold text-xs shadow-2xs transition-colors cursor-pointer shrink-0"
           >
-            <Plus className="w-4 h-4 text-[#1E6B7B]" />
+            <Plus className="w-4 h-4 text-white" />
             <span>Tambah Tim Baru</span>
           </button>
         )}
@@ -740,10 +734,11 @@ export function TeamManagementPanel({
                       className="hover:text-[#1E6B7B] transition-colors cursor-pointer flex items-center gap-1 font-semibold"
                       title="Klik untuk membuka rincian anggota tim"
                     >
-                      👥 <strong>{team.members?.length || team.memberCount || 0}</strong> Staf
+                      <Users className="w-3.5 h-3.5 text-slate-400" />
+                      <strong>{team.members?.length || team.memberCount || 0}</strong> Staf
                     </button>
-                    <span title="Total kegiatan yang dicatat tim ini">
-                      📑 <strong>{team.meetingCount || 0}</strong> Kegiatan
+                    <span className="flex items-center gap-1" title="Total kegiatan yang dicatat tim ini">
+                      <strong>{team.meetingCount || 0}</strong> Kegiatan
                     </span>
                   </div>
 

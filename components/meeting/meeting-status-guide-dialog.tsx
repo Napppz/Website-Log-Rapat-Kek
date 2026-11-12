@@ -78,7 +78,7 @@ export function MeetingStatusGuideDialog({ isOpen, onClose }: MeetingStatusGuide
               </div>
               <div className="space-y-2">
                 <h4 className="font-bold text-[14px] text-slate-900">
-                  💡 Alur 3 Tahapan Progres Kegiatan
+                  Alur 3 Tahapan Progres Kegiatan
                 </h4>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-3 text-[12.5px] pt-1">
                   <div className="p-3 rounded-lg bg-white/95 border border-slate-200 shadow-2xs">

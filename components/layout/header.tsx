@@ -41,19 +41,19 @@ export function Header({
   const [profileDropdownOpen, setProfileDropdownOpen] = useState(false);
 
   const currentUser = session?.user;
-  const userName = currentUser?.name || 'Pengguna Sistem';
+  const rawUserName = currentUser?.name || 'Pengguna Sistem';
+  // Bersihkan akhiran peran ganda pada nama seperti "(Staff)" karena sudah ada badge peran di bawahnya
+  const userName = rawUserName.replace(/\s*\((Staff|Staf|Admin|Administrator|Super Admin|Pimpinan)[^)]*\)\s*$/i, '').trim() || rawUserName;
   const userEmail = currentUser?.email || '';
   const userRole = currentUser?.role || 'STAFF';
   const roleLabel = ROLE_LABELS[userRole] || userRole;
+  const userTeamName = currentUser?.teamName?.trim() || '';
 
-  const rawBiroCode = currentUser?.biroCode?.trim() || '';
-  const rawBiroName = currentUser?.biroName?.trim() || '';
-  // Cegah duplikasi jika nama biro sudah memuat kode biro (misal: "Biro 3 (IKK)" sudah ada "IKK")
-  const biroLabel = rawBiroName && rawBiroCode
-    ? rawBiroName.toUpperCase().includes(rawBiroCode.toUpperCase())
-      ? rawBiroName
-      : `${rawBiroCode} - ${rawBiroName}`
-    : rawBiroName || rawBiroCode || null;
+  const biroLabel = userTeamName
+    ? userTeamName.startsWith('Tim ')
+      ? `${userTeamName} • Biro 3`
+      : `Tim ${userTeamName} • Biro 3`
+    : 'Biro 3';
 
   const canCreateMeeting =
     userRole === 'SUPER_ADMIN' || userRole === 'ADMIN' || userRole === 'STAFF';
@@ -61,7 +61,7 @@ export function Header({
   return (
     <header
       className={cn(
-        "fixed top-0 right-0 h-16 bg-white/95 backdrop-blur-md border-b border-slate-200 z-40 flex items-center justify-between px-4 sm:px-6 shadow-xs transition-all duration-300",
+        "fixed top-0 right-0 h-[72px] bg-white/95 backdrop-blur-md border-b border-slate-200 z-40 flex items-center justify-between px-4 sm:px-6 shadow-xs transition-all duration-300",
         collapsed ? "left-0 lg:left-20" : "left-0 lg:left-72"
       )}
     >

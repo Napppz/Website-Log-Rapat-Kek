@@ -49,27 +49,31 @@ export function ActionItemPriorityBadge({ priority }: ActionItemPriorityBadgePro
   switch (p) {
     case 'URGENT':
       return (
-        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-rose-50 text-rose-700 text-[10.5px] font-bold border border-rose-200 shadow-2xs">
-          <span>⚡ Sangat Mendesak</span>
+        <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-rose-50 text-rose-700 text-[11px] font-semibold border border-rose-200">
+          <span className="w-1.5 h-1.5 rounded-full bg-rose-500" />
+          <span>Sangat Mendesak</span>
         </span>
       );
     case 'HIGH':
       return (
-        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-amber-50 text-amber-800 text-[10.5px] font-bold border border-amber-200 shadow-2xs">
-          <span>🔺 Tinggi</span>
+        <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-amber-50 text-amber-800 text-[11px] font-semibold border border-amber-200">
+          <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />
+          <span>Tinggi</span>
         </span>
       );
     case 'MEDIUM':
       return (
-        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-blue-50 text-blue-700 text-[10.5px] font-bold border border-blue-200 shadow-2xs">
-          <span>🔷 Sedang</span>
+        <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-sky-50 text-sky-700 text-[11px] font-semibold border border-sky-200">
+          <span className="w-1.5 h-1.5 rounded-full bg-sky-500" />
+          <span>Sedang</span>
         </span>
       );
     case 'LOW':
     default:
       return (
-        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-slate-100 text-slate-600 text-[10.5px] font-semibold border border-slate-200 shadow-2xs">
-          <span>🔹 Rendah</span>
+        <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-slate-100 text-slate-600 text-[11px] font-medium border border-slate-200">
+          <span className="w-1.5 h-1.5 rounded-full bg-slate-400" />
+          <span>Rendah</span>
         </span>
       );
   }

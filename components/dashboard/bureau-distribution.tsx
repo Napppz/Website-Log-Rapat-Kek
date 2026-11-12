@@ -2,7 +2,17 @@
 
 import React, { useState, useEffect, useMemo } from 'react';
 import { Meeting } from '@/lib/types';
-import { FolderOpen, ChevronRight, RotateCcw } from 'lucide-react';
+import {
+  FolderOpen,
+  ChevronRight,
+  RotateCcw,
+  Building2,
+  Landmark,
+  Inbox,
+  FileSpreadsheet,
+  Clock,
+  Info,
+} from 'lucide-react';
 import { AnimatedCounter } from '@/components/ui/animated-counter';
 import { cn } from '@/lib/utils';
 
@@ -13,7 +23,7 @@ export interface CategoryWorkloadItem {
   percentage: number;
   barColor: string;
   textColor: string;
-  icon: string;
+  Icon: React.ComponentType<{ className?: string }>;
 }
 
 interface BureauDistributionProps {
@@ -30,42 +40,42 @@ interface BureauDistributionProps {
 const CATEGORY_DEFINITIONS: Array<{
   key: string;
   label: string;
-  icon: string;
+  Icon: React.ComponentType<{ className?: string }>;
   barColor: string;
   textColor: string;
 }> = [
     {
       key: 'UNDANGAN_INTERNAL',
       label: 'Undangan Internal',
-      icon: '🏢',
+      Icon: Building2,
       barColor: 'bg-[#31889C]',
       textColor: 'text-[#31889C]',
     },
     {
       key: 'DISPOSISI_Setjen',
       label: 'Disposisi Setjen',
-      icon: '🏛️',
+      Icon: Landmark,
       barColor: 'bg-indigo-600',
       textColor: 'text-indigo-600',
     },
     {
       key: 'NASKAH_MASUK',
       label: 'Daftar Naskah Masuk',
-      icon: '📥',
+      Icon: Inbox,
       barColor: 'bg-amber-500',
       textColor: 'text-amber-600',
     },
     {
       key: 'DISPOSISI_BIRO',
       label: 'Disposisi Biro',
-      icon: '📑',
+      Icon: FileSpreadsheet,
       barColor: 'bg-purple-600',
       textColor: 'text-purple-600',
     },
     {
       key: 'SURAT_DITUNDA',
       label: 'Tunda Kegiatan',
-      icon: '⏳',
+      Icon: Clock,
       barColor: 'bg-rose-500',
       textColor: 'text-rose-600',
     },
@@ -178,7 +188,7 @@ export function BureauDistribution({
   };
 
   return (
-    <div className={cn("rounded-2xl bg-white p-6 shadow-xs border border-slate-200 flex flex-col justify-between transition-all duration-300 hover:shadow-md", className || "lg:col-span-5")}>
+    <div className={cn("rounded-xl bg-white p-6 shadow-2xs border border-slate-200 flex flex-col justify-between", className || "lg:col-span-5")}>
       <div>
         {/* Card Header with Replay Action */}
         <div className="flex items-start justify-between">
@@ -187,7 +197,7 @@ export function BureauDistribution({
               <FolderOpen className="w-3.5 h-3.5 text-[#31889C]" />
               <span>Klasifikasi Dokumen</span>
             </span>
-            <h2 className="font-bold text-[18px] text-slate-900 mt-0.5">
+            <h2 className="font-bold text-[17px] text-slate-900 mt-0.5">
               Kegiatan per Kategori
             </h2>
             <p className="text-[12px] text-slate-500 mt-0.5">
@@ -198,72 +208,67 @@ export function BureauDistribution({
           <button
             type="button"
             onClick={handleReplay}
-            className="text-slate-400 hover:text-[#31889C] p-1.5 rounded-lg hover:bg-[#F0F9FA] cursor-pointer transition-all duration-200 hover:rotate-180"
-            title="Putar ulang animasi progres kategori"
+            className="text-slate-400 hover:text-[#31889C] p-1.5 rounded-lg hover:bg-[#F0F9FA] cursor-pointer transition-colors"
+            title="Segarkan tampilan progres kategori"
           >
             <RotateCcw className="w-4 h-4" />
           </button>
         </div>
 
-        {/* Animated Progress Bars per Category */}
+        {/* Progress Bars per Category */}
         <div className="mt-4 space-y-2">
-          {categories.map((cat, idx) => (
-            <div
-              key={cat.key}
-              role="button"
-              tabIndex={0}
-              style={{
-                transition: 'all 600ms cubic-bezier(0.16, 1, 0.3, 1)',
-                transitionDelay: isAnimated ? `${idx * 70}ms` : '0ms',
-                transform: isAnimated ? 'translateY(0)' : 'translateY(12px)',
-                opacity: isAnimated ? 1 : 0,
-              }}
-              className="p-2 -mx-2 rounded-xl hover:bg-[#F0F9FA] border border-transparent hover:border-[#BCE3EB] transition-all cursor-pointer group"
-              onClick={() => handleItemClick(cat.key)}
-              title={`Klik untuk memfilter log book kegiatan berdasarkan kategori ${cat.label}`}
-            >
-              {/* Row Header: Category Name + Count */}
-              <div className="flex items-center justify-between text-[12px] mb-1.5 gap-2">
-                <span
-                  className="font-bold text-slate-800 group-hover:text-[#215865] transition-colors truncate flex-1 min-w-0 flex items-center gap-1.5"
-                  title={cat.label}
-                >
-                  <span className="text-[13px] shrink-0">{cat.icon}</span>
-                  <span className="truncate">{cat.label}</span>
-                </span>
-
-                <div className="flex items-center gap-1.5 shrink-0 whitespace-nowrap">
-                  <span className={`font-extrabold ${cat.textColor} text-[12px] tabular-nums`}>
-                    {isAnimated ? (
-                      <AnimatedCounter value={cat.count} duration={800 + idx * 70} />
-                    ) : (
-                      0
-                    )}{' '}
-                    Kegiatan
+          {categories.map((cat, idx) => {
+            const CatIcon = cat.Icon;
+            return (
+              <div
+                key={cat.key}
+                role="button"
+                tabIndex={0}
+                className="p-2 -mx-2 rounded-lg hover:bg-[#F0F9FA] border border-transparent hover:border-[#BCE3EB] transition-colors cursor-pointer group"
+                onClick={() => handleItemClick(cat.key)}
+                title={`Klik untuk memfilter log book kegiatan berdasarkan kategori ${cat.label}`}
+              >
+                {/* Row Header: Category Name + Count */}
+                <div className="flex items-center justify-between text-[12px] mb-1.5 gap-2">
+                  <span
+                    className="font-semibold text-slate-800 group-hover:text-[#215865] transition-colors truncate flex-1 min-w-0 flex items-center gap-2"
+                    title={cat.label}
+                  >
+                    <CatIcon className={cn("w-3.5 h-3.5 shrink-0", cat.textColor)} />
+                    <span className="truncate">{cat.label}</span>
                   </span>
-                  <ChevronRight className="w-3.5 h-3.5 text-slate-400 group-hover:text-[#31889C] group-hover:translate-x-0.5 transition-all" />
+
+                  <div className="flex items-center gap-1.5 shrink-0 whitespace-nowrap">
+                    <span className="font-bold text-slate-800 text-[12px] tabular-nums">
+                      {isAnimated ? (
+                        <AnimatedCounter value={cat.count} duration={500} />
+                      ) : (
+                        cat.count
+                      )}{' '}
+                      <span className="font-normal text-slate-500">Kegiatan</span>
+                    </span>
+                    <ChevronRight className="w-3.5 h-3.5 text-slate-400 group-hover:text-[#31889C] transition-colors" />
+                  </div>
+                </div>
+
+                {/* Progress Bar Track */}
+                <div className="h-2 w-full bg-slate-100 rounded-full overflow-hidden">
+                  <div
+                    className={`h-full ${cat.barColor} rounded-full transition-all duration-500 ease-out`}
+                    style={{
+                      width: isAnimated ? `${Math.max(cat.percentage, cat.count > 0 ? 6 : 0)}%` : '0%',
+                    }}
+                  />
                 </div>
               </div>
-
-              {/* Animated Progress Bar Track with Shimmer Shine */}
-              <div className="h-2.5 w-full bg-slate-100 rounded-full overflow-hidden relative">
-                <div
-                  className={`h-full ${cat.barColor} rounded-full transition-all duration-900 ease-out relative ${isAnimated ? 'animate-shimmer' : ''
-                    }`}
-                  style={{
-                    width: isAnimated ? `${Math.max(cat.percentage, cat.count > 0 ? 8 : 0)}%` : '0%',
-                    transitionDelay: isAnimated ? `${120 + idx * 90}ms` : '0ms',
-                  }}
-                />
-              </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       </div>
 
       <div className="mt-4 pt-2.5 text-center border-t border-slate-100">
-        <span className="text-[11px] text-slate-500 font-medium flex items-center justify-center gap-1">
-          <span>💡</span>
+        <span className="text-[11px] text-slate-500 font-medium flex items-center justify-center gap-1.5">
+          <Info className="w-3.5 h-3.5 text-slate-400" />
           <span>Klik kategori untuk memfilter daftar kegiatan</span>
         </span>
       </div>

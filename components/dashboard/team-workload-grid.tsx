@@ -9,7 +9,6 @@ import {
   ChevronRight,
   Calendar,
   Users,
-  Sparkles,
   ArrowUpRight,
   Search,
   Cpu,
@@ -147,18 +146,14 @@ export function TeamWorkloadGrid({ teams, onTeamClick }: TeamWorkloadGridProps) 
       <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3">
         <div>
           <div className="flex items-center gap-2 flex-wrap">
-            <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-[#E8F5F7] text-[#1E6B7B] border border-[#BCE3EB]">
-              <Sparkles className="w-3 h-3 text-[#1E6B7B]" />
-              MONITORING TIM KERJA SEKRETARIAT KEK
-            </span>
-            <span className="text-[12px] font-semibold text-slate-500">
-              • {allTeams.length} Tim Terpantau
+            <h2 className="text-lg md:text-xl font-bold text-slate-900 tracking-tight">
+              Monitoring Aktivitas &amp; Status Pekerjaan per Tim
+            </h2>
+            <span className="inline-flex items-center px-2 py-0.5 rounded-md text-[11px] font-semibold bg-slate-100 text-slate-600 border border-slate-200">
+              {allTeams.length} Tim Terpantau
             </span>
           </div>
-          <h2 className="text-xl md:text-2xl font-bold text-slate-900 tracking-tight mt-1">
-            Monitoring Aktivitas &amp; Status Pekerjaan per Tim
-          </h2>
-          <p className="text-[13px] text-slate-500 mt-0.5">
+          <p className="text-[12.5px] text-slate-500 mt-0.5">
             Pemantauan langsung jumlah kegiatan dan status tiap pekerjaan seluruh Tim Kerja Biro 3.
           </p>
         </div>
@@ -171,7 +166,7 @@ export function TeamWorkloadGrid({ teams, onTeamClick }: TeamWorkloadGridProps) 
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="Cari nama atau kode tim..."
-            className="w-full pl-9 pr-3 py-1.5 rounded-xl border border-slate-200 bg-white text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#1E6B7B]/30 focus:border-[#1E6B7B] transition-all shadow-2xs"
+            className="w-full pl-9 pr-3 py-1.5 rounded-lg border border-slate-200 bg-white text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#1E6B7B]/20 focus:border-[#1E6B7B] transition-colors shadow-2xs"
           />
         </div>
       </div>
@@ -180,13 +175,9 @@ export function TeamWorkloadGrid({ teams, onTeamClick }: TeamWorkloadGridProps) 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
         {filteredTeams.map((team) => {
           const colors = getTeamColors(team.code);
-          const total = team.totalJobs || 0;
           const completed = team.completedJobs || 0;
           const inProgress = team.inProgressJobs || 0;
           const pending = team.pendingJobs || 0;
-          const pCompleted = total > 0 ? Math.round((completed / total) * 100) : 0;
-          const pInProgress = total > 0 ? Math.round((inProgress / total) * 100) : 0;
-          const pPending = total > 0 ? Math.max(0, 100 - pCompleted - pInProgress) : 0;
 
           return (
             <div
@@ -200,28 +191,15 @@ export function TeamWorkloadGrid({ teams, onTeamClick }: TeamWorkloadGridProps) 
                   onTeamClick(team);
                 }
               }}
-              className={cn(
-                'group relative rounded-2xl bg-white border border-slate-200 p-4 shadow-2xs transition-all duration-200 text-left cursor-pointer flex flex-col justify-between overflow-hidden',
-                colors.borderHover,
-                colors.cardGlow,
-                'hover:-translate-y-1 focus:outline-none focus:ring-2 focus:ring-[#1E6B7B]/30'
-              )}
+              className="group relative rounded-xl bg-white border border-slate-200 hover:border-[#1E6B7B]/70 p-4 shadow-2xs hover:shadow-xs transition-colors text-left cursor-pointer flex flex-col justify-between focus:outline-none focus:ring-2 focus:ring-[#1E6B7B]/20"
             >
-              {/* Ambient Top Gradient */}
-              <div
-                className={cn(
-                  'absolute top-0 left-0 right-0 h-16 bg-gradient-to-b opacity-50 pointer-events-none transition-opacity group-hover:opacity-100',
-                  colors.gradient
-                )}
-              />
-
               <div className="relative z-10">
                 {/* Card Header: Icon, Badge, Team Name, Arrow */}
                 <div className="flex items-start justify-between gap-2 mb-3">
                   <div className="flex items-center gap-2.5">
                     <div
                       className={cn(
-                        'w-10 h-10 rounded-xl flex items-center justify-center border shadow-2xs transition-transform duration-200 group-hover:scale-105 shrink-0',
+                        'w-9 h-9 rounded-lg flex items-center justify-center border shrink-0',
                         colors.lightBg,
                         'border-slate-200/80'
                       )}
@@ -271,7 +249,7 @@ export function TeamWorkloadGrid({ teams, onTeamClick }: TeamWorkloadGridProps) 
                 </div>
 
                 {/* Status 3 Kotak (Menunggu, Proses, Selesai) - Label Ringkas & Anti-Truncate */}
-                <div className="space-y-1.5 mb-3">
+                <div className="space-y-1.5">
                   <div className="flex items-center justify-between text-[10.5px] font-semibold text-slate-400 uppercase tracking-wider">
                     <span>Status Tiap Pekerjaan</span>
                     <span className="text-slate-700 font-bold">{team.totalJobs} Total</span>
@@ -306,21 +284,6 @@ export function TeamWorkloadGrid({ teams, onTeamClick }: TeamWorkloadGridProps) 
                         {completed}
                       </span>
                     </div>
-                  </div>
-                </div>
-
-                {/* Stacked Progress Bar & Completion Rate */}
-                <div className="space-y-1.5 pt-1">
-                  <div className="flex items-center justify-between text-xs">
-                    <span className="font-semibold text-slate-600 text-[11px]">Tingkat Penyelesaian</span>
-                    <span className="font-bold text-slate-900 tabular-nums text-xs">
-                      {team.completionRate}%
-                    </span>
-                  </div>
-                  <div className="h-2 w-full bg-slate-100 rounded-full overflow-hidden flex shadow-2xs">
-                    <div style={{ width: `${pCompleted}%` }} className="bg-emerald-500 transition-all duration-300" title={`Selesai: ${completed}`} />
-                    <div style={{ width: `${pInProgress}%` }} className="bg-amber-400 transition-all duration-300" title={`Dalam Proses: ${inProgress}`} />
-                    <div style={{ width: `${pPending}%` }} className="bg-slate-300 transition-all duration-300" title={`Belum Dimulai: ${pending}`} />
                   </div>
                 </div>
               </div>

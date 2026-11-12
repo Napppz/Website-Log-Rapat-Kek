@@ -297,13 +297,9 @@ export function NotifikasiClient({
   return (
     <div className="flex flex-col gap-6">
       {/* Header Banner */}
-      <div className="p-6 bg-white rounded-xl border border-slate-200 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <div className="p-5 md:p-6 bg-white rounded-xl border border-slate-200 border-l-4 border-l-[#31889C] shadow-2xs flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <span className="font-semibold text-[12px] text-[#31889C] uppercase tracking-wider flex items-center gap-1.5">
-            <Sparkles className="w-3.5 h-3.5" />
-            Pusat Pemberitahuan Sistem
-          </span>
-          <h1 className="text-[24px] font-bold text-slate-900 mt-0.5">
+          <h1 className="text-[20px] md:text-[22px] font-bold text-slate-900 tracking-tight">
             Notifikasi &amp; Peringatan Tim
           </h1>
           <p className="text-[13px] text-slate-500 mt-1">

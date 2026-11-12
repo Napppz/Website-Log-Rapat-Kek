@@ -98,48 +98,36 @@ export function StatsOverview({
           <Link
             key={metric.id}
             href={linkInfo.href}
-            style={{
-              transition: 'all 500ms cubic-bezier(0.16, 1, 0.3, 1)',
-              transitionDelay: isAnimated ? `${idx * 60}ms` : '0ms',
-              transform: isAnimated ? 'translateY(0)' : 'translateY(10px)',
-              opacity: isAnimated ? 1 : 0,
-            }}
             className={cn(
-              'group relative rounded-2xl bg-white p-4 shadow-2xs hover:-translate-y-1 hover:shadow-md transition-all duration-200 cursor-pointer block overflow-hidden border',
-              isHighlighted ? 'border-[#31889C]/70 shadow-sm shadow-[#31889C]/15 ring-1 ring-[#31889C]/20' : 'border-slate-200/90',
-              // KEK 4-Quadrant Accent Top Stripes
-              metric.id === 'total-rapat' && 'border-t-[3px] border-t-[#1E6B7B] hover:border-[#1E6B7B]/40 hover:bg-[#F0F8FA]/30',
-              metric.id === 'rapat-bulan-ini' && 'border-t-[3px] border-t-[#7CC563] hover:border-[#7CC563]/40 hover:bg-[#ECF8E9]/30',
-              metric.id === 'tindak-lanjut-aktif' && 'border-t-[3px] border-t-[#F99D1C] hover:border-[#F99D1C]/40 hover:bg-[#FFF0DC]/30',
-              metric.id === 'perlu-atensi' && 'border-t-[3px] border-t-[#DC2626] hover:border-red-400 hover:bg-red-50/20',
-              metric.id === 'tindak-lanjut-selesai' && 'border-t-[3px] border-t-[#16A34A] hover:border-[#16A34A]/40 hover:bg-[#DCFCE7]/30'
+              'group relative rounded-xl bg-white p-4 shadow-2xs hover:border-[#31889C]/70 hover:bg-slate-50/40 transition-colors cursor-pointer block border',
+              isHighlighted ? 'border-[#31889C] ring-1 ring-[#31889C]/20' : 'border-slate-200'
             )}
             title={`Klik untuk membuka data: ${metric.label}`}
           >
             {/* Header: Label & Icon */}
-            <div className="flex items-center justify-between gap-1">
+            <div className="flex items-center justify-between gap-2">
               <span
                 className={cn(
-                  'font-semibold text-[11px] uppercase tracking-wider',
-                  isDanger ? 'text-red-600 font-bold' : 'text-slate-500'
+                  'font-semibold text-[11px] uppercase tracking-wider leading-tight',
+                  isDanger ? 'text-red-600' : 'text-slate-500'
                 )}
               >
                 {metric.label}
               </span>
               <div
                 className={cn(
-                  'w-8 h-8 rounded-xl flex items-center justify-center shrink-0 transition-transform group-hover:scale-110 shadow-2xs',
+                  'w-8 h-8 rounded-lg flex items-center justify-center shrink-0 border',
                   isDanger
-                    ? 'bg-red-100 text-red-600 border border-red-200'
+                    ? 'bg-red-50 text-red-600 border-red-200'
                     : metric.id === 'total-rapat'
-                    ? 'bg-[#F0F8FA] text-[#1E6B7B] border border-[#BCE3EB]'
+                    ? 'bg-[#F0F8FA] text-[#1E6B7B] border-[#BCE3EB]'
                     : metric.id === 'rapat-bulan-ini'
-                    ? 'bg-[#ECF8E9] text-[#15803D] border border-[#D2EFCA]'
+                    ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
                     : metric.id === 'tindak-lanjut-aktif'
-                    ? 'bg-[#FFF0DC] text-[#C2410C] border border-[#FEDEBE]'
+                    ? 'bg-amber-50 text-amber-700 border-amber-200'
                     : metric.id === 'tindak-lanjut-selesai' || isSuccess
-                    ? 'bg-[#DCFCE7] text-[#15803D] border border-[#86EFAC]'
-                    : 'bg-[#F0F8FA] text-[#1E6B7B] border border-[#BCE3EB]'
+                    ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                    : 'bg-slate-50 text-slate-700 border-slate-200'
                 )}
               >
                 {metric.id === 'total-rapat' && <CalendarCheck className="w-4 h-4" />}
@@ -152,32 +140,14 @@ export function StatsOverview({
 
             {/* Value & Unit */}
             <div className="mt-2.5 flex items-baseline gap-1.5">
-              <span
-                className={cn(
-                  'font-black text-[30px] leading-none font-mono tracking-tight',
-                  isDanger
-                    ? 'text-red-600'
-                    : metric.id === 'tindak-lanjut-aktif'
-                    ? 'text-[#C2410C]'
-                    : metric.id === 'total-rapat'
-                    ? 'text-[#1E6B7B]'
-                    : metric.id === 'tindak-lanjut-selesai'
-                    ? 'text-[#15803D]'
-                    : 'text-slate-900'
-                )}
-              >
+              <span className="font-bold text-[28px] leading-none tabular-nums tracking-tight text-slate-900">
                 {isAnimated ? (
-                  <AnimatedCounter value={numValue} duration={750 + idx * 80} />
+                  <AnimatedCounter value={numValue} duration={500} />
                 ) : (
-                  0
+                  numValue
                 )}
               </span>
-              <span
-                className={cn(
-                  'text-[12px] font-semibold',
-                  isDanger ? 'text-red-600' : 'text-slate-500'
-                )}
-              >
+              <span className="text-[12px] font-medium text-slate-500">
                 {metric.unit}
               </span>
             </div>

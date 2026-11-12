@@ -29,6 +29,8 @@ import {
   MoreVertical,
   Download,
   Paperclip,
+  Link2,
+  User,
 } from 'lucide-react';
 import { ActionItem, ActionItemStatus } from '@/lib/types';
 import { ActionItemStatusBadge, ActionItemPriorityBadge } from './action-item-status-badge';
@@ -491,34 +493,29 @@ export function ActionItemMatrixView({
 
   return (
     <div className="flex flex-col gap-6">
-      {/* Header Card dengan Metrik Eksekutif Modern */}
-      <div className="bg-white rounded-2xl border border-slate-200/90 shadow-xs overflow-hidden">
-        {/* Baris Atas: Informasi & Konteks Eksekutif */}
-        <div className="p-6 pb-5 flex flex-col md:flex-row md:items-center md:justify-between gap-4 border-b border-slate-100">
+      {/* Header Card */}
+      <div className="bg-white rounded-xl border border-slate-200 border-l-4 border-l-[#31889C] shadow-2xs overflow-hidden">
+        <div className="p-5 sm:p-6 flex flex-col md:flex-row md:items-center md:justify-between gap-4 border-b border-slate-100">
           <div className="space-y-1">
-            <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-[#EBF6F8] border border-[#BCE3EB]/60 text-[#1E6778] font-bold text-[11px] uppercase tracking-wider">
-              <Layers className="w-3.5 h-3.5 text-[#31889C]" />
-              <span>Matriks Disposisi &amp; Pemantauan Dewan</span>
-            </div>
-            <h1 className="text-2xl sm:text-[26px] font-extrabold text-slate-900 tracking-tight">
+            <h1 className="text-xl sm:text-[22px] font-bold text-slate-900 tracking-tight">
               Monitoring &amp; Evaluasi Tindak Lanjut
             </h1>
             <p className="text-[13px] text-slate-500 leading-relaxed max-w-2xl">
-              Pantau realisasi komitmen keputusan kegiatan dewan KEK per tim kerja pelaksana dan penanggung jawab teknis.
+              Pemantauan progres penyelesaian tindak lanjut kegiatan per tim kerja dan PIC pelaksana.
             </p>
           </div>
 
           {/* Quick Stat Indicators */}
           <div className="flex items-center gap-3 shrink-0 self-start md:self-center">
-            <div className="px-4 py-2.5 rounded-xl bg-slate-50 border border-slate-200/80 flex items-center gap-4 shadow-2xs">
+            <div className="px-4 py-2 rounded-lg bg-slate-50 border border-slate-200 flex items-center gap-4">
               <div>
-                <span className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider">Total Komitmen</span>
-                <span className="text-base sm:text-lg font-black text-slate-900 leading-tight">{totalCount} Butir</span>
+                <span className="block text-[10px] font-semibold text-slate-500 uppercase">Total Tugas</span>
+                <span className="text-base font-bold text-slate-900 tabular-nums leading-tight">{totalCount} Butir</span>
               </div>
-              <div className="w-px h-8 bg-slate-200" />
+              <div className="w-px h-7 bg-slate-200" />
               <div>
-                <span className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider">Tingkat Selesai</span>
-                <span className="text-base sm:text-lg font-black text-emerald-600 leading-tight">
+                <span className="block text-[10px] font-semibold text-slate-500 uppercase">Penyelesaian</span>
+                <span className="text-base font-bold text-slate-900 tabular-nums leading-tight">
                   {totalCount > 0 ? Math.round((completedCount / totalCount) * 100) : 0}%
                 </span>
               </div>
@@ -527,33 +524,33 @@ export function ActionItemMatrixView({
         </div>
 
         {/* Baris Bawah: Grid 4 Interactive KPI Status Cards */}
-        <div className="p-4 sm:p-5 bg-slate-50/50">
+        <div className="p-4 bg-slate-50/50">
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 sm:gap-3 w-full">
             {/* Total */}
             <button
               type="button"
               onClick={() => handleSelectStatus('ALL')}
               className={cn(
-                "p-3 rounded-xl border text-left transition-all cursor-pointer flex flex-col justify-between group",
+                "p-3 rounded-lg border text-left transition-colors cursor-pointer flex flex-col justify-between",
                 statusParam === 'ALL'
-                  ? "bg-[#F0F9FA] border-[#31889C] ring-2 ring-[#31889C]/25 shadow-2xs"
-                  : "bg-white border-slate-200/90 hover:border-[#31889C]/50 hover:bg-slate-50/70 shadow-2xs hover:-translate-y-0.5"
+                  ? "bg-white border-[#31889C] ring-1 ring-[#31889C]/25 shadow-2xs"
+                  : "bg-white border-slate-200 hover:border-slate-300"
               )}
             >
               <div className="flex items-center justify-between gap-1">
-                <span className="text-[10px] sm:text-[10.5px] text-slate-500 font-bold uppercase tracking-wider flex items-center gap-1.5 truncate">
+                <span className="text-[11px] text-slate-600 font-semibold uppercase flex items-center gap-1.5 truncate">
                   <span className="w-1.5 h-1.5 rounded-full bg-[#31889C] shrink-0" />
                   Total
                 </span>
                 {statusParam === 'ALL' && (
-                  <span className="text-[9px] font-bold px-1.5 py-0.2 rounded-full bg-[#EBF6F8] text-[#1E6778] shrink-0">
+                  <span className="text-[9.5px] font-semibold px-1.5 py-0.2 rounded bg-[#EBF6F8] text-[#1E6778] shrink-0">
                     Aktif
                   </span>
                 )}
               </div>
               <div className="flex items-baseline gap-1 mt-1.5">
-                <span className="text-xl sm:text-[22px] font-black text-slate-900 tracking-tight">{totalCount}</span>
-                <span className="text-[10.5px] text-slate-400 font-medium">butir</span>
+                <span className="text-xl font-bold text-slate-900 tabular-nums tracking-tight">{totalCount}</span>
+                <span className="text-[11px] text-slate-500 font-medium">butir</span>
               </div>
             </button>
 
@@ -562,26 +559,26 @@ export function ActionItemMatrixView({
               type="button"
               onClick={() => handleSelectStatus('PENDING')}
               className={cn(
-                "p-3 rounded-xl border text-left transition-all cursor-pointer flex flex-col justify-between group",
+                "p-3 rounded-lg border text-left transition-colors cursor-pointer flex flex-col justify-between",
                 statusParam === 'PENDING'
-                  ? "bg-amber-100/70 border-amber-400 ring-2 ring-amber-400/30 shadow-2xs"
-                  : "bg-white border-amber-200/80 hover:border-amber-300 hover:bg-amber-50/40 shadow-2xs hover:-translate-y-0.5"
+                  ? "bg-white border-[#31889C] ring-1 ring-[#31889C]/25 shadow-2xs"
+                  : "bg-white border-slate-200 hover:border-slate-300"
               )}
             >
               <div className="flex items-center justify-between gap-1">
-                <span className="text-[10px] sm:text-[10.5px] text-amber-700 font-bold uppercase tracking-wider flex items-center gap-1.5 truncate">
-                  <span className="w-1.5 h-1.5 rounded-full bg-amber-500 shrink-0" />
+                <span className="text-[11px] text-slate-600 font-semibold uppercase flex items-center gap-1.5 truncate">
+                  <span className="w-1.5 h-1.5 rounded-full bg-amber-400 shrink-0" />
                   Belum Dimulai
                 </span>
                 {statusParam === 'PENDING' && (
-                  <span className="text-[9px] font-bold px-1.5 py-0.2 rounded-full bg-amber-200/80 text-amber-900 shrink-0">
+                  <span className="text-[9.5px] font-semibold px-1.5 py-0.2 rounded bg-[#EBF6F8] text-[#1E6778] shrink-0">
                     Aktif
                   </span>
                 )}
               </div>
               <div className="flex items-baseline gap-1 mt-1.5">
-                <span className="text-xl sm:text-[22px] font-black text-amber-700 tracking-tight">{pendingCount}</span>
-                <span className="text-[10.5px] text-amber-600/70 font-medium">butir</span>
+                <span className="text-xl font-bold text-slate-900 tabular-nums tracking-tight">{pendingCount}</span>
+                <span className="text-[11px] text-slate-500 font-medium">butir</span>
               </div>
             </button>
 
@@ -590,26 +587,26 @@ export function ActionItemMatrixView({
               type="button"
               onClick={() => handleSelectStatus('IN_PROGRESS')}
               className={cn(
-                "p-3 rounded-xl border text-left transition-all cursor-pointer flex flex-col justify-between group",
+                "p-3 rounded-lg border text-left transition-colors cursor-pointer flex flex-col justify-between",
                 statusParam === 'IN_PROGRESS'
-                  ? "bg-sky-100/70 border-sky-400 ring-2 ring-sky-400/30 shadow-2xs"
-                  : "bg-white border-sky-200/80 hover:border-sky-300 hover:bg-sky-50/40 shadow-2xs hover:-translate-y-0.5"
+                  ? "bg-white border-[#31889C] ring-1 ring-[#31889C]/25 shadow-2xs"
+                  : "bg-white border-slate-200 hover:border-slate-300"
               )}
             >
               <div className="flex items-center justify-between gap-1">
-                <span className="text-[10px] sm:text-[10.5px] text-sky-700 font-bold uppercase tracking-wider flex items-center gap-1.5 truncate">
-                  <span className="w-1.5 h-1.5 rounded-full bg-sky-500 shrink-0" />
+                <span className="text-[11px] text-slate-600 font-semibold uppercase flex items-center gap-1.5 truncate">
+                  <span className="w-1.5 h-1.5 rounded-full bg-[#31889C] shrink-0" />
                   Dalam Proses
                 </span>
                 {statusParam === 'IN_PROGRESS' && (
-                  <span className="text-[9px] font-bold px-1.5 py-0.2 rounded-full bg-sky-200/80 text-sky-900 shrink-0">
+                  <span className="text-[9.5px] font-semibold px-1.5 py-0.2 rounded bg-[#EBF6F8] text-[#1E6778] shrink-0">
                     Aktif
                   </span>
                 )}
               </div>
               <div className="flex items-baseline gap-1 mt-1.5">
-                <span className="text-xl sm:text-[22px] font-black text-sky-700 tracking-tight">{inProgressCount}</span>
-                <span className="text-[10.5px] text-sky-600/70 font-medium">proses</span>
+                <span className="text-xl font-bold text-slate-900 tabular-nums tracking-tight">{inProgressCount}</span>
+                <span className="text-[11px] text-slate-500 font-medium">butir</span>
               </div>
             </button>
 
@@ -618,26 +615,26 @@ export function ActionItemMatrixView({
               type="button"
               onClick={() => handleSelectStatus('COMPLETED')}
               className={cn(
-                "p-3 rounded-xl border text-left transition-all cursor-pointer flex flex-col justify-between group",
+                "p-3 rounded-lg border text-left transition-colors cursor-pointer flex flex-col justify-between",
                 statusParam === 'COMPLETED'
-                  ? "bg-emerald-100/70 border-emerald-400 ring-2 ring-emerald-400/30 shadow-2xs"
-                  : "bg-white border-emerald-200/80 hover:border-emerald-300 hover:bg-emerald-50/40 shadow-2xs hover:-translate-y-0.5"
+                  ? "bg-white border-[#31889C] ring-1 ring-[#31889C]/25 shadow-2xs"
+                  : "bg-white border-slate-200 hover:border-slate-300"
               )}
             >
               <div className="flex items-center justify-between gap-1">
-                <span className="text-[10px] sm:text-[10.5px] text-emerald-700 font-bold uppercase tracking-wider flex items-center gap-1.5 truncate">
+                <span className="text-[11px] text-slate-600 font-semibold uppercase flex items-center gap-1.5 truncate">
                   <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 shrink-0" />
                   Selesai
                 </span>
                 {statusParam === 'COMPLETED' && (
-                  <span className="text-[9px] font-bold px-1.5 py-0.2 rounded-full bg-emerald-200/80 text-emerald-900 shrink-0">
+                  <span className="text-[9.5px] font-semibold px-1.5 py-0.2 rounded bg-[#EBF6F8] text-[#1E6778] shrink-0">
                     Aktif
                   </span>
                 )}
               </div>
               <div className="flex items-baseline gap-1 mt-1.5">
-                <span className="text-xl sm:text-[22px] font-black text-emerald-700 tracking-tight">{completedCount}</span>
-                <span className="text-[10.5px] text-emerald-600/70 font-semibold">selesai</span>
+                <span className="text-xl font-bold text-slate-900 tabular-nums tracking-tight">{completedCount}</span>
+                <span className="text-[11px] text-slate-500 font-medium">butir</span>
               </div>
             </button>
 
@@ -1095,9 +1092,9 @@ export function ActionItemMatrixView({
                                       target="_blank"
                                       rel="noopener noreferrer"
                                       className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-semibold bg-white hover:bg-amber-50 text-amber-800 border border-amber-300 transition-colors shadow-2xs"
-                                      title="Google Drive Materi Acuan dari Atasan"
+                                      title="Link Terkait Materi Acuan dari Atasan"
                                     >
-                                      <GoogleDriveIcon className="w-3 h-3" />
+                                      <Link2 className="w-3 h-3 text-amber-700" />
                                       <span>Link Terkait</span>
                                       <ExternalLink className="w-2.5 h-2.5 text-amber-600" />
                                     </a>
@@ -1130,10 +1127,10 @@ export function ActionItemMatrixView({
                                       target="_blank"
                                       rel="noopener noreferrer"
                                       className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-semibold bg-white hover:bg-emerald-50 text-emerald-800 border border-emerald-300 transition-colors shadow-2xs"
-                                      title="Tautan Google Drive Bukti Hasil PIC"
+                                      title="Link Hasil Kegiatan PIC"
                                     >
-                                      <GoogleDriveIcon className="w-3 h-3" />
-                                      <span>Drive Bukti</span>
+                                      <Link2 className="w-3 h-3 text-emerald-700" />
+                                      <span>Link Hasil Kegiatan</span>
                                       <ExternalLink className="w-2.5 h-2.5 text-emerald-600" />
                                     </a>
                                   )}
@@ -1183,7 +1180,7 @@ export function ActionItemMatrixView({
 
                           {task.picUser ? (
                             <p className="text-[11.5px] text-slate-700 font-medium truncate max-w-[170px] mt-0.5 flex items-center gap-1">
-                              <span className="text-slate-400">👤</span>
+                              <User className="w-3.5 h-3.5 text-slate-400 shrink-0" />
                               <span>{task.picUser.name}</span>
                             </p>
                           ) : (

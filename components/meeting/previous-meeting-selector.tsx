@@ -239,7 +239,9 @@ export function PreviousMeetingSelector({
                     : teamCode === 'KOM'
                     ? 'Tim Komunikasi'
                     : currentSelectedMeeting.primaryTeam?.name
-                    ? `Tim ${currentSelectedMeeting.primaryTeam.name}`
+                    ? currentSelectedMeeting.primaryTeam.name.startsWith('Tim ')
+                      ? currentSelectedMeeting.primaryTeam.name
+                      : `Tim ${currentSelectedMeeting.primaryTeam.name}`
                     : null;
                 if (!teamName) return null;
                 return (
@@ -276,8 +278,7 @@ export function PreviousMeetingSelector({
 
           {/* Action buttons */}
           <div className="flex items-center justify-between pt-1.5 border-t border-slate-100 text-xs">
-            <span className="text-[11px] text-slate-400 flex items-center gap-1">
-              <Sparkles className="w-3 h-3 text-teal-500" />
+            <span className="text-[11px] text-slate-500 flex items-center gap-1">
               Notulensi &amp; tindak lanjut sesi ini akan saling terhubung
             </span>
             <div className="flex items-center gap-1.5">
@@ -557,7 +558,9 @@ export function PreviousMeetingSelector({
                         : teamCode === 'KOM'
                         ? 'Tim Komunikasi'
                         : m.primaryTeam?.name
-                        ? `Tim ${m.primaryTeam.name}`
+                        ? m.primaryTeam.name.startsWith('Tim ')
+                          ? m.primaryTeam.name
+                          : `Tim ${m.primaryTeam.name}`
                         : null;
 
                     return (

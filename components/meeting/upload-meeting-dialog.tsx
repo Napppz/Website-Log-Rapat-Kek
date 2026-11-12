@@ -176,14 +176,11 @@ export function UploadMeetingDialog({
         <div className="p-5 bg-gradient-to-r from-[#1B5260] via-[#266F80] to-[#31889C] text-white flex items-center justify-between">
           <div className="flex items-center gap-2.5">
             <div className="w-9 h-9 rounded-xl bg-white/20 backdrop-blur-md flex items-center justify-center">
-              <Sparkles className="w-5 h-5 text-amber-300" />
+              <FileText className="w-5 h-5 text-white" />
             </div>
             <div>
               <h2 className="text-base font-bold flex items-center gap-2">
                 <span>Unggah &amp; Ekstrak Catatan Kegiatan Otomatis</span>
-                <span className="text-[10px] px-2 py-0.5 rounded-full bg-white/20 text-white font-semibold">
-                  AI &amp; Smart Parser
-                </span>
               </h2>
               <p className="text-[11px] text-white/80">
                 Unggah berkas dokumen (PDF, Word, atau Teks) hasil kegiatan offline/eksternal. Sistem otomatis mengisi dan menuliskan catatan kegiatan resmi.
@@ -286,7 +283,7 @@ export function UploadMeetingDialog({
               {/* Information Card */}
               <div className="p-4 bg-[#F0F9FA] rounded-xl border border-[#BCE3EB] space-y-2">
                 <h4 className="text-xs font-bold text-[#215865] flex items-center gap-1.5">
-                  <Sparkles className="w-3.5 h-3.5 text-[#31889C]" />
+                  <FileCheck className="w-3.5 h-3.5 text-[#31889C]" />
                   Apa saja yang otomatis diekstrak oleh sistem?
                 </h4>
                 <div className="grid grid-cols-2 gap-2 text-[11px] text-slate-600">
@@ -464,7 +461,6 @@ export function UploadMeetingDialog({
                   </>
                 ) : (
                   <>
-                    <Sparkles className="w-4 h-4 text-amber-300" />
                     <span>Simpan Kegiatan &amp; Catatan Langsung</span>
                     <ArrowRight className="w-4 h-4" />
                   </>

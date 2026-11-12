@@ -1,5 +1,7 @@
 const fs = require('fs');
 
+const TARGET_DOC_ID = '1UlcjKxBuI8320KcQnWZUAUfVI9i08yggW7Kh1aTPiBg';
+
 async function getValidAccessToken() {
   const keys = JSON.parse(fs.readFileSync('C:/Users/nappz/.config/google-drive-mcp/gcp-oauth.keys.json', 'utf8'));
   const tokens = JSON.parse(fs.readFileSync('C:/Users/nappz/.config/google-drive-mcp/tokens.json', 'utf8'));
@@ -31,48 +33,55 @@ async function getValidAccessToken() {
   return account.accessToken;
 }
 
+// Proportional image sizes so Heading + Image + Caption + Explanation always fit on the same page
 const IMAGE_PLACEHOLDERS = [
   {
     token: '[[IMAGE_LOGO_KEK]]',
     uri: 'https://drive.google.com/uc?id=1AKT1iBrvuP-BNA7K_4hYfptOuGY0OGns&export=download',
-    width: 90,
-    height: 90
+    width: 80,
+    height: 80
   },
   {
     token: '[[IMAGE_USE_CASE]]',
     uri: 'https://drive.google.com/uc?id=1UhBx0itPWdDI6qze2R3BeFmXWeq1nvUt&export=download',
-    width: 420,
-    height: 405
+    width: 240,
+    height: 231
   },
   {
     token: '[[IMAGE_ACTIVITY_1]]',
     uri: 'https://drive.google.com/uc?id=1TXIowJidE0XQ4Cp3v_DAzHWQzgQ_4OtA&export=download',
-    width: 400,
-    height: 451
+    width: 204,
+    height: 230
   },
   {
     token: '[[IMAGE_ACTIVITY_2]]',
     uri: 'https://drive.google.com/uc?id=1bDeIE8O58v-S5gXEMy3GtOkVZLaE1NqV&export=download',
-    width: 425,
-    height: 386
+    width: 253,
+    height: 230
   },
   {
     token: '[[IMAGE_ACTIVITY_3]]',
     uri: 'https://drive.google.com/uc?id=1q_S5PGMZNXiTqfLIchFxpPKrvQZOoGEB&export=download',
-    width: 435,
-    height: 331
+    width: 302,
+    height: 230
+  },
+  {
+    token: '[[IMAGE_ARCHITECTURE]]',
+    uri: 'https://drive.google.com/uc?id=1uR11sH_TPdPj9YIAE8NNd-Ko_NjuW0oM&export=download',
+    width: 360,
+    height: 240
   },
   {
     token: '[[IMAGE_ERD]]',
     uri: 'https://drive.google.com/uc?id=1z9adGxKYry7qTjenm4-5SFWYpYAuHu-z&export=download',
-    width: 440,
-    height: 295
+    width: 360,
+    height: 241
   },
   {
     token: '[[IMAGE_LRS]]',
     uri: 'https://drive.google.com/uc?id=1ozG8cPsuXSXRSo-g506oGG558TV6WhK1&export=download',
-    width: 430,
-    height: 391
+    width: 275,
+    height: 250
   }
 ];
 
@@ -85,7 +94,6 @@ async function replacePlaceholderWithImage(docId, accessToken, placeholder) {
   let targetStart = null;
   let targetEnd = null;
   let pStart = null;
-  let pEnd = null;
 
   for (const el of doc.body.content) {
     if (el.paragraph) {
@@ -93,7 +101,6 @@ async function replacePlaceholderWithImage(docId, accessToken, placeholder) {
       const idx = fullText.indexOf(placeholder.token);
       if (idx !== -1) {
         pStart = el.startIndex;
-        pEnd = el.endIndex;
         targetStart = el.startIndex + idx;
         targetEnd = targetStart + placeholder.token.length;
         break;
@@ -127,8 +134,12 @@ async function replacePlaceholderWithImage(docId, accessToken, placeholder) {
     {
       updateParagraphStyle: {
         range: { startIndex: pStart, endIndex: pStart + 2 },
-        paragraphStyle: { alignment: 'CENTER' },
-        fields: 'alignment'
+        paragraphStyle: {
+          alignment: 'CENTER',
+          keepWithNext: placeholder.token !== '[[IMAGE_LOGO_KEK]]',
+          keepLinesTogether: true
+        },
+        fields: 'alignment,keepWithNext,keepLinesTogether'
       }
     }
   ];
@@ -149,6 +160,192 @@ async function replacePlaceholderWithImage(docId, accessToken, placeholder) {
   console.log(`Successfully inserted image for ${placeholder.token}!`);
 }
 
+async function applyCleanPagination(docId, accessToken) {
+  console.log('5. Merapikan tata letak halaman (keepWithNext, keepLinesTogether & compact table cells) agar tidak ada subbab/gambar/tabel yang terpotong...');
+  const res = await fetch(`https://docs.googleapis.com/v1/documents/${docId}`, {
+    headers: { 'Authorization': `Bearer ${accessToken}` }
+  });
+  const doc = await res.json();
+  const content = doc.body.content || [];
+
+  const keepWithNextRanges = [];
+  const keepLinesRanges = [];
+  const compactCellRanges = [];
+  const pageBreakBeforeRanges = [];
+
+  for (let i = 0; i < content.length; i++) {
+    const el = content[i];
+
+    if (el.paragraph) {
+      const styleType = el.paragraph.paragraphStyle?.namedStyleType || '';
+      const hasInlineImage = el.paragraph.elements?.some(e => Boolean(e.inlineObjectElement));
+      const text = (el.paragraph.elements?.map(e => e.textRun?.content || '').join('') || '').trim();
+
+      // Add clean pageBreakBefore on specific section/table headings that would otherwise split a table across pages
+      if (
+        text === '3.4. Technology Stack' ||
+        text === '4.3. Spesifikasi Basis Data (Data Dictionary)' ||
+        text === 'Tabel 4.4. Spesifikasi Tabel Kegiatan (kegiatan)' ||
+        text === 'Tabel 4.5. Spesifikasi Tabel Peserta Kegiatan (peserta_kegiatan)' ||
+        text === 'Tabel 4.8. Spesifikasi Tabel Berkas Lampiran Kegiatan (lampiran_kegiatan)' ||
+        text === '5. Struktur Folder Sistem'
+      ) {
+        pageBreakBeforeRanges.push({ startIndex: el.startIndex, endIndex: el.endIndex });
+      }
+
+      // All non-empty paragraphs: keepLinesTogether + avoidWidowAndOrphan
+      if (el.startIndex && el.endIndex > el.startIndex) {
+        keepLinesRanges.push({ startIndex: el.startIndex, endIndex: el.endIndex });
+      }
+
+      // 1. Every Heading (H1, H2, H3, H4) must stick to the element after it
+      if (styleType.startsWith('HEADING_')) {
+        keepWithNextRanges.push({ startIndex: el.startIndex, endIndex: el.endIndex });
+      }
+
+      // 2. If this paragraph contains a diagram image (not the top logo at i <= 2):
+      //    - Glue up to 3 preceding paragraphs (sub-heading + intro text)
+      //    - Glue the image paragraph itself
+      //    - Glue the caption paragraph (i + 1) AND the first explanation paragraph/item (i + 2, i + 3)
+      //      so a diagram is NEVER left at the bottom of a page without its explanation below it!
+      if (hasInlineImage && i > 3) {
+        keepWithNextRanges.push({ startIndex: el.startIndex, endIndex: el.endIndex });
+        for (let back = 1; back <= 3; back++) {
+          const prev = content[i - back];
+          if (prev && prev.paragraph && prev.startIndex) {
+            keepWithNextRanges.push({ startIndex: prev.startIndex, endIndex: prev.endIndex });
+            const prevStyle = prev.paragraph.paragraphStyle?.namedStyleType || '';
+            if (prevStyle === 'HEADING_3' || prevStyle === 'HEADING_4') {
+              const aboveHeading = content[i - back - 1];
+              if (aboveHeading && aboveHeading.paragraph && (aboveHeading.paragraph.paragraphStyle?.namedStyleType || '').startsWith('HEADING_')) {
+                keepWithNextRanges.push({ startIndex: aboveHeading.startIndex, endIndex: aboveHeading.endIndex });
+              }
+              break;
+            }
+          }
+        }
+        // Also glue caption (i + 1) and the explanation intro (i + 2) so the explanation starts on the SAME page as the diagram!
+        for (let fwd = 1; fwd <= 2; fwd++) {
+          const nextEl = content[i + fwd];
+          if (nextEl && nextEl.paragraph && nextEl.startIndex) {
+            keepWithNextRanges.push({ startIndex: nextEl.startIndex, endIndex: nextEl.endIndex });
+          }
+        }
+      }
+
+      // 3. Any paragraph starting with "Gambar ", "Tabel ", or ending with ":"
+      if (text.startsWith('Gambar ') || text.startsWith('Tabel ') || text.endsWith(':')) {
+        keepWithNextRanges.push({ startIndex: el.startIndex, endIndex: el.endIndex });
+      }
+    }
+
+    // 4. If this element is a Table:
+    //    - Glue the 1-2 paragraphs above the table (table title / intro sentence)
+    //    - Make all table cell paragraphs compact (spaceAbove=1pt, spaceBelow=1pt, lineSpacing=105)
+    //    - Glue ALL rows (except the very last row) so that NO table is ever split in half across two pages!
+    if (el.table) {
+      for (let back = 1; back <= 2; back++) {
+        const prev = content[i - back];
+        if (prev && prev.paragraph && prev.startIndex) {
+          keepWithNextRanges.push({ startIndex: prev.startIndex, endIndex: prev.endIndex });
+        }
+      }
+
+      const rows = el.table.tableRows || [];
+      for (let r = 0; r < rows.length; r++) {
+        const row = rows[r];
+        const isBeforeLastRow = r < rows.length - 1;
+        for (const cell of row.tableCells || []) {
+          for (const cellEl of cell.content || []) {
+            if (cellEl.paragraph && cellEl.startIndex) {
+              const rng = { startIndex: cellEl.startIndex, endIndex: cellEl.endIndex };
+              compactCellRanges.push(rng);
+              if (isBeforeLastRow) {
+                keepWithNextRanges.push(rng);
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+
+  const requests = [];
+
+  for (const rng of keepLinesRanges) {
+    requests.push({
+      updateParagraphStyle: {
+        range: rng,
+        paragraphStyle: {
+          keepLinesTogether: true,
+          avoidWidowAndOrphan: true
+        },
+        fields: 'keepLinesTogether,avoidWidowAndOrphan'
+      }
+    });
+  }
+
+  for (const rng of compactCellRanges) {
+    requests.push({
+      updateParagraphStyle: {
+        range: rng,
+        paragraphStyle: {
+          spaceAbove: { magnitude: 1, unit: 'PT' },
+          spaceBelow: { magnitude: 1, unit: 'PT' },
+          lineSpacing: 105,
+          keepLinesTogether: true,
+          avoidWidowAndOrphan: true
+        },
+        fields: 'spaceAbove,spaceBelow,lineSpacing,keepLinesTogether,avoidWidowAndOrphan'
+      }
+    });
+  }
+
+  for (const rng of keepWithNextRanges) {
+    requests.push({
+      updateParagraphStyle: {
+        range: rng,
+        paragraphStyle: {
+          keepWithNext: true,
+          keepLinesTogether: true,
+          avoidWidowAndOrphan: true
+        },
+        fields: 'keepWithNext,keepLinesTogether,avoidWidowAndOrphan'
+      }
+    });
+  }
+
+  for (const rng of pageBreakBeforeRanges) {
+    requests.push({
+      updateParagraphStyle: {
+        range: rng,
+        paragraphStyle: {
+          pageBreakBefore: true,
+          keepWithNext: true,
+          keepLinesTogether: true
+        },
+        fields: 'pageBreakBefore,keepWithNext,keepLinesTogether'
+      }
+    });
+  }
+
+  if (requests.length > 0) {
+    const updateRes = await fetch(`https://docs.googleapis.com/v1/documents/${docId}:batchUpdate`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${accessToken}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ requests })
+    });
+    if (!updateRes.ok) {
+      console.warn('Warning applying pagination styles:', await updateRes.text());
+    } else {
+      console.log(`   Berhasil menerapkan aturan halaman (keepWithNext & compact table) pada ${keepWithNextRanges.length} blok!`);
+    }
+  }
+}
+
 async function main() {
   const accessToken = await getValidAccessToken();
 
@@ -163,52 +360,52 @@ async function main() {
     body {
       font-family: Cambria, Calibri, Arial, sans-serif;
       font-size: 11pt;
-      line-height: 1.4;
+      line-height: 1.35;
       color: #1a1a1a;
     }
     h1 {
       font-family: Calibri, Arial, sans-serif;
-      font-size: 16pt;
+      font-size: 15.5pt;
       font-weight: bold;
       text-align: center;
-      margin-top: 12pt;
-      margin-bottom: 18pt;
+      margin-top: 8pt;
+      margin-bottom: 14pt;
       color: #1f3864;
       text-transform: uppercase;
     }
     h2 {
       font-family: Calibri, Arial, sans-serif;
-      font-size: 14pt;
+      font-size: 13.5pt;
       font-weight: bold;
-      margin-top: 18pt;
-      margin-bottom: 6pt;
+      margin-top: 14pt;
+      margin-bottom: 5pt;
       color: #2f5496;
     }
     h3 {
       font-family: Calibri, Arial, sans-serif;
-      font-size: 12.5pt;
+      font-size: 12pt;
       font-weight: bold;
-      margin-top: 12pt;
+      margin-top: 10pt;
       margin-bottom: 4pt;
       color: #2f5496;
     }
     h4 {
       font-family: Calibri, Arial, sans-serif;
-      font-size: 11.5pt;
+      font-size: 11pt;
       font-weight: bold;
-      margin-top: 10pt;
-      margin-bottom: 4pt;
+      margin-top: 8pt;
+      margin-bottom: 3pt;
       color: #1f3864;
     }
     p {
       margin-top: 0;
-      margin-bottom: 8pt;
+      margin-bottom: 6pt;
       text-align: justify;
     }
     .center-p {
       text-align: center;
-      margin-top: 8pt;
-      margin-bottom: 8pt;
+      margin-top: 4pt;
+      margin-bottom: 4pt;
     }
     .caption {
       text-align: center;
@@ -216,36 +413,36 @@ async function main() {
       font-size: 10pt;
       color: #333333;
       margin-top: 2pt;
-      margin-bottom: 12pt;
+      margin-bottom: 8pt;
     }
     ul, ol {
       margin-top: 2pt;
-      margin-bottom: 8pt;
-      padding-left: 22pt;
+      margin-bottom: 6pt;
+      padding-left: 20pt;
     }
     li {
-      margin-bottom: 3pt;
+      margin-bottom: 2.5pt;
       text-align: justify;
     }
     table {
       width: 100%;
       border-collapse: collapse;
-      margin-top: 6pt;
-      margin-bottom: 14pt;
-      font-size: 10pt;
+      margin-top: 4pt;
+      margin-bottom: 10pt;
+      font-size: 9.5pt;
     }
     table, th, td {
-      border: 1px solid #9ca3af;
+      border: 1px solid #000000;
     }
     th {
-      background-color: #d9e1f2;
-      color: #1f3864;
+      background-color: #f2f4f7;
+      color: #000000;
       font-weight: bold;
-      text-align: left;
-      padding: 6pt 8pt;
+      text-align: center;
+      padding: 5pt 7pt;
     }
     td {
-      padding: 5pt 8pt;
+      padding: 4pt 7pt;
       vertical-align: top;
     }
     .center {
@@ -274,7 +471,7 @@ async function main() {
   <ol>
     <li>Menjadi acuan teknis dalam pengembangan, pengujian, dan pengelolaan website Aplikasi Log Book Kegiatan KEK.</li>
     <li>Memberikan gambaran menyeluruh terkait arsitektur sistem, pemodelan diagram UML, dan desain antarmuka sistem.</li>
-    <li>Mendokumentasikan struktur sistem, desain database (ERD, LRS, dan spesifikasi kamus data), serta alur proses bisnis utama.</li>
+    <li>Mendokumentasikan struktur sistem, desain database (ERD, LRS, dan spesifikasi tabel basis data), serta alur proses bisnis utama.</li>
     <li>Memudahkan proses pengembangan lanjutan dan pemeliharaan sistem secara berkelanjutan.</li>
     <li>Menjadi referensi resmi bagi tim teknis, pengembang, dan pemangku kepentingan terkait di lingkungan Sekretariat Jenderal Dewan Nasional KEK.</li>
   </ol>
@@ -342,7 +539,8 @@ async function main() {
         <li>Melakukan pencatatan dan penjadwalan kegiatan baru (Naskah Masuk, Disposisi Sekjen, Disposisi Karo, Kegiatan Internal, dan Laporan Rutin).</li>
         <li>Mengelola daftar pihak terkait / undangan kegiatan resmi.</li>
         <li>Mengunggah berkas dokumen log book kegiatan (undangan, nota konsumsi, materi paparan, dan tautan rilis) serta mencatat ringkasan hasil kegiatan.</li>
-        <li>Mengelola matriks tindak lanjut (<em>action items</em>) beserta penunjukan staf PIC dan batas waktu penyelesaian.</li>
+        <li>Menetapkan dan mengelola butir tindak lanjut (<em>action items</em>) beserta staf PIC penanggung jawab.</li>
+        <li>Mengekspor laporan rekapitulasi kegiatan dan matriks tindak lanjut (PDF/Excel/Word).</li>
       </ul>
     </li>
     <li><strong>Super Admin / Pimpinan:</strong>
@@ -437,11 +635,14 @@ async function main() {
   <h2>3. Arsitektur Sistem</h2>
 
   <h3>3.1. Gambaran Arsitektur Sistem</h3>
-  <p>Website Aplikasi Log Book Kegiatan KEK dibangun menggunakan pendekatan arsitektur <em>fullstack</em> terintegrasi berbasis <em>framework</em> <strong>Next.js (App Router)</strong> dengan bahasa pemrograman <strong>TypeScript</strong>. Seluruh proses, mulai dari penyajian antarmuka pengguna (<em>frontend</em>) hingga pengolahan logika bisnis dan akses basis data (<em>backend</em>), dijalankan dalam satu kesatuan aplikasi terpadu.</p>
+  <p>Website Aplikasi Log Book Kegiatan KEK dibangun menggunakan pendekatan arsitektur <em>fullstack</em> terintegrasi berbasis <em>framework</em> <strong>Next.js (App Router)</strong> dengan bahasa pemrograman <strong>TypeScript</strong> sebagaimana ditampilkan pada diagram arsitektur berikut:</p>
 
-  <p>Interaksi pengguna dilakukan melalui peramban web menggunakan protokol aman HTTPS, yang kemudian diproses oleh sistem melalui mekanisme Next.js <em>Server Components</em>, <em>Server Actions</em>, dan <em>Route Handlers</em>. Sistem memverifikasi sesi otorisasi pengguna menggunakan <strong>NextAuth.js (Auth.js v5)</strong>, memvalidasi masukan data dengan <strong>Zod</strong>, mengakses basis data melalui <strong>Prisma ORM</strong>, dan mengembalikan hasilnya dalam bentuk tampilan antarmuka yang responsif.</p>
+  <p class="center-p">[[IMAGE_ARCHITECTURE]]</p>
+  <p class="caption">Gambar 3.1. Arsitektur Sistem Aplikasi Log Book Kegiatan KEK</p>
 
-  <p>Basis data yang digunakan adalah <strong>PostgreSQL (Neon Serverless Database)</strong>, yang berfungsi sebagai media penyimpanan utama seluruh entitas data sistem, termasuk data biro, tim kerja, pengguna, agenda kegiatan, peserta terkait, lampiran dokumen, tindak lanjut, riwayat progres, dan notifikasi.</p>
+  <p>Seluruh proses aplikasi, mulai dari penyajian antarmuka pengguna (<em>frontend</em>) hingga pengolahan logika bisnis dan akses basis data (<em>backend</em>), dijalankan dalam satu kesatuan aplikasi terpadu. Interaksi pengguna dilakukan melalui peramban web menggunakan protokol aman HTTPS, yang kemudian diproses oleh sistem melalui mekanisme Next.js <em>Server Components</em>, <em>Server Actions</em>, dan <em>Route Handlers</em>. Sistem memverifikasi sesi otorisasi pengguna menggunakan <strong>NextAuth.js (Auth.js v5)</strong>, memvalidasi masukan data dengan <strong>Zod</strong>, mengakses basis data melalui <strong>Prisma ORM</strong>, dan mengembalikan hasilnya dalam bentuk tampilan antarmuka yang responsif.</p>
+
+  <p>Basis data yang digunakan adalah <strong>PostgreSQL (Neon Serverless Database)</strong>, yang berfungsi sebagai media penyimpanan utama seluruh entitas data sistem, termasuk data biro, tim kerja, pengguna, agenda kegiatan, peserta terkait, lampiran dokumen, tindak lanjut, dan riwayat progres.</p>
 
   <h3>3.2. Pola Arsitektur Sistem</h3>
   <p>Sistem ini menerapkan pemisahan tanggung jawab berlapis yang setara dengan konsep <em>Model-View-Controller</em> (MVC) pada arsitektur modern Next.js, yang terdiri dari tiga komponen utama:</p>
@@ -452,7 +653,7 @@ async function main() {
       <ul>
         <li>Mengelola struktur tabel master organisasi (<code>biro</code>, <code>tim_biro</code>, <code>pengguna</code>).</li>
         <li>Mengelola transaksi jadwal dan dokumen log book kegiatan (<code>kegiatan</code>, <code>peserta_kegiatan</code>, <code>lampiran_kegiatan</code>).</li>
-        <li>Mengelola matriks penugasan dan jejak audit progres (<code>tindak_lanjut</code>, <code>riwayat_tindak_lanjut</code>, <code>notifikasi</code>).</li>
+        <li>Mengelola matriks penugasan dan jejak audit progres (<code>tindak_lanjut</code>, <code>riwayat_tindak_lanjut</code>).</li>
         <li>Menjaga integritas relasi antar-tabel (<em>foreign key</em>) serta menyediakan <em>query</em> basis data yang <em>type-safe</em>.</li>
       </ul>
     </li>
@@ -505,7 +706,7 @@ async function main() {
       <tr>
         <td class="center">1</td>
         <td>Framework Aplikasi</td>
-        <td>Next.js 15 (App Router) &amp; React 19</td>
+        <td>Next.js 15 / 16 (App Router) &amp; React 19</td>
       </tr>
       <tr>
         <td class="center">2</td>
@@ -520,7 +721,7 @@ async function main() {
       <tr>
         <td class="center">4</td>
         <td>Object Relational Mapping (ORM)</td>
-        <td>Prisma ORM</td>
+        <td>Prisma ORM v6</td>
       </tr>
       <tr>
         <td class="center">5</td>
@@ -540,12 +741,12 @@ async function main() {
       <tr>
         <td class="center">8</td>
         <td>Generator Laporan Dokumen</td>
-        <td>jsPDF, SheetJS (XLSX), dan Docx</td>
+        <td>PDFKit, SheetJS (XLSX / ExcelJS), dan Docx</td>
       </tr>
       <tr>
         <td class="center">9</td>
         <td>Runtime Environment</td>
-        <td>Node.js</td>
+        <td>Node.js LTS</td>
       </tr>
       <tr>
         <td class="center">10</td>
@@ -556,47 +757,62 @@ async function main() {
   </table>
 
   <h3>3.5. Keamanan Sistem (Arsitektur)</h3>
-  <p>Dalam arsitektur ini, aspek keamanan diterapkan secara berlapis melalui mekanisme berikut:</p>
+  <p>Dalam arsitektur ini, aspek keamanan diterapkan secara berlapis melalui fitur keamanan modern, antara lain:</p>
   <ol>
-    <li>Proteksi CSRF (<em>Cross-Site Request Forgery</em>) bawaan pada setiap transaksi formulir dan <em>Server Actions</em>.</li>
-    <li>Validasi input berlapis di sisi klien dan server menggunakan skema Zod untuk mencegah masuknya data tidak valid atau berbahaya.</li>
-    <li>Penerapan <em>authentication</em> (NextAuth.js) dan <em>authorization</em> berbasis <em>role</em> (RBAC: Staf Pelaksana, Admin Biro/Tim, Super Admin/Pimpinan) yang diverifikasi langsung di sisi server.</li>
-    <li>Pencegahan serangan <em>SQL Injection</em> melalui penggunaan <em>parameterized queries</em> otomatis pada Prisma ORM.</li>
-    <li>Enkripsi data kredensial sensitif (kata sandi pengguna di-<em>hash</em> menggunakan algoritma <em>bcrypt</em>).</li>
-    <li>Penggunaan protokol HTTPS untuk mengamankan komunikasi data antara <em>browser</em> dan server.</li>
+    <li>Proteksi sesi autentikasi berbasis token terenkripsi (JWT/Session Cookie HttpOnly) menggunakan <strong>NextAuth.js</strong> serta proteksi rute halaman melalui <code>middleware.ts</code>.</li>
+    <li>Pengendalian hak akses berbasis peran (<em>Role-Based Access Control</em> / RBAC) untuk membatasi kewenangan antara Staf Pelaksana, Admin Biro/Tim, dan Super Admin/Pimpinan.</li>
+    <li>Validasi skema masukan secara ketat di sisi klien dan server menggunakan <strong>Zod</strong> guna mencegah injeksi data tidak valid atau berbahaya.</li>
+    <li>Enkripsi kata sandi pengguna secara satu arah (<em>one-way hashing</em>) menggunakan algoritma <strong>Bcrypt</strong>.</li>
+    <li>Pencegahan serangan <em>SQL Injection</em> melalui penggunaan <em>parameterized queries</em> otomatis pada <strong>Prisma ORM</strong> serta komunikasi data terenkripsi melalui protokol HTTPS.</li>
   </ol>
 
   <h3>3.6. Kelebihan Pendekatan Arsitektur</h3>
-  <p>Pendekatan arsitektur <em>fullstack</em> terintegrasi berbasis Next.js App Router yang digunakan dalam pengembangan website Aplikasi Log Book Kegiatan KEK memberikan sejumlah keunggulan nyata bagi tata kelola aplikasi internal instansi. Dengan menyatukan komponen antarmuka (<em>frontend</em>) dan logika pemrosesan server (<em>backend</em>) dalam satu repositori terpadu, proses pengembangan menjadi lebih terstruktur, konsisten, dan mudah dikelola oleh tim pengembang.</p>
+  <p>Pendekatan arsitektur <em>fullstack</em> terpadu berbasis Next.js App Router, TypeScript, dan Prisma ORM yang digunakan dalam pengembangan website Aplikasi Log Book Kegiatan KEK memberikan sejumlah keunggulan strategis. Dengan penyatuan komponen antarmuka (<em>frontend</em>) dan pemrosesan logika bisnis (<em>backend Server Actions</em>) dalam satu basis kode terstruktur, proses pengembangan menjadi lebih cepat, konsisten, dan mudah dikelola.</p>
 
   <p>Selain itu, dukungan pengetikan statis (<em>type-safety</em>) secara menyeluruh dari skema basis data Prisma hingga ke komponen React mampu meminimalisasi kesalahan pemrograman (<em>runtime error</em>) serta menjamin keakuratan data log book kegiatan. Proses <em>deployment</em> dan pemeliharaan sistem juga menjadi jauh lebih efisien karena tidak memerlukan pengelolaan infrastruktur layanan terpisah yang kompleks.</p>
-
-  <p>Dengan demikian, pemilihan arsitektur ini sangat sesuai untuk mendukung operasional Sekretariat Jenderal Dewan Nasional KEK yang mengutamakan kecepatan akses, stabilitas sistem, kemudahan pemeliharaan, serta keamanan data kedinasan.</p>
 
   <h2>4. Desain Database</h2>
 
   <h3>4.1. Entity Relationship Diagram (ERD)</h3>
-  <p>Entity Relationship Diagram (ERD) memodelkan hubungan logis antar-entitas data dalam sistem menggunakan notasi Peter Chen. Berikut merupakan diagram ERD pada Aplikasi Log Book Kegiatan KEK:</p>
+  <p>Entity Relationship Diagram (ERD) memodelkan hubungan logis antar-entitas data dalam sistem menggunakan notasi Chen klasik akademik sebagaimana disajikan pada Gambar 4.1 berikut:</p>
 
   <p class="center-p">[[IMAGE_ERD]]</p>
   <p class="caption">Gambar 4.1. Entity Relationship Diagram (ERD) Aplikasi Log Book Kegiatan KEK</p>
 
-  <p>Dalam proses bisnis pencatatan kegiatan kedinasan, struktur organisasi Sekretariat Jenderal Dewan Nasional KEK dipetakan melalui entitas <strong>biro</strong> yang menaungi entitas <strong>tim_biro</strong> dengan relasi satu-ke-banyak (1:N). Setiap aparatur pengguna sistem dicatat dalam entitas <strong>pengguna</strong> yang berelasi dengan tim kerja dan biro terkait, serta menerima pesan pemberitahuan sistem melalui entitas <strong>notifikasi</strong>.</p>
-
-  <p>Ketika suatu agenda kegiatan dijadwalkan, data transaksi utama disimpan pada entitas sentral <strong>kegiatan</strong> yang diselenggarakan oleh biro pemrakarsa dan dipimpin oleh pengguna terkait. Untuk mendukung tertib pengarsipan log book, entitas <strong>kegiatan</strong> berelasi 1:N dengan entitas <strong>lampiran_kegiatan</strong> guna menyimpan berkas dokumen digital (undangan, nota konsumsi, materi paparan, tautan rilis), serta berelasi 1:N dengan entitas <strong>peserta_kegiatan</strong> untuk mendokumentasikan daftar pihak dan aparatur yang diundang dalam kegiatan.</p>
-
-  <p>Selanjutnya, setiap butir komitmen atau arahan hasil pembahasan kegiatan dicatat ke dalam entitas <strong>tindak_lanjut</strong> yang terhubung langsung dengan entitas <strong>kegiatan</strong> dan staf penanggung jawab (PIC) pada entitas <strong>pengguna</strong>. Seluruh riwayat pembaruan status progres tindak lanjut (<em>Belum Dimulai</em>, <em>Dalam Proses</em>, <em>Selesai</em>) direkam secara historis pada entitas <strong>riwayat_tindak_lanjut</strong> guna menjamin akuntabilitas dan kemudahan pengawasan pimpinan.</p>
+  <p>Berdasarkan diagram ERD pada Gambar 4.1 di atas, entitas dan relasi utama dalam sistem dijelaskan sebagai berikut:</p>
+  <ol>
+    <li><strong>Entitas Biro (<code>biro</code>):</strong> Menyimpan data master unit kerja Eselon II di lingkungan Setjen KEK dengan atribut utama <code>id_biro</code> (Primary Key), <code>kode_biro</code>, <code>nama_biro</code>, dan <code>status_aktif</code>. Berelasi 1 ke N dengan entitas Tim Kerja Biro (<code>tim_biro</code>) melalui relasi <em>menaungi</em>, serta berelasi 1 ke N dengan entitas Kegiatan (<code>kegiatan</code>) melalui relasi <em>menyelenggarakan</em>.</li>
+    <li><strong>Entitas Tim Kerja Biro (<code>tim_biro</code>):</strong> Menyimpan data kelompok kerja teknis fungsional di bawah naungan biro dengan atribut <code>id_tim</code> (Primary Key), <code>kode_tim</code>, dan <code>nama_tim</code>. Berelasi N ke 1 dengan <code>biro</code> induk melalui relasi <em>menaungi</em>, serta berelasi 1 ke N dengan entitas Pengguna (<code>pengguna</code>) melalui relasi <em>beranggotakan</em>.</li>
+    <li><strong>Entitas Pengguna (<code>pengguna</code>):</strong> Menyimpan data aparatur/pegawai pengguna sistem dengan atribut <code>id_pengguna</code> (Primary Key), <code>email</code>, <code>nama_lengkap</code>, dan <code>peran</code>. Berelasi N ke 1 dengan <code>tim_biro</code>, 1 ke N dengan <code>notifikasi</code> melalui relasi <em>menerima</em>, 1 ke 1 dengan <code>kegiatan</code> melalui relasi <em>memimpin</em>, 1 ke N dengan <code>lampiran_kegiatan</code> sebagai pengunggah berkas, 1 ke N dengan <code>peserta_kegiatan</code> melalui relasi <em>menghadiri</em>, serta 1 ke N dengan <code>tindak_lanjut</code> melalui relasi <em>mengerjakan PIC</em>.</li>
+    <li><strong>Entitas Notifikasi (<code>notifikasi</code>):</strong> Menyimpan pesan pemberitahuan sistem kepada aparatur terkait agenda kegiatan dan penugasan dinas dengan atribut <code>id_notifikasi</code> (Primary Key), <code>judul</code>, <code>pesan</code>, dan <code>sudah_dibaca</code>.</li>
+    <li><strong>Entitas Kegiatan (<code>kegiatan</code>):</strong> Merupakan entitas sentral sistem yang mencatat pelaksanaan agenda kegiatan dengan atribut <code>id_kegiatan</code> (Primary Key), <code>nomor_kegiatan</code>, <code>judul_kegiatan</code>, <code>tanggal_kegiatan</code>, dan <code>status_kegiatan</code>. Berelasi 1 ke N dengan <code>lampiran_kegiatan</code> melalui relasi <em>melampirkan</em>, 1 ke N dengan <code>peserta_kegiatan</code> melalui relasi <em>mengundang</em>, serta 1 ke N dengan <code>tindak_lanjut</code> melalui relasi <em>menetapkan</em>.</li>
+    <li><strong>Entitas Berkas Lampiran Kegiatan (<code>lampiran_kegiatan</code>):</strong> Menyimpan dokumen pendukung pelaksanaan kegiatan dengan atribut <code>id_lampiran</code> (Primary Key), <code>nama_berkas</code>, dan <code>kategori_berkas</code>.</li>
+    <li><strong>Entitas Peserta Kegiatan (<code>peserta_kegiatan</code>):</strong> Menyimpan daftar aparatur atau pihak terkait yang diundang dalam kegiatan dengan atribut <code>id_peserta</code> (Primary Key) dan <code>status_kehadiran</code>.</li>
+    <li><strong>Entitas Tindak Lanjut Arahan (<code>tindak_lanjut</code>):</strong> Menyimpan butir arahan komitmen penugasan hasil pembahasan kegiatan dengan atribut <code>id_tindak_lanjut</code> (Primary Key), <code>judul_tindakan</code>, dan <code>status_tindak_lanjut</code>.</li>
+  </ol>
 
   <h3>4.2. Logical Record Structure (LRS)</h3>
-  <p>Logical Record Structure (LRS) menggambarkan transformasi skema ERD ke dalam bentuk tabel-tabel relasional beserta pertautan <em>Primary Key</em> (PK) dan <em>Foreign Key</em> (FK) dengan derajat kardinalitas 1 ke N (<em>One-to-Many</em>):</p>
+  <p>Logical Record Structure (LRS) menggambarkan transformasi skema ERD ke dalam bentuk tabel-tabel relasional yang telah dinormalisasi hingga bentuk normal ketiga (3NF) sebagaimana disajikan pada Gambar 4.2 berikut:</p>
 
   <p class="center-p">[[IMAGE_LRS]]</p>
   <p class="caption">Gambar 4.2. Logical Record Structure (LRS) Aplikasi Log Book Kegiatan KEK</p>
 
-  <h3>4.3. Spesifikasi Tabel Database (Data Dictionary)</h3>
-  <p>Berikut merupakan daftar tabel basis data aktif beserta spesifikasi struktur kolom yang digunakan dalam sistem Aplikasi Log Book Kegiatan KEK:</p>
+  <p>Transformasi LRS pada Gambar 4.2 menghubungkan <em>Primary Key</em> (PK) dan <em>Foreign Key</em> (FK) secara konsisten antar-tabel relasional dengan derajat kardinalitas 1 ke N (<em>One-to-Many</em>). Struktur rekod logis dari 8 entitas relasional aktif pada LRS dijelaskan sebagai berikut:</p>
+  <ol>
+    <li><strong><code>biro</code> (Master Unit Kerja Eselon II):</strong> Terdiri atas atribut <code>id_biro</code> (PK), <code>kode_biro</code>, <code>nama_biro</code>, <code>nama_singkat</code>, dan <code>status_aktif</code>. Berelasi 1 ke N dengan <code>tim_biro</code> dan <code>kegiatan</code>.</li>
+    <li><strong><code>tim_biro</code> (Kelompok Kerja Teknis):</strong> Terdiri atas atribut <code>id_tim</code> (PK), <code>id_biro</code> (FK), <code>kode_tim</code>, <code>nama_tim</code>, dan <code>status_aktif</code>. Berelasi 1 ke N dengan <code>pengguna</code>.</li>
+    <li><strong><code>pengguna</code> (Akun Aparatur &amp; Autentikasi):</strong> Terdiri atas atribut <code>id_pengguna</code> (PK), <code>id_biro</code> (FK), <code>id_tim</code> (FK), <code>nama_lengkap</code>, <code>email</code>, <code>kata_sandi</code>, <code>peran</code>, dan <code>status_aktif</code>. Berelasi 1 ke N dengan <code>peserta_kegiatan</code>, <code>tindak_lanjut</code> (sebagai PIC penugasan), dan <code>riwayat_tindak_lanjut</code>.</li>
+    <li><strong><code>kegiatan</code> (Transaksi Sentral Log Book Kegiatan):</strong> Terdiri atas atribut <code>id_kegiatan</code> (PK), <code>id_biro</code> (FK), <code>id_tim</code> (FK), <code>nomor_kegiatan</code>, <code>judul_kegiatan</code>, <code>tanggal_kegiatan</code>, <code>waktu_mulai</code>, <code>waktu_selesai</code>, <code>lokasi_kegiatan</code>, <code>pic_kegiatan</code>, <code>kategori_naskah</code>, <code>catatan_hasil</code>, dan <code>status_kegiatan</code>. Berelasi 1 ke N dengan <code>lampiran_kegiatan</code>, <code>peserta_kegiatan</code>, dan <code>tindak_lanjut</code>.</li>
+    <li><strong><code>lampiran_kegiatan</code> (Dokumen Digital Pendukung):</strong> Terdiri atas atribut <code>id_lampiran</code> (PK), <code>id_kegiatan</code> (FK), <code>nama_berkas</code>, <code>url_berkas</code>, <code>ukuran_berkas</code>, <code>tipe_berkas</code>, <code>kategori</code>, dan <code>dibuat_pada</code>.</li>
+    <li><strong><code>peserta_kegiatan</code> (Daftar Penugasan Kehadiran Aparatur):</strong> Terdiri atas atribut <code>id_peserta</code> (PK), <code>id_kegiatan</code> (FK), <code>id_pengguna</code> (FK), <code>status_kehadiran</code>, dan <code>dibuat_pada</code>.</li>
+    <li><strong><code>tindak_lanjut</code> (Arahan Komitmen &amp; Action Items):</strong> Terdiri atas atribut <code>id_tindak_lanjut</code> (PK), <code>id_kegiatan</code> (FK), <code>id_biro</code> (FK), <code>id_tim</code> (FK), <code>id_pengguna</code> (FK), <code>judul_tindakan</code>, <code>deskripsi_tindakan</code>, <code>tenggat_waktu</code>, dan <code>status_tindak_lanjut</code>. Berelasi 1 ke N dengan <code>riwayat_tindak_lanjut</code>.</li>
+    <li><strong><code>riwayat_tindak_lanjut</code> (Rekam Jejak Audit Progres Tugas):</strong> Terdiri atas atribut <code>id_riwayat</code> (PK), <code>id_tindak_lanjut</code> (FK), <code>id_pengguna</code> (FK), <code>status_sebelumnya</code>, <code>status_terbaru</code>, <code>catatan_progres</code>, dan <code>dibuat_pada</code>.</li>
+  </ol>
 
-  <h4>1. Tabel: pengguna (Spesifikasi Tabel Pengguna)</h4>
+  <h3>4.3. Spesifikasi Basis Data (Data Dictionary)</h3>
+  <p>Spesifikasi basis data (<em>data dictionary</em>) menjelaskan rincian teknis dari setiap tabel yang digunakan dalam sistem aplikasi Log Book Kegiatan. Berdasarkan skema basis data PostgreSQL pada platform <em>serverless</em> Neon, berikut merupakan daftar 8 tabel dan spesifikasi struktur kolom yang diimplementasikan:</p>
+
+  <h4>Tabel 4.1. Spesifikasi Tabel Pengguna (pengguna)</h4>
   <table>
     <thead>
       <tr>
@@ -607,21 +823,20 @@ async function main() {
       </tr>
     </thead>
     <tbody>
-      <tr><td class="center">1</td><td>id_pengguna</td><td>Varchar (UUID)</td><td>Primary Key (Kode pengenal unik akun aparatur)</td></tr>
-      <tr><td class="center">2</td><td>nama_lengkap</td><td>Varchar</td><td>Nama lengkap aparatur pegawai</td></tr>
+      <tr><td class="center">1</td><td>id_pengguna</td><td>Varchar (UUID)</td><td>Primary Key</td></tr>
+      <tr><td class="center">2</td><td>nama_lengkap</td><td>Varchar</td><td>Nama lengkap pegawai</td></tr>
       <tr><td class="center">3</td><td>email</td><td>Varchar</td><td>Alamat email resmi (Unique)</td></tr>
-      <tr><td class="center">4</td><td>nama_pengguna</td><td>Varchar</td><td>Username unik untuk autentikasi login</td></tr>
-      <tr><td class="center">5</td><td>kata_sandi</td><td>Varchar</td><td>Password akun terenkripsi (Bcrypt hash)</td></tr>
-      <tr><td class="center">6</td><td>peran</td><td>Enum</td><td>Hak akses peran: SUPER_ADMIN, ADMIN, PIMPINAN, STAFF</td></tr>
-      <tr><td class="center">7</td><td>id_biro</td><td>Varchar (UUID)</td><td>Foreign Key &rarr; biro.id_biro</td></tr>
-      <tr><td class="center">8</td><td>id_tim</td><td>Varchar (UUID)</td><td>Foreign Key &rarr; tim_biro.id_tim (opsional)</td></tr>
-      <tr><td class="center">9</td><td>status_aktif</td><td>Boolean</td><td>Status keaktifan akun pengguna (Default: true)</td></tr>
-      <tr><td class="center">10</td><td>dibuat_pada</td><td>Timestamp</td><td>Waktu akun pertama kali didaftarkan</td></tr>
-      <tr><td class="center">11</td><td>diperbarui_pada</td><td>Timestamp</td><td>Waktu terakhir pembaruan data profil akun</td></tr>
+      <tr><td class="center">4</td><td>kata_sandi</td><td>Varchar</td><td>Password terenkripsi (Bcrypt hash)</td></tr>
+      <tr><td class="center">5</td><td>peran</td><td>Enum</td><td>SUPER_ADMIN, ADMIN, PIMPINAN, STAFF</td></tr>
+      <tr><td class="center">6</td><td>id_biro</td><td>Varchar (UUID)</td><td>Foreign Key (Relasi ke tabel biro)</td></tr>
+      <tr><td class="center">7</td><td>id_tim</td><td>Varchar (UUID)</td><td>Foreign Key (Relasi ke tabel tim_biro, opsional)</td></tr>
+      <tr><td class="center">8</td><td>status_aktif</td><td>Boolean</td><td>Status aktif akun (Default: true)</td></tr>
+      <tr><td class="center">9</td><td>dibuat_pada</td><td>Timestamp</td><td>Waktu akun didaftarkan</td></tr>
+      <tr><td class="center">10</td><td>diperbarui_pada</td><td>Timestamp</td><td>Waktu terakhir pembaruan profil</td></tr>
     </tbody>
   </table>
 
-  <h4>2. Tabel: biro (Spesifikasi Tabel Biro)</h4>
+  <h4>Tabel 4.2. Spesifikasi Tabel Biro (biro)</h4>
   <table>
     <thead>
       <tr>
@@ -632,18 +847,18 @@ async function main() {
       </tr>
     </thead>
     <tbody>
-      <tr><td class="center">1</td><td>id_biro</td><td>Varchar (UUID)</td><td>Primary Key (Kode pengenal unik unit kerja Biro)</td></tr>
+      <tr><td class="center">1</td><td>id_biro</td><td>Varchar (UUID)</td><td>Primary Key</td></tr>
       <tr><td class="center">2</td><td>kode_biro</td><td>Varchar</td><td>Kode singkatan unik biro (Unique)</td></tr>
-      <tr><td class="center">3</td><td>nama_biro</td><td>Varchar</td><td>Nama lengkap unit kerja biro pemrakarsa</td></tr>
-      <tr><td class="center">4</td><td>nama_singkat</td><td>Varchar</td><td>Nomenklatur singkatan biro kerja</td></tr>
-      <tr><td class="center">5</td><td>deskripsi</td><td>Text</td><td>Uraian tugas dan fungsi pokok biro</td></tr>
-      <tr><td class="center">6</td><td>status_aktif</td><td>Boolean</td><td>Status aktif operasional biro (Default: true)</td></tr>
+      <tr><td class="center">3</td><td>nama_biro</td><td>Varchar</td><td>Nama lengkap biro pemrakarsa</td></tr>
+      <tr><td class="center">4</td><td>nama_singkat</td><td>Varchar</td><td>Nomenklatur singkatan biro</td></tr>
+      <tr><td class="center">5</td><td>deskripsi</td><td>Text</td><td>Uraian fungsi pokok biro</td></tr>
+      <tr><td class="center">6</td><td>status_aktif</td><td>Boolean</td><td>Status aktif operasional biro</td></tr>
       <tr><td class="center">7</td><td>dibuat_pada</td><td>Timestamp</td><td>Waktu data biro dibuat</td></tr>
-      <tr><td class="center">8</td><td>diperbarui_pada</td><td>Timestamp</td><td>Waktu terakhir pembaruan data biro</td></tr>
+      <tr><td class="center">8</td><td>diperbarui_pada</td><td>Timestamp</td><td>Waktu terakhir data diperbarui</td></tr>
     </tbody>
   </table>
 
-  <h4>3. Tabel: tim_biro (Spesifikasi Tabel Tim Kerja Biro)</h4>
+  <h4>Tabel 4.3. Spesifikasi Tabel Tim Kerja Biro (tim_biro)</h4>
   <table>
     <thead>
       <tr>
@@ -654,18 +869,18 @@ async function main() {
       </tr>
     </thead>
     <tbody>
-      <tr><td class="center">1</td><td>id_tim</td><td>Varchar (UUID)</td><td>Primary Key (Kode pengenal unik kelompok kerja tim)</td></tr>
-      <tr><td class="center">2</td><td>id_biro</td><td>Varchar (UUID)</td><td>Foreign Key &rarr; biro.id_biro (Biro Induk)</td></tr>
-      <tr><td class="center">3</td><td>kode_tim</td><td>Varchar</td><td>Kode unik pengenal tim kerja</td></tr>
-      <tr><td class="center">4</td><td>nama_tim</td><td>Varchar</td><td>Nama kelompok kerja teknis di bawah biro</td></tr>
-      <tr><td class="center">5</td><td>deskripsi_tim</td><td>Text</td><td>Uraian bidang penugasan kerja tim</td></tr>
-      <tr><td class="center">6</td><td>status_aktif</td><td>Boolean</td><td>Status keaktifan kelompok kerja (Default: true)</td></tr>
-      <tr><td class="center">7</td><td>dibuat_pada</td><td>Timestamp</td><td>Waktu tim kerja dibentuk</td></tr>
-      <tr><td class="center">8</td><td>diperbarui_pada</td><td>Timestamp</td><td>Waktu pembaruan data tim kerja</td></tr>
+      <tr><td class="center">1</td><td>id_tim</td><td>Varchar (UUID)</td><td>Primary Key</td></tr>
+      <tr><td class="center">2</td><td>id_biro</td><td>Varchar (UUID)</td><td>Foreign Key (Relasi ke tabel biro)</td></tr>
+      <tr><td class="center">3</td><td>kode_tim</td><td>Varchar</td><td>Kode pengenal tim kerja</td></tr>
+      <tr><td class="center">4</td><td>nama_tim</td><td>Varchar</td><td>Nama kelompok kerja / tim</td></tr>
+      <tr><td class="center">5</td><td>deskripsi_tim</td><td>Text</td><td>Uraian bidang penugasan tim</td></tr>
+      <tr><td class="center">6</td><td>status_aktif</td><td>Boolean</td><td>Status keaktifan tim kerja</td></tr>
+      <tr><td class="center">7</td><td>dibuat_pada</td><td>Timestamp</td><td>Waktu tim dibentuk</td></tr>
+      <tr><td class="center">8</td><td>diperbarui_pada</td><td>Timestamp</td><td>Waktu pembaruan data tim</td></tr>
     </tbody>
   </table>
 
-  <h4>4. Tabel: kegiatan (Spesifikasi Tabel Kegiatan)</h4>
+  <h4>Tabel 4.4. Spesifikasi Tabel Kegiatan (kegiatan)</h4>
   <table>
     <thead>
       <tr>
@@ -679,26 +894,23 @@ async function main() {
       <tr><td class="center">1</td><td>id_kegiatan</td><td>Varchar (UUID)</td><td>Primary Key (Kode pengenal unik transaksi agenda kegiatan)</td></tr>
       <tr><td class="center">2</td><td>nomor_kegiatan</td><td>Varchar</td><td>Nomor registrasi agenda kegiatan (Unique)</td></tr>
       <tr><td class="center">3</td><td>judul_kegiatan</td><td>Varchar</td><td>Pokok judul pembahasan agenda kegiatan</td></tr>
-      <tr><td class="center">4</td><td>id_biro</td><td>Varchar (UUID)</td><td>Foreign Key &rarr; biro.id_biro (Biro Pemrakarsa)</td></tr>
-      <tr><td class="center">5</td><td>id_tim</td><td>Varchar (UUID)</td><td>Foreign Key &rarr; tim_biro.id_tim (opsional)</td></tr>
+      <tr><td class="center">4</td><td>id_biro</td><td>Varchar (UUID)</td><td>Foreign Key (Relasi ke tabel biro - Biro Pemrakarsa Kegiatan)</td></tr>
+      <tr><td class="center">5</td><td>id_tim</td><td>Varchar (UUID)</td><td>Foreign Key (Relasi ke tabel tim_biro, opsional)</td></tr>
       <tr><td class="center">6</td><td>tanggal_kegiatan</td><td>Timestamp</td><td>Tanggal pelaksanaan agenda kegiatan</td></tr>
       <tr><td class="center">7</td><td>waktu_mulai</td><td>Varchar</td><td>Waktu mulai pelaksanaan kegiatan (Format HH:mm)</td></tr>
       <tr><td class="center">8</td><td>waktu_selesai</td><td>Varchar</td><td>Waktu penutupan pelaksanaan kegiatan (Format HH:mm)</td></tr>
-      <tr><td class="center">9</td><td>lokasi_kegiatan</td><td>Varchar</td><td>Lokasi pelaksanaan kegiatan (ruang fisik atau tautan daring)</td></tr>
-      <tr><td class="center">10</td><td>id_pengguna</td><td>Varchar (UUID)</td><td>Foreign Key &rarr; pengguna.id_pengguna (Pimpinan Kegiatan)</td></tr>
+      <tr><td class="center">9</td><td>lokasi_kegiatan</td><td>Varchar</td><td>Lokasi pelaksanaan kegiatan (ruang kegiatan luring atau tautan daring)</td></tr>
+      <tr><td class="center">10</td><td>id_pengguna</td><td>Varchar (UUID)</td><td>Foreign Key (Relasi ke tabel pengguna - Pejabat Pimpinan Kegiatan)</td></tr>
       <tr><td class="center">11</td><td>status_kegiatan</td><td>Enum</td><td>Status tahapan kegiatan: Belum Dimulai, Dalam Proses, Selesai</td></tr>
-      <tr><td class="center">12</td><td>kategori_naskah</td><td>Varchar</td><td>Kategori naskah acuan (Naskah Masuk, Disposisi Sekjen/Karo, Internal, Rutin)</td></tr>
-      <tr><td class="center">13</td><td>pic_kegiatan</td><td>Varchar</td><td>Nama pejabat/staf penanggung jawab teknis kegiatan</td></tr>
-      <tr><td class="center">14</td><td>catatan_hasil</td><td>Text</td><td>Ringkasan pokok catatan dan kesimpulan pelaksanaan kegiatan</td></tr>
-      <tr><td class="center">15</td><td>rencana_aksi</td><td>Text</td><td>Rencana tindak lanjut pelaksanaan arahan kegiatan</td></tr>
-      <tr><td class="center">16</td><td>nomor_nd_konsum</td><td>Varchar</td><td>Nomor nota dinas pengajuan konsumsi kegiatan</td></tr>
-      <tr><td class="center">17</td><td>tautan_rilis</td><td>Varchar</td><td>Tautan publikasi media/berita terkait kegiatan</td></tr>
-      <tr><td class="center">18</td><td>dibuat_pada</td><td>Timestamp</td><td>Waktu data agenda kegiatan didaftarkan ke sistem</td></tr>
-      <tr><td class="center">19</td><td>diperbarui_pada</td><td>Timestamp</td><td>Waktu terakhir pembaruan data kegiatan</td></tr>
+      <tr><td class="center">12</td><td>kategori_naskah</td><td>Varchar</td><td>Klasifikasi kategori naskah acuan kegiatan</td></tr>
+      <tr><td class="center">13</td><td>pic_kegiatan</td><td>Varchar</td><td>Nama staf penanggung jawab kegiatan</td></tr>
+      <tr><td class="center">14</td><td>catatan_hasil</td><td>Text</td><td>Ringkasan naskah dan catatan hasil pembahasan kegiatan</td></tr>
+      <tr><td class="center">15</td><td>dibuat_pada</td><td>Timestamp</td><td>Waktu agenda kegiatan didaftarkan ke sistem</td></tr>
+      <tr><td class="center">16</td><td>diperbarui_pada</td><td>Timestamp</td><td>Waktu terakhir pembaruan data agenda kegiatan</td></tr>
     </tbody>
   </table>
 
-  <h4>5. Tabel: peserta_kegiatan (Spesifikasi Tabel Peserta Kegiatan)</h4>
+  <h4>Tabel 4.5. Spesifikasi Tabel Peserta Kegiatan (peserta_kegiatan)</h4>
   <table>
     <thead>
       <tr>
@@ -709,15 +921,15 @@ async function main() {
       </tr>
     </thead>
     <tbody>
-      <tr><td class="center">1</td><td>id_peserta</td><td>Varchar (UUID)</td><td>Primary Key (Kode unik data pihak terkait kegiatan)</td></tr>
-      <tr><td class="center">2</td><td>id_kegiatan</td><td>Varchar (UUID)</td><td>Foreign Key &rarr; kegiatan.id_kegiatan</td></tr>
-      <tr><td class="center">3</td><td>id_pengguna</td><td>Varchar (UUID)</td><td>Foreign Key &rarr; pengguna.id_pengguna (Aparatur Terkait)</td></tr>
-      <tr><td class="center">4</td><td>status_kehadiran</td><td>Enum</td><td>Status peran aparatur/undangan terkait kegiatan</td></tr>
-      <tr><td class="center">5</td><td>dibuat_pada</td><td>Timestamp</td><td>Waktu data pihak terkait ditambahkan ke agenda</td></tr>
+      <tr><td class="center">1</td><td>id_peserta</td><td>Varchar (UUID)</td><td>Primary Key</td></tr>
+      <tr><td class="center">2</td><td>id_kegiatan</td><td>Varchar (UUID)</td><td>Foreign Key (Relasi ke tabel kegiatan)</td></tr>
+      <tr><td class="center">3</td><td>id_pengguna</td><td>Varchar (UUID)</td><td>Foreign Key (Relasi ke tabel pengguna - Peserta / Pihak Terkait Kegiatan)</td></tr>
+      <tr><td class="center">4</td><td>status_kehadiran</td><td>Enum</td><td>Status konfirmasi kehadiran aparatur: INVITED, PRESENT, ABSENT, EXCUSED</td></tr>
+      <tr><td class="center">5</td><td>dibuat_pada</td><td>Timestamp</td><td>Waktu undangan peserta ditambahkan</td></tr>
     </tbody>
   </table>
 
-  <h4>6. Tabel: lampiran_kegiatan (Spesifikasi Tabel Berkas Lampiran Kegiatan)</h4>
+  <h4>Tabel 4.6. Spesifikasi Tabel Riwayat Tindak Lanjut (riwayat_tindak_lanjut)</h4>
   <table>
     <thead>
       <tr>
@@ -728,19 +940,17 @@ async function main() {
       </tr>
     </thead>
     <tbody>
-      <tr><td class="center">1</td><td>id_lampiran</td><td>Varchar (UUID)</td><td>Primary Key (Kode unik berkas lampiran dokumen kegiatan)</td></tr>
-      <tr><td class="center">2</td><td>id_kegiatan</td><td>Varchar (UUID)</td><td>Foreign Key &rarr; kegiatan.id_kegiatan</td></tr>
-      <tr><td class="center">3</td><td>nama_berkas</td><td>Varchar</td><td>Nama berkas dokumen kegiatan (misal: Undangan_KEK.pdf)</td></tr>
-      <tr><td class="center">4</td><td>url_berkas</td><td>Text</td><td>Tautan lokasi penyimpanan berkas digital (Storage URL)</td></tr>
-      <tr><td class="center">5</td><td>ukuran_berkas</td><td>Integer</td><td>Ukuran kapasitas berkas dokumen dalam satuan bytes</td></tr>
-      <tr><td class="center">6</td><td>tipe_berkas</td><td>Varchar</td><td>Ekstensi format berkas naskah digital (PDF, DOCX, XLSX)</td></tr>
-      <tr><td class="center">7</td><td>nama_pengunggah</td><td>Varchar</td><td>Identitas staf aparatur yang mengunggah dokumen</td></tr>
-      <tr><td class="center">8</td><td>kategori</td><td>Varchar</td><td>Klasifikasi dokumen (UNDANGAN / MATERI / NOTA_KONSUMSI / RILIS)</td></tr>
-      <tr><td class="center">9</td><td>dibuat_pada</td><td>Timestamp</td><td>Waktu berkas diunggah ke sistem repositori</td></tr>
+      <tr><td class="center">1</td><td>id_riwayat</td><td>Varchar (UUID)</td><td>Primary Key</td></tr>
+      <tr><td class="center">2</td><td>id_tindak_lanjut</td><td>Varchar (UUID)</td><td>Foreign Key (Relasi ke tabel tindak_lanjut)</td></tr>
+      <tr><td class="center">3</td><td>id_pengguna</td><td>Varchar (UUID)</td><td>Foreign Key (Relasi ke tabel pengguna - Aparatur PIC)</td></tr>
+      <tr><td class="center">4</td><td>status_sebelumnya</td><td>Enum</td><td>Status tahapan sebelum pembaruan</td></tr>
+      <tr><td class="center">5</td><td>status_terbaru</td><td>Enum</td><td>Status tahapan terkini: Belum Dimulai, Dalam Proses, Selesai</td></tr>
+      <tr><td class="center">6</td><td>catatan_progres</td><td>Text</td><td>Uraian capaian realisasi progres tindak lanjut</td></tr>
+      <tr><td class="center">7</td><td>dibuat_pada</td><td>Timestamp</td><td>Waktu pencatatan riwayat progres tugas</td></tr>
     </tbody>
   </table>
 
-  <h4>7. Tabel: tindak_lanjut (Spesifikasi Tabel Tindak Lanjut Arahan)</h4>
+  <h4>Tabel 4.7. Spesifikasi Tabel Tindak Lanjut Arahan (tindak_lanjut)</h4>
   <table>
     <thead>
       <tr>
@@ -751,22 +961,22 @@ async function main() {
       </tr>
     </thead>
     <tbody>
-      <tr><td class="center">1</td><td>id_tindak_lanjut</td><td>Varchar (UUID)</td><td>Primary Key (Kode unik butir komitmen tindak lanjut)</td></tr>
-      <tr><td class="center">2</td><td>id_kegiatan</td><td>Varchar (UUID)</td><td>Foreign Key &rarr; kegiatan.id_kegiatan</td></tr>
-      <tr><td class="center">3</td><td>judul_tindakan</td><td>Varchar</td><td>Judul arahan / butir tugas tindak lanjut kegiatan</td></tr>
-      <tr><td class="center">4</td><td>deskripsi_tindakan</td><td>Text</td><td>Uraian teknis rincian instruksi pelaksanaan penugasan</td></tr>
-      <tr><td class="center">5</td><td>id_biro</td><td>Varchar (UUID)</td><td>Foreign Key &rarr; biro.id_biro (Biro Penanggung Jawab)</td></tr>
-      <tr><td class="center">6</td><td>id_tim</td><td>Varchar (UUID)</td><td>Foreign Key &rarr; tim_biro.id_tim (opsional)</td></tr>
-      <tr><td class="center">7</td><td>id_pengguna</td><td>Varchar (UUID)</td><td>Foreign Key &rarr; pengguna.id_pengguna (Staf Aparatur PIC)</td></tr>
-      <tr><td class="center">8</td><td>tenggat_waktu</td><td>Timestamp</td><td>Batas akhir waktu penyelesaian tugas (Due Date)</td></tr>
-      <tr><td class="center">9</td><td>status_tindak_lanjut</td><td>Enum</td><td>Status tahapan: Belum Dimulai, Dalam Proses, Selesai</td></tr>
-      <tr><td class="center">10</td><td>diselesaikan_pada</td><td>Timestamp</td><td>Waktu resmi penuntasan butir tugas (opsional)</td></tr>
-      <tr><td class="center">11</td><td>dibuat_pada</td><td>Timestamp</td><td>Waktu butir instruksi diterbitkan</td></tr>
+      <tr><td class="center">1</td><td>id_tindak_lanjut</td><td>Varchar (UUID)</td><td>Primary Key</td></tr>
+      <tr><td class="center">2</td><td>id_kegiatan</td><td>Varchar (UUID)</td><td>Foreign Key (Relasi ke tabel kegiatan)</td></tr>
+      <tr><td class="center">3</td><td>judul_tindakan</td><td>Varchar</td><td>Judul arahan / butir penugasan tindak lanjut</td></tr>
+      <tr><td class="center">4</td><td>deskripsi_tindakan</td><td>Text</td><td>Uraian rincian teknis penugasan</td></tr>
+      <tr><td class="center">5</td><td>id_biro</td><td>Varchar (UUID)</td><td>Foreign Key (Relasi ke tabel biro - Biro Penanggung Jawab)</td></tr>
+      <tr><td class="center">6</td><td>id_tim</td><td>Varchar (UUID)</td><td>Foreign Key (Relasi ke tabel tim_biro, opsional)</td></tr>
+      <tr><td class="center">7</td><td>id_pengguna</td><td>Varchar (UUID)</td><td>Foreign Key (Relasi ke tabel pengguna - Staf Aparatur PIC)</td></tr>
+      <tr><td class="center">8</td><td>tenggat_waktu</td><td>Timestamp</td><td>Batas akhir penyelesaian (Due Date)</td></tr>
+      <tr><td class="center">9</td><td>status_tindak_lanjut</td><td>Enum</td><td>Belum Dimulai, Dalam Proses, Selesai</td></tr>
+      <tr><td class="center">10</td><td>diselesaikan_pada</td><td>Timestamp</td><td>Waktu penuntasan tugas (Opsional)</td></tr>
+      <tr><td class="center">11</td><td>dibuat_pada</td><td>Timestamp</td><td>Waktu instruksi diterbitkan</td></tr>
       <tr><td class="center">12</td><td>diperbarui_pada</td><td>Timestamp</td><td>Waktu pembaruan status tindak lanjut</td></tr>
     </tbody>
   </table>
 
-  <h4>8. Tabel: riwayat_tindak_lanjut (Spesifikasi Tabel Riwayat Tindak Lanjut)</h4>
+  <h4>Tabel 4.8. Spesifikasi Tabel Berkas Lampiran Kegiatan (lampiran_kegiatan)</h4>
   <table>
     <thead>
       <tr>
@@ -777,36 +987,15 @@ async function main() {
       </tr>
     </thead>
     <tbody>
-      <tr><td class="center">1</td><td>id_riwayat</td><td>Varchar (UUID)</td><td>Primary Key (Kode pengenal unik riwayat progres)</td></tr>
-      <tr><td class="center">2</td><td>id_tindak_lanjut</td><td>Varchar (UUID)</td><td>Foreign Key &rarr; tindak_lanjut.id_tindak_lanjut</td></tr>
-      <tr><td class="center">3</td><td>id_pengguna</td><td>Varchar (UUID)</td><td>Foreign Key &rarr; pengguna.id_pengguna (Aparatur PIC)</td></tr>
-      <tr><td class="center">4</td><td>status_sebelumnya</td><td>Enum</td><td>Status tahapan penugasan sebelum diperbarui</td></tr>
-      <tr><td class="center">5</td><td>status_terbaru</td><td>Enum</td><td>Status tahapan terkini: Belum Dimulai, Dalam Proses, Selesai</td></tr>
-      <tr><td class="center">6</td><td>catatan_progres</td><td>Text</td><td>Uraian catatan capaian realisasi progres tindak lanjut</td></tr>
-      <tr><td class="center">7</td><td>dibuat_pada</td><td>Timestamp</td><td>Waktu pencatatan log riwayat progres tugas</td></tr>
-    </tbody>
-  </table>
-
-  <h4>9. Tabel: notifikasi (Spesifikasi Tabel Notifikasi Sistem)</h4>
-  <table>
-    <thead>
-      <tr>
-        <th style="width: 8%;" class="center">No</th>
-        <th style="width: 27%;">Nama Field</th>
-        <th style="width: 23%;">Tipe Data</th>
-        <th style="width: 42%;">Keterangan</th>
-      </tr>
-    </thead>
-    <tbody>
-      <tr><td class="center">1</td><td>id_notifikasi</td><td>Varchar (UUID)</td><td>Primary Key (Kode pengenal unik notifikasi pesan)</td></tr>
-      <tr><td class="center">2</td><td>id_pengguna</td><td>Varchar (UUID)</td><td>Foreign Key &rarr; pengguna.id_pengguna (Penerima Notifikasi)</td></tr>
-      <tr><td class="center">3</td><td>id_tim</td><td>Varchar (UUID)</td><td>Foreign Key &rarr; tim_biro.id_tim (opsional)</td></tr>
-      <tr><td class="center">4</td><td>judul</td><td>Varchar</td><td>Judul pemberitahuan informasi sistem</td></tr>
-      <tr><td class="center">5</td><td>pesan</td><td>Text</td><td>Uraian teks detail notifikasi jadwal / penugasan</td></tr>
-      <tr><td class="center">6</td><td>tipe</td><td>Varchar</td><td>Tipe kategori pesan notifikasi (info, warning, success)</td></tr>
-      <tr><td class="center">7</td><td>tautan</td><td>Varchar</td><td>Tautan navigasi cepat menuju detail kegiatan / tindak lanjut</td></tr>
-      <tr><td class="center">8</td><td>sudah_dibaca</td><td>Boolean</td><td>Indikator status apakah pesan telah dibaca (Default: false)</td></tr>
-      <tr><td class="center">9</td><td>dibuat_pada</td><td>Timestamp</td><td>Waktu notifikasi diterbitkan oleh sistem</td></tr>
+      <tr><td class="center">1</td><td>id_lampiran</td><td>Varchar (UUID)</td><td>Primary Key</td></tr>
+      <tr><td class="center">2</td><td>id_kegiatan</td><td>Varchar (UUID)</td><td>Foreign Key (Relasi ke tabel kegiatan)</td></tr>
+      <tr><td class="center">3</td><td>nama_berkas</td><td>Varchar</td><td>Nama dokumen (misal: Paparan_KEK.pdf)</td></tr>
+      <tr><td class="center">4</td><td>url_berkas</td><td>Text</td><td>Alamat penyimpanan berkas digital (Storage URL)</td></tr>
+      <tr><td class="center">5</td><td>ukuran_berkas</td><td>Integer</td><td>Ukuran berkas dalam satuan bytes</td></tr>
+      <tr><td class="center">6</td><td>tipe_berkas</td><td>Varchar</td><td>Ekstensi format berkas (PDF/DOCX)</td></tr>
+      <tr><td class="center">7</td><td>nama_pengunggah</td><td>Varchar</td><td>Identitas aparatur yang mengunggah berkas</td></tr>
+      <tr><td class="center">8</td><td>kategori</td><td>Varchar</td><td>Klasifikasi berkas (UNDANGAN / MATERI)</td></tr>
+      <tr><td class="center">9</td><td>dibuat_pada</td><td>Timestamp</td><td>Waktu berkas diunggah ke sistem</td></tr>
     </tbody>
   </table>
 
@@ -913,7 +1102,7 @@ async function main() {
 </body>
 </html>`;
 
-  console.log('2. Membuat file Google Docs baru di Google Drive...');
+  console.log('2. Memperbarui isi file Google Docs secara langsung (in-place)...');
 
   const metadata = {
     name: 'Dokumen Teknis Website Aplikasi Log Book Kegiatan KEK',
@@ -933,8 +1122,8 @@ async function main() {
     htmlContent +
     closeDelimiter;
 
-  const createRes = await fetch('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart', {
-    method: 'POST',
+  const updateRes = await fetch(`https://www.googleapis.com/upload/drive/v3/files/${TARGET_DOC_ID}?uploadType=multipart`, {
+    method: 'PATCH',
     headers: {
       'Authorization': `Bearer ${accessToken}`,
       'Content-Type': `multipart/related; boundary=${boundary}`
@@ -942,37 +1131,25 @@ async function main() {
     body: multipartBody
   });
 
-  if (!createRes.ok) {
-    throw new Error('Failed to create Google Doc: ' + createRes.status + ' ' + (await createRes.text()));
+  if (!updateRes.ok) {
+    throw new Error('Failed to update Google Doc: ' + updateRes.status + ' ' + (await updateRes.text()));
   }
 
-  const createdFile = await createRes.json();
-  const newDocId = createdFile.id;
-  console.log('3. File Google Docs baru berhasil dibuat!');
-  console.log('   New Doc ID:', newDocId);
-  console.log('   URL: https://docs.google.com/document/d/' + newDocId + '/edit');
+  const updatedFile = await updateRes.json();
+  const docId = updatedFile.id || TARGET_DOC_ID;
+  console.log('3. Naskah Google Docs berhasil diperbarui!');
+  console.log('   Doc ID:', docId);
+  console.log('   URL: https://docs.google.com/document/d/' + docId + '/edit');
 
-  console.log('4. Menyisipkan seluruh gambar diagram asli dari folder proyek...');
-  // Process from bottom to top or sequentially with re-fetch
+  console.log('4. Menyisipkan seluruh 8 gambar diagram proporsional...');
   for (const item of IMAGE_PLACEHOLDERS) {
-    await replacePlaceholderWithImage(newDocId, accessToken, item);
+    await replacePlaceholderWithImage(docId, accessToken, item);
   }
 
-  // Set sharing permission so anyone with link can view/edit easily
-  await fetch(`https://www.googleapis.com/drive/v3/files/${newDocId}/permissions`, {
-    method: 'POST',
-    headers: {
-      'Authorization': `Bearer ${accessToken}`,
-      'Content-Type': 'application/json'
-    },
-    body: JSON.stringify({
-      role: 'writer',
-      type: 'anyone'
-    })
-  });
+  await applyCleanPagination(docId, accessToken);
 
-  console.log('\n=== SELESAI! DOKUMEN TEKNIS BARU DENGAN SELURUH GAMBAR DIAGRAM ASLI TELAH TERBIT ===');
-  console.log('Link Google Docs:', `https://docs.google.com/document/d/${newDocId}/edit`);
+  console.log('\n=== SELESAI! DOKUMEN TEKNIS TELAH DIPERBARUI & DIRAPIKAN ===');
+  console.log('Link Google Docs:', `https://docs.google.com/document/d/${docId}/edit`);
 }
 
 main().catch(console.error);

@@ -571,7 +571,7 @@ export function LocationPicker({
             <div className="p-3.5 rounded-xl bg-white border border-blue-200 shadow-2xs space-y-2 animate-in fade-in">
               <div className="flex items-center justify-between">
                 <span className="font-bold text-xs text-blue-950 flex items-center gap-1.5">
-                  <Sparkles className="w-3.5 h-3.5 text-amber-500" />
+                  <Video className="w-3.5 h-3.5 text-blue-600" />
                   <span>Pratinjau Tautan Zoom Resmi:</span>
                 </span>
                 <span className="text-[10px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200">
@@ -625,8 +625,8 @@ export function LocationPicker({
                 </div>
               )}
 
-              <p className="text-[11px] text-slate-500 italic leading-relaxed pt-0.5">
-                💡 Tautan Zoom ini akan otomatis ditambahkan ke deskripsi Google Calendar dan pesan undangan WhatsApp bagi seluruh peserta.
+              <p className="text-[11px] text-slate-500 leading-relaxed pt-0.5">
+                Tautan Zoom ini akan otomatis ditambahkan ke deskripsi Google Calendar dan pesan undangan WhatsApp bagi seluruh peserta.
               </p>
             </div>
           )}

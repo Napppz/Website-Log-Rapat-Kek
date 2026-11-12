@@ -328,13 +328,13 @@ export function SemuaRapatClient({
   }).length;
 
   const categoryFilters = [
-    { label: 'Semua Kategori', value: 'ALL', count: teamFilteredMeetings.length, icon: '🏷️' },
-    { label: 'Undangan Internal', value: 'UNDANGAN_INTERNAL', count: countUndanganInternal, icon: '🏢' },
-    { label: 'Daftar Naskah Masuk', value: 'NASKAH_MASUK', count: countNaskahMasuk, icon: '📥' },
-    { label: 'Disposisi Setjen', value: 'DISPOSISI_Setjen', count: countDisposisiSetjen, icon: '🏛️' },
-    { label: 'Disposisi Biro', value: 'DISPOSISI_BIRO', count: countDisposisiBiro, icon: '📑' },
-    { label: 'Tunda Kegiatan', value: 'SURAT_DITUNDA', count: countTundaRapat, icon: '⏳' },
-    { label: 'Lainnya / Other', value: 'LAINNYA', count: countLainnya, icon: '📌' },
+    { label: 'Semua Kategori', value: 'ALL', count: teamFilteredMeetings.length, dot: 'bg-slate-400' },
+    { label: 'Undangan Internal', value: 'UNDANGAN_INTERNAL', count: countUndanganInternal, dot: 'bg-[#31889C]' },
+    { label: 'Daftar Naskah Masuk', value: 'NASKAH_MASUK', count: countNaskahMasuk, dot: 'bg-amber-500' },
+    { label: 'Disposisi Setjen', value: 'DISPOSISI_Setjen', count: countDisposisiSetjen, dot: 'bg-indigo-600' },
+    { label: 'Disposisi Biro', value: 'DISPOSISI_BIRO', count: countDisposisiBiro, dot: 'bg-purple-600' },
+    { label: 'Tunda Kegiatan', value: 'SURAT_DITUNDA', count: countTundaRapat, dot: 'bg-rose-500' },
+    { label: 'Lainnya', value: 'LAINNYA', count: countLainnya, dot: 'bg-slate-500' },
   ];
 
   const handleSelectCategory = (val: string) => {
@@ -374,7 +374,7 @@ export function SemuaRapatClient({
 
   const jenisFilters = useMemo(() => {
     const list = [
-      { label: 'Semua Jenis', value: 'ALL', count: teamFilteredMeetings.length, icon: '📂' },
+      { label: 'Semua Jenis', value: 'ALL', count: teamFilteredMeetings.length },
       ...availableJenisRapat
         .map((jenis) => {
           const count = teamFilteredMeetings.filter(
@@ -384,7 +384,6 @@ export function SemuaRapatClient({
             label: jenis,
             value: jenis,
             count,
-            icon: '📌',
           };
         })
         .sort((a, b) => b.count - a.count || a.label.localeCompare(b.label)),
@@ -395,7 +394,6 @@ export function SemuaRapatClient({
         label: 'Tanpa Jenis',
         value: 'NONE',
         count: countTanpaJenis,
-        icon: '⚪',
       });
     }
 
@@ -724,7 +722,6 @@ export function SemuaRapatClient({
   const selectedCatLabel = selectedCatObj && selectedCatObj.value !== 'ALL'
     ? selectedCatObj.label
     : 'Semua Kategori';
-  const selectedCatIcon = selectedCatObj?.icon || '🏷️';
 
   const selectedJenisObj = jenisFilters.find(
     (j) => j.value.toLowerCase() === (jenisParam || 'ALL').toLowerCase()
@@ -732,7 +729,6 @@ export function SemuaRapatClient({
   const selectedJenisLabel = selectedJenisObj && selectedJenisObj.value !== 'ALL'
     ? selectedJenisObj.label
     : 'Semua Jenis';
-  const selectedJenisIcon = selectedJenisObj?.icon || '📌';
 
   const selectedPeriodeLabel = activeTimeLabel || 'Semua Periode';
 
@@ -751,10 +747,10 @@ export function SemuaRapatClient({
       )}
 
       {/* Header section: Judul Halaman & Tombol Aksi Cepat */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 p-5 sm:p-6 bg-white rounded-2xl border border-slate-200/90 shadow-xs">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 p-5 sm:p-6 bg-white rounded-xl border border-slate-200 border-l-4 border-l-[#31889C] shadow-2xs">
         <div>
           <div className="flex items-center gap-2 flex-wrap">
-            <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11.5px] font-semibold bg-[#F0F9FA] text-[#215865] border border-[#BCE3EB]">
+            <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md text-[11px] font-semibold bg-[#F0F9FA] text-[#215865] border border-[#BCE3EB]">
               {effectiveLockedTeamCode ? (
                 <>
                   <Layers className="w-3.5 h-3.5 text-[#31889C]" />
@@ -778,19 +774,19 @@ export function SemuaRapatClient({
             </span>
           </div>
 
-          <h1 className="text-[22px] sm:text-[24px] font-extrabold text-slate-900 mt-1.5 tracking-tight">
+          <h1 className="text-[20px] sm:text-[22px] font-bold text-slate-900 mt-1.5 tracking-tight">
             {effectiveLockedTeamCode
               ? `Log Book Kegiatan — ${effectiveLockedTeamName?.startsWith('Tim ') ? effectiveLockedTeamName : `Tim ${effectiveLockedTeamName || effectiveLockedTeamCode}`}`
               : lockedBiroCode
                 ? `Log Book Kegiatan — ${currentUserBiroName || `Biro ${lockedBiroCode}`}`
                 : 'Log Book Kegiatan & Aktivitas — Biro 3 (IKK)'}
           </h1>
-          <p className="text-[13px] text-slate-500 mt-1 max-w-2xl leading-relaxed">
+          <p className="text-[13px] text-slate-500 mt-0.5 max-w-2xl leading-relaxed">
             {effectiveLockedTeamCode
-              ? `Log Book lengkap kegiatan, agenda, hasil kerja, dan status pekerjaan khusus ${effectiveLockedTeamName?.startsWith('Tim ') ? effectiveLockedTeamName : `Tim ${effectiveLockedTeamName || effectiveLockedTeamCode}`}.`
+              ? `Daftar kegiatan, dokumen log book, dan status pekerjaan ${effectiveLockedTeamName?.startsWith('Tim ') ? effectiveLockedTeamName : `Tim ${effectiveLockedTeamName || effectiveLockedTeamCode}`}.`
               : lockedBiroCode
-                ? `Log Book lengkap kegiatan, agenda, hasil kerja, dan status pekerjaan ${currentUserBiroName || `Biro ${lockedBiroCode}`}.`
-                : 'Sistem monitoring terpadu seluruh kegiatan, hasil kerja, dan status pekerjaan 5 tim kerja Biro 3 (Investasi, Kerja Sama, Komunikasi, Sistem Informasi, Hukum).'}
+                ? `Daftar kegiatan, dokumen log book, dan status pekerjaan ${currentUserBiroName || `Biro ${lockedBiroCode}`}.`
+                : 'Daftar seluruh kegiatan, dokumen log book, dan status pekerjaan 5 tim kerja Biro 3.'}
           </p>
         </div>
 
@@ -799,10 +795,10 @@ export function SemuaRapatClient({
             <div className="flex items-center gap-2">
               <Link
                 href="/catat-kegiatan"
-                className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-[#31889C] text-white font-semibold text-[12.5px] hover:bg-[#266F80] shadow-2xs hover:shadow-xs transition-all cursor-pointer"
+                className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg bg-[#31889C] text-white font-semibold text-[13px] hover:bg-[#266F80] shadow-2xs transition-colors cursor-pointer"
               >
                 <PlusCircle className="w-4 h-4" />
-                <span>+ Catat Kegiatan Baru</span>
+                <span>Catat Kegiatan Baru</span>
               </Link>
             </div>
           )}
@@ -1036,7 +1032,7 @@ export function SemuaRapatClient({
                 )}
                 title="Filter berdasarkan Kategori Naskah"
               >
-                <span>{selectedCatIcon}</span>
+                <Tag className="w-3.5 h-3.5 text-[#31889C] shrink-0" />
                 <span className="truncate max-w-[130px]">{selectedCatLabel}</span>
                 <span
                   className={cn(
@@ -1075,7 +1071,7 @@ export function SemuaRapatClient({
                         )}
                       >
                         <span className="flex items-center gap-2">
-                          <span>{cf.icon}</span>
+                          <span className={cn("w-2 h-2 rounded-full shrink-0", cf.dot)} />
                           <span>{cf.label}</span>
                         </span>
                         <div className="flex items-center gap-1.5">
@@ -1106,7 +1102,7 @@ export function SemuaRapatClient({
                 )}
                 title="Filter berdasarkan Jenis Kegiatan"
               >
-                <span>{selectedJenisIcon}</span>
+                <Filter className="w-3.5 h-3.5 text-[#31889C] shrink-0" />
                 <span className="truncate max-w-[130px]">{selectedJenisLabel}</span>
                 <span
                   className={cn(
@@ -1147,7 +1143,7 @@ export function SemuaRapatClient({
                         )}
                       >
                         <span className="flex items-center gap-2 truncate">
-                          <span>{jf.icon}</span>
+                          <span className="w-1.5 h-1.5 rounded-full bg-slate-300 shrink-0" />
                           <span className="truncate">{jf.label}</span>
                         </span>
                         <div className="flex items-center gap-1.5 shrink-0 ml-2">

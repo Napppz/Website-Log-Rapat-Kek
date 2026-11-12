@@ -148,7 +148,7 @@ export function ActivityTrendChart({
       : 'Jan - Sep';
 
   return (
-    <div className={cn("rounded-2xl bg-white p-6 shadow-sm border border-slate-200 flex flex-col justify-between transition-all", className || "lg:col-span-7")}>
+    <div className={cn("rounded-xl bg-white p-6 shadow-2xs border border-slate-200 flex flex-col justify-between", className || "lg:col-span-7")}>
       <div>
         {/* Header with Title, Year Selector & Interactive Replay Pill */}
         <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3">
@@ -157,7 +157,7 @@ export function ActivityTrendChart({
               <TrendingUp className="w-3.5 h-3.5 text-[#31889C]" />
               <span>Tren Aktivitas Kegiatan Seluruh Tim</span>
             </span>
-            <h2 className="font-bold text-[18px] text-slate-900 mt-0.5">
+            <h2 className="font-bold text-[17px] text-slate-900 mt-0.5">
               Tren Kegiatan per Bulan ({selectedYear})
             </h2>
             <p className="text-[12px] text-slate-500 mt-0.5">
@@ -166,19 +166,19 @@ export function ActivityTrendChart({
           </div>
 
           <div className="flex items-center gap-2 self-start sm:self-auto shrink-0">
-            {/* Year Switcher Pills */}
+            {/* Year Switcher */}
             {availableYears && availableYears.length > 1 && (
-              <div className="inline-flex items-center bg-[#F0F9FA] p-0.5 rounded-full border border-[#BCE3EB]">
+              <div className="inline-flex items-center bg-slate-100 p-0.5 rounded-lg border border-slate-200">
                 {availableYears.map((yr) => (
                   <button
                     key={yr}
                     type="button"
                     onClick={() => onYearChange?.(yr)}
                     className={cn(
-                      "px-2.5 py-0.5 rounded-full text-[11px] font-extrabold transition-all cursor-pointer",
+                      "px-2.5 py-0.5 rounded-md text-[11px] font-bold transition-colors cursor-pointer",
                       selectedYear === yr
-                        ? "bg-[#215865] text-white shadow-2xs"
-                        : "text-[#215865]/70 hover:text-[#215865] hover:bg-white/60"
+                        ? "bg-white text-slate-900 shadow-2xs"
+                        : "text-slate-600 hover:text-slate-900"
                     )}
                     title={`Pilih data kegiatan tahun ${yr}`}
                   >
@@ -191,11 +191,11 @@ export function ActivityTrendChart({
             <button
               type="button"
               onClick={handleReplay}
-              className="group inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-[#F0F9FA] hover:bg-[#E8F5F7] border border-[#BCE3EB] text-[#215865] text-[11px] font-bold transition-all cursor-pointer shadow-2xs"
-              title="Klik untuk memutar ulang animasi tren"
+              className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-slate-50 hover:bg-slate-100 border border-slate-200 text-slate-700 text-[11px] font-semibold transition-colors cursor-pointer"
+              title="Segarkan grafik tren"
             >
               <span>{dateRangeLabel}</span>
-              <RotateCcw className="w-3 h-3 text-[#31889C] group-hover:rotate-180 transition-transform duration-500" />
+              <RotateCcw className="w-3 h-3 text-slate-500" />
             </button>
           </div>
         </div>

@@ -14,10 +14,16 @@ import {
   Eye,
   EyeOff,
   Loader2,
-  Sparkles,
   KeyRound,
   ChevronDown,
   ChevronUp,
+  Shield,
+  Building2,
+  Users,
+  Cpu,
+  TrendingUp,
+  Radio,
+  Settings,
 } from 'lucide-react';
 
 function LoginForm() {
@@ -61,13 +67,13 @@ function LoginForm() {
 
   // Demo accounts helper for quick evaluation (Super Admin, Pimpinan, Admin, Staf)
   const demoAccounts = [
-    { label: 'Super Admin', email: 'superadmin@kek.go.id', icon: '👑', desc: 'Akses Penuh IT' },
-    { label: 'Pimpinan', email: 'pimpinan.biro3@kek.go.id', icon: '🏛️', desc: 'Monitoring & Pengawas' },
-    { label: 'Staf KS', email: 'staf.kerjasama@kek.go.id', icon: '🤝', desc: 'Tim Kerja Sama' },
-    { label: 'Staf SI', email: 'staf.si@kek.go.id', icon: '💻', desc: 'Tim Sistem Informasi' },
-    { label: 'Staf Investasi', email: 'staf.investasi@kek.go.id', icon: '📈', desc: 'Tim Investasi' },
-    { label: 'Staf Komunikasi', email: 'staf.komunikasi@kek.go.id', icon: '📢', desc: 'Tim Komunikasi' },
-    { label: 'Admin IKK', email: 'admin@kek.go.id', icon: '⚙️', desc: 'Pengelola Biro 3' },
+    { label: 'Super Admin', email: 'superadmin@kek.go.id', Icon: Shield, desc: 'Akses Penuh IT' },
+    { label: 'Pimpinan', email: 'pimpinan.biro3@kek.go.id', Icon: Building2, desc: 'Monitoring & Pengawas' },
+    { label: 'Staf KS', email: 'staf.kerjasama@kek.go.id', Icon: Users, desc: 'Tim Kerja Sama' },
+    { label: 'Staf SI', email: 'staf.si@kek.go.id', Icon: Cpu, desc: 'Tim Sistem Informasi' },
+    { label: 'Staf Investasi', email: 'staf.investasi@kek.go.id', Icon: TrendingUp, desc: 'Tim Investasi' },
+    { label: 'Staf Komunikasi', email: 'staf.komunikasi@kek.go.id', Icon: Radio, desc: 'Tim Komunikasi' },
+    { label: 'Admin IKK', email: 'admin@kek.go.id', Icon: Settings, desc: 'Pengelola Biro 3' },
   ];
 
   const handleFillDemo = (demoEmail: string, roleName: string) => {
@@ -78,43 +84,36 @@ function LoginForm() {
   };
 
   return (
-    <div className="relative min-h-screen bg-gradient-to-br from-[#EEF7F9] via-[#F8FAFC] to-[#E5F3F6] flex flex-col justify-center items-center p-4 sm:p-6 overflow-hidden">
-      {/* Decorative Ambient Glow Orbs */}
-      <div className="absolute -top-32 -left-32 w-96 h-96 bg-[#31889C]/15 rounded-full blur-3xl pointer-events-none animate-pulse duration-1000" />
-      <div className="absolute -bottom-32 -right-32 w-96 h-96 bg-[#7CC563]/15 rounded-full blur-3xl pointer-events-none" />
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[700px] h-[700px] bg-gradient-to-tr from-[#31889C]/5 to-transparent rounded-full blur-2xl pointer-events-none" />
-
+    <div className="relative min-h-screen bg-[#F4F7F9] flex flex-col justify-center items-center p-4 sm:p-6">
       <div className="relative w-full max-w-md">
         {/* Main Card Container */}
-        <div className="bg-white/95 backdrop-blur-md rounded-2xl border border-slate-200/90 shadow-2xl shadow-slate-300/40 overflow-hidden transition-all duration-300">
+        <div className="bg-white rounded-xl border border-slate-200 shadow-lg shadow-slate-900/5 overflow-hidden">
 
           {/* Card Top Accent Bar */}
-          <div className="w-full h-1.5 bg-gradient-to-r from-[#31889C] via-[#7CC563] to-[#266F80]" />
+          <div className="w-full h-1 bg-[#31889C]" />
 
           {/* Card Header with Official Emblem & Title */}
-          <div className="pt-7 pb-6 px-8 text-center bg-gradient-to-b from-[#F2F9FA] via-[#FAFCFD] to-white border-b border-slate-100">
-            <div className="relative inline-flex p-2.5 rounded-full bg-white shadow-md border border-slate-200/90 mb-3.5 ring-4 ring-[#E8F5F7] transition-transform hover:scale-105 duration-200">
+          <div className="pt-6 pb-5 px-8 text-center bg-slate-50/60 border-b border-slate-200/80">
+            <div className="relative inline-flex p-2 rounded-full bg-white shadow-2xs border border-slate-200 mb-3">
               <Image
                 src="/logo-denas-kek.png"
                 alt="Logo Sekretariat Jenderal Dewan Nasional Kawasan Ekonomi Khusus"
                 width={84}
                 height={84}
-                className="w-16 h-16 object-contain"
+                className="w-15 h-15 object-contain"
                 priority
               />
             </div>
 
-            <div className="inline-block px-3 py-0.5 rounded-full bg-[#EBF6F8] border border-[#31889C]/20 mb-2">
-              <span className="text-[10.5px] font-bold tracking-wider text-[#266F80] uppercase">
-                Sekretariat Dewan Nasional KEK RI
-              </span>
-            </div>
+            <p className="text-[11px] font-bold tracking-wider text-[#266F80] uppercase mb-1">
+              Sekretariat Jenderal Dewan Nasional KEK RI
+            </p>
 
-            <h1 className="text-[21px] font-black text-slate-900 tracking-tight">
-              AKTIVITAS KEGIATAN BIRO 3
+            <h1 className="text-[19px] font-bold text-slate-900 tracking-tight">
+              Log Book &amp; Aktivitas Kegiatan Biro 3
             </h1>
             <p className="text-[12px] text-slate-500 mt-1 max-w-xs mx-auto leading-relaxed">
-              Sistem Monitoring Aktivitas, Kegiatan &amp; Status Pekerjaan Biro 3 (IKK)
+              Biro Investasi, Kerja Sama, dan Komunikasi (IKK)
             </p>
           </div>
 
@@ -269,12 +268,12 @@ function LoginForm() {
               className="w-full px-7 py-2.5 flex items-center justify-between text-left hover:bg-slate-100/70 transition-colors cursor-pointer"
             >
               <div className="flex items-center gap-1.5">
-                <Sparkles className="w-3.5 h-3.5 text-[#31889C]" />
+                <KeyRound className="w-3.5 h-3.5 text-[#31889C]" />
                 <span className="text-[11px] font-bold text-slate-700 uppercase tracking-wider">
-                  Uji Coba Akun Demo
+                  Akses Cepat Akun Demo
                 </span>
                 {selectedDemoRole && (
-                  <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-[#EBF6F8] text-[#266F80] border border-[#31889C]/20">
+                  <span className="text-[10px] font-semibold px-2 py-0.5 rounded-md bg-[#EBF6F8] text-[#266F80] border border-[#31889C]/20">
                     {selectedDemoRole} terpilih
                   </span>
                 )}
@@ -298,21 +297,22 @@ function LoginForm() {
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-1.5 text-[11px]">
                   {demoAccounts.map((acc) => {
                     const isSelected = selectedDemoRole === acc.label;
+                    const RoleIcon = acc.Icon;
 
                     return (
                       <button
                         key={acc.email}
                         type="button"
                         onClick={() => handleFillDemo(acc.email, acc.label)}
-                        className={`p-2 text-left rounded-xl border transition-all cursor-pointer flex flex-col justify-between ${isSelected
-                            ? 'bg-[#EBF6F8] border-[#31889C] text-[#266F80] font-bold shadow-xs ring-1 ring-[#31889C]'
-                            : 'bg-white border-slate-200/90 hover:border-[#31889C]/60 hover:bg-[#F6FBFC] text-slate-700 font-semibold'
+                        className={`p-2 text-left rounded-lg border transition-colors cursor-pointer flex flex-col justify-between ${isSelected
+                            ? 'bg-[#EBF6F8] border-[#31889C] text-[#266F80] font-bold shadow-2xs ring-1 ring-[#31889C]'
+                            : 'bg-white border-slate-200 hover:border-[#31889C]/60 hover:bg-[#F6FBFC] text-slate-700 font-semibold'
                           }`}
                         title={`${acc.label} (${acc.email}) - ${acc.desc}`}
                       >
                         <div className="flex items-center justify-between w-full">
                           <div className="flex items-center gap-1.5 truncate">
-                            <span className="text-[13px]">{acc.icon}</span>
+                            <RoleIcon className="w-3.5 h-3.5 text-[#31889C] shrink-0" />
                             <span className="truncate text-[11.5px]">{acc.label}</span>
                           </div>
                           {isSelected && (
